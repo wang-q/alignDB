@@ -1,0 +1,62 @@
+#----------------------------------------------------------#
+# 1. insert_gene.pl
+#----------------------------------------------------------#
+E:\wq\Scripts\alignDB\gene>insert_gene.pl -d=alignDB -e=yeast_37
+
+==============================
+Update alignDB...
+
+Prosess align 1 in chrI 218482 - 228462
+Prosess align 2 in chrI 12908 - 24993
+Prosess align 3 in chrI 166020 - 181123
+Prosess align 4 in chrI 182956 - 199141
+Prosess align 5 in chrI 207009 - 222802
+
+Runtime 14 seconds.
+==============================
+
+#----------------------------------------------------------#
+# 2. insert_gene.pl
+#----------------------------------------------------------#
+E:\wq\Scripts\alignDB\gene>update_gene_feature.pl -d=alignDB
+
+==============================
+Update alignDB...
+
+Prosess align 1 in chrI 218482 - 228462
+Prosess align 2 in chrI 12908 - 24993
+Prosess align 3 in chrI 166020 - 181123
+Prosess align 4 in chrI 182956 - 199141
+Prosess align 5 in chrI 207009 - 222802
+
+Runtime 30 seconds.
+==============================
+
+#----------------------------------------------------------#
+# 3. update_gene_D.pl
+#----------------------------------------------------------#
+E:\wq\Scripts\alignDB\gene>update_gene_D.pl --aim_db=alignDB --ref_db=S288CvsYJM
+789
+
+==============================
+Init alignDB...
+
+Table gene altered
+Get gene divergences in ref_db: S288CvsYJM789
+Update gene_feature5 in aim_db: alignDB
+
+Runtime 2 seconds.
+==============================
+
+#----------------------------------------------------------#
+# 4. update_gene_yeast.pl
+#----------------------------------------------------------#
+E:\wq\Scripts\alignDB\gene>update_gene_yeast.pl -d=alignDB
+
+==============================
+Update alignDB...
+
+Table gene altered
+
+Runtime 2 seconds.
+==============================

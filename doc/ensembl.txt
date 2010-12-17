@@ -1,0 +1,3 @@
+# ensembl/misc-scripts/
+perl schema_patch.pl --host localhost --port 3306 --user alignDB --pass alignDB \
+   --pattern human_58 --schema 59 --schema_type core --bindir /usr/bin

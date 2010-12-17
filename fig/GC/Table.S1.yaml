@@ -1,0 +1,88 @@
+---
+autofit: A:M
+ranges:
+  HumanvsChimp.gc.chart.xls:
+    summary:
+      - copy: E6
+        paste: B3:C3
+        merge: 1
+      - copy: G6
+        paste: B4:C4
+        merge: 1
+  HumanvsRhesus.gc.chart.xls:
+    summary:
+      - copy: E6
+        paste: D3:E3
+        merge: 1
+      - copy: G6
+        paste: D4:E4
+        merge: 1
+  DsimvsDsec.gc.chart.xls:
+    summary:
+      - copy: E6
+        paste: F3:G3
+        merge: 1
+      - copy: G6
+        paste: F4:G4
+        merge: 1
+  Nipvs9311.gc.chart.xls:
+    summary:
+      - copy: E6
+        paste: H3:I3
+        merge: 1
+      - copy: G6
+        paste: H4:I4
+        merge: 1
+  S288CvsRM11.gc.chart.xls:
+    summary:
+      - copy: E6
+        paste: J3:K3
+        merge: 1
+      - copy: G6
+        paste: J4:K4
+        merge: 1
+  S288CvsYJM789.gc.chart.xls:
+    summary:
+      - copy: E6
+        paste: L3:M3
+        merge: 1
+      - copy: G6
+        paste: L4:M4
+        merge: 1
+texts:
+  - text: "Comparison"
+    pos: A1
+  - text: "Total Length (Mb)"
+    pos: A2
+  - text: "Aligned length (Mb)"
+    pos: A3
+  - text: "Indels / 100 bp"
+    pos: A4
+  - text: "D on average"
+    pos: A5
+  - text: "GC-content"
+    pos: A6
+  - text: "Human vs. Chimp"
+    pos: B1:C1
+    merge: 1
+  - text: "Human vs. Rhesus"
+    pos: D1:E1
+    merge: 1
+  - text: "D. sim  vs. D. sech"
+    pos: F1:G1
+    merge: 1
+  - text: "Nip. vs. 93-11"
+    pos: H1:I1
+    merge: 1
+  - text: "S288C vs. RM11"
+    pos: J1:K1
+    merge: 1
+  - text: "S288C vs. YJM789"
+    pos: L1:M1
+    merge: 1
+borders:
+  - range: A1:M1
+    top: 1
+    bottom: 1
+  - range: A6:M6
+    bottom: 1

@@ -1,0 +1,50 @@
+# Campylobacter_jejuni
+bac_bz.pl -p 197 -t 192222 -r 360109
+
+# Salmonella_enterica
+bac_bz.pl -p 28901 -t 220341 -r 882884
+
+# Staphylococcus_aureus
+# 282458 Staphylococcus aureus subsp. aureus MRSA252 is more divergence than 273036 Staphylococcus aureus RF122
+# To make 273036 more reliable as outgroup, I exclude 282458
+bac_bz.pl -p 1280 -t 93062 -r 273036 -e 282458
+
+# Helicobacter pylori
+bac_bz.pl -p 210 -t 85962 -r 85963
+
+# use 382638 Helicobacter acinonychis str. Sheeba as ref
+# REJECT 
+# Aligned length (Mb)	0.7297
+# Indels / 100 bp	0.20716
+# D on average	0.15013743
+bac_bz.pl -p 210,382638 -t 85962 -r 382638
+
+# Bacillus anthracis
+perl bac_bz.pl -p 1392 -t 198094 -r 568206
+
+# Streptococcus pneumoniae
+perl bac_bz.pl -p 1313 -t 170187 -r 487214
+
+===================NOK==================================
+# Bacillus cereus
+perl bac_bz.pl -p 1396
+
+# Chlamydia trachomatis
+bac_bz.pl -p 813
+
+# Clostridium botulinum
+bac_bz.pl -p 1491
+
+# Francisella tularensis
+bac_bz.pl -p 263
+
+# Listeria_monocytogenes
+bac_bz.pl -p 1639 -t 169963
+
+# use 272626 Listeria innocua Clip11262 as ref
+# REJECT
+# Aligned length (Mb)	2.5742
+# Indels / 100 bp	0.10821
+# D on average	0.174848003
+bac_bz.pl -p 1639,272626 -t 169963 -r 272626
+

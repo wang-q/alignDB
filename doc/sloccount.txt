@@ -1,0 +1,42 @@
+Tue Nov 24 13:45:28 2009
+
+SLOC	Directory	SLOC-by-Language (Sorted)
+14445   stat            perl=14445
+8983    lib             perl=8983
+3935    extra           perl=3935
+3506    gui             perl=3506
+2516    init            perl=2516
+2507    multi           perl=2507
+2118    util            perl=2118
+974     ofg             perl=974
+955     gene            perl=955
+779     axt             perl=779
+733     bac             perl=733
+428     rhs             perl=428
+96      fig             perl=96
+14      schema          perl=14
+0       doc             (none)
+0       top_dir         (none)
+
+
+Totals grouped by language (dominant language first):
+perl:         41989 (100.00%)
+
+
+
+
+Total Physical Source Lines of Code (SLOC)                = 41,989
+Development Effort Estimate, Person-Years (Person-Months) = 10.12 (121.48)
+ (Basic COCOMO model, Person-Months = 2.4 * (KSLOC**1.05))
+Schedule Estimate, Years (Months)                         = 1.29 (15.49)
+ (Basic COCOMO model, Months = 2.5 * (person-months**0.38))
+Estimated Average Number of Developers (Effort/Schedule)  = 7.84
+Total Estimated Cost to Develop                           = $ 1,367,521
+ (average salary = $56,286/year, overhead = 2.40).
+SLOCCount, Copyright (C) 2001-2004 David A. Wheeler
+SLOCCount is Open Source Software/Free Software, licensed under the GNU GPL.
+SLOCCount comes with ABSOLUTELY NO WARRANTY, and you are welcome to
+redistribute it under certain conditions as specified by the GNU GPL license;
+see the documentation for details.
+Please credit this data as "generated using David A. Wheeler's 'SLOCCount'."
+

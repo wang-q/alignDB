@@ -1,0 +1,166 @@
+---
+charts:
+  HumanvsChimp_alt_level.gc.chart.xls:
+    segment_cv_indel_9:
+      1:
+        - 1
+        - 0
+      2:
+        - 0
+        - 0
+    segment_cv_indel_8:
+      1:
+        - 1
+        - 1
+      2:
+        - 0
+        - 1
+    segment_cv_indel_7:
+      1:
+        - 1
+        - 2
+      2:
+        - 0
+        - 2
+    segment_cv_indel_6:
+      1:
+        - 1
+        - 3
+      2:
+        - 0
+        - 3
+    segment_cv_indel_5:
+      1:
+        - 1
+        - 4
+      2:
+        - 0
+        - 4
+    segment_cv_indel_4:
+      1:
+        - 1
+        - 5
+      2:
+        - 0
+        - 5
+    segment_cv_indel_3:
+      1:
+        - 1
+        - 6
+      2:
+        - 0
+        - 6
+    segment_cv_indel_2:
+      1:
+        - 1
+        - 7
+      2:
+        - 0
+        - 7
+texts:
+  - text: a
+    size: 32
+    pos:
+      - 0
+      - 0
+  - text: b
+    size: 32
+    pos:
+      - 1
+      - 0
+  - text: "0.9 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 0.4
+      - 0.1
+  - text: "0.9 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 1.4
+      - 0.1
+  - text: "0.8 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 0.4
+      - 1.1
+  - text: "0.8 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 1.4
+      - 1.1
+  - text: "0.7 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 0.4
+      - 2.1
+  - text: "0.7 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 1.4
+      - 2.1
+  - text: "0.6 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 0.4
+      - 3.1
+  - text: "0.6 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 1.4
+      - 3.1
+  - text: "0.5 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 0.4
+      - 4.1
+  - text: "0.5 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 1.4
+      - 4.1
+  - text: "0.4 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 0.4
+      - 5.1
+  - text: "0.4 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 1.4
+      - 5.1
+  - text: "0.3 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 0.4
+      - 6.1
+  - text: "0.3 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 1.4
+      - 6.1
+  - text: "0.2 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 0.4
+      - 7.1
+  - text: "0.2 kb"
+    size: 8
+    bold: 1
+    pos:
+      - 1.4
+      - 7.1

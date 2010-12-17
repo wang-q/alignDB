@@ -1,0 +1,33 @@
+---
+charts:
+  Nipvs9311.gene.chart.xls:
+    coding_all:
+      1:
+        - 0
+        - 0
+      2:
+        - 1
+        - 0
+      3:
+        - 0
+        - 1
+      4:
+        - 1
+        - 1
+texts:
+  - text: a
+    pos:
+      - 0
+      - 0
+  - text: b
+    pos:
+      - 1
+      - 0
+  - text: c
+    pos:
+      - 0
+      - 1
+  - text: d
+    pos:
+      - 1
+      - 1

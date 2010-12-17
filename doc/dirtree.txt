@@ -1,0 +1,181 @@
++- alignDB/
+    |- alignDB.ini | 122 lines  | 1.7K
+    |- alignDB.kpf | 128 lines  | 5.22K
+    |- bac.sql | 65 lines  | 2.21K
+    |- ensembl.sql | 1606 lines  | 50.43K
+    |- gce.sql | 27 lines  | 795
+    |- init.sql | 778 lines  | 27.42K
+    |- minit.sql | 353 lines  | 12.71K
+    |- rhs.sql | 44 lines  | 1.11K
+    +- axt/
+        |- unmatched_query.pl | 226 lines  | 5.78K
+        |- write_axt.pl | 282 lines  | 8.14K
+        |- write_axt_slice.pl | 257 lines  | 7.51K
+        |- write_chr_axt.pl | 260 lines  | 7.07K
+        |- write_full_paralog.pl | 263 lines  | 7.02K
+    +- bac/
+        |- bac_batch.pl | 136 lines  | 3.37K
+        |- bac_db.pl | 294 lines  | 7.57K
+        |- bac_strains.pl | 301 lines  | 7.69K
+        |- chr_cv.pl | 233 lines  | 5.97K
+    +- doc/
+        |- alignDB.cmd.txt | 204 lines  | 7.33K
+        |- alignDB.mindmap.mm | 508 lines  | 24.98K
+        |- chr01.axt | 580 lines  | 354.23K
+        |- dependence.txt | 70 lines  | 1.24K
+        |- dirtree.txt | 196 lines  | 8.61K
+        |- features.mindmap.mm | 181 lines  | 8.8K
+        |- foo.txt | 16 lines  | 5.29K
+        |- gene.cmd.txt | 62 lines  | 1.74K
+        |- prepare.cmd.txt | 38 lines  | 1.48K
+        |- sloccount.txt | 38 lines  | 1.48K
+        |- three.cmd.txt | 31 lines  | 1.19K
+        |- yeast_combo.doc | 80 lines  | 33.5K
+    +- extra/
+        |- align_fasta.pl | 152 lines  | 3.58K
+        |- align_xls.pl | 419 lines  | 11.01K
+        |- fasta2csv.pl | 208 lines  | 5.03K
+        |- fasta2xls.pl | 751 lines  | 26.43K
+        |- human_snp.pl | 260 lines  | 7.76K
+        |- ref_outgroup.pl | 950 lines  | 31.09K
+        |- seq_pair_batch.pl | 106 lines  | 2.51K
+        |- target_fasta.pl | 137 lines  | 3.01K
+        |- test_wwwblast.pl | 158 lines  | 4.45K
+        |- update_indel_occured.pl | 333 lines  | 9.38K
+        |- update_isw_dxr.pl | 345 lines  | 10.07K
+        |- update_snp_cpg.pl | 294 lines  | 7.39K
+        |- write_indel_vicinity.pl | 255 lines  | 7.13K
+        |- yeast_combo.pl | 232 lines  | 6.26K
+    +- gene/
+        |- Essential_ORFs.txt | 1118 lines  | 104.21K
+        |- forWebIntergenic.txt | 13047 lines  | 234.32K
+        |- forWebORFs.txt | 6195 lines  | 251.18K
+        |- insert_gene.pl | 840 lines  | 27.3K
+        |- update_gene_D.pl | 176 lines  | 4.56K
+        |- update_gene_yeast.pl | 193 lines  | 4.15K
+        |- update_snp_dnds.pl | 473 lines  | 13.48K
+    +- gui/
+        |- alignDBGUI.pl | 903 lines  | 18.28K
+        |- alignDBGUI.ui | 1546 lines  | 37.32K
+        |- alignDBGUI_run.pm | 994 lines  | 22.77K
+        |- alignDBGUI_ui.pm | 1512 lines  | 35.33K
+        |- gui2.pl | 27 lines  | 366
+        |- gui3.glade | 1777 lines  | 94.11K
+        |- gui3.pl | 63 lines  | 1.29K
+        |- normal_taxon.csv | 43 lines  | 1.3K
+    +- init/
+        |- chr_length.csv | 1162 lines  | 36.18K
+        |- delete_chr.pl | 302 lines  | 6.49K
+        |- gen_alignDB.pl | 196 lines  | 5.19K
+        |- init_alignDB.pl | 200 lines  | 5.04K
+        |- insert_gc.pl | 258 lines  | 6.47K
+        |- taxon.csv | 37279 lines  | 6.55M
+        |- update_align_paralog.pl | 216 lines  | 5.41K
+        |- update_feature.pl | 546 lines  | 16.17K
+        |- update_indel_slippage.pl | 313 lines  | 8.33K
+        |- update_isw_indel_id.pl | 142 lines  | 3.17K
+        |- update_segment.pl | 168 lines  | 4.07K
+        |- update_window_feature.pl | 229 lines  | 5.88K
+    +- lib/
+        |- AlignDB.pm | 1726 lines  | 51.67K
+        +- AlignDB/
+            |- Ensembl.pm | 321 lines  | 8.6K
+            |- GC.pm | 768 lines  | 23.32K
+            |- Multi.pm | 1115 lines  | 33.72K
+            |- Ofg.pm | 362 lines  | 9.4K
+            |- Paralog.pm | 304 lines  | 9.36K
+            |- Position.pm | 406 lines  | 11.55K
+            |- Util.pm | 1018 lines  | 26.7K
+            |- WriteExcel.pm | 1099 lines  | 28.4K
+            +- GUI/
+                |- Bitmap.pm | 2528 lines  | 43.92K
+                |- Frame.pm | 1334 lines  | 38.62K
+                |- Frame_cmd.pm | 625 lines  | 17.01K
+                |- Frame_config.pm | 90 lines  | 3.8K
+                |- Frame_event.pm | 422 lines  | 10.46K
+                |- TaxonDialog.pm | 180 lines  | 4.93K
+            +- Multi/
+                |- GC.pm | 178 lines  | 4.68K
+        +- t/
+            +- Util/
+                |- 00.load.t | 15 lines  | 223
+                |- 01.basic.t | 53 lines  | 1.27K
+                |- 05.ref_indel_type.t | 50 lines  | 1.71K
+    +- multi/
+        |- bootstrap.pl | 191 lines  | 3.9K
+        |- fasta_malignDB.pl | 200 lines  | 4.93K
+        |- insert_gc_multi.pl | 224 lines  | 5.39K
+        |- snp_ttest.pl | 577 lines  | 17.42K
+        |- update_multi.pl | 487 lines  | 14.02K
+        |- update_multi_gff.pl | 486 lines  | 13.03K
+        +- old/
+            |- init.sql | 170 lines  | 5.08K
+            |- multi_alignDB2.pl | 663 lines  | 23.38K
+            |- update_misc.pl | 475 lines  | 14.59K
+            |- update_mslippage.pl | 299 lines  | 8.02K
+    +- ofg/
+        |- coldspots.chr_pos.hg17.txt | 9290 lines  | 216.87K
+        |- event_intervals.txt | 6792 lines  | 255.98K
+        |- gene_gce.pl | 238 lines  | 5.36K
+        |- gene_rhs.pl | 335 lines  | 8.48K
+        |- hot_spots.txt | 303 lines  | 7.18K
+        |- hotspots.chr_pos.hg17.txt | 26137 lines  | 610.14K
+        |- insert_gce.pl | 181 lines  | 4.19K
+        |- insert_rhs.pl | 163 lines  | 3.64K
+        |- insert_rhs_science05.pl | 163 lines  | 3.63K
+        |- write_runlist.pl | 196 lines  | 4.67K
+        |- write_runlist_pnas00.pl | 199 lines  | 4.93K
+        |- write_runlist_science05.pl | 136 lines  | 3.05K
+    +- schema/
+        |- Workspace.sws | 13 lines  | 840
+        |- alignDB.cdb | 8723 lines  | 266.49K
+        |- alignDB.cdm | 8723 lines  | 266.49K
+        |- alignDB.pdb | 11141 lines  | 328.24K
+        |- alignDB.pdm | 12344 lines  | 353.77K
+        |- crebas2init.pl | 19 lines  | 394
+        |- malignDB.cdb | 5445 lines  | 159.2K
+        |- malignDB.cdm | 5445 lines  | 159.2K
+        |- malignDB.pdb | 7348 lines  | 197.29K
+        |- malignDB.pdm | 7349 lines  | 197.29K
+    +- stat/
+        |- all_stat.sql | 722 lines  | 23.15K
+        |- bac_stat_factory.pl | 363 lines  | 10.5K
+        |- common_chart_factory.pl | 649 lines  | 17.25K
+        |- common_stat_factory.pl | 2762 lines  | 90.25K
+        |- dnds_chart_factory.pl | 156 lines  | 3.4K
+        |- dnds_stat_factory.pl | 213 lines  | 5.5K
+        |- four_chart_factory.pl | 225 lines  | 5.48K
+        |- four_stat_factory.pl | 1743 lines  | 58.17K
+        |- gc_chart_factory.pl | 553 lines  | 16.15K
+        |- gc_stat_factory.pl | 2002 lines  | 63.78K
+        |- gce_chart_factory.pl | 163 lines  | 3.92K
+        |- gce_stat_factory.pl | 419 lines  | 12K
+        |- gene_chart_factory.pl | 186 lines  | 4.73K
+        |- gene_stat_factory.pl | 1528 lines  | 47.25K
+        |- human_coverage.doc | 318 lines  | 91K
+        |- indel_content.pl | 258 lines  | 6.73K
+        |- mgc_chart_factory.pl | 249 lines  | 6.84K
+        |- mgc_stat_factory.pl | 687 lines  | 20.2K
+        |- multi_chart_factory.pl | 178 lines  | 4.45K
+        |- multi_stat_factory.pl | 1190 lines  | 37.05K
+        |- mvar_stat_factory.pl | 527 lines  | 15.9K
+        |- rhs_chart_factory.pl | 163 lines  | 3.93K
+        |- rhs_stat_factory.pl | 429 lines  | 11.77K
+        |- sql.lib | 1144 lines  | 25.36K
+        |- sql_library.pl | 743 lines  | 24.23K
+        |- three_chart_factory.pl | 699 lines  | 19.36K
+        |- three_stat_factory.pl | 4007 lines  | 129.1K
+        |- var_stat_factory.pl | 575 lines  | 17.8K
+    +- util/
+        |- alignDB_graph.pl | 395 lines  | 10.5K
+        |- align_graph.pl | 728 lines  | 18.87K
+        |- apply_sql.pl | 127 lines  | 2.63K
+        |- build_ensembl.pl | 225 lines  | 6.21K
+        |- fetch_gi_seq.pl | 209 lines  | 5.18K
+        |- genbank2ensembl.pl | 500 lines  | 13.89K
+        |- kaks.pl | 267 lines  | 6.72K
+        |- query_sql.pl | 201 lines  | 4.69K
+        |- query_tracedb.pl | 214 lines  | 6.55K
+        |- realign.pl | 232 lines  | 6.52K
+        |- reverse_axt.pl | 151 lines  | 3.54K
+

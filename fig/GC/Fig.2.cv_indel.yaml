@@ -1,0 +1,48 @@
+---
+charts:
+  HumanvsChimp.gc.chart.xls:
+    segment_cv_indel_3:
+      2:
+        - 0
+        - 0
+  Nipvs9311.gc.chart.xls:
+    segment_cv_indel_3:
+      2:
+        - 1
+        - 0
+  S288CvsRM11.gc.chart.xls:
+    segment_cv_indel_3:
+      2:
+        - 0
+        - 1
+texts:
+  - text: a
+    pos:
+      - 0
+      - 0
+  - text: b
+    pos:
+      - 1
+      - 0
+  - text: c
+    pos:
+      - 0
+      - 1
+  - text: "Human versus Chimpanzee"
+    size: 8
+    bold: 1
+    pos :
+      - 0.3
+      - 0.1
+  - text: "Nip versus 9311"
+    size: 8
+    bold: 1
+    pos :
+      - 1.3
+      - 0.1
+  - text: "S288C versus RM11"
+    size: 8
+    bold: 1
+    pos :
+      - 0.3
+      - 1.1

@@ -1,0 +1,205 @@
+#----------------------------------------------------------#
+# 1. init_alignDB.pl
+#----------------------------------------------------------#
+
+============CMD===============
+perl E:/wq/Scripts/alignDB/gui/../init/init_alignDB.pl -s=202.119.43.5 --port=33
+06 -d=alignDB -u=alignDB --password=alignDB
+==============================
+
+==============================
+Init alignDB...
+
+#drop
+mysql -h202.119.43.5 -P3306 -ualignDB -palignDB  -e "DROP DATABASE IF EXISTS ali
+gnDB;"
+#create
+mysql -h202.119.43.5 -P3306 -ualignDB -palignDB  -e "CREATE DATABASE alignDB;"
+#init
+mysql -h202.119.43.5 -P3306 -ualignDB -palignDB  alignDB < E:/wq/Scripts/alignDB
+/init/../init.sql
+|DBI::db=HASH(0x1c61e5c)|
+Use E:/wq/Scripts/alignDB/init/taxon.csv to Init table taxon
+Found a row: taxon_id = 9606, genus = Homo, species = sapiens, common_name = Hum
+an
+Use E:/wq/Scripts/alignDB/init/chr_length.csv to Init table chromosome
+Found a row: taxon_id = 31033, chr_name = chrUn, chr_length = 349519338
+
+Runtime 6 seconds.
+==============================
+
+#----------------------------------------------------------#
+# 2. gen_alignDB.pl
+#----------------------------------------------------------#
+
+============CMD===============
+perl E:/wq/Scripts/alignDB/gui/../init/gen_alignDB.pl -s=202.119.43.5 --port=33
+06 -d=alignDB -u=alignDB --password=alignDB -t="4932,S288C" -q="285006,RM11" -a=
+G:/S288CvsRM11 -l=10000 --realign=0 --insert_gc=1 --insert_dG=0 --insert_segment
+=1 --parallel=1
+==============================
+
+----Total .AXT Files:    1----
+
+
+==============================
+Process G:/S288CvsRM11/chr01.axt...
+==============================
+
+Process align_id 1, target_chr_id 263
+Process align_id 2, target_chr_id 263
+Process align_id 3, target_chr_id 263
+Process align_id 4, target_chr_id 263
+Process align_id 5, target_chr_id 263
+
+==============================
+G:/S288CvsRM11/chr01.axt has been processed.
+Runtime 1 minute and 41 seconds.
+==============================
+
+==============================
+All files have been processed.
+Runtime 1 minute and 41 seconds.
+==============================
+
+#----------------------------------------------------------#
+# 3. insert_gc.pl
+#----------------------------------------------------------#
+
+E:\wq\Scripts\alignDB\init>insert_gc.pl
+==============================
+Update GC tables of alignDB...
+Start at: Sun Jan 14 05:41:42 2007
+
+Prosess align 1 in chrI 218482 - 228462
+Prosess align 2 in chrI 12908 - 24993
+Prosess align 3 in chrI 166020 - 181123
+Prosess align 4 in chrI 182956 - 199141
+Prosess align 5 in chrI 207009 - 222802
+
+End at: Sun Jan 14 05:42:23 2007
+Runtime 41 seconds.
+==============================
+
+#----------------------------------------------------------#
+# 4. update_feature.pl
+#----------------------------------------------------------#
+E:\wq\Scripts\alignDB\init>update_feature.pl -d=alignDB -e=yeast_37
+
+==============================
+Update alignDB...
+
+Prosess align 1 in chrI 218482 - 228462
+Prosess align 2 in chrI 12908 - 24993
+Prosess align 3 in chrI 166020 - 181123
+Prosess align 4 in chrI 182956 - 199141
+Prosess align 5 in chrI 207009 - 222802
+
+Runtime 15 seconds.
+==============================
+
+#----------------------------------------------------------#
+# 5. update_indel_slippage.pl
+#----------------------------------------------------------#
+E:\wq\Scripts\alignDB\init>update_indel_slippage.pl -d=alignDB
+
+==============================
+Init alignDB...
+
+Table indel_extra altered
+Table window altered
+Processing align_id 1
+Processing align_id 2
+Processing align_id 3
+Processing align_id 4
+Processing align_id 5
+Processing align_id 6
+
+Runtime 34 seconds.
+==============================
+
+#----------------------------------------------------------#
+# 6. update_align_paralog.pl (OPTIONAL)
+#----------------------------------------------------------#
+update_align_paralog.pl -d=Nipvs9311 -da=nip_chro --mega=1 -v=9
+
+#----------------------------------------------------------#
+# 7. stat_factory.pl
+#----------------------------------------------------------#
+E:\wq\Scripts\alignDB\stat>stat_factory.pl --db=alignDB
+Writing Excel file S288CvsRM11.auto.xls...
+Sheet "summary" has been generated.
+Sheet "indel_length" has been generated.
+Sheet "indel_length_100" has been generated.
+Sheet "snp_base_change" has been generated.
+Sheet "density" has been generated.
+Sheet "combined_density" has been generated.
+Sheet "group_density" has been generated.
+Sheet "distance" has been generated.
+Sheet "combined_distance" has been generated.
+Sheet "group_distance" has been generated.
+Sheet "indel_size_group" has been generated.
+Sheet "indel_size_asymmetry" has been generated.
+Sheet "indel_extand_group" has been generated.
+Sheet "indel_extand_asymmetry" has been generated.
+Sheet "snp_indel_ratio" has been generated.
+Sheet "snp_indel_ratio_2" has been generated.
+Sheet "dd_group" has been generated.
+all done!!!
+
+#----------------------------------------------------------#
+# 8. chart_factory.pl
+#----------------------------------------------------------#
+E:\wq\Scripts\alignDB\stat>chart_factory.pl -i=E:\wq\Scripts\alignDB\stat\alignDB.auto.xls
+E:\wq\Scripts\alignDB\write_excel\alignDB.auto.chart.xls has been generated.
+
+#----------------------------------------------------------#
+# 9. gc_stat_factory.pl (In practice, -t should be 1,000,000 or 10,000,000)
+#----------------------------------------------------------#
+E:\wq\Scripts\alignDB\stat>gc_stat_factory.pl -d=alignDB -t=10000
+Sheet "summary" has been generated.
+Sheet "combined_distance" has been generated.
+Sheet "distance_ns_indel" has been generated.
+Sheet "distance_pi" has been generated.
+Sheet "combined_density" has been generated.
+Sheet "density_ns_indel" has been generated.
+Sheet "density_pi" has been generated.
+Sheet "combined_amplitude" has been generated.
+Sheet "amplitude_ns_indel" has been generated.
+Sheet "amplitude_pi" has been generated.
+Sheet "combined_a2d" has been generated.
+Sheet "a2d_ns_indel" has been generated.
+Sheet "a2d_pi" has been generated.
+Sheet "dd_group" has been generated.
+Sheet "dd_group_ns_indel" has been generated.
+Sheet "da_group" has been generated.
+Sheet "da2d_group" has been generated.
+Sheet "segment_gc_indel_1" has been generated.
+Sheet "segment_gc_indel_2" has been generated.
+Sheet "segment_gc_indel_3" has been generated.
+Sheet "segment_gc_indel_4" has been generated.
+Sheet "segment_gc_indel_5" has been generated.
+Sheet "segment_std_indel_1" has been generated.
+Sheet "segment_std_indel_2" has been generated.
+Sheet "segment_std_indel_3" has been generated.
+Sheet "segment_std_indel_4" has been generated.
+Sheet "segment_std_indel_5" has been generated.
+Sheet "segment_cv_indel_1" has been generated.
+Sheet "segment_cv_indel_2" has been generated.
+Sheet "segment_cv_indel_3" has been generated.
+Sheet "segment_cv_indel_4" has been generated.
+Sheet "segment_cv_indel_5" has been generated.
+Sheet "segment_coding_indel_1" has been generated.
+Sheet "segment_coding_indel_2" has been generated.
+Sheet "segment_coding_indel_3" has been generated.
+Sheet "segment_coding_indel_4" has been generated.
+Sheet "segment_coding_indel_5" has been generated.
+all done!!!
+
+#----------------------------------------------------------#
+# 10. gc_chart_factory.pl
+#----------------------------------------------------------#
+E:\wq\Scripts\alignDB\stat>gc_chart_factory.pl -i=E:\wq\Scripts\alignDB\stat\ali
+gnDB.gc.xls
+Processing E:\wq\Scripts\alignDB\stat\alignDB.gc.xls...
+E:\wq\Scripts\alignDB\stat\alignDB.gc.chart.xls has been generated.

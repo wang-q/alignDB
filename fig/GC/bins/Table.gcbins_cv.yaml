@@ -1,0 +1,218 @@
+---
+autofit: A:D
+ranges:
+  HumanvsChimp_bin0.gc.chart.xls:
+    segment_summary:
+      - copy: C15
+        paste: B2
+      - copy: F15
+        paste: C2
+      - copy: G15
+        paste: D2
+      - copy: C6
+        paste: E2
+      - copy: D6
+        paste: F2
+      - copy: E6
+        paste: G2
+    summary:
+      - copy: E6
+        paste: H2
+  HumanvsChimp_bin1.gc.chart.xls:
+    segment_summary:
+      - copy: C15
+        paste: B3
+      - copy: F15
+        paste: C3
+      - copy: G15
+        paste: D3
+      - copy: C6
+        paste: E3
+      - copy: D6
+        paste: F3
+      - copy: E6
+        paste: G3
+    summary:
+      - copy: E6
+        paste: H3
+  HumanvsChimp_bin2.gc.chart.xls:
+    segment_summary:
+      - copy: C15
+        paste: B4
+      - copy: F15
+        paste: C4
+      - copy: G15
+        paste: D4
+      - copy: C6
+        paste: E4
+      - copy: D6
+        paste: F4
+      - copy: E6
+        paste: G4
+    summary:
+      - copy: E6
+        paste: H4
+  HumanvsChimp_bin3.gc.chart.xls:
+    segment_summary:
+      - copy: C15
+        paste: B5
+      - copy: F15
+        paste: C5
+      - copy: G15
+        paste: D5
+      - copy: C6
+        paste: E5
+      - copy: D6
+        paste: F5
+      - copy: E6
+        paste: G5
+    summary:
+      - copy: E6
+        paste: H5
+  HumanvsChimp_bin4.gc.chart.xls:
+    segment_summary:
+      - copy: C15
+        paste: B6
+      - copy: F15
+        paste: C6
+      - copy: G15
+        paste: D6
+      - copy: C6
+        paste: E6
+      - copy: D6
+        paste: F6
+      - copy: E6
+        paste: G6
+    summary:
+      - copy: E6
+        paste: H6
+  HumanvsChimp_bin5.gc.chart.xls:
+    segment_summary:
+      - copy: C15
+        paste: B7
+      - copy: F15
+        paste: C7
+      - copy: G15
+        paste: D7
+      - copy: C6
+        paste: E7
+      - copy: D6
+        paste: F7
+      - copy: E6
+        paste: G7
+    summary:
+      - copy: E6
+        paste: H7
+  HumanvsChimp_bin6.gc.chart.xls:
+    segment_summary:
+      - copy: C15
+        paste: B8
+      - copy: F15
+        paste: C8
+      - copy: G15
+        paste: D8
+      - copy: C6
+        paste: E8
+      - copy: D6
+        paste: F8
+      - copy: E6
+        paste: G8
+    summary:
+      - copy: E6
+        paste: H8
+  HumanvsChimp_bin7.gc.chart.xls:
+    segment_summary:
+      - copy: C15
+        paste: B9
+      - copy: F15
+        paste: C9
+      - copy: G15
+        paste: D9
+      - copy: C6
+        paste: E9
+      - copy: D6
+        paste: F9
+      - copy: E6
+        paste: G9
+    summary:
+      - copy: E6
+        paste: H9
+  HumanvsChimp_bin8.gc.chart.xls:
+    segment_summary:
+      - copy: C15
+        paste: B10
+      - copy: F15
+        paste: C10
+      - copy: G15
+        paste: D10
+      - copy: C6
+        paste: E10
+      - copy: D6
+        paste: F10
+      - copy: E6
+        paste: G10
+    summary:
+      - copy: E6
+        paste: H10
+  HumanvsChimp_bin9.gc.chart.xls:
+    segment_summary:
+      - copy: C15
+        paste: B11
+      - copy: F15
+        paste: C11
+      - copy: G15
+        paste: D11
+      - copy: C6
+        paste: E11
+      - copy: D6
+        paste: F11
+      - copy: E6
+        paste: G11
+    summary:
+      - copy: E6
+        paste: H11
+texts:
+  - text: "BINs"
+    pos: A1
+  - text: "CV mean"
+    pos: B1
+  - text: "CV std"
+    pos: C1
+  - text: "Count"
+    pos: D1
+  - text: "GC mean"
+    pos: E1
+  - text: "GC min"
+    pos: F1
+  - text: "GC max"
+    pos: G1
+  - text: "GC mean"
+    pos: H1
+  - text: "Length"
+    pos: H1
+  - text: "bin0"
+    pos: A2
+  - text: "bin1"
+    pos: A3
+  - text: "bin2"
+    pos: A4
+  - text: "bin3"
+    pos: A5
+  - text: "bin4"
+    pos: A6
+  - text: "bin5"
+    pos: A7
+  - text: "bin6"
+    pos: A8
+  - text: "bin7"
+    pos: A9
+  - text: "bin8"
+    pos: A10
+  - text: "bin9"
+    pos: A11
+borders:
+  - range: A1:H1
+    top: 1
+    bottom: 1
+  - range: A11:H11
+    bottom: 1

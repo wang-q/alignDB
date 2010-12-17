@@ -1,0 +1,363 @@
+---
+charts:
+  Clostridium_botulinum.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 0
+      2:
+        - 1
+        - 0
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 0
+      2:
+        - 3
+        - 0
+  Clostridium_perfringens.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 1
+      2:
+        - 1
+        - 1
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 1
+      2:
+        - 3
+        - 1
+  Campylobacter_jejuni.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 2
+      2:
+        - 1
+        - 2
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 2
+      2:
+        - 3
+        - 2
+  Prochlorococcus_marinus.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 3
+      2:
+        - 1
+        - 3
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 3
+      2:
+        - 3
+        - 3
+  Francisella_tularensis.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 4
+      2:
+        - 1
+        - 4
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 4
+      2:
+        - 3
+        - 4
+  Staphylococcus_aureus.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 5
+      2:
+        - 1
+        - 5
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 5
+      2:
+        - 3
+        - 5
+  Bacillus_cereus.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 6
+      2:
+        - 1
+        - 6
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 6
+      2:
+        - 3
+        - 6
+  Lactococcus_lactis.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 7
+      2:
+        - 1
+        - 7
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 7
+      2:
+        - 3
+        - 7
+  Haemophilus_influenzae.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 8
+      2:
+        - 1
+        - 8
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 8
+      2:
+        - 3
+        - 8
+  Helicobacter_pylori.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 9
+      2:
+        - 1
+        - 9
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 9
+      2:
+        - 3
+        - 9
+  Legionella_pneumophila.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 10
+      2:
+        - 1
+        - 10
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 10
+      2:
+        - 3
+        - 10
+  Streptococcus_pyogenes.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 11
+      2:
+        - 1
+        - 11
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 11
+      2:
+        - 3
+        - 11
+  Acinetobacter_baumannii.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 12
+      2:
+        - 1
+        - 12
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 12
+      2:
+        - 3
+        - 12
+  Streptococcus_pneumoniae.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 13
+      2:
+        - 1
+        - 13
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 13
+      2:
+        - 3
+        - 13
+  Streptococcus_thermophilus.mgc.chart.xls:
+    segment_gc_indel_3:
+      1:
+        - 0
+        - 14
+      2:
+        - 1
+        - 14
+    segment_cv_indel_3:
+      1:
+        - 2
+        - 14
+      2:
+        - 3
+        - 14
+texts:
+  - text: a
+    size: 48
+    pos:
+      - 0
+      - 0
+  - text: b
+    size: 48
+    pos:
+      - 0
+      - 2
+  - text: c
+    size: 48
+    pos:
+      - 0
+      - 8
+  - text: "Clostridium botulinum"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 0
+  - text: "Clostridium perfringens"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 1
+  - text: "Campylobacter jejuni"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 2
+  - text: "Prochlorococcus marinus"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 3
+  - text: "Francisella tularensis"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 4
+  - text: "Staphylococcus aureus"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 5
+  - text: "Bacillus cereus"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 6
+  - text: "Lactococcus lactis"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 7
+  - text: "Haemophilus influenzae"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 8
+  - text: "Helicobacter pylori"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 9
+  - text: "Legionella pneumophila"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 10
+  - text: "Streptococcus pyogenes"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 11
+  - text: "Acinetobacter baumannii"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 12
+  - text: "Streptococcus pneumoniae"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 13
+  - text: "Streptococcus thermophilus"
+    size: 9
+    bold: 1
+    italic: 1
+    rotate: 270
+    pos:
+      - 4
+      - 14
