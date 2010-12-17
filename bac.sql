@@ -32,7 +32,7 @@ create table strain
     genus_strain_member             int,
     primary key (taxonomy_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 create table seq
 (
@@ -46,7 +46,7 @@ create table seq
     primary key (accession),
     index(taxonomy_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 create table segment
 (
@@ -60,4 +60,4 @@ create table segment
     primary key (segment_id),
     index(accession)
 )
-type = MyISAM;
+ENGINE = MyISAM;

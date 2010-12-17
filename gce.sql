@@ -11,7 +11,7 @@ create table gce
    gce_type                        text,
    primary key (gce_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 create table hotspot
 (
@@ -23,5 +23,5 @@ create table hotspot
    hotspot_type                        text,
    primary key (hotspot_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 

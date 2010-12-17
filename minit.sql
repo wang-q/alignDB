@@ -28,7 +28,7 @@ create table align
    align_paralog                  double,
    primary key (align_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Table: chromosome                                            */
@@ -41,7 +41,7 @@ create table chromosome
    chr_length                     int,
    primary key (chr_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: taxon_chromosome_FK                                   */
@@ -74,7 +74,7 @@ create table indel
    indel_repeats                  double,
    primary key (indel_id, foregoing_indel_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: align_indel_FK                                        */
@@ -123,7 +123,7 @@ create table isw
    isw_cpg_pi                     double,
    primary key (isw_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: indel_isw_FK                                          */
@@ -144,7 +144,7 @@ create table meta
    meta_value                     text,
    primary key (meta_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Table: query                                                 */
@@ -157,7 +157,7 @@ create table query
    query_position                 int,
    primary key (query_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: sequence_query_FK                                     */
@@ -178,7 +178,7 @@ create table reference
    ref_complex_indel              text,
    primary key (ref_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: sequence_reference_FK                                 */
@@ -202,7 +202,7 @@ create table segment
    segment_gc_mdcw                double,
    primary key (segment_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: window_segment_FK                                     */
@@ -229,7 +229,7 @@ create table sequence
    seq_runlist                    text,
    primary key (seq_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: chromosome_sequence_FK                                */
@@ -267,7 +267,7 @@ create table snp
    snp_cpg                        double,
    primary key (snp_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: isw_snp_FK                                            */
@@ -294,7 +294,7 @@ create table target
    seq_id                         int,
    primary key (target_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: sequence_target_FK                                    */
@@ -317,7 +317,7 @@ create table taxon
    classification                 text,
    primary key (taxon_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Table: window                                                */
@@ -341,7 +341,7 @@ create table window
    window_repeats                 double,
    primary key (window_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: align_window_FK                                       */

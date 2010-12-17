@@ -24,7 +24,7 @@ create table align
    indel_runlist                  text,
    primary key (align_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: tvsq_align_FK                                         */
@@ -51,7 +51,7 @@ create table align_extra
    align_feature8                 text,
    primary key (align_extra_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: align_align_extra_FK                                  */
@@ -72,7 +72,7 @@ create table chromosome
    chr_length                     int,
    primary key (chr_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: taxon_chromosome_FK                                   */
@@ -95,7 +95,7 @@ create table codingsw
    codingsw_distance              int,
    primary key (codingsw_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: exon_codingsw_FK                                      */
@@ -138,7 +138,7 @@ create table exon
    primary key (exon_id, foregoing_exon_id),
    key AK_exon_stable_id (exon_stable_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: window_exon_FK                                        */
@@ -170,7 +170,7 @@ create table exonsw
    exonsw_density                 int,
    primary key (exonsw_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: exon_exonsw_FK                                        */
@@ -204,7 +204,7 @@ create table extreme
    extreme_right_wave_length      double,
    primary key (extreme_id, foregoing_extreme_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: windows_extreme_FK                                    */
@@ -242,7 +242,7 @@ create table gene
    primary key (gene_id),
    key AK_gene_stable_id (gene_stable_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: window_gene_FK                                        */
@@ -264,7 +264,7 @@ create table genesw
    genesw_distance                int,
    primary key (genesw_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: gene_genesw_FK                                        */
@@ -297,7 +297,7 @@ create table gsw
    gsw_amplitude                  int,
    primary key (gsw_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: windows_gsw_FK                                        */
@@ -337,7 +337,7 @@ create table indel
    indel_type                     char(1),
    primary key (indel_id, foregoing_indel_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: align_indel_FK                                        */
@@ -360,7 +360,7 @@ create table indel_extra
    indel_feature3                 double,
    primary key (indel_extra_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: indel_indel_extra_FK                                  */
@@ -395,7 +395,7 @@ create table isw
    isw_d_complex                  double,
    primary key (isw_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: indel_isw_FK                                          */
@@ -418,7 +418,7 @@ create table isw_extra
    isw_feature3                   double,
    primary key (isw_extra_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: isw_isw_extra_FK                                      */
@@ -438,7 +438,7 @@ create table meta
    meta_value                     text,
    primary key (meta_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Table: ofg                                                   */
@@ -452,7 +452,7 @@ create table ofg
    primary key (ofg_id)
 )
 comment = "Other feature of genome"
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: window_ofg_FK                                         */
@@ -474,7 +474,7 @@ create table ofgsw
    ofgsw_distance                 int,
    primary key (ofgsw_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: ofg_ofgsw_FK                                          */
@@ -505,7 +505,7 @@ create table query
    query_runlist                  text,
    primary key (query_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: sequence_query_FK                                     */
@@ -535,7 +535,7 @@ create table reference
    ref_complex_indel              text,
    primary key (ref_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: align_reference_FK                                    */
@@ -559,7 +559,7 @@ create table segment
    segment_gc_mdcw                double,
    primary key (segment_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: window_segment_FK                                     */
@@ -582,7 +582,7 @@ create table sequence
    seq_length                     int,
    primary key (seq_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: chromosome_sequence_FK                                */
@@ -607,7 +607,7 @@ create table snp
    snp_occured                    char(1),
    primary key (snp_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: align_snp_FK                                          */
@@ -637,7 +637,7 @@ create table snp_extra
    snp_feature3                   double,
    primary key (snp_extra_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: snp_snp_extra_FK                                      */
@@ -662,7 +662,7 @@ create table ssw
    ssw_d_complex                  double,
    primary key (ssw_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: window_ssw_FK                                         */
@@ -692,7 +692,7 @@ create table target
    target_runlist                 text,
    primary key (target_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: sequence_target_FK                                    */
@@ -723,7 +723,7 @@ create table taxon
    classification                 text,
    primary key (taxon_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Table: tvsq                                                  */
@@ -739,7 +739,7 @@ create table tvsq
    ref_name                       text,
    primary key (tvsq_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Table: window                                                */
@@ -766,7 +766,7 @@ create table window
    window_feature3                double,
    primary key (window_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 /*==============================================================*/
 /* Index: align_window_FK                                       */

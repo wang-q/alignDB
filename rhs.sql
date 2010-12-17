@@ -8,7 +8,7 @@ create table window
     window_runlist                  text,
     primary key (window_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 # natgen05
 create table hotspot 
@@ -22,7 +22,7 @@ create table hotspot
    hotspot_type                     text,
    primary key (hotspot_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
 
 # science05
 create table spot
@@ -35,7 +35,7 @@ create table spot
    spot_type                        text,
    primary key (spot_id)
 )
-type = MyISAM;
+ENGINE = MyISAM;
     
 create index window_hotspot_FK on hotspot
 (
