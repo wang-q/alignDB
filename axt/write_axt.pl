@@ -7,13 +7,14 @@ use Pod::Usage;
 use Config::Tiny;
 use YAML qw(Dump Load DumpFile LoadFile);
 
+use AlignDB::IntSpan;
+use AlignDB::Stopwatch;
+
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 use AlignDB::Ensembl;
-use AlignDB::IntSpan;
 use AlignDB::Position;
-use AlignDB::Stopwatch;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -22,16 +23,16 @@ my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server     = $Config->{database}->{server};
-my $port       = $Config->{database}->{port};
-my $username   = $Config->{database}->{username};
-my $password   = $Config->{database}->{password};
-my $db         = $Config->{database}->{db};
-my $ensembl_db = $Config->{database}->{ensembl};
+my $server     = $Config->{database}{server};
+my $port       = $Config->{database}{port};
+my $username   = $Config->{database}{username};
+my $password   = $Config->{database}{password};
+my $db         = $Config->{database}{db};
+my $ensembl_db = $Config->{database}{ensembl};
 
 # write_axt parameter
-my $length_threshold = $Config->{write}->{feature_threshold};
-my $feature          = $Config->{write}->{feature};
+my $length_threshold = $Config->{write}{feature_threshold};
+my $feature          = $Config->{write}{feature};
 
 my $man  = 0;
 my $help = 0;
