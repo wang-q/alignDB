@@ -83,19 +83,19 @@ sub set_slice {
     my $cds_set   = AlignDB::IntSpan->new;
 
     # Gene
-    foreach my $gene ( @{ $slice->get_all_Genes } ) {
+    for my $gene ( @{ $slice->get_all_Genes } ) {
         $gene = $gene->transform('chromosome');
         $gene_set->merge( _ftr2runlist($gene) );
-        foreach my $trans ( @{ $gene->get_all_Transcripts } ) {
+        for my $trans ( @{ $gene->get_all_Transcripts } ) {
 
             # Exon
-            foreach my $exon ( @{ $trans->get_all_Exons } ) {
+            for my $exon ( @{ $trans->get_all_Exons } ) {
                 $exon = $exon->transform('chromosome');
                 $exon_set->merge( _ftr2runlist($exon) );
             }
 
             # CDS
-            foreach my $cds ( @{ $trans->get_all_translateable_Exons } ) {
+            for my $cds ( @{ $trans->get_all_translateable_Exons } ) {
                 $cds = $cds->transform('chromosome');
                 $cds_set->merge( _ftr2runlist($cds) );
             }
@@ -119,7 +119,7 @@ sub set_slice {
     # repeat set
     my $repeat_set = AlignDB::IntSpan->new;
 
-    foreach my $repeat ( @{ $slice->get_all_RepeatFeatures } ) {
+    for my $repeat ( @{ $slice->get_all_RepeatFeatures } ) {
         $repeat = $repeat->transform('chromosome');
         $repeat_set->merge( _ftr2runlist($repeat) );
     }
@@ -138,9 +138,8 @@ sub set_slice {
         "TE",    # gramene type
     );
 
-    foreach my $te_type (@te_types) {
-        foreach
-            my $te ( @{ $slice->get_all_RepeatFeatures( undef, $te_type ) } )
+    for my $te_type (@te_types) {
+        for my $te ( @{ $slice->get_all_RepeatFeatures( undef, $te_type ) } )
         {
             $te = $te->transform('chromosome');
             $te_set->merge( _ftr2runlist($te) );
@@ -177,7 +176,7 @@ sub slice_stat {
 
     my %stat_hash;
 
-    foreach my $key ( keys %$slice_hash ) {
+    for my $key ( keys %$slice_hash ) {
         my $new_key = $key;
         if ( $new_key =~ /_set/ ) {
             $new_key =~ s/_(.+)_set/$1/;
@@ -228,7 +227,7 @@ sub locate_set_position {
         _cds_set
     };
 
-    foreach my $feature (@features) {
+    for my $feature (@features) {
         if ( $pos_set->subset( $slice_hash->{$feature} ) ) {
             $pos_location = $feature;
         }
@@ -251,7 +250,7 @@ sub locate_set_position {
         _repeat_set
     };
 
-    foreach my $repeat (@repeats) {
+    for my $repeat (@repeats) {
         if ( $pos_set->subset( $slice_hash->{$repeat} ) ) {
             $pos_in_repeats = $repeat;
         }
