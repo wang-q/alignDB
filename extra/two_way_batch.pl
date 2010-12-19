@@ -68,10 +68,10 @@ GetOptions(
     'db=s'               => \$db_name,
     'username=s'         => \$username,
     'password=s'         => \$password,
-    'a|axt_dir=s'          => \$axt_dir,
+    'a|axt_dir=s'        => \$axt_dir,
     't|target=s'         => \$target,
     'q|query=s'          => \$query,
-    'e|ensembl=s'          => \$ensembl_db,
+    'e|ensembl=s'        => \$ensembl_db,
     'parallel=i'         => \$parallel,
     'at|axt_threshold=i' => \$axt_threshold,
     'st|sum_threshold=i' => \$sum_threshold,
@@ -224,4 +224,4 @@ exit;
 
 __END__
 
-perl two_way_batch.pl -d alignDB -e yeast_58 -t="4932,S288C" -q="285006,RM11" -a=F:/S288CvsRM11 --threshold 1000000 --parallel=4 --run common
+perl two_way_batch.pl -d alignDB -e yeast_58 -t "4932,S288C" -q "285006,RM11" -a F:/S288CvsRM11 -at 10000 -st 1000000 --parallel=4 --run common
