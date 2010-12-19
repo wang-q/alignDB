@@ -8,7 +8,8 @@ Rename with Total Commander as chr01.fasta
 # 2. Change fasta sequence headers
 #----------------------------------------------------------#
 >chrI or >chr01
-$perl -nl -e '/>/ and s/EG://; print' chrUn.fasta > chrUn_new.fasta
+$ perl -p -i '/>/ and s/EG://' chrUn.fasta
+$ perl -nl -e '/>/ and s/EG://; print' chrUn.fasta > chrUn_new.fasta
 
 #----------------------------------------------------------#
 # 3. RepeatMasker
@@ -20,7 +21,7 @@ $ mv chr01.fasta.masked chr01.fa
 # 4. blastz & lav2axt
 #----------------------------------------------------------#
 perl bz.pl -dt yeast/S288C -dq yeast/SK1/SK1.fa -dl yeast/S288CvsSK1 \
-    -s=set01 -p 4
+    -s set02 -p 4
 
 #----------------------------------------------------------#
 # 5. Check for species name in 'taxon.csv'
