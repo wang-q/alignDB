@@ -26,11 +26,11 @@ my $stopwatch = AlignDB::Stopwatch->new(
 );
 
 # Database init values
-my $server     = $Config->{database}->{server};
-my $port       = $Config->{database}->{port};
-my $username   = $Config->{database}->{username};
-my $password   = $Config->{database}->{password};
-my $db_name    = $Config->{database}->{db};
+my $server     = $Config->{database}{server};
+my $port       = $Config->{database}{port};
+my $username   = $Config->{database}{username};
+my $password   = $Config->{database}{password};
+my $db_name    = $Config->{database}{db};
 my $ensembl_db = $Config->{database}{ensembl};
 
 # target, query init values
