@@ -99,7 +99,15 @@ EOF
 
 [% FOREACH item IN data -%]
 # [% item.goal_db %]
-perl join_dbs.pl --dbs item.dbs --goal_db item.goal_db --no_insert=1 --trimmed_fasta=1 --outgroup item.outgroup --target item.target --queries item.queries
+perl /home/wangq/Scripts/alignDB/extra/join_dbs.pl --dbs [% item.dbs %] \
+    --goal_db [% item.goal_db _ "_10k" %] --outgroup [% item.outgroup %] --target [% item.target %] \
+    --queries [% item.queries %] \
+    --no_insert=1 --trimmed_fasta=1 --length 10000
+
+perl /home/wangq/Scripts/alignDB/extra/join_dbs.pl --dbs [% item.dbs %] \
+    --goal_db [% item.goal_db _ "_5k" %] --outgroup [% item.outgroup %] --target [% item.target %] \
+    --queries [% item.queries %] \
+    --no_insert=1 --trimmed_fasta=1 --length 5000
 
 [% END -%]
 EOF
