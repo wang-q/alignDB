@@ -12,8 +12,8 @@ use Template;
         { taxon => 307796, name => 'YJM789',     coverage => '10x', },
         { taxon => 574961, name => 'JAY291',     coverage => '162x', },
         { taxon => 538975, name => 'Sigma1278b', coverage => '45x', },
-        { taxon => 545124, name => 'AWRI1631',   coverage => '7x', },
         { taxon => 643680, name => 'EC1118',     coverage => 'unknown', },
+        { taxon => 545124, name => 'AWRI1631',   coverage => '7x', },
         { taxon => 538976, name => 'YPS163',     coverage => '2.8x', },
         { taxon => 538975, name => 'M22',        coverage => '2.6x', },
     );
@@ -74,22 +74,14 @@ EOF
             target   => '0target',
             queries  => '1query,2query',
         },
-        {   goal_db => 'S288CvsSix',
+        {   goal_db => 'S288CvsTen',
             dbs     => 'S288CvsSpar,S288CvsRM11,S288CvsYJM789'
-                . ',S288CvsJAY291,S288CvsSigma1278b,S288CvsAWRI1631',
-            outgroup => '0query',
-            target   => '0target',
-            queries  => '1query,2query,3query,4query,5query',
-        },
-        {   goal_db => 'S288CvsThirteen',
-            dbs     => 'S288CvsSpar,S288CvsRM11,S288CvsYJM789'
-                . ',S288CvsJAY291,S288CvsSigma1278b,S288CvsAWRI1631'
-                . ',S288CvsEC1118,S288CvsYPS163,S288CvsM22'
+                . ',S288CvsJAY291,S288CvsSigma1278b,S288CvsEC1118'
                 . ',S288CvsY55,S288CvsSK1,S288CvsW303,S288CvsDBVPG6765',
             outgroup => '0query',
             target   => '0target',
             queries  => '1query,2query,3query,4query,5query'
-                . ',6query,7query,8query,9query,10query,11query,12query',
+                . ',6query,7query,8query,9query',
         },
     );
 
