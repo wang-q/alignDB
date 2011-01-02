@@ -174,13 +174,18 @@ for (@all_dbs) {
     ( $db_info_of{$_}->{target}{name}, $db_info_of{$_}->{query}{name}, )
         = $cur_obj->get_names;
 
+    my $chr_id_set = AlignDB::IntSpan->new;
+
     my $chr_ref = $cur_obj->get_chrs('target');
 
     for my $ref ( @{$chr_ref} ) {
         my ( $chr_id, $chr_name, $chr_length ) = @{$ref};
         my $chr_set = build_chr_set( $cur_dbh, $chr_id, $reduce_end );
-        $db_info_of{$_}->{chrs}{$chr_name} = $chr_set;
+        $db_info_of{$_}->{chrs}{$chr_id}{set}  = $chr_set;
+        $db_info_of{$_}->{chrs}{$chr_id}{name} = $chr_name;
+        $chr_id_set->add($chr_id);
     }
+    $db_info_of{$_}->{chr_id_set} = $chr_id_set;
 }
 
 my $target_db;
@@ -195,27 +200,10 @@ for ( 0 .. @ingroup_names - 1 ) {
     $ingroup_order{ $ingroup_names[$_] } = $_;
 }
 
-#----------------------------#
-# build intersect chromosome set
-#----------------------------#
-my %chr_set_of;
-for my $chr_name ( sort keys %{ $db_info_of{$target_db}->{chrs} } ) {
-    my $intersect_set = AlignDB::IntSpan->new;
-    for my $db (@all_dbs) {
-        my $cur_chr_set = $db_info_of{$target_db}->{chrs}{$chr_name};
-        if ( $intersect_set->is_empty ) {
-            $intersect_set = $cur_chr_set;
-        }
-        else {
-            $intersect_set = $intersect_set->intersect($cur_chr_set);
-        }
-    }
-    $chr_set_of{$chr_name} = $intersect_set;
-}
-
 #----------------------------------------------------------#
 # Init
 #----------------------------------------------------------#
+
 my $percentile_90;
 if ($discard_distant) {
     $outgroup =~ /^(\d+)(.+)/;
@@ -243,13 +231,38 @@ if ($discard_distant) {
 #----------------------------------------------------------#
 # Start
 #----------------------------------------------------------#
-for my $chr_name ( sort keys %chr_set_of ) {
-    my $intersect_set = $chr_set_of{$chr_name};
 
+#----------------------------#
+# build intersect chromosome set
+#----------------------------#
+my %chr_set_of;
+for my $chr_id ( $db_info_of{$target_db}->{chr_id_set}->elements ) {
+    my ($chr_name) = $db_info_of{$target_db}->{obj}->get_chr_info($chr_id);
+    print "\nchr_id: $chr_id\tchr_name: $chr_name\n";
+
+    my $inter_chr_set = AlignDB::IntSpan->new;
+    for my $db_name (@all_dbs) {
+        my $cur_chr_set = $db_info_of{$db_name}->{chrs}{$chr_id}{set};
+        if ( $inter_chr_set->is_empty ) {
+            $inter_chr_set = $cur_chr_set;
+        }
+        else {
+            $inter_chr_set = $inter_chr_set->intersect($cur_chr_set);
+        }
+    }
+    
+    $chr_set_of{$chr_id} = $inter_chr_set;
+}
+
+for my $chr_id (sort keys %chr_set_of) {
+    my $inter_chr_set = $chr_set_of{$chr_id};
+    my $chr_name = $db_info_of{$target_db}->{chrs}{$chr_id}{name};
+    
     #----------------------------#
     # process each intersects
     #----------------------------#
-    my @segments = $intersect_set->spans;
+
+    my @segments = $inter_chr_set->spans;
 SEG: for (@segments) {
         my $seg_start  = $_->[0];
         my $seg_end    = $_->[1];
@@ -267,7 +280,7 @@ SEG: for (@segments) {
         for my $db_name (@all_dbs) {
             my $pos_obj = $db_info_of{$db_name}->{pos_obj};
             my ( $align_id, $dummy ) = @{
-                $pos_obj->positioning_align_chr_name( $chr_name, $seg_start,
+                $pos_obj->positioning_align_chr_id( $chr_id, $seg_start,
                     $seg_end )
                 };
 
@@ -438,9 +451,9 @@ SEG: for (@segments) {
             trim_outgroup( \%info_of, \@all_names );
         }
 
-        #----------------------------------------------------------#
+        #----------------------------#
         # record complex indels and ingroup indels
-        #----------------------------------------------------------#
+        #----------------------------#
         # if intersect is subset of union
         #   ref GGAGAC
         #   tar G-A-AC
@@ -524,9 +537,9 @@ SEG: for (@segments) {
             $info_of{$outgroup}->{all_indel} = $all_indel_region->runlist;
         }
 
-        #----------------------------------------------------------#
+        #----------------------------#
         # output a fasta alignment for further use
-        #----------------------------------------------------------#
+        #----------------------------#
         if ($trimmed_fasta) {
             unless ( -e $goal_db ) {
                 mkdir $goal_db, 0777
@@ -542,7 +555,7 @@ SEG: for (@segments) {
             print " " x 4, "$outfile\n";
             open my $out_fh, '>', $outfile
                 or die("Cannot open OUT file $outfile");
-            foreach my $name (@all_names) {
+            for my $name (@all_names) {
                 my $seq = $info_of{$name}->{seqs};
                 print {$out_fh} ">", $info_of{$name}->{name}, "\n";
                 print {$out_fh} $seq, "\n";
@@ -822,7 +835,7 @@ sub trim_outgroup {
     my @all_names = @{$all_names};
 
     # add raw_seqs to outgroup info hash
-    # it will be used in $goal_obj->add_align()
+    # it will be used in $goal_obj->add_align
     $info_of{$outgroup}->{raw_seqs} = $info_of{$outgroup}->{seqs};
 
     # don't expand indel set

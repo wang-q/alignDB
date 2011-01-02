@@ -81,7 +81,7 @@ EOF
             target   => '0target',
             queries  => '1query,2query,3query,4query,5query',
         },
-        {   goal_db => 'S288CvsFourteen',
+        {   goal_db => 'S288CvsThirteen',
             dbs     => 'S288CvsSpar,S288CvsRM11,S288CvsYJM789'
                 . ',S288CvsJAY291,S288CvsSigma1278b,S288CvsAWRI1631'
                 . ',S288CvsEC1118,S288CvsYPS163,S288CvsM22'
