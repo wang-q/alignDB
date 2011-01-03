@@ -122,7 +122,6 @@ my $worker = sub {
         passwd => $password,
     );
     AlignDB::GC->meta->apply($obj);
-    
     my %opt = (
         wave_window_size => $wave_window_size,
         wave_window_step => $wave_window_step,

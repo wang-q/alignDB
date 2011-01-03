@@ -12,7 +12,8 @@ use AlignDB::Util qw(:all);
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use AlignDB::Multi::GC;
+use AlignDB::Multi;
+use AlignDB::GC;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -64,19 +65,25 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 $stopwatch->start_message("Update $db...");
 
-my $obj = AlignDB::Multi::GC->new(
-    mysql            => "$db:$server",
-    user             => $username,
-    passwd           => $password,
+my $obj = AlignDB::Multi->new(
+    mysql  => "$db:$server",
+    user   => $username,
+    passwd => $password,
+);
+AlignDB::GC->meta->apply($obj);
+my %opt = (
     stat_window_size => $stat_window_size,
     stat_window_step => $stat_window_step,
 );
+for my $key ( sort keys %opt ) {
+    $obj->$key( $opt{$key} );
+}
 
 # Database handler
 my $dbh = $obj->dbh;
 
 {    # add column isw_cv and codingsw_cv
-    $obj->create_column( "isw",   "isw_cv",   "DOUBLE" );
+    $obj->create_column( "isw", "isw_cv", "DOUBLE" );
     print "Table isw altered\n";
 }
 
@@ -148,7 +155,7 @@ $stopwatch->end_message;
 # store program running meta info to database
 # this AlignDB object is just for storing meta info
 END {
-    AlignDB::Multi::GC->new(
+    AlignDB::Multi->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,

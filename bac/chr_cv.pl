@@ -16,7 +16,8 @@ use AlignDB::Stopwatch;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use AlignDB::Multi::GC;
+use AlignDB;
+use AlignDB::GC;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -34,8 +35,8 @@ my $stopwatch = AlignDB::Stopwatch->new(
 # running options
 my $base_dir = $Config->{bac}{base_dir};
 
-my $window_size = $Config->{gc}{stat_window_size};
-my $window_step = $Config->{gc}{stat_window_step};
+my $stat_window_size = $Config->{gc}{stat_window_size};
+my $stat_window_step = $Config->{gc}{stat_window_step};
 
 # Database init values
 my $server   = $Config->{database}{server};
@@ -79,14 +80,12 @@ my @fna_files = File::Find::Rule->file->name('*.fna')->in($base_dir);
 my @jobs;
 {
 
-    # $db is not a type of AlignDB or AlignDB::Multi, I just want use the calc
-    # methods in AlignDB::Multi::GC
-    my $obj = AlignDB::Multi::GC->new(
-        mysql       => "$db:$server",
-        user        => $username,
-        passwd      => $password,
-        window_size => $window_size,
-        window_step => $window_step,
+    # $db is not AlignDB , I just want use the segment_gc_stat methods in
+    # AlignDB::GC
+    my $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
     );
     my $dbh = $obj->dbh;
 
@@ -118,13 +117,19 @@ my $worker = sub {
     my $job        = shift;
     my @accessions = @$job;
 
-    my $obj = AlignDB::Multi::GC->new(
-        mysql       => "$db:$server",
-        user        => $username,
-        passwd      => $password,
-        window_size => $window_size,
-        window_step => $window_step,
+    my $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
     );
+    AlignDB::GC->meta->apply($obj);
+    my %opt = (
+        stat_window_size => $stat_window_size,
+        stat_window_step => $stat_window_step,
+    );
+    for my $key ( sort keys %opt ) {
+        $obj->$key( $opt{$key} );
+    }
 
     # for each chr
     for my $accession (@accessions) {

@@ -13,7 +13,8 @@ use AlignDB::Stopwatch;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use AlignDB::Multi::GC;
+use AlignDB::Multi;
+use AlignDB::GC;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -29,23 +30,23 @@ my $stopwatch = AlignDB::Stopwatch->new(
 );
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 # AlignDB::GC options
-my $window_size = $Config->{gc}->{wave_window_size};
-my $window_step = $Config->{gc}->{wave_window_step};
+my $wave_window_size = $Config->{gc}{wave_window_size};
+my $wave_window_step = $Config->{gc}{wave_window_step};
 
-my $insert_segment = $Config->{gc}->{insert_segment};
+my $insert_segment = $Config->{gc}{insert_segment};
 
 # run in parallel mode
-my $parallel = $Config->{generate}->{parallel};
+my $parallel = $Config->{generate}{parallel};
 
 # number of alignments process in one child process
-my $batch_number = $Config->{feature}->{batch};
+my $batch_number = $Config->{feature}{batch};
 
 my $man  = 0;
 my $help = 0;
@@ -73,7 +74,7 @@ $stopwatch->start_message("Update GC tables of $db...");
 
 my @jobs;
 {
-    my $obj = AlignDB::Multi::GC->new(
+    my $obj = AlignDB::Multi->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
@@ -100,13 +101,19 @@ my $worker = sub {
     my $job       = shift;
     my @align_ids = @$job;
 
-    my $obj = AlignDB::Multi::GC->new(
+    my $obj = AlignDB::Multi->new(
         mysql       => "$db:$server",
         user        => $username,
         passwd      => $password,
-        window_size => $window_size,
-        window_step => $window_step,
     );
+    AlignDB::GC->meta->apply($obj);
+    my %opt = (
+        wave_window_size => $wave_window_size,
+        wave_window_step => $wave_window_step,
+    );
+    for my $key (sort keys %opt) {
+        $obj->$key($opt{$key});
+    }
 
     # Database handler
     my $dbh = $obj->dbh;
@@ -162,7 +169,7 @@ $stopwatch->end_message;
 # store program running meta info to database
 # this AlignDB object is just for storing meta info
 END {
-    AlignDB::Multi::GC->new(
+    AlignDB::Multi->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
