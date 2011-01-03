@@ -36,8 +36,8 @@ my $password = $Config->{database}->{password};
 my $db       = $Config->{database}->{db};
 
 # AlignDB::GC options
-my $window_size = $Config->{gc}->{window_size};
-my $window_step = $Config->{gc}->{window_step};
+my $window_size = $Config->{gc}->{wave_window_size};
+my $window_step = $Config->{gc}->{wave_window_step};
 
 my $insert_segment = $Config->{gc}->{insert_segment};
 
