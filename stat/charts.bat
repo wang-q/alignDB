@@ -9,3 +9,8 @@ forfiles /m *.gc.xls -c "cmd /c perl e:/wq/Scripts/alignDB/stat/gc_chart_factory
 echo "gene"
 forfiles /m *.gene.xls -c "cmd /c perl e:/wq/Scripts/alignDB/stat/gene_chart_factory.pl -i @path"
 
+echo "multi"
+forfiles /m *.multi.xls -c "cmd /c perl e:/wq/Scripts/alignDB/stat/multi_chart_factory.pl -i @path"
+
+echo "mgc"
+forfiles /m *.mgc.xls -c "cmd /c perl e:/wq/Scripts/alignDB/stat/mgc_chart_factory.pl -i @path"
