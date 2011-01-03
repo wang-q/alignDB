@@ -105,7 +105,7 @@ my $worker = sub {
     );
 
     for my $infile (@infiles) {
-        print "process " . basename($infile);
+        print "process " . basename($infile) . "\n";
         $obj->parse_fasta_file($infile);
     }
 };

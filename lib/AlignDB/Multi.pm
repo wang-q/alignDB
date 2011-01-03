@@ -636,6 +636,8 @@ sub update_indel {
             my $left_extand    = $indel_info->{$indel_id}{left_extand};
             my $right_extand   = $indel_info->{$indel_id}{right_extand};
             my $indel_slippate = 0;
+            
+            next unless $indel_seq;
 
             if ( exists $min_reps->{$indel_length} ) {
                 my $reps         = $min_reps->{$indel_length};
@@ -657,6 +659,7 @@ sub update_indel {
 
                 my $flank = $left_flank . $indel_seq . $right_flank;
                 my $regex = $indel_seq . "{$reps,}";
+                $regex = quotemeta $regex;
 
                 if ( $flank =~ /$regex/ ) {
                     $indel_slippate = 1;
