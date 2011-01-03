@@ -12,6 +12,7 @@ use AlignDB::Util qw(:all);
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
+use AlignDB;
 use AlignDB::GC;
 
 #----------------------------------------------------------#
@@ -65,12 +66,18 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 $stopwatch->start_message("Update $db...");
 
 my $obj = AlignDB::GC->new(
-    mysql            => "$db:$server",
-    user             => $username,
-    passwd           => $password,
+    mysql  => "$db:$server",
+    user   => $username,
+    passwd => $password,
+);
+AlignDB::GC->meta->apply($obj);
+my %opt = (
     stat_window_size => $stat_window_size,
     stat_window_step => $stat_window_step,
 );
+for my $key ( sort keys %opt ) {
+    $obj->$key( $opt{$key} );
+}
 
 # Database handler
 my $dbh = $obj->dbh;
@@ -179,7 +186,7 @@ $stopwatch->end_message;
 # store program running meta info to database
 # this AlignDB object is just for storing meta info
 END {
-    AlignDB::GC->new(
+    AlignDB->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,

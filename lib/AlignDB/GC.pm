@@ -1,5 +1,5 @@
 package AlignDB::GC;
-use Moose;
+use Moose::Role;
 use Carp;
 
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
@@ -8,7 +8,7 @@ use YAML qw(Dump Load DumpFile LoadFile);
 use AlignDB::IntSpan;
 use AlignDB::Util qw(:all);
 
-extends qw(AlignDB);
+requires 'dbh';
 
 # extreme sliding window size
 has 'wave_window_size' => ( is => 'rw', isa => 'Int', default => 100, );

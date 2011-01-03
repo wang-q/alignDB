@@ -13,6 +13,7 @@ use AlignDB::Stopwatch;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
+use AlignDB;
 use AlignDB::GC;
 
 #----------------------------------------------------------#
@@ -29,29 +30,29 @@ my $stopwatch = AlignDB::Stopwatch->new(
 );
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 # AlignDB::GC options
-my $wave_window_size = $Config->{gc}->{wave_window_size};
-my $wave_window_step = $Config->{gc}->{wave_window_step};
-my $vicinal_size     = $Config->{gc}->{vicinal_size};
-my $fall_range       = $Config->{gc}->{fall_range};
-my $gsw_size         = $Config->{gc}->{gsw_size};
-my $stat_window_size = $Config->{gc}->{stat_window_size};
-my $stat_window_step = $Config->{gc}->{stat_window_step};
+my $wave_window_size = $Config->{gc}{wave_window_size};
+my $wave_window_step = $Config->{gc}{wave_window_step};
+my $vicinal_size     = $Config->{gc}{vicinal_size};
+my $fall_range       = $Config->{gc}{fall_range};
+my $gsw_size         = $Config->{gc}{gsw_size};
+my $stat_window_size = $Config->{gc}{stat_window_size};
+my $stat_window_step = $Config->{gc}{stat_window_step};
 
-my $insert_gc      = $Config->{gc}->{insert_gc};
-my $insert_segment = $Config->{gc}->{insert_segment};
+my $insert_gc      = $Config->{gc}{insert_gc};
+my $insert_segment = $Config->{gc}{insert_segment};
 
 # run in parallel mode
-my $parallel = $Config->{feature}->{parallel};
+my $parallel = $Config->{feature}{parallel};
 
 # number of alignments process in one child process
-my $batch_number = $Config->{feature}->{batch};
+my $batch_number = $Config->{feature}{batch};
 
 # use 100 .. 900 segment levels
 my $alt_level;
@@ -84,7 +85,7 @@ $stopwatch->start_message("Update GC tables of $db...");
 
 my @jobs;
 {
-    my $obj = AlignDB::GC->new(
+    my $obj = AlignDB->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
@@ -114,11 +115,15 @@ my @jobs;
 my $worker = sub {
     my $job       = shift;
     my @align_ids = @$job;
-
-    my $obj = AlignDB::GC->new(
-        mysql            => "$db:$server",
-        user             => $username,
-        passwd           => $password,
+    
+    my $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+    AlignDB::GC->meta->apply($obj);
+    
+    my %opt = (
         wave_window_size => $wave_window_size,
         wave_window_step => $wave_window_step,
         vicinal_size     => $vicinal_size,
@@ -128,6 +133,9 @@ my $worker = sub {
         stat_window_step => $stat_window_step,
         alt_level        => $alt_level,
     );
+    for my $key (sort keys %opt) {
+        $obj->$key($opt{$key});
+    }
 
     # Database handler
     my $dbh = $obj->dbh;
@@ -187,7 +195,7 @@ $stopwatch->end_message;
 # store program running meta info to database
 # this AlignDB object is just for storing meta info
 END {
-    AlignDB::GC->new(
+    AlignDB->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
