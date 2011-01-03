@@ -106,7 +106,7 @@ my $dispatch = {
         . " --fasta_dir=$fasta_dir"
         . " --length=$length_thredhold"
         . " --parallel=$parallel",
-    2 => "perl $FindBin::Bin/../init/insert_gc_multi.pl"
+    2 => "perl $FindBin::Bin/../multi/insert_gc_multi.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
@@ -184,3 +184,5 @@ exit;
 __END__
 
 perl multi_way_batch.pl -d S288CvsThree_10k -e yeast_58 -f F:/S288CvsThree_10k --freq 3 -lt 10000 -st 100000 --parallel=6 --run all
+
+perl multi_way_batch.pl -d S288CvsTen_10k -e yeast_58 -f F:/S288CvsTen_10k --freq 10 -lt 10000 -st 100000 --parallel=6 --run all
