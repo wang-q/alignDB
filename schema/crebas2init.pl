@@ -9,7 +9,7 @@ open my $infh, '<', $crebas_file;
 my $content = do { local $/; <$infh> };
 close $infh;
 
-$content =~ s/type = InnoDB/type = MyISAM/g;
+$content =~ s/type = InnoDB/ENGINE = MyISAM/g;
 $content =~ s/^drop.*$//mg;
 $content =~ s/^alter.*?\;$//smg;
 $content =~ s/\n{3,}/\n\n/g;
