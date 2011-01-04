@@ -251,7 +251,7 @@ sub ns { return AlignDB::SQL->new; }
         indel => {
             type      => 'inner',
             table     => 'isw',
-            condition => 'indel.indel_id = isw.foregoing_indel_id',
+            condition => 'indel.indel_id = isw.prev_indel_id',
         }
     );
     $sql_L->add_where( 'isw.isw_type' => \'= \'L\'' );
@@ -309,7 +309,7 @@ sub ns { return AlignDB::SQL->new; }
         indel => [
             {   type      => 'inner',
                 table     => 'isw',
-                condition => 'indel.indel_id = isw.foregoing_indel_id',
+                condition => 'indel.indel_id = isw.prev_indel_id',
             },
             {   type      => 'inner',
                 table     => 'indel_extra',
@@ -350,7 +350,7 @@ sub ns { return AlignDB::SQL->new; }
 #       COUNT(*) COUNT,
 #       STD(isw.isw_pi) STD_pi
 #FROM isw INNER JOIN indel_extra e1 ON isw.indel_id = e1.indel_id
-#         INNER JOIN indel_extra e2 ON isw.foregoing_indel_id = e2.indel_id
+#         INNER JOIN indel_extra e2 ON isw.prev_indel_id = e2.indel_id
 #WHERE isw.isw_type IN ('S')
 #AND e1.isw_feature1 >= ?
 #AND e1.isw_feature1 <= ?
@@ -372,7 +372,7 @@ sub ns { return AlignDB::SQL->new; }
             },
             {   type      => 'inner',
                 table     => 'indel_extra e2',
-                condition => 'isw.foregoing_indel_id = e2.indel_id',
+                condition => 'isw.prev_indel_id = e2.indel_id',
             },
         ]
     );

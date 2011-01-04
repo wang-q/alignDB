@@ -151,22 +151,22 @@ sub _insert_isw {
     my ( $align_set, $comparable_set, $indel_set )
         = $self->get_sets($align_id);
 
-    # indel_id & foregoing_indel_id
+    # indel_id & prev_indel_id
     my $fetch_indel_id_isw = $dbh->prepare(
-        'SELECT indel_id, foregoing_indel_id
+        'SELECT indel_id, prev_indel_id
         FROM indel
         WHERE align_id = ?'
     );
     $fetch_indel_id_isw->execute($align_id);
 
     # indel_end
-    my $fetch_foregoing_indel_end = $dbh->prepare(
+    my $fetch_prev_indel_end = $dbh->prepare(
         'SELECT indel_end
         FROM indel
         WHERE indel_id = ?'
     );
 
-    # foregoing_indel_start
+    # prev_indel_start
     my $fetch_indel_start = $dbh->prepare(
         'SELECT indel_start
         FROM indel
@@ -176,7 +176,7 @@ sub _insert_isw {
     # prepare isw_insert
     my $isw_insert = $dbh->prepare(
         'INSERT INTO isw (
-            isw_id, indel_id, foregoing_indel_id,
+            isw_id, indel_id, prev_indel_id,
             isw_start, isw_end, isw_length, 
             isw_type, isw_distance, isw_density,
             isw_pi, isw_target_gc, isw_average_gc,
@@ -195,17 +195,17 @@ sub _insert_isw {
 
     while ( my $ref = $fetch_indel_id_isw->fetchrow_hashref ) {
         my $indel_id           = $ref->{indel_id};
-        my $foregoing_indel_id = $ref->{foregoing_indel_id};
+        my $prev_indel_id = $ref->{prev_indel_id};
 
         # bypass the first indel
-        if ( $foregoing_indel_id == 0 ) {
+        if ( $prev_indel_id == 0 ) {
             next;
         }
 
         my ( $interval_start, $interval_end, $interval_length ) = ( 0, 0, 0 );
 
-        $fetch_foregoing_indel_end->execute($foregoing_indel_id);
-        ($interval_start) = $fetch_foregoing_indel_end->fetchrow_array;
+        $fetch_prev_indel_end->execute($prev_indel_id);
+        ($interval_start) = $fetch_prev_indel_end->fetchrow_array;
         $interval_start++;
 
         $fetch_indel_start->execute($indel_id);
@@ -237,7 +237,7 @@ sub _insert_isw {
 
             $isw_insert->execute(
                 $indel_id,
-                $foregoing_indel_id,
+                $prev_indel_id,
                 $isw_start,
                 $isw_end,
                 $isw_length,
@@ -250,7 +250,7 @@ sub _insert_isw {
     }
 
     $isw_insert->finish;
-    $fetch_foregoing_indel_end->finish;
+    $fetch_prev_indel_end->finish;
     $fetch_indel_start->finish;
     $fetch_indel_id_isw->finish;
 
@@ -332,13 +332,13 @@ sub _modify_isw {
     my $window_maker = $self->window_maker;
     my $windows_size = $window_maker->sw_size;
 
-    # indel_id & foregoing_indel_id
+    # indel_id & prev_indel_id
     my $fetch_indel_id = $dbh->prepare(
         'SELECT i1.indel_id,
                 i1.indel_occured,
                 i2.indel_occured
         FROM indel i1, indel i2
-        WHERE i1.foregoing_indel_id = i2.indel_id
+        WHERE i1.prev_indel_id = i2.indel_id
         AND i1.align_id = ?
         AND i1.left_extand >= ?'
     );
@@ -369,7 +369,7 @@ sub _modify_isw {
 
     $fetch_indel_id->execute( $align_id, $windows_size );
     while ( my @row = $fetch_indel_id->fetchrow_array ) {
-        my ( $indel_id, $indel_occured, $foregoing_indel_occured ) = @row;
+        my ( $indel_id, $indel_occured, $prev_indel_occured ) = @row;
         $fetch_isw_id->execute($indel_id);
         while ( my @row = $fetch_isw_id->fetchrow_array ) {
             my ( $isw_id, $isw_type ) = @row;
@@ -396,14 +396,14 @@ sub _modify_isw {
                 $d_noindel = $occured{T};
                 $d_complex = $occured{N};
             }
-            elsif ( $foregoing_indel_occured eq "T"
+            elsif ( $prev_indel_occured eq "T"
                 and $isw_type eq "L" )
             {
                 $d_indel   = $occured{T};
                 $d_noindel = $occured{Q};
                 $d_complex = $occured{N};
             }
-            elsif ( $foregoing_indel_occured eq "Q"
+            elsif ( $prev_indel_occured eq "Q"
                 and $isw_type eq "L" )
             {
                 $d_indel   = $occured{Q};
@@ -437,7 +437,7 @@ sub _insert_ssw {
     my $ssw_max_distance = 10;
     my $ssw_size_window0 = int( $ssw_size / 2 );
 
-    # extreme_id & foregoing_extreme_id
+    # extreme_id & prev_extreme_id
     my $fetch_snp_id = $dbh->prepare(
         'SELECT s.snp_id, s.snp_pos, s.snp_occured
         FROM snp s
@@ -732,7 +732,7 @@ sub add_align {
     {
         my $indel_insert = $dbh->prepare(
             'INSERT INTO indel (
-                indel_id, foregoing_indel_id, align_id,
+                indel_id, prev_indel_id, align_id,
                 indel_start, indel_end, indel_length,
                 indel_seq, indel_insert, left_extand, right_extand,
                 indel_gc, indel_dG, indel_occured, indel_type
@@ -755,7 +755,7 @@ sub add_align {
             $complex_set->add( $ref_info->{complex} );
         }
 
-        my $foregoing_indel_id = 0;
+        my $prev_indel_id = 0;
         foreach (@indel_site) {
 
             # $indel_occured:
@@ -788,13 +788,13 @@ sub add_align {
                 }
             }
             $indel_insert->execute(
-                $foregoing_indel_id, $align_id,         $_->{start},
+                $prev_indel_id, $align_id,         $_->{start},
                 $_->{end},           $_->{length},      $_->{seq},
                 $_->{insert},        $_->{left_extand}, $_->{right_extand},
                 $_->{gc},      $_->{dG},          $indel_occured,
                 $indel_type,
             );
-            ($foregoing_indel_id) = $self->last_insert_id;
+            ($prev_indel_id) = $self->last_insert_id;
         }
         $indel_insert->finish;
     }

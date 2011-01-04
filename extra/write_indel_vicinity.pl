@@ -126,7 +126,7 @@ my $ref_dbh = $ref_obj->dbh();
                 SELECT isw_id
                 FROM   isw
                 WHERE  isw_type = 'L'
-                AND isw.foregoing_indel_id = ?) i
+                AND isw.prev_indel_id = ?) i
         WHERE  isw_distance >= 0
         AND isw_distance <= 5
         AND isw.isw_id = i.isw_id

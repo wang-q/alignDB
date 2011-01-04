@@ -447,7 +447,7 @@ my $exon_D = sub {
                            exonsw s
                       WHERE g.gene_id = e.gene_id AND
                             g.gene_feature5 BETWEEN ? AND ? AND
-                            e.exon_id = s.foregoing_exon_id AND
+                            e.exon_id = s.prev_exon_id AND
                             s.exonsw_type IN ('L', 'l')
                       UNION
                       SELECT s.exonsw_id
@@ -528,7 +528,7 @@ my $exon_D_null = sub {
                        exonsw s
                   WHERE g.gene_id = e.gene_id AND
                         g.gene_feature5 IS NULL AND
-                        e.exon_id = s.foregoing_exon_id AND
+                        e.exon_id = s.prev_exon_id AND
                         s.exonsw_type IN ('L', 'l')
                   UNION
                   SELECT s.exonsw_id
@@ -632,7 +632,7 @@ my $exon_gc = sub {
                            exonsw s
                       WHERE e.window_id = w.window_id AND
                             w.window_target_gc BETWEEN ? AND ? AND
-                            e.exon_id = s.foregoing_exon_id AND
+                            e.exon_id = s.prev_exon_id AND
                             s.exonsw_type IN ('L', 'l')
                      ) sw
                 WHERE s.window_id = w.window_id AND
@@ -709,7 +709,7 @@ my $exon_ess = sub {
                      WHERE g.gene_id = e.gene_id AND
                            g.gene_feature4 = ? AND
                            g.gene_biotype = 'protein_coding' AND
-                           e.exon_id = s.foregoing_exon_id AND
+                           e.exon_id = s.prev_exon_id AND
                            s.exonsw_type IN ('L', 'l')
                      UNION
                      SELECT s.exonsw_id

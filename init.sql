@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/4/2011 10:28:48 PM                         */
+/* Created on:     1/4/2011 11:00:14 PM                         */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -89,7 +89,7 @@ create table codingsw
 (
    codingsw_id                    int                            not null AUTO_INCREMENT,
    exon_id                        int,
-   foregoing_exon_id              int,
+   prev_exon_id                   int,
    window_id                      int,
    codingsw_type                  char(1),
    codingsw_distance              int,
@@ -103,7 +103,7 @@ ENGINE = MyISAM;
 create index exon_codingsw_FK on codingsw
 (
    exon_id,
-   foregoing_exon_id
+   prev_exon_id
 );
 
 /*==============================================================*/
@@ -120,7 +120,7 @@ create index window_codingsw_FK on codingsw
 create table exon
 (
    exon_id                        int                            not null AUTO_INCREMENT,
-   foregoing_exon_id              int                            not null,
+   prev_exon_id                   int                            not null,
    window_id                      int,
    gene_id                        int,
    exon_stable_id                 char(64)                       not null,
@@ -135,7 +135,7 @@ create table exon
    exon_tl_runlist                text,
    exon_seq                       longtext,
    exon_peptide                   longtext,
-   primary key (exon_id, foregoing_exon_id),
+   primary key (exon_id, prev_exon_id),
    key AK_exon_stable_id (exon_stable_id)
 )
 ENGINE = MyISAM;
@@ -164,7 +164,7 @@ create table exonsw
    exonsw_id                      int                            not null AUTO_INCREMENT,
    window_id                      int,
    exon_id                        int,
-   foregoing_exon_id              int,
+   prev_exon_id                   int,
    exonsw_type                    char(1),
    exonsw_distance                int,
    exonsw_density                 int,
@@ -178,7 +178,7 @@ ENGINE = MyISAM;
 create index exon_exonsw_FK on exonsw
 (
    exon_id,
-   foregoing_exon_id
+   prev_exon_id
 );
 
 /*==============================================================*/
@@ -195,14 +195,14 @@ create index window_exonsw_FK on exonsw
 create table extreme
 (
    extreme_id                     int                            not null AUTO_INCREMENT,
-   foregoing_extreme_id           int                            not null,
+   prev_extreme_id                int                            not null,
    window_id                      int,
    extreme_type                   char(1),
    extreme_left_amplitude         double,
    extreme_right_amplitude        double,
    extreme_left_wave_length       double,
    extreme_right_wave_length      double,
-   primary key (extreme_id, foregoing_extreme_id)
+   primary key (extreme_id, prev_extreme_id)
 )
 ENGINE = MyISAM;
 
@@ -289,7 +289,7 @@ create table gsw
 (
    gsw_id                         int                            not null AUTO_INCREMENT,
    extreme_id                     int,
-   foregoing_extreme_id           int,
+   prev_extreme_id                int,
    window_id                      int,
    gsw_type                       char(1),
    gsw_distance                   int,
@@ -313,7 +313,7 @@ create index windows_gsw_FK on gsw
 create index extreme_gsw_FK on gsw
 (
    extreme_id,
-   foregoing_extreme_id
+   prev_extreme_id
 );
 
 /*==============================================================*/
@@ -322,7 +322,7 @@ create index extreme_gsw_FK on gsw
 create table indel
 (
    indel_id                       int                            not null AUTO_INCREMENT,
-   foregoing_indel_id             int                            not null,
+   prev_indel_id                  int                            not null,
    align_id                       int,
    indel_start                    int,
    indel_end                      int,
@@ -335,7 +335,7 @@ create table indel
    indel_dG                       double,
    indel_occured                  char(1),
    indel_type                     char(1),
-   primary key (indel_id, foregoing_indel_id)
+   primary key (indel_id, prev_indel_id)
 )
 ENGINE = MyISAM;
 
@@ -354,7 +354,7 @@ create table indel_extra
 (
    indel_extra_id                 int                            not null AUTO_INCREMENT,
    indel_id                       int,
-   foregoing_indel_id             int,
+   prev_indel_id                  int,
    indel_feature1                 double,
    indel_feature2                 double,
    indel_feature3                 double,
@@ -368,7 +368,7 @@ ENGINE = MyISAM;
 create index indel_indel_extra_FK on indel_extra
 (
    indel_id,
-   foregoing_indel_id
+   prev_indel_id
 );
 
 /*==============================================================*/
@@ -378,7 +378,7 @@ create table isw
 (
    isw_id                         int                            not null AUTO_INCREMENT,
    indel_id                       int,
-   foregoing_indel_id             int,
+   prev_indel_id                  int,
    isw_start                      int,
    isw_end                        int,
    isw_length                     int,
@@ -403,7 +403,7 @@ ENGINE = MyISAM;
 create index indel_isw_FK on isw
 (
    indel_id,
-   foregoing_indel_id
+   prev_indel_id
 );
 
 /*==============================================================*/

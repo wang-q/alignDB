@@ -91,8 +91,8 @@ my $dbh = $obj->dbh;
 
     if ( !$count ) {
         $sql_query = qq{
-            INSERT INTO indel_extra (indel_id, foregoing_indel_id)
-            SELECT indel.indel_id, indel.foregoing_indel_id
+            INSERT INTO indel_extra (indel_id, prev_indel_id)
+            SELECT indel.indel_id, indel.prev_indel_id
             FROM indel
         };
         $sth = $dbh->prepare($sql_query);

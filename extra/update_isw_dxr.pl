@@ -146,7 +146,7 @@ my $dbh = $obj->dbh();
     my $isw_R_query = q{
         SELECT isw_id, isw_start, isw_end, isw_length
         FROM isw
-        WHERE foregoing_indel_id = ?
+        WHERE prev_indel_id = ?
         AND isw_type = "R"
     };
     my $isw_R_sth = $dbh->prepare($isw_R_query);

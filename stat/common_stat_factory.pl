@@ -1329,7 +1329,7 @@ my $indel_size_asymmetry = sub {
                    STD(isw_pi) STD_pi
             FROM isw, (SELECT i2.indel_id indel_id
                        FROM indel i1, indel i2
-                       WHERE i1.indel_id = i2.foregoing_indel_id
+                       WHERE i1.indel_id = i2.prev_indel_id
                        AND i1.indel_length BETWEEN ? AND ?
                        AND i2.indel_length BETWEEN ? AND ?
                       ) indel
@@ -1347,7 +1347,7 @@ my $indel_size_asymmetry = sub {
                    STD(isw_pi) STD_pi
             FROM isw, (SELECT i2.indel_id indel_id
                        FROM indel i1, indel i2
-                       WHERE i1.indel_id = i2.foregoing_indel_id
+                       WHERE i1.indel_id = i2.prev_indel_id
                        AND i1.indel_length BETWEEN ? AND ?
                        AND i2.indel_length BETWEEN ? AND ?
                       ) indel
@@ -1464,7 +1464,7 @@ my $indel_extand_asymmetry = sub {
                    STD(isw_pi) STD_pi
             FROM isw, (SELECT i2.indel_id indel_id
                        FROM indel i1, indel i2
-                       WHERE i1.indel_id = i2.foregoing_indel_id
+                       WHERE i1.indel_id = i2.prev_indel_id
                        AND FLOOR(i1.left_extand / 100) BETWEEN ? AND ?
                        AND FLOOR(i2.right_extand / 100) BETWEEN ? AND ?
                       ) indel
@@ -1479,7 +1479,7 @@ my $indel_extand_asymmetry = sub {
             SELECT CONCAT(isw.isw_type, isw.isw_distance) isw_distance, AVG(isw_pi) AVG_pi, COUNT(isw_pi) COUNT, STD(isw_pi) STD_pi
             FROM isw, (SELECT i2.indel_id indel_id
                        FROM indel i1, indel i2
-                       WHERE i1.indel_id = i2.foregoing_indel_id
+                       WHERE i1.indel_id = i2.prev_indel_id
                        AND FLOOR(i1.left_extand / 100) BETWEEN ? AND ?
                        AND FLOOR(i2.right_extand / 100) BETWEEN ? AND ?
                       ) indel
@@ -2071,7 +2071,7 @@ my $snp_base_change = sub {
                            isw,
                            snp
                     WHERE  isw.isw_type = 'L'
-                    AND isw.foregoing_indel_id = indel.indel_id
+                    AND isw.prev_indel_id = indel.indel_id
                     AND indel.indel_insert = 'D'
                     AND indel.indel_seq NOT LIKE "%N%"
                     AND isw.isw_density > 9
@@ -2096,7 +2096,7 @@ my $snp_base_change = sub {
                            isw,
                            snp
                     WHERE  isw.isw_type = 'L'
-                    AND isw.foregoing_indel_id = indel.indel_id
+                    AND isw.prev_indel_id = indel.indel_id
                     AND indel.indel_insert = 'D'
                     AND indel.indel_seq NOT LIKE "%N%"
                     AND isw.isw_density > 9
@@ -2136,7 +2136,7 @@ my $snp_base_change = sub {
                            isw,
                            snp
                     WHERE  isw.isw_type = 'L'
-                    AND isw.foregoing_indel_id = indel.indel_id
+                    AND isw.prev_indel_id = indel.indel_id
                     AND indel.indel_insert = 'D'
                     AND indel.indel_seq NOT LIKE "%N%"
                     AND isw.isw_density > 9
@@ -2161,7 +2161,7 @@ my $snp_base_change = sub {
                            isw,
                            snp
                     WHERE  isw.isw_type = 'L'
-                    AND isw.foregoing_indel_id = indel.indel_id
+                    AND isw.prev_indel_id = indel.indel_id
                     AND indel.indel_insert = 'D'
                     AND indel.indel_seq NOT LIKE "%N%"
                     AND isw.isw_density > 9

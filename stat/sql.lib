@@ -313,7 +313,7 @@ where_values:
 __CLASS__: AlignDB::SQL-0.103470
 _sql: "SELECT\n  isw.isw_distance distance,\n  AVG(isw.isw_pi) AVG_pi,\n  COUNT(*)
   COUNT,\n  STD(isw.isw_pi) STD_pi\nFROM isw\n  INNER JOIN indel_extra e1 ON\n    isw.indel_id
-  = e1.indel_id\n  INNER JOIN indel_extra e2 ON\n    isw.foregoing_indel_id = e2.indel_id\nWHERE
+  = e1.indel_id\n  INNER JOIN indel_extra e2 ON\n    isw.prev_indel_id = e2.indel_id\nWHERE
   (isw.isw_type IN ('S'))\n  AND (e1.indel_feature3 >= ?)\n  AND (e1.indel_feature3
   <= ?)\n  AND (e2.indel_feature3 >= ?)\n  AND (e2.indel_feature3 <= ?)\nGROUP BY\n
   \ isw.isw_distance\n"
@@ -332,7 +332,7 @@ joins:
   - condition: isw.indel_id = e1.indel_id
     table: indel_extra e1
     type: inner
-  - condition: isw.foregoing_indel_id = e2.indel_id
+  - condition: isw.prev_indel_id = e2.indel_id
     table: indel_extra e2
     type: inner
   table: isw
@@ -452,7 +452,7 @@ having: []
 indent: '  '
 joins:
 - joins:
-  - condition: indel.indel_id = isw.foregoing_indel_id
+  - condition: indel.indel_id = isw.prev_indel_id
     table: isw
     type: inner
   - condition: indel.indel_id = indel_extra.indel_id
@@ -579,7 +579,7 @@ having: []
 indent: '  '
 joins:
 - joins:
-  - condition: indel.indel_id = isw.foregoing_indel_id
+  - condition: indel.indel_id = isw.prev_indel_id
     table: isw
     type: inner
   table: indel

@@ -355,7 +355,7 @@ FROM    (SELECT e.indel_id
                indel_extra e
         WHERE  e.indel_feature3 BETWEEN 0 AND 0
         AND isw_type = 'L'
-        AND isw.foregoing_indel_id = e.indel_id) i
+        AND isw.prev_indel_id = e.indel_id) i
 
 #----------------------------------------------------------#
 # GC wave                                        

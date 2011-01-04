@@ -673,7 +673,7 @@ my $indel_onc_distance = sub {
                         i.indel_occured IN ('T', 'Q') AND
                         e.indel_feature4 IN ('T', 'Q') AND
                         isw_type = 'L' AND
-                        isw.foregoing_indel_id = i.indel_id
+                        isw.prev_indel_id = i.indel_id
                  ) i
             WHERE isw_distance >= 0 AND
                   isw_d_indel IS NOT NULL AND
@@ -759,7 +759,7 @@ my $indel_oc_distance = sub {
                         i.indel_occured IN ('T', 'Q') AND
                         e.indel_feature4 IN ('T', 'Q') AND
                         isw_type = 'L' AND
-                        isw.foregoing_indel_id = i.indel_id
+                        isw.prev_indel_id = i.indel_id
                  ) i
             WHERE isw_distance >= 0 AND
                   isw_d_indel IS NOT NULL AND
@@ -851,7 +851,7 @@ my $indel_onc_slip = sub {
                             e.indel_feature4 IN ('T', 'Q') AND
                             e.indel_feature3 = ? AND
                             isw_type = 'L' AND
-                            isw.foregoing_indel_id = i.indel_id
+                            isw.prev_indel_id = i.indel_id
                      ) i
                 WHERE isw_distance >= 0 AND
                       isw_d_indel IS NOT NULL AND
@@ -951,7 +951,7 @@ my $indel_oc_slip = sub {
                             e.indel_feature4 IN ('T', 'Q') AND
                             e.indel_feature3 = ? AND
                             isw_type = 'L' AND
-                            isw.foregoing_indel_id = i.indel_id
+                            isw.prev_indel_id = i.indel_id
                      ) i
                 WHERE isw_distance >= 0 AND
                       isw_d_indel IS NOT NULL AND
@@ -1054,7 +1054,7 @@ my $indel_onc_nonslip_dxr = sub {
                         e.indel_feature4 IN ('T', 'Q') AND
                         e.indel_feature3 = 0 AND
                         isw_type = 'L' AND
-                        isw.foregoing_indel_id = i.indel_id
+                        isw.prev_indel_id = i.indel_id
                  ) i
             WHERE i.isw_distance >= 0 AND
                   e.isw_feature6 IS NOT NULL AND
@@ -1150,7 +1150,7 @@ my $indel_oc_nonslip_dxr = sub {
                         e.indel_feature4 IN ('T', 'Q') AND
                         e.indel_feature3 = 0 AND
                         isw_type = 'L' AND
-                        isw.foregoing_indel_id = i.indel_id
+                        isw.prev_indel_id = i.indel_id
                  ) i
             WHERE i.isw_distance >= 0 AND
                   e.isw_feature6 IS NOT NULL AND
@@ -1247,7 +1247,7 @@ my $indel_size_onc_nonslip = sub {
                             i.indel_length BETWEEN ? AND ? AND
                             e.indel_feature3 = 0 AND
                             isw_type = 'L' AND
-                            isw.foregoing_indel_id = i.indel_id
+                            isw.prev_indel_id = i.indel_id
                      ) i
                 WHERE isw_distance >= 0 AND
                       isw_d_indel IS NOT NULL AND
@@ -1351,7 +1351,7 @@ my $indel_size_oc_nonslip = sub {
                             i.indel_length BETWEEN ? AND ? AND
                             e.indel_feature3 = 0 AND
                             isw_type = 'L' AND
-                            isw.foregoing_indel_id = i.indel_id
+                            isw.prev_indel_id = i.indel_id
                      ) i
                 WHERE isw_distance >= 0 AND
                       isw_d_indel IS NOT NULL AND
@@ -1458,7 +1458,7 @@ my $indel_size_onc_nonslip_dxr = sub {
                             i.indel_length BETWEEN ? AND ? AND
                             e.indel_feature3 = 0 AND
                             isw_type = 'L' AND
-                            isw.foregoing_indel_id = i.indel_id
+                            isw.prev_indel_id = i.indel_id
                      ) i
                 WHERE i.isw_distance >= 0 AND
                       e.isw_feature6 IS NOT NULL AND
@@ -1565,7 +1565,7 @@ my $indel_size_oc_nonslip_dxr = sub {
                             i.indel_length BETWEEN ? AND ? AND
                             e.indel_feature3 = 0 AND
                             isw_type = 'L' AND
-                            isw.foregoing_indel_id = i.indel_id
+                            isw.prev_indel_id = i.indel_id
                      ) i
                 WHERE i.isw_distance >= 0 AND
                       e.isw_feature6 IS NOT NULL AND
@@ -1650,7 +1650,7 @@ my $indel_size_didn = sub {
                       WHERE i.indel_length >= ? AND
                             indel_length <= ? AND
                             isw_type = 'L' AND
-                            isw.foregoing_indel_id = i.indel_id
+                            isw.prev_indel_id = i.indel_id
                      ) i
                 WHERE isw_distance >= 0 AND
                       isw_d_indel IS NOT NULL AND

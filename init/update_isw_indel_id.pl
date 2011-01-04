@@ -87,7 +87,7 @@ my $dbh = $obj->dbh;
     };
     my $isw_query_2 = q{
         UPDATE  isw
-        SET isw.isw_indel_id = isw.foregoing_indel_id
+        SET isw.isw_indel_id = isw.prev_indel_id
         WHERE isw.isw_type IN ('L')
     };
     my $isw_sth_1 = $dbh->prepare($isw_query_1);

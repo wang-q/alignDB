@@ -884,7 +884,7 @@ my $target_dtr_dqr = sub {
                         indel i
                  WHERE  i.indel_occured = "T"
                  AND isw_type = 'L'
-                 AND isw.foregoing_indel_id = i.indel_id) i
+                 AND isw.prev_indel_id = i.indel_id) i
             WHERE i.isw_distance >= 0
             AND e.isw_feature6 IS NOT NULL
             AND i.isw_id = e.isw_id
@@ -922,7 +922,7 @@ my $target_dtr_dqr = sub {
                         indel i
                  WHERE  i.indel_occured = "T"
                  AND isw_type = 'L'
-                 AND isw.foregoing_indel_id = i.indel_id) i
+                 AND isw.prev_indel_id = i.indel_id) i
             WHERE i.isw_distance >= 0
             AND e.isw_feature6 IS NOT NULL
             AND i.isw_id = e.isw_id
@@ -990,7 +990,7 @@ my $query_dtr_dqr = sub {
                         indel i
                  WHERE  i.indel_occured = "Q"
                  AND isw_type = 'L'
-                 AND isw.foregoing_indel_id = i.indel_id) i
+                 AND isw.prev_indel_id = i.indel_id) i
             WHERE i.isw_distance >= 0
             AND e.isw_feature6 IS NOT NULL
             AND i.isw_id = e.isw_id
@@ -1028,7 +1028,7 @@ my $query_dtr_dqr = sub {
                         indel i
                  WHERE  i.indel_occured = "Q"
                  AND isw_type = 'L'
-                 AND isw.foregoing_indel_id = i.indel_id) i
+                 AND isw.prev_indel_id = i.indel_id) i
             WHERE i.isw_distance >= 0
             AND e.isw_feature6 IS NOT NULL
             AND i.isw_id = e.isw_id
@@ -1266,7 +1266,7 @@ my $snp_distance_non_slip = sub {
                         AND e.indel_feature3 BETWEEN 0 AND 0
                         AND isw_type = 'L'
                         AND isw_distance BETWEEN ? AND ?
-                        AND isw.foregoing_indel_id = i.indel_id) i
+                        AND isw.prev_indel_id = i.indel_id) i
                 WHERE s.window_id = w.window_id
                 AND snp.snp_id = s.snp_id
                 AND snp.isw_id = i.isw_id
@@ -1316,7 +1316,7 @@ my $snp_distance_non_slip = sub {
                         AND e.indel_feature3 BETWEEN 0 AND 0
                         AND isw_type = 'L'
                         AND isw_distance BETWEEN ? AND ?
-                        AND isw.foregoing_indel_id = i.indel_id) i
+                        AND isw.prev_indel_id = i.indel_id) i
                 WHERE s.window_id = w.window_id
                 AND snp.snp_id = s.snp_id
                 AND snp.isw_id = i.isw_id
@@ -1913,7 +1913,7 @@ my $indel_distance_slip = sub {
                         WHERE  i.indel_id = e.indel_id
                         AND e.indel_feature3 BETWEEN ? AND ?
                         AND isw_type = 'L'
-                        AND isw.foregoing_indel_id = i.indel_id) i
+                        AND isw.prev_indel_id = i.indel_id) i
                 WHERE  isw_distance >= 0
                 AND isw_d_indel IS NOT NULL 
                 AND isw.isw_id = i.isw_id
@@ -1961,7 +1961,7 @@ my $indel_distance_slip = sub {
                         WHERE  i.indel_id = e.indel_id
                         AND e.indel_feature3 BETWEEN ? AND ?
                         AND isw_type = 'L'
-                        AND isw.foregoing_indel_id = i.indel_id) i
+                        AND isw.prev_indel_id = i.indel_id) i
                 WHERE  isw_distance >= 0
                 AND isw_d_indel IS NOT NULL 
                 AND isw.isw_id = i.isw_id
@@ -2053,7 +2053,7 @@ my $indel_slip_di_group = sub {
             WHERE isw.isw_type = 'L'
             AND isw.isw_density > 9
             AND isw.isw_distance <= 5
-            AND isw.foregoing_indel_id = indel.indel_id
+            AND isw.prev_indel_id = indel.indel_id
             AND indel.indel_id = indel_extra.indel_id
             AND indel_extra.indel_feature3 BETWEEN ? AND ?
             AND indel.indel_seq NOT LIKE "%N%"
@@ -2137,7 +2137,7 @@ my $indel_slip_dn_group = sub {
             WHERE isw.isw_type = 'L'
             AND isw.isw_density > 9
             AND isw.isw_distance <= 5
-            AND isw.foregoing_indel_id = indel.indel_id
+            AND isw.prev_indel_id = indel.indel_id
             AND indel.indel_id = indel_extra.indel_id
             AND indel_extra.indel_feature3 BETWEEN ? AND ?
             AND indel.indel_seq NOT LIKE "%N%"
@@ -3603,7 +3603,7 @@ my $di_dn_ttest = sub {
                     WHERE  i.indel_id = e.indel_id
                     AND e.indel_feature3 BETWEEN 0 AND 0
                     AND isw_type = 'L'
-                    AND isw.foregoing_indel_id = i.indel_id) i
+                    AND isw.prev_indel_id = i.indel_id) i
             WHERE  isw_distance >= 0
             AND isw_d_indel IS NOT NULL 
             AND isw.isw_id = i.isw_id
@@ -3674,7 +3674,7 @@ my $di_dn_ttest = sub {
                     WHERE  i.indel_id = e.indel_id
                     AND e.indel_feature3 BETWEEN 0 AND 0
                     AND isw_type = 'L'
-                    AND isw.foregoing_indel_id = i.indel_id) i
+                    AND isw.prev_indel_id = i.indel_id) i
             WHERE  isw_distance >= 0
             AND isw_d_indel IS NOT NULL 
             AND isw.isw_id = i.isw_id
@@ -3759,7 +3759,7 @@ my $indel_distance_type = sub {
                         WHERE i.indel_occured IS NOT NULL
                         AND i.indel_type = ?
                         AND isw_type = 'L'
-                        AND isw.foregoing_indel_id = i.indel_id) i
+                        AND isw.prev_indel_id = i.indel_id) i
                 WHERE  isw_distance >= 0
                 AND isw_d_indel IS NOT NULL 
                 AND isw.isw_id = i.isw_id
@@ -3851,7 +3851,7 @@ my $indel_distance_tq = sub {
                         AND e.indel_feature3 BETWEEN 0 AND 0
                         AND i.indel_occured = ?
                         AND isw_type = 'L'
-                        AND isw.foregoing_indel_id = i.indel_id) i                        
+                        AND isw.prev_indel_id = i.indel_id) i                        
                 WHERE  isw_distance >= 0
                 AND isw_d_indel IS NOT NULL 
                 AND isw.isw_id = i.isw_id
@@ -3898,7 +3898,7 @@ my $indel_distance_tq = sub {
                         AND e.indel_feature3 BETWEEN 0 AND 0
                         AND i.indel_occured = ?
                         AND isw_type = 'L'
-                        AND isw.foregoing_indel_id = i.indel_id) i     
+                        AND isw.prev_indel_id = i.indel_id) i     
                 WHERE  isw_distance >= 0
                 AND isw_d_indel IS NOT NULL 
                 AND isw.isw_id = i.isw_id

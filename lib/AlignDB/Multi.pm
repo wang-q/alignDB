@@ -197,7 +197,7 @@ sub parse_fasta_file {
         my $indel_insert_sql = $dbh->prepare(
             q{
             INSERT INTO indel (
-                indel_id, align_id, foregoing_indel_id,
+                indel_id, align_id, prev_indel_id,
                 indel_start, indel_end, indel_length,
                 indel_seq,  indel_gc, indel_freq,
                 indel_occured, indel_type
@@ -211,7 +211,7 @@ sub parse_fasta_file {
             }
         );
 
-        my $foregoing_indel_id = 0;
+        my $prev_indel_id = 0;
         for my $cur_indel (@indel_spans) {
             my ( $indel_start, $indel_end ) = @{$cur_indel};
             my $indel_length = $indel_end - $indel_start + 1;
@@ -283,12 +283,12 @@ sub parse_fasta_file {
             my $indel_gc = calc_gc_ratio($indel_seq);
 
             $indel_insert_sql->execute(
-                $align_id,  $foregoing_indel_id, $indel_start,
+                $align_id,  $prev_indel_id, $indel_start,
                 $indel_end, $indel_length,       $indel_seq,
                 $indel_gc,  $indel_frequency,    $indel_occured,
                 $indel_type,
             );
-            ($foregoing_indel_id) = $self->last_insert_id;
+            ($prev_indel_id) = $self->last_insert_id;
         }
     }
 
@@ -296,7 +296,7 @@ sub parse_fasta_file {
     if ( $align_indels > 1 ) {
         my $fetch_indel_id_sql = $dbh->prepare(
             q{
-            SELECT indel_id, foregoing_indel_id
+            SELECT indel_id, prev_indel_id
             FROM indel
             WHERE align_id = ?
               AND indel_start = ?
@@ -305,7 +305,7 @@ sub parse_fasta_file {
         my $isw_insert_sql = $dbh->prepare(
             q{
             INSERT INTO isw (
-                isw_id, indel_id, foregoing_indel_id, isw_indel_id,
+                isw_id, indel_id, prev_indel_id, isw_indel_id,
                 isw_start, isw_end, isw_length, isw_type,
                 isw_distance, isw_density, isw_differences,
                 isw_pi, isw_target_gc, isw_average_gc
@@ -342,7 +342,7 @@ sub parse_fasta_file {
             my $indel_start = $interval_end + 1;
 
             $fetch_indel_id_sql->execute( $align_id, $indel_start );
-            my ( $indel_id, $foregoing_indel_id, )
+            my ( $indel_id, $prev_indel_id, )
                 = $fetch_indel_id_sql->fetchrow_array;
 
             my @isws
@@ -373,17 +373,17 @@ sub parse_fasta_file {
 
                 my $isw_indel_id;
                 if ( $isw_type eq 'L' ) {
-                    $isw_indel_id = $foregoing_indel_id;
+                    $isw_indel_id = $prev_indel_id;
                 }
                 elsif ( $isw_type eq 'R' ) {
                     $isw_indel_id = $indel_id;
                 }
                 elsif ( $isw_type eq 'S' ) {
-                    $isw_indel_id = $foregoing_indel_id;
+                    $isw_indel_id = $prev_indel_id;
                 }
 
                 $isw_insert_sql->execute(
-                    $indel_id,     $foregoing_indel_id,
+                    $indel_id,     $prev_indel_id,
                     $isw_indel_id, $isw_start,
                     $isw_end,      $isw_length,
                     $isw_type,     $isw_distance,

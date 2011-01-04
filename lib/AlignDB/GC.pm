@@ -569,7 +569,7 @@ sub insert_extreme {
     # prepare extreme_insert
     my $extreme_sql = qq{
         INSERT INTO extreme (
-            extreme_id, foregoing_extreme_id, window_id, extreme_type,
+            extreme_id, prev_extreme_id, window_id, extreme_type,
             extreme_left_amplitude, extreme_right_amplitude,
             extreme_left_wave_length, extreme_right_wave_length
         )
@@ -615,7 +615,7 @@ sub insert_gsw {
 
     # extreme_id & prev_extreme_id
     my $fetch_ex_id = $dbh->prepare(
-        "SELECT e.extreme_id, e.foregoing_extreme_id, e.extreme_type
+        "SELECT e.extreme_id, e.prev_extreme_id, e.extreme_type
         FROM extreme e, window w
         WHERE e.window_id = w.window_id
         AND w.align_id = ?"
@@ -633,7 +633,7 @@ sub insert_gsw {
     # prepare gsw_insert
     my $gsw_insert = $dbh->prepare(
         'INSERT INTO gsw (
-            gsw_id, extreme_id, foregoing_extreme_id, window_id,
+            gsw_id, extreme_id, prev_extreme_id, window_id,
             gsw_type, gsw_distance, gsw_density, gsw_amplitude
         )
         VALUES (
@@ -644,7 +644,7 @@ sub insert_gsw {
 
     while ( my $ref = $fetch_ex_id->fetchrow_hashref ) {
         my $ex_id      = $ref->{extreme_id};
-        my $prev_ex_id = $ref->{foregoing_extreme_id};
+        my $prev_ex_id = $ref->{prev_extreme_id};
         my $ex_type    = $ref->{extreme_type};
 
         # determining $gsw_type here, ascend and descent

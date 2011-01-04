@@ -152,7 +152,7 @@ my $worker = sub {
     my $exon_sth = $dbh->prepare(
         q{
         INSERT INTO exon (
-            exon_id, foregoing_exon_id, window_id, gene_id, exon_stable_id,
+            exon_id, prev_exon_id, window_id, gene_id, exon_stable_id,
             exon_strand, exon_phase, exon_end_phase,
             exon_frame, exon_is_full,
             exon_tl_runlist,
@@ -339,7 +339,7 @@ my $worker = sub {
             #----------------------------#
             # moving this section and @exon_sites out of gene section
             #   will get exonsw of all exons
-            my $foregoing_exon_id = 0;
+            my $prev_exon_id = 0;
             for my $exon_site (@exon_sites) {
 
                 # window
@@ -348,7 +348,7 @@ my $worker = sub {
                     $internal_indel_flag );
 
                 $exon_sth->execute(
-                    $foregoing_exon_id,      $cur_window_id,
+                    $prev_exon_id,      $cur_window_id,
                     $exon_site->{gene_id},   $exon_site->{stable_id},
                     $exon_site->{strand},    $exon_site->{phase},
                     $exon_site->{end_phase}, $exon_site->{frame},
@@ -356,7 +356,7 @@ my $worker = sub {
                     $exon_site->{seq},       $exon_site->{peptide}
                 );
 
-                ($foregoing_exon_id) = $obj->last_insert_id;
+                ($prev_exon_id) = $obj->last_insert_id;
             }
         }
 
@@ -365,10 +365,10 @@ my $worker = sub {
         #----------------------------#
         if ($insert_exonsw) {
 
-            # exon_id & foregoing_exon_id
+            # exon_id & prev_exon_id
             my $fetch_exon_id = $dbh->prepare(
                 q{
-                SELECT exon_id, foregoing_exon_id
+                SELECT exon_id, prev_exon_id
                 FROM exon e, window w
                 WHERE e.window_id = w.window_id
                 AND align_id = ?
@@ -387,7 +387,7 @@ my $worker = sub {
             # prepare exonsw_insert
             my $exonsw_insert = $dbh->prepare(
                 'INSERT INTO exonsw (
-                    exonsw_id, window_id, exon_id, foregoing_exon_id, 
+                    exonsw_id, window_id, exon_id, prev_exon_id, 
                     exonsw_type, exonsw_distance, exonsw_density
                 )
                 VALUES (
@@ -398,15 +398,15 @@ my $worker = sub {
 
             while ( my $ref = $fetch_exon_id->fetchrow_hashref ) {
                 my $exon_id           = $ref->{exon_id};
-                my $foregoing_exon_id = $ref->{foregoing_exon_id};
+                my $prev_exon_id = $ref->{prev_exon_id};
 
                 # bypass the first exon
-                if ( $foregoing_exon_id == 0 ) {
+                if ( $prev_exon_id == 0 ) {
                     next;
                 }
 
-                $fetch_exon_info->execute($foregoing_exon_id);
-                my ( undef, $inter_exon_start, $foregoing_exon_runlist )
+                $fetch_exon_info->execute($prev_exon_id);
+                my ( undef, $inter_exon_start, $prev_exon_runlist )
                     = $fetch_exon_info->fetchrow_array;
                 $inter_exon_start++;
 
@@ -432,7 +432,7 @@ my $worker = sub {
 
                     $exonsw_insert->execute(
                         $cur_window_id,      $exon_id,
-                        $foregoing_exon_id,  $exonsw->{type},
+                        $prev_exon_id,  $exonsw->{type},
                         $exonsw->{distance}, $exonsw->{density},
                     );
                 }
@@ -450,7 +450,7 @@ my $worker = sub {
                     my $working_exon_set;
                     if ( $exonsw_type eq 'l' ) {
                         $working_exon_set = AlignDB::IntSpan->new(
-                            "$foregoing_exon_runlist");
+                            "$prev_exon_runlist");
                         $exonsw_end = $working_exon_set->cardinality;
                         $exonsw_start
                             = $exonsw_end - $exonsw_size_window0 + 1;
@@ -491,7 +491,7 @@ my $worker = sub {
 
                         $exonsw_insert->execute(
                             $cur_window_id,     $exon_id,
-                            $foregoing_exon_id, $exonsw_type,
+                            $prev_exon_id, $exonsw_type,
                             $exonsw_distance,   $exonsw_density
                         );
 
@@ -515,7 +515,7 @@ my $worker = sub {
 
             # exon_id
             my $fetch_exon_id = $dbh->prepare(
-                "SELECT exon_id, foregoing_exon_id
+                "SELECT exon_id, prev_exon_id
                 FROM exon e, window w
                 WHERE e.window_id = w.window_id
                 AND align_id = ?"
@@ -532,7 +532,7 @@ my $worker = sub {
             # prepare exonsw_insert
             my $codingsw_insert = $dbh->prepare(
                 'INSERT INTO codingsw (
-                    codingsw_id, window_id, exon_id, foregoing_exon_id, 
+                    codingsw_id, window_id, exon_id, prev_exon_id, 
                     codingsw_type, codingsw_distance
                 )
                 VALUES (
@@ -543,7 +543,7 @@ my $worker = sub {
 
             while ( my $ref = $fetch_exon_id->fetchrow_hashref ) {
                 my $exon_id           = $ref->{exon_id};
-                my $foregoing_exon_id = $ref->{foregoing_exon_id};
+                my $prev_exon_id = $ref->{prev_exon_id};
 
                 $fetch_exon_info->execute($exon_id);
                 my ($exon_tl_runlist) = $fetch_exon_info->fetchrow_array;
@@ -564,7 +564,7 @@ my $worker = sub {
                         $internal_indel_flag );
 
                     $codingsw_insert->execute(
-                        $cur_window_id, $exon_id, $foregoing_exon_id,
+                        $cur_window_id, $exon_id, $prev_exon_id,
                         $outside_window->{type},
                         $outside_window->{distance}
                     );
@@ -581,7 +581,7 @@ my $worker = sub {
                         $inside_window->{set}, $internal_indel_flag );
 
                     $codingsw_insert->execute(
-                        $cur_window_id, $exon_id, $foregoing_exon_id,
+                        $cur_window_id, $exon_id, $prev_exon_id,
                         $inside_window->{type},
                         $inside_window->{distance}
                     );

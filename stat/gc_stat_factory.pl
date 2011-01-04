@@ -913,7 +913,7 @@ my $da2d_group = sub {
 #            AND g.gsw_type = 'R'
 #            AND g.gsw_density > 5
 #            AND g.gsw_distance <= 5
-#            AND g.foregoing_extreme_id = e.extreme_id
+#            AND g.prev_extreme_id = e.extreme_id
 #            GROUP BY CONCAT(g.gsw_type, g.gsw_distance)
 #        };
 #        my %option = (

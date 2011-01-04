@@ -187,7 +187,7 @@ my $worker = sub {
 
     # select all indels in this alignment
     my $indel_query = q{
-        SELECT indel_id, foregoing_indel_id, indel_start, indel_end
+        SELECT indel_id, prev_indel_id, indel_start, indel_end
         FROM indel
         WHERE align_id = ?
     };
@@ -196,7 +196,7 @@ my $worker = sub {
     # update indel table in the new feature column
     my $indel_extra = q{
         INSERT INTO indel_extra (
-            indel_extra_id, indel_id, foregoing_indel_id,
+            indel_extra_id, indel_id, prev_indel_id,
             indel_feature1, indel_feature2
         )
         VALUES (NULL, ?, ?, ?, ?)
@@ -332,7 +332,7 @@ UPDATE: for my $align_id (@align_ids) {
         #----------------------------#
         $indel_query_sth->execute($align_id);
         while ( my @row3 = $indel_query_sth->fetchrow_array ) {
-            my ( $indel_id, $foregoing_indel_id, $indel_start, $indel_end )
+            my ( $indel_id, $prev_indel_id, $indel_start, $indel_end )
                 = @row3;
             my $indel_chr_start = $chr_pos[$indel_start];
             my $indel_chr_end   = $chr_pos[$indel_end];
@@ -347,7 +347,7 @@ UPDATE: for my $align_id (@align_ids) {
                 my $indel_feature2 = $ensembl->feature_portion( '_repeat_set',
                     $indel_chr_runlist );
                 $indel_extra_sth->execute(
-                    $indel_id,       $foregoing_indel_id,
+                    $indel_id,       $prev_indel_id,
                     $indel_feature1, $indel_feature2
                 );
                 $indel_extra_sth->finish;
