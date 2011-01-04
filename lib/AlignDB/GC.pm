@@ -462,9 +462,7 @@ sub gc_wave {
     my $align_id       = shift;
     my $comparable_set = shift;
 
-    my $seqs_ref   = $self->get_seqs($align_id);
-    my $target_seq = $seqs_ref->[0];
-    my $query_seq  = $seqs_ref->[1];
+    my @seqs   = @{$self->get_seqs($align_id)};
 
     my $comparable_number = $comparable_set->cardinality;
 
@@ -475,12 +473,9 @@ sub gc_wave {
     my @sliding_attrs;
     for my $i ( 0 .. $#sliding_windows ) {
         my $sliding_window = $sliding_windows[$i];
-
-        my $sw_target_seq = $sliding_window->substr_span($target_seq);
-        my $sw_target_gc  = calc_gc_ratio($sw_target_seq);
-        my $sw_query_seq  = $sliding_window->substr_span($query_seq);
-        my $sw_query_gc   = calc_gc_ratio($sw_query_seq);
-        my $sw_gc         = ( $sw_target_gc + $sw_query_gc ) / 2;
+        
+        my @sw_seqs = map {$sliding_window->substr_span($_)} @seqs;
+        my $sw_gc   = calc_gc_ratio(@sw_seqs);
 
         my $sw_length = $sliding_window->cardinality;
         my $sw_span   = scalar $sliding_window->spans;

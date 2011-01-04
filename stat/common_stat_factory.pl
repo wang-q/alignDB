@@ -274,7 +274,7 @@ my $basic = sub {
     {    # write contents
         my $query_name = 'GC-content';
         my $sql_query  = q{
-            SELECT sum(a.align_length * (a.target_gc_ratio + a.query_gc_ratio) / 2.0)
+            SELECT sum(a.align_length * a.align_average_gc )
                    / sum(a.align_length)
             FROM align a
         };
@@ -458,8 +458,7 @@ my $combined_distance = sub {
             $thaw_sql->replace(
                 {   AVG_pi => 'AVG_gc',
                     STD_pi => 'STD_gc',
-                    isw_pi =>
-                        '(isw_target_gc_ratio + isw_query_gc_ratio) / 2',
+                    isw_pi => 'isw_average_gc',
                 }
             );
             my %option = (
@@ -558,8 +557,7 @@ my $combined_density = sub {
                 {   distance => 'density',
                     AVG_pi   => 'AVG_gc',
                     STD_pi   => 'STD_gc',
-                    isw_pi =>
-                        '(isw_target_gc_ratio + isw_query_gc_ratio) / 2',
+                    isw_pi   => 'isw_average_gc',
                 }
             );
             my %option = (
@@ -808,10 +806,9 @@ my $distance_coding = sub {
         {    # write contents
             my $thaw_sql = $sql_file->retrieve('common-distance_coding-2');
             $thaw_sql->replace(
-                {   AVG_pi => 'AVG_gc',
-                    STD_pi => 'STD_gc',
-                    'isw.isw_pi' =>
-                        '(isw.isw_target_gc_ratio + isw.isw_query_gc_ratio) / 2',
+                {   AVG_pi       => 'AVG_gc',
+                    STD_pi       => 'STD_gc',
+                    'isw.isw_pi' => 'isw.isw_average_gc',
                 }
             );
             $thaw_sql->bind( [ $isw_f1_1, $isw_f1_2 ] );
@@ -915,10 +912,9 @@ my $distance_non_coding = sub {
         {    # write contents
             my $thaw_sql = $sql_file->retrieve('common-distance_coding-2');
             $thaw_sql->replace(
-                {   AVG_pi => 'AVG_gc',
-                    STD_pi => 'STD_gc',
-                    'isw.isw_pi' =>
-                        '(isw.isw_target_gc_ratio + isw.isw_query_gc_ratio) / 2',
+                {   AVG_pi       => 'AVG_gc',
+                    STD_pi       => 'STD_gc',
+                    'isw.isw_pi' => 'isw.isw_average_gc',
                 }
             );
             $thaw_sql->bind( [ $isw_f1_1, $isw_f1_2 ] );
@@ -1024,11 +1020,10 @@ my $density_coding = sub {
         {    # write contents
             my $thaw_sql = $sql_file->retrieve('common-distance_coding-2');
             $thaw_sql->replace(
-                {   distance => 'density',
-                    AVG_pi   => 'AVG_gc',
-                    STD_pi   => 'STD_gc',
-                    'isw.isw_pi' =>
-                        '(isw.isw_target_gc_ratio + isw.isw_query_gc_ratio) / 2',
+                {   distance     => 'density',
+                    AVG_pi       => 'AVG_gc',
+                    STD_pi       => 'STD_gc',
+                    'isw.isw_pi' => 'isw.isw_average_gc',
                 }
             );
             $thaw_sql->bind( [ $isw_f1_1, $isw_f1_2 ] );
@@ -1134,11 +1129,10 @@ my $density_non_coding = sub {
         {    # write contents
             my $thaw_sql = $sql_file->retrieve('common-distance_coding-2');
             $thaw_sql->replace(
-                {   AVG_pi => 'AVG_gc',
-                    STD_pi => 'STD_gc',
-                    'isw.isw_pi' =>
-                        '(isw.isw_target_gc_ratio + isw.isw_query_gc_ratio) / 2',
-                    distance => 'density',
+                {   AVG_pi       => 'AVG_gc',
+                    STD_pi       => 'STD_gc',
+                    'isw.isw_pi' => 'isw.isw_average_gc',
+                    distance     => 'density',
                 }
             );
             $thaw_sql->bind( [ $isw_f1_1, $isw_f1_2 ] );
@@ -1232,8 +1226,7 @@ my $dd_group = sub {
             $thaw_sql->replace(
                 {   AVG_pi => 'AVG_gc',
                     STD_pi => 'STD_gc',
-                    isw_pi =>
-                        '(isw_target_gc_ratio + isw_query_gc_ratio) / 2',
+                    isw_pi => 'isw_average_gc',
                 }
             );
             my %option = (
@@ -2417,10 +2410,9 @@ my $distance_gc_slip = sub {
                 # S widnows, isw_indel_id is indel_id (left indel's id)
             my $thaw_sql_s = $sql_file->retrieve('common-distance_slip_s-4');
             $thaw_sql_s->replace(
-                {   AVG_pi => 'AVG_gc',
-                    STD_pi => 'STD_gc',
-                    'isw.isw_pi' =>
-                        '(isw.isw_target_gc_ratio + isw.isw_query_gc_ratio) / 2',
+                {   AVG_pi       => 'AVG_gc',
+                    STD_pi       => 'STD_gc',
+                    'isw.isw_pi' => 'isw.isw_average_gc',
                 }
             );
             my %option = (
@@ -2440,10 +2432,9 @@ my $distance_gc_slip = sub {
             my $thaw_sql_lr
                 = $sql_file->retrieve('common-distance_slip_lr-2');
             $thaw_sql_lr->replace(
-                {   AVG_pi => 'AVG_gc',
-                    STD_pi => 'STD_gc',
-                    'isw.isw_pi' =>
-                        '(isw.isw_target_gc_ratio + isw.isw_query_gc_ratio) / 2',
+                {   AVG_pi       => 'AVG_gc',
+                    STD_pi       => 'STD_gc',
+                    'isw.isw_pi' => 'isw.isw_average_gc',
                 }
             );
             my %option = (
@@ -2461,10 +2452,9 @@ my $distance_gc_slip = sub {
             my $thaw_sql
                 = $sql_file->retrieve('common-distance_slip_total-2');
             $thaw_sql->replace(
-                {   AVG_pi => 'AVG_gc',
-                    STD_pi => 'STD_gc',
-                    'isw.isw_pi' =>
-                        '(isw.isw_target_gc_ratio + isw.isw_query_gc_ratio) / 2',
+                {   AVG_pi       => 'AVG_gc',
+                    STD_pi       => 'STD_gc',
+                    'isw.isw_pi' => 'isw.isw_average_gc',
                 }
             );
             my %option = (

@@ -57,7 +57,7 @@ FROM
 
 # AVG GC%
 SELECT concat(vs.target_name, ' vs. ', vs.query_name),
-       sum(a.align_length * (a.target_gc_ratio + a.query_gc_ratio) / 2) /
+       sum(a.align_length * a.align_average_gc) /
        sum(a.align_length)
 FROM align a,
      tvsq vs
@@ -260,9 +260,9 @@ GROUP BY isw_distance
 #----------------------------------------------------------#
 # density effect
 SELECT isw_density density, 
-       AVG((isw_target_gc_ratio + isw_query_gc_ratio) / 2) AVG_gc, 
-       COUNT((isw_target_gc_ratio + isw_query_gc_ratio) / 2) COUNT, 
-       STD((isw_target_gc_ratio + isw_query_gc_ratio) / 2) STD_gc
+       AVG(isw_average_gc) AVG_gc, 
+       COUNT(isw_average_gc) COUNT, 
+       STD(isw_average_gc) STD_gc
 FROM isw i
 GROUP BY isw_density
 
@@ -297,16 +297,16 @@ GROUP BY isw_density
 
 # density effect
 SELECT isw_density density, 
-       AVG((isw_target_gc_ratio + isw_query_gc_ratio) / 2) AVG_gc, 
-       COUNT((isw_target_gc_ratio + isw_query_gc_ratio) / 2) COUNT, 
-       STD((isw_target_gc_ratio + isw_query_gc_ratio) / 2) STD_gc
+       AVG(isw_average_gc) AVG_gc, 
+       COUNT(isw_average_gc) COUNT, 
+       STD(isw_average_gc) STD_gc
 FROM isw i
 GROUP BY isw_density
 
 SELECT isw_distance d1, 
        isw_density d2, 
        isw_pi pi, 
-       (isw_target_gc_ratio + isw_query_gc_ratio) / 2 gc
+       isw_average_gc gc
 FROM isw i
 
 SELECT a.align_id align_id, 
@@ -314,7 +314,7 @@ SELECT a.align_id align_id,
        count(i.indel_id) indel,
        a.gaps gaps,
        a.pi align_pi, 
-       (a.target_gc_ratio + a.query_gc_ratio) / 2 align_gc
+       a.align_average_gc align_gc
 FROM align a, indel i
 WHERE a.align_id = i.align_id
 GROUP BY a.align_id

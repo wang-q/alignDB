@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     2008/12/15 1:57:48                           */
+/* Created on:     1/4/2011 12:40:59 PM                         */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -18,8 +18,8 @@ create table align
    ns                             int,
    align_error                    int,
    pi                             double,
-   target_gc_ratio                double,
-   query_gc_ratio                 double,
+   align_target_gc                double,
+   align_average_gc               double,
    comparable_runlist             text,
    indel_runlist                  text,
    primary key (align_id)
@@ -386,8 +386,8 @@ create table isw
    isw_distance                   int,
    isw_density                    int,
    isw_pi                         double,
-   isw_target_gc_ratio            double,
-   isw_query_gc_ratio             double,
+   isw_target_gc                  double,
+   isw_average_gc                 double,
    isw_target_dG                  double,
    isw_query_dG                   double,
    isw_d_indel                    double,
@@ -450,8 +450,7 @@ create table ofg
    ofg_tag                        char(64),
    ofg_type                       char(64),
    primary key (ofg_id)
-)
-comment = "Other feature of genome"
+)comment = 'Other feature of genome'
 ENGINE = MyISAM;
 
 /*==============================================================*/
@@ -758,7 +757,7 @@ create table window
    window_indel                   int,
    window_pi                      double,
    window_target_gc               double,
-   window_query_gc                double,
+   window_average_gc              double,
    window_target_dG               double,
    window_query_dG                double,
    window_feature1                double,

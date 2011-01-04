@@ -116,7 +116,7 @@ sub _insert_align {
             align_id, tvsq_id, align_length,
             comparable_bases, identities, differences,
             gaps, ns, align_error,
-            pi, target_gc_ratio, query_gc_ratio,
+            pi, align_target_gc, align_average_gc,
             comparable_runlist, indel_runlist
         )
         VALUES (
@@ -179,7 +179,7 @@ sub _insert_isw {
             isw_id, indel_id, foregoing_indel_id,
             isw_start, isw_end, isw_length, 
             isw_type, isw_distance, isw_density,
-            isw_pi, isw_target_gc_ratio, isw_query_gc_ratio,
+            isw_pi, isw_target_gc, isw_average_gc,
             isw_target_dG, isw_query_dG,
             isw_d_indel, isw_d_noindel, isw_d_complex
         )
@@ -1151,14 +1151,14 @@ sub get_slice_pi_gc_dG {
     my $align_id = shift;
     my $set      = shift;
 
-    my $slice_stat      = $self->get_slice_stat( $align_id, $set );
-    my $pi              = $slice_stat->[7];
-    my $target_gc_ratio = $slice_stat->[8];
-    my $query_gc_ratio  = $slice_stat->[9];
-    my $target_dG       = $slice_stat->[10];
-    my $query_dG        = $slice_stat->[11];
+    my $slice_stat = $self->get_slice_stat( $align_id, $set );
+    my $pi         = $slice_stat->[7];
+    my $target_gc  = $slice_stat->[8];
+    my $average_gc = $slice_stat->[9];
+    my $target_dG  = $slice_stat->[10];
+    my $query_dG   = $slice_stat->[11];
 
-    return ( $pi, $target_gc_ratio, $query_gc_ratio, $target_dG, $query_dG );
+    return ( $pi, $target_gc, $average_gc, $target_dG, $query_dG );
 }
 
 ##################################################
@@ -1187,7 +1187,7 @@ sub insert_window {
             window_id, align_id, window_start, window_end, window_length,
             window_runlist, window_comparables, window_identities,
             window_differences, window_indel, window_pi,
-            window_target_gc, window_query_gc,
+            window_target_gc, window_average_gc,
             window_target_dG, window_query_dG,
             window_feature1, window_feature2, window_feature3
         )
@@ -1362,8 +1362,7 @@ sub create_column {
         }
 
         $dbh->do(
-            qq{ALTER TABLE $table ADD COLUMN $column $column_definition}
-        );
+            qq{ALTER TABLE $table ADD COLUMN $column $column_definition} );
     }
 
     return;

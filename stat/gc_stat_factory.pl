@@ -958,7 +958,7 @@ my $segment_gc_indel = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           (w.window_target_gc + w.window_query_gc) / 2 `gc`,
+                           w.window_average_gc `gc`,
                            s.segment_gc_CV `cv`,
                            w.window_feature1 `coding`,
                            w.window_length `length`
@@ -1073,7 +1073,7 @@ my $segment_std_indel = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           (w.window_target_gc + w.window_query_gc) / 2 `gc`,
+                           w.window_average_gc `gc`,
                            s.segment_gc_std `std`,
                            w.window_feature1 `coding`,
                            w.window_length `length`
@@ -1188,7 +1188,7 @@ my $segment_cv_indel = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           (w.window_target_gc + w.window_query_gc) / 2 `gc`,
+                           w.window_average_gc `gc`,
                            s.segment_gc_CV `cv`,
                            w.window_feature1 `coding`,
                            w.window_length `length`
@@ -1304,7 +1304,7 @@ my $segment_mdcw_indel = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           (w.window_target_gc + w.window_query_gc) / 2 `gc`,
+                           w.window_average_gc `gc`,
                            s.segment_gc_mdcw `mdcw`,
                            w.window_feature1 `coding`,
                            w.window_length `length`
@@ -1419,7 +1419,7 @@ my $segment_coding_indel = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           (w.window_target_gc + w.window_query_gc) / 2 `gc`,
+                           w.window_average_gc `gc`,
                            s.segment_gc_CV `cv`,
                            w.window_feature1 `coding`,
                            w.window_length `length`
@@ -1535,7 +1535,7 @@ my $segment_coding_indel = sub {
 #                    ENGINE=MyISAM
 #                    SELECT w.window_pi `pi`,
 #                           w.window_indel `indel`,
-#                           (w.window_target_gc + w.window_query_gc) / 2 `gc`,
+#                           w.window_average_gc `gc`,
 #                           s.segment_feature4 `extreme`,
 #                           w.window_length `length`
 #                    FROM segment s, window w
@@ -1659,7 +1659,7 @@ my $segment_gc_indel_cr = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           (w.window_target_gc + w.window_query_gc) / 2 `gc`,
+                           w.window_average_gc `gc`,
                            s.segment_gc_CV `cv`,
                            w.window_feature1 `coding`,
                            w.window_length `length`
@@ -1781,7 +1781,7 @@ my $segment_cv_indel_cr = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           (w.window_target_gc + w.window_query_gc) / 2 `gc`,
+                           w.window_average_gc `gc`,
                            s.segment_gc_CV `cv`,
                            w.window_feature1 `coding`,
                            w.window_length `length`
