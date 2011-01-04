@@ -247,10 +247,10 @@ my $worker = sub {
             my @transcripts     = @{ $gene->get_all_Transcripts };
             my $gene_multitrans = @transcripts;
             my ($transcript)    = @transcripts;
-            $transcript = $transcript->transform('chromosome');
 
             my @exons;
             if ($transcript) {
+                $transcript = $transcript->transform('chromosome');
                 @exons = @{ $transcript->get_all_Exons };
                 $_ = $_->transform('chromosome') for @exons;
             }
@@ -307,11 +307,13 @@ my $worker = sub {
                     $exon_is_full = 0;
                 }
 
-                my $exon_seq = $exon->seq->seq;
+                # XXX: bioperl and ensembl conflict
+                my $exon_seq;
+                #my $exon_seq = $exon->seq->seq;
                 my $exon_peptide;
-                if ($transcript) {
-                    $exon_peptide = $exon->peptide($transcript)->seq;
-                }
+                #if ($transcript) {
+                #    $exon_peptide = $exon->peptide($transcript)->seq;
+                #}
 
                 # exon position set
                 my $exon_start
