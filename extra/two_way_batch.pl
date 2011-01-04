@@ -86,6 +86,9 @@ my @tasks;
 if ( $run eq 'all' ) {
     @tasks = ( 1 .. 12 );
 }
+elsif ( $run eq 'basic' ) {
+    @tasks = ( 1 .. 3 );
+}
 elsif ( $run eq 'common' ) {
     @tasks = ( 1 .. 3, 7, 8, 10 );
 }
