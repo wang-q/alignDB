@@ -1773,17 +1773,17 @@ my $indel_gc_group = sub {
         $thaw_sql_R->add_where( 'indel.indel_length' => \'>= 10' );
         $thaw_sql_R->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_R->add_where(
-            'indel.indel_gc_ratio' => { op => '>=', value => '0' } );
+            'indel.indel_gc' => { op => '>=', value => '0' } );
         $thaw_sql_R->add_where(
-            'indel.indel_gc_ratio' => { op => '<=', value => '0' } );
+            'indel.indel_gc' => { op => '<=', value => '0' } );
 
         my $thaw_sql_L = $sql_file->retrieve('common-indel_size_l-0');
         $thaw_sql_L->add_where( 'indel.indel_length' => \'>= 10' );
         $thaw_sql_L->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_L->add_where(
-            'indel.indel_gc_ratio' => { op => '>=', value => '0' } );
+            'indel.indel_gc' => { op => '>=', value => '0' } );
         $thaw_sql_L->add_where(
-            'indel.indel_gc_ratio' => { op => '<=', value => '0' } );
+            'indel.indel_gc' => { op => '<=', value => '0' } );
 
         my %option = (
             sql_query_1 => $thaw_sql_R->as_sql,

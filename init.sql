@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/4/2011 12:40:59 PM                         */
+/* Created on:     1/4/2011 10:28:48 PM                         */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -331,7 +331,7 @@ create table indel
    indel_insert                   char(1),
    left_extand                    int,
    right_extand                   int,
-   indel_gc_ratio                 double,
+   indel_gc                       double,
    indel_dG                       double,
    indel_occured                  char(1),
    indel_type                     char(1),

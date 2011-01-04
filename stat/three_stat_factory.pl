@@ -2174,10 +2174,10 @@ my $indel_type_gc_10 = sub {
     # write header
     {
         my $query_name = 'indel_type_gc_10';
-        my $sql_query  = q~
+        my $sql_query  = q{
             # header of Table group_density
             SELECT 'indel_length', 'AVG_gc_ratio', 'COUNT', 'STD_gc_ratio'
-        ~;
+        };
         ( $sheet_row, $sheet_col ) = ( 0, 1 );
         my %option = (
             sql_query  => $sql_query,
@@ -2192,17 +2192,17 @@ my $indel_type_gc_10 = sub {
     # write contents
     foreach (@indel_types) {
         $sheet_row++;
-        my $sql_query = q~
+        my $sql_query = q{
             # indel_length distribution
             SELECT  indel_length,
-                    AVG(indel_gc_ratio) AVG_gc_ratio,
+                    AVG(indel_gc) AVG_indel_gc,
                     COUNT(*),
-                    STD(indel_gc_ratio) STD_gc_ratio
+                    STD(indel_gc) STD_indel_gc
             FROM indel
             WHERE indel_type = ?
             AND indel_length <= 10
             GROUP BY indel_length
-        ~;
+        };
         my %option = (
             sql_query  => $sql_query,
             query_name => $_->[0],
@@ -2234,10 +2234,10 @@ my $indel_type_gc_100 = sub {
     # write header
     {
         my $query_name = 'indel_type_gc_100';
-        my $sql_query  = q~
+        my $sql_query  = q{
             # header of Table group_density
             SELECT 'indel_length', 'AVG_gc_ratio', 'COUNT', 'STD_gc_ratio'
-        ~;
+        };
         ( $sheet_row, $sheet_col ) = ( 0, 1 );
         my %option = (
             sql_query  => $sql_query,
@@ -2252,17 +2252,17 @@ my $indel_type_gc_100 = sub {
     # write contents
     foreach (@indel_types) {
         $sheet_row++;
-        my $sql_query = q~
+        my $sql_query = q{
             # indel_length distribution
             SELECT  CEIL(indel_length / 10) * 10,
-                    AVG(indel_gc_ratio) AVG_gc_ratio,
+                    AVG(indel_gc) AVG_indel_gc,
                     COUNT(*),
-                    STD(indel_gc_ratio) STD_gc_ratio
+                    STD(indel_gc) STD_indel_gc
             FROM indel
             WHERE indel_type = ?
             AND indel_length <= 100
             GROUP BY CEIL(indel_length / 10)
-        ~;
+        };
         my %option = (
             sql_query  => $sql_query,
             query_name => $_->[0],
@@ -2284,16 +2284,16 @@ my $insertion_length = sub {
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
-    my $sql_query = q~
+    my $sql_query = q{
         # insertion_length distribution
         SELECT  indel_length,
                 COUNT(indel_length) indel_number,
-                AVG(indel_gc_ratio) AVG_gc_ratio,
+                AVG(indel_gc) AVG_indel_gc,
                 SUM(indel_length) indel_sum
         FROM indel
         WHERE indel_type = "I"
         GROUP BY indel_length
-    ~;
+    };
 
     # write header
     {
@@ -2329,16 +2329,16 @@ my $deletion_length = sub {
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
-    my $sql_query = q~
+    my $sql_query = q{
         # insertion_length distribution
         SELECT  indel_length,
                 COUNT(indel_length) indel_number,
-                AVG(indel_gc_ratio) AVG_gc_ratio,
+                AVG(indel_gc) AVG_indel_gc,
                 SUM(indel_length) indel_sum
         FROM indel
         WHERE indel_type = "D"
         GROUP BY indel_length
-    ~;
+    };
 
     # write header
     {
@@ -2374,16 +2374,16 @@ my $complex_length = sub {
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
-    my $sql_query = q~
+    my $sql_query = q{
         # insertion_length distribution
         SELECT  indel_length,
                 COUNT(indel_length) indel_number,
-                AVG(indel_gc_ratio) AVG_gc_ratio,
+                AVG(indel_gc) AVG_indel_gc,
                 SUM(indel_length) indel_sum
         FROM indel
         WHERE indel_type = "C"
         GROUP BY indel_length
-    ~;
+    };
 
     # write header
     {

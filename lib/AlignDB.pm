@@ -735,7 +735,7 @@ sub add_align {
                 indel_id, foregoing_indel_id, align_id,
                 indel_start, indel_end, indel_length,
                 indel_seq, indel_insert, left_extand, right_extand,
-                indel_gc_ratio, indel_dG, indel_occured, indel_type
+                indel_gc, indel_dG, indel_occured, indel_type
             )
             VALUES (
                 NULL, ?, ?,
@@ -791,7 +791,7 @@ sub add_align {
                 $foregoing_indel_id, $align_id,         $_->{start},
                 $_->{end},           $_->{length},      $_->{seq},
                 $_->{insert},        $_->{left_extand}, $_->{right_extand},
-                $_->{gc_ratio},      $_->{dG},          $indel_occured,
+                $_->{gc},      $_->{dG},          $indel_occured,
                 $indel_type,
             );
             ($foregoing_indel_id) = $self->last_insert_id;

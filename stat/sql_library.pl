@@ -328,16 +328,16 @@ sub ns { return AlignDB::SQL->new; }
 
 #SELECT  indel_length,
 #        COUNT(*) indel_number,
-#        AVG(indel_gc_ratio) AVG_gc_ratio,
+#        AVG(indel_gc) AVG_gc,
 #        SUM(indel_length) indel_sum
 #FROM indel
 #GROUP BY indel_length
 {
     my $sql = ns();
     $sql->add_select('indel_length');
-    $sql->add_select( 'COUNT(*)',            'indel_number' );
-    $sql->add_select( 'AVG(indel_gc_ratio)', 'AVG_gc_ratio' );
-    $sql->add_select( 'SUM(indel_length)',   'indel_sum' );
+    $sql->add_select( 'COUNT(*)',          'indel_number' );
+    $sql->add_select( 'AVG(indel_gc)',     'AVG_indel_gc' );
+    $sql->add_select( 'SUM(indel_length)', 'indel_sum' );
     $sql->from( ['indel'] );
     $sql->group( { column => 'indel_length' } );
 
