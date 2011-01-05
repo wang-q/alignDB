@@ -77,7 +77,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 # prepare to run tasks in @tasks
 my @tasks;
 if ( $run eq 'all' ) {
-    @tasks = ( 1 .. 8 );
+    @tasks = ( 1 .. 9 );
 }
 elsif ( $run eq 'basic' ) {
     @tasks = (1);
@@ -89,10 +89,10 @@ elsif ( $run eq 'gc' ) {
     @tasks = ( 1, 2, 4 .. 8 );
 }
 elsif ( $run eq 'gene' ) {
-    @tasks = ( 1 .. 8 );
+    @tasks = ( 1 .. 9 );
 }
 elsif ( $run eq 'stat' ) {
-    @tasks = ( 6 .. 8 );
+    @tasks = ( 6 .. 9 );
 }
 else {
     $run =~ s/\"\'//s;
@@ -177,6 +177,13 @@ my $dispatch = {
         . " --password=$password"
         . " -d=$db_name"
         . " -o=$FindBin::Bin/../stat/$db_name.mvar.xls",
+    9 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
+        . " -s=$server"
+        . " --port=$port"
+        . " -u=$username"
+        . " --password=$password"
+        . " -d=$db_name"
+        . " -o=$FindBin::Bin/../stat/$db_name.gene.xls",
 };
 
 #----------------------------#
