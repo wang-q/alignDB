@@ -14,6 +14,7 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 use AlignDB::GC;
+use AlignDB::Multi;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -43,6 +44,8 @@ my $stat_window_step  = $Config->{gc}{stat_window_step};
 # run in parallel mode
 my $parallel = $Config->{feature}{parallel};
 
+my $multi;
+
 my $man  = 0;
 my $help = 0;
 
@@ -55,6 +58,7 @@ GetOptions(
     'username=s' => \$username,
     'password=s' => \$password,
     'parallel=i' => \$parallel,
+    'multi'      => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -65,11 +69,21 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 $stopwatch->start_message("Update $db...");
 
-my $obj = AlignDB::GC->new(
-    mysql  => "$db:$server",
-    user   => $username,
-    passwd => $password,
-);
+my $obj;
+if ( !$multi ) {
+    $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+}
+else {
+    $obj = AlignDB::Multi->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+}
 AlignDB::GC->meta->apply($obj);
 my %opt = (
     stat_window_size => $stat_window_size,
@@ -93,22 +107,6 @@ my $dbh = $obj->dbh;
 #----------------------------------------------------------#
 
 my @align_ids = @{ $obj->get_align_ids };
-
-# alignments' chromosomal location
-my $align_seq_sth = $dbh->prepare(
-    q{
-    SELECT c.chr_name,
-           a.align_length,
-           t.target_runlist,
-           s.chr_start,
-           s.chr_end
-    FROM align a, target t, sequence s, chromosome c
-    WHERE a.align_id = t.align_id
-    AND t.seq_id = s.seq_id
-    AND s.chr_id = c.chr_id
-    AND a.align_id = ?
-    }
-);
 
 my $exonsw_sth = $dbh->prepare(
     q{
@@ -145,13 +143,12 @@ my $codingsw_update_sth = $dbh->prepare(
 );
 
 for my $align_id (@align_ids) {
-    $align_seq_sth->execute($align_id);
-    my ( $chr_name, $align_length, $target_runlist, $chr_start, $chr_end, )
-        = $align_seq_sth->fetchrow_array;
+    my $target_info    = $obj->get_target_info($align_id);
+    my $target_runlist = $target_info->{seq_runlist};
 
-    print "prosess align $align_id ", "in $chr_name $chr_start - $chr_end\n";
+    $obj->process_message($align_id);
 
-    # comparable runlist
+    # sliding in target_set
     my $target_set = AlignDB::IntSpan->new($target_runlist);
 
     $exonsw_sth->execute($align_id);
@@ -223,11 +220,11 @@ __END__
 
 =head1 NAME
 
-    update_segment.pl - Add additional slippage-like info to alignDB
-                                 1 for slippage-like and 0 for non
+    update_sw_cv.pl - CV for exonsw and codingsw
+
 =head1 SYNOPSIS
 
-    update_segment.pl [options]
+    update_sw_cv.pl [options]
       Options:
         --help              brief help message
         --man               full documentation
@@ -235,6 +232,7 @@ __END__
         --db                database name
         --username          username
         --password          password
+        --multi             work for AlignDB::Multi
 
 =head1 OPTIONS
 
