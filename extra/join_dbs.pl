@@ -354,11 +354,10 @@ SEG: for (@segments) {
             }
             elsif ( all { $_ ne '-' } @target_bases ) {
                 warn " " x 8 . "align error in $pos_count, [@target_bases]\n";
-
-                my %target_seq_of
-                    = map { $_ => $db_info_of{$_}->{target}{seq} } @all_dbs;
-                DumpFile( "$chr_name-$seg_start-$seg_end.yml",
-                    \%target_seq_of );
+                #my %target_seq_of
+                #    = map { $_ => $db_info_of{$_}->{target}{seq} } @all_dbs;
+                #DumpFile( "$chr_name-$seg_start-$seg_end.yml",
+                #    \%target_seq_of );
                 next SEG;
             }
 
@@ -693,13 +692,12 @@ sub realign {
     my $all_names = shift;
 
     my %info_of   = %{$info_of};
-    my @all_names = @{$all_names};
 
     # use AlignDB::IntSpan to find nearby indels
     #   expand indel by a range of $indel_expand
 
     my %indel_sets;
-    for (@all_names) {
+    for (@$all_names) {
         $indel_sets{$_}
             = find_indel_set( $info_of{$_}->{seq}, $indel_expand );
     }
@@ -707,7 +705,7 @@ sub realign {
     my $realign_region = AlignDB::IntSpan->new;
     my $combinat       = Math::Combinatorics->new(
         count => 2,
-        data  => \@all_names,
+        data  => $all_names,
     );
     while ( my @combo = $combinat->next_combination ) {
         print " " x 8, "pairwise correction @combo\n";
@@ -735,7 +733,7 @@ sub realign {
         my $seg_start = $_->[0];
         my $seg_end   = $_->[1];
         my @segments;
-        for (@all_names) {
+        for (@$all_names) {
             my $seg = substr(
                 $info_of{$_}->{seq},
                 $seg_start - 1,
@@ -746,7 +744,7 @@ sub realign {
 
         my $realign_segments = clustal_align( \@segments );
 
-        for (@all_names) {
+        for (@$all_names) {
             my $seg = shift @$realign_segments;
             substr(
                 $info_of{$_}->{seq},
@@ -757,7 +755,6 @@ sub realign {
     }
 
     $info_of   = \%info_of;
-    $all_names = @all_names;
 }
 
 #----------------------------#
@@ -768,17 +765,16 @@ sub trim_hf {
     my $all_names = shift;
 
     my %info_of   = %{$info_of};
-    my @all_names = @{$all_names};
 
     # header indels
     while (1) {
         my @first_column;
-        for (@all_names) {
+        for (@$all_names) {
             my $first_base = substr( $info_of{$_}->{seq}, 0, 1 );
             push @first_column, $first_base;
         }
         if ( any { $_ eq '-' } @first_column ) {
-            for (@all_names) {
+            for (@$all_names) {
                 substr( $info_of{$_}->{seq}, 0, 1, '' );
             }
             print " " x 4, "Trim header indel\n";
@@ -791,12 +787,12 @@ sub trim_hf {
     # footer indels
     while (1) {
         my (@last_column);
-        for (@all_names) {
+        for (@$all_names) {
             my $last_base = substr( $info_of{$_}->{seq}, -1, 1 );
             push @last_column, $last_base;
         }
         if ( any { $_ eq '-' } @last_column ) {
-            for (@all_names) {
+            for (@$all_names) {
                 substr( $info_of{$_}->{seq}, -1, 1, '' );
             }
             print " " x 4, "Trim footer indel\n";
@@ -807,7 +803,6 @@ sub trim_hf {
     }
 
     $info_of   = \%info_of;
-    $all_names = @all_names;
 }
 
 #----------------------------#
@@ -822,7 +817,6 @@ sub trim_outgroup {
     my $all_names = shift;
 
     my %info_of   = %{$info_of};
-    my @all_names = @{$all_names};
 
     # add raw_seqs to outgroup info hash
     # it will be used in $goal_obj->add_align
@@ -830,8 +824,8 @@ sub trim_outgroup {
 
     # don't expand indel set
     my %indel_sets;
-    for ( 1 .. @all_names - 1 ) {
-        my $name = $all_names[$_];
+    for ( 1 .. @$all_names - 1 ) {
+        my $name = $all_names->[$_];
         $indel_sets{$name} = find_indel_set( $info_of{$name}->{seq} );
     }
 
@@ -851,7 +845,7 @@ sub trim_outgroup {
     for ( reverse $trim_region->spans ) {
         my $seg_start = $_->[0];
         my $seg_end   = $_->[1];
-        for (@all_names) {
+        for (@$all_names) {
             substr(
                 $info_of{$_}->{seq},
                 $seg_start - 1,
@@ -862,7 +856,6 @@ sub trim_outgroup {
     }
 
     $info_of   = \%info_of;
-    $all_names = @all_names;
 }
 
 __END__
