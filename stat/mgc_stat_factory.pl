@@ -167,7 +167,7 @@ my $segment_gc_indel = sub {
                 CREATE TABLE tmp_group (t_id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (t_id))
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
-                           w.window_indels `indel`,
+                           w.window_indel `indel`,
                            w.window_average_gc `gc`,
                            s.segment_gc_CV `cv`,
                            w.window_length `length`
@@ -289,7 +289,7 @@ my $segment_std_indel = sub {
                 CREATE TABLE tmp_group (t_id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (t_id))
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
-                           w.window_indels `indel`,
+                           w.window_indel `indel`,
                            w.window_average_gc `gc`,
                            s.segment_gc_std `std`,
                            w.window_length `length`
@@ -411,7 +411,7 @@ my $segment_cv_indel = sub {
                 CREATE TABLE tmp_group (t_id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (t_id))
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
-                           w.window_indels `indel`,
+                           w.window_indel `indel`,
                            w.window_average_gc `gc`,
                            s.segment_gc_CV `cv`,
                            w.window_length `length`
@@ -533,7 +533,7 @@ my $segment_mdcw_indel = sub {
                 CREATE TABLE tmp_group (t_id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (t_id))
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
-                           w.window_indels `indel`,
+                           w.window_indel `indel`,
                            w.window_average_gc `gc`,
                            s.segment_gc_mdcw `mdcw`,
                            w.window_length `length`

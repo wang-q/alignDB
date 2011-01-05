@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/4/2011 11:00:46 PM                         */
+/* Created on:     1/5/2011 12:58:58 PM                         */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -91,6 +91,7 @@ create table exon
    exon_id                        int                            not null AUTO_INCREMENT,
    prev_exon_id                   int                            not null,
    gene_id                        int,
+   window_id                      int,
    exon_stable_id                 char(64)                       not null,
    exon_strand                    char(1),
    exon_phase                     int,
@@ -114,6 +115,14 @@ ENGINE = MyISAM;
 create index gene_exon_FK on exon
 (
    gene_id
+);
+
+/*==============================================================*/
+/* Index: window_exon_FK                                        */
+/*==============================================================*/
+create index window_exon_FK on exon
+(
+   window_id
 );
 
 /*==============================================================*/
@@ -609,7 +618,7 @@ create table window
    window_comparables             int,
    window_identities              int,
    window_differences             int,
-   window_indels                  int,
+   window_indel                   int,
    window_pi                      double,
    window_target_gc               double,
    window_average_gc              double,

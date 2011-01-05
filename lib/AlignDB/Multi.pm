@@ -949,7 +949,7 @@ sub insert_window {
         INSERT INTO window (
             window_id, align_id, window_start, window_end, window_length,
             window_runlist, window_comparables, window_identities,
-            window_differences, window_indels, window_pi,
+            window_differences, window_indel, window_pi,
             window_target_gc, window_average_gc,
             window_coding, window_repeats
         )
@@ -1034,6 +1034,33 @@ sub get_align_ids_of_chr {
     }
 
     return \@align_ids;
+}
+
+sub get_target_info {
+    my $self     = shift;
+    my $align_id = shift;
+
+    my $dbh = $self->dbh;
+
+    my $query = q{
+        SELECT c.chr_name,
+               s.chr_start,
+               s.chr_end,
+               s.seq_runlist
+        FROM sequence s
+        inner join target t on s.seq_id = t.seq_id
+        inner join chromosome c on s.chr_id = c.chr_id
+        WHERE 1 = 1
+        AND s.align_id = ?
+    };
+
+    my $sth = $dbh->prepare($query);
+    $sth->execute($align_id);
+    my ( $chr_name, $chr_start, $chr_end, $target_runlist )
+        = $sth->fetchrow_array;
+    $sth->finish;
+
+    return ( $chr_name, $chr_start, $chr_end, $target_runlist );
 }
 
 #----------------------------------------------------------#

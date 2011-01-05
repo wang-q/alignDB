@@ -18,6 +18,8 @@ use lib "$FindBin::Bin/../lib";
 use AlignDB;
 use AlignDB::Ensembl;
 use AlignDB::Position;
+use AlignDB::Multi;
+use AlignDB::Multi::Position;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -49,6 +51,8 @@ my $parallel = $Config->{feature}{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{feature}{batch};
 
+my $multi;
+
 my $man  = 0;
 my $help = 0;
 
@@ -65,6 +69,7 @@ GetOptions(
     'insert_codingsw=s' => \$insert_codingsw,
     'parallel=i'        => \$parallel,
     'batch=i'           => \$batch_number,
+    'multi'             => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -110,14 +115,26 @@ my $worker = sub {
     my $job       = shift;
     my @align_ids = @$job;
 
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-
-    # Database handler
-    my $dbh = $obj->dbh;
+    my ( $obj, $dbh, $pos_obj );
+    if ( !$multi ) {
+        $obj = AlignDB->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+        $dbh = $obj->dbh;
+        $pos_obj = AlignDB::Position->new( dbh => $dbh );
+    }
+    else {
+        $obj = AlignDB::Multi->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+        $dbh = $obj->dbh;
+        $pos_obj = AlignDB::Multi::Position->new( dbh => $dbh );
+    }
+    my $window_maker = $obj->window_maker;
 
     # ensembl handler
     my $ensembl = AlignDB::Ensembl->new(
@@ -126,9 +143,6 @@ my $worker = sub {
         user   => $username,
         passwd => $password,
     );
-
-    my $pos_obj = AlignDB::Position->new( dbh => $dbh );
-    my $window_maker = $obj->window_maker;
 
     # insert into gene
     my $gene_sth = $dbh->prepare(
@@ -183,12 +197,6 @@ my $worker = sub {
         $ensembl->set_slice( $chr_name, $chr_start, $chr_end );
         my $slice_obj     = $ensembl->slice_obj;
         my $slice_chr_set = AlignDB::IntSpan->new("$chr_start-$chr_end");
-        my $cds_set       = $ensembl->feature_set_obj('_cds_set');
-        my @cds_ranges
-            = map { $pos_obj->at_align( $align_id, $_ ) } $cds_set->ranges;
-        $cds_set = AlignDB::IntSpan->new;
-        $cds_set->add_range(@cds_ranges);
-        $cds_set->intersect($target_set);
 
         # insert internal indels, that are, indels in target_set
         # indels in query_set is equal to spans of target_set minus one
@@ -232,7 +240,7 @@ my $worker = sub {
                 = $pos_obj->at_align( $align_id, $gene_info{start} );
             my $gene_end = $pos_obj->at_align( $align_id, $gene_info{end} );
             if ( $gene_start >= $gene_end ) {
-                print "Gene $gene_info{stable_id} wrong\n";
+                print "Gene $gene_info{stable_id} wrong, start >= end\n";
                 next;
             }
             my $gene_set = AlignDB::IntSpan->new("$gene_start-$gene_end");
@@ -251,8 +259,9 @@ my $worker = sub {
             my @exons;
             if ($transcript) {
                 $transcript = $transcript->transform('chromosome');
-                @exons = @{ $transcript->get_all_Exons };
-                $_ = $_->transform('chromosome') for @exons;
+                @exons      = @{ $transcript->get_all_Exons };
+                @exons = sort { $a->start <=> $b->start } @exons;
+                $_          = $_->transform('chromosome') for @exons;
             }
             my $gene_multiexons = @exons;
 
@@ -288,6 +297,12 @@ my $worker = sub {
                     $exon_info{$_} = $result;
                 }
 
+                for (qw{ coding_region_start coding_region_end }) {
+                    my $result = $exon->$_($transcript);
+                    $result = $result ? $result : undef;
+                    $exon_info{$_} = $result;
+                }
+
                 # convert strand symbol from "1" or "-1" to "+" or "-"
                 $exon_info{strand} = $exon_info{strand} > 0 ? "+" : "-";
 
@@ -307,10 +322,20 @@ my $worker = sub {
                     $exon_is_full = 0;
                 }
 
+                if ( $exon_info{coding_region_start} < $chr_start ) {
+                    $exon_info{coding_region_start} = $chr_start;
+                }
+                if ( $exon_info{coding_region_end} > $chr_end ) {
+                    $exon_info{coding_region_end} = $chr_end;
+                    $exon_is_full = 0;
+                }
+
                 # XXX: bioperl and ensembl conflict
                 my $exon_seq;
+
                 #my $exon_seq = $exon->seq->seq;
                 my $exon_peptide;
+
                 #if ($transcript) {
                 #    $exon_peptide = $exon->peptide($transcript)->seq;
                 #}
@@ -320,12 +345,26 @@ my $worker = sub {
                     = $pos_obj->at_align( $align_id, $exon_info{start} );
                 my $exon_end
                     = $pos_obj->at_align( $align_id, $exon_info{end} );
-                next if $exon_start >= $exon_end;
+                if ( $exon_start >= $exon_end ) {
+                    print "Exon $exon_info{stable_id} wrong, start >= end\n";
+                    next;
+                }
                 my $exon_set = AlignDB::IntSpan->new("$exon_start-$exon_end");
                 $exon_set = $exon_set->intersect($target_set);
 
                 # coding region set
-                my $coding_set = $exon_set->intersect($cds_set);
+                my $coding_region_start = $pos_obj->at_align( $align_id,
+                    $exon_info{coding_region_start} );
+                my $coding_region_end = $pos_obj->at_align( $align_id,
+                    $exon_info{coding_region_end} );
+                if ( $coding_region_start >= $coding_region_end ) {
+                    print
+                        "Exon $exon_info{stable_id} coding_region wrong, start >= end\n";
+                    next;
+                }
+                my $coding_set = AlignDB::IntSpan->new(
+                    "$coding_region_start-$coding_region_end");
+                $coding_set = $coding_set->intersect($target_set);
 
                 $exon_info{set}        = $exon_set;
                 $exon_info{is_full}    = $exon_is_full;
@@ -350,7 +389,7 @@ my $worker = sub {
                     $internal_indel_flag );
 
                 $exon_sth->execute(
-                    $prev_exon_id,      $cur_window_id,
+                    $prev_exon_id,           $cur_window_id,
                     $exon_site->{gene_id},   $exon_site->{stable_id},
                     $exon_site->{strand},    $exon_site->{phase},
                     $exon_site->{end_phase}, $exon_site->{frame},
@@ -380,26 +419,30 @@ my $worker = sub {
 
             # exon_end
             my $fetch_exon_info = $dbh->prepare(
-                'SELECT w.window_start, w.window_end, w.window_runlist
+                q{
+                SELECT w.window_start, w.window_end, w.window_runlist
                 FROM exon e, window w
                 WHERE e.window_id = w.window_id
-                AND exon_id = ?'
+                AND exon_id = ?
+                }
             );
 
             # prepare exonsw_insert
             my $exonsw_insert = $dbh->prepare(
-                'INSERT INTO exonsw (
+                q{
+                INSERT INTO exonsw (
                     exonsw_id, window_id, exon_id, prev_exon_id, 
                     exonsw_type, exonsw_distance, exonsw_density
                 )
                 VALUES (
                     NULL, ?, ?, ?,
                     ?, ?, ?
-                )'
+                )
+                }
             );
 
             while ( my $ref = $fetch_exon_id->fetchrow_hashref ) {
-                my $exon_id           = $ref->{exon_id};
+                my $exon_id      = $ref->{exon_id};
                 my $prev_exon_id = $ref->{prev_exon_id};
 
                 # bypass the first exon
@@ -418,7 +461,8 @@ my $worker = sub {
                 $inter_exon_end--;
 
                 if ( $inter_exon_start > $inter_exon_end ) {
-                    warn "start $inter_exon_start > end $inter_exon_end.\n";
+                    warn
+                        "interexon start $inter_exon_start > end $inter_exon_end.\n";
                     next;
                 }
 
@@ -432,11 +476,9 @@ my $worker = sub {
                         = $obj->insert_window( $align_id, $exonsw->{set},
                         $internal_indel_flag );
 
-                    $exonsw_insert->execute(
-                        $cur_window_id,      $exon_id,
-                        $prev_exon_id,  $exonsw->{type},
-                        $exonsw->{distance}, $exonsw->{density},
-                    );
+                    $exonsw_insert->execute( $cur_window_id, $exon_id,
+                        $prev_exon_id, $exonsw->{type}, $exonsw->{distance},
+                        $exonsw->{density}, );
                 }
 
                 # inside sliding
@@ -451,8 +493,8 @@ my $worker = sub {
                     my ( $exonsw_start, $exonsw_end );
                     my $working_exon_set;
                     if ( $exonsw_type eq 'l' ) {
-                        $working_exon_set = AlignDB::IntSpan->new(
-                            "$prev_exon_runlist");
+                        $working_exon_set
+                            = AlignDB::IntSpan->new("$prev_exon_runlist");
                         $exonsw_end = $working_exon_set->cardinality;
                         $exonsw_start
                             = $exonsw_end - $exonsw_size_window0 + 1;
@@ -492,9 +534,9 @@ my $worker = sub {
                             $internal_indel_flag );
 
                         $exonsw_insert->execute(
-                            $cur_window_id,     $exon_id,
-                            $prev_exon_id, $exonsw_type,
-                            $exonsw_distance,   $exonsw_density
+                            $cur_window_id,   $exon_id,
+                            $prev_exon_id,    $exonsw_type,
+                            $exonsw_distance, $exonsw_density
                         );
 
                         if ( $exonsw_type eq 'l' ) {
@@ -544,7 +586,7 @@ my $worker = sub {
             );
 
             while ( my $ref = $fetch_exon_id->fetchrow_hashref ) {
-                my $exon_id           = $ref->{exon_id};
+                my $exon_id      = $ref->{exon_id};
                 my $prev_exon_id = $ref->{prev_exon_id};
 
                 $fetch_exon_info->execute($exon_id);
