@@ -73,13 +73,7 @@ my $dbh = $obj->dbh;
 # start update
 #----------------------------------------------------------#
 {
-
-    # alignments
-    my $align_query = q{
-        SELECT align_id
-        FROM align 
-    };
-    my $align_sth = $dbh->prepare($align_query);
+    my @align_ids = @{ $obj->get_align_ids };
 
     # update
     my $segment_query = q{
@@ -107,17 +101,12 @@ my $dbh = $obj->dbh;
     };
     my $segment_sth = $dbh->prepare($segment_query);
 
-    $align_sth->execute;
-
-    # for segment
-    while ( my @row = $align_sth->fetchrow_array ) {
-        my ($align_id) = @row;
+    for my $align_id (@align_ids) {
         print "Processing align_id $align_id\n";
         $segment_sth->execute( $align_id, $align_id );
     }
 
     $segment_sth->finish;
-    $align_sth->finish;
 }
 
 $stopwatch->end_message;

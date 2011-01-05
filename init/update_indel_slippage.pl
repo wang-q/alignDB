@@ -90,7 +90,7 @@ my $dbh = $obj->dbh;
     my ($count) = $sth->fetchrow_array;
 
     if ( !$count ) {
-        $sql_query = qq{
+        $sql_query = q{
             INSERT INTO indel_extra (indel_id, prev_indel_id)
             SELECT indel.indel_id, indel.prev_indel_id
             FROM indel
@@ -104,23 +104,7 @@ my $dbh = $obj->dbh;
 # start update
 #----------------------------------------------------------#
 {
-
-    # alignments
-    my $align_query = q{
-        SELECT align_id
-        FROM align 
-    };
-    my $align_sth = $dbh->prepare($align_query);
-
-    # sequence
-    my $seq_query = q{
-        SELECT t.target_seq, q.query_seq
-        FROM align a, target t, query q
-        WHERE a.align_id = ?
-        AND a.align_id = q.align_id
-        AND a.align_id = t.align_id
-    };
-    my $seq_sth = $dbh->prepare($seq_query);
+    my @align_ids = @{ $obj->get_align_ids };
 
     # select all indels in this alignment
     my $indel_query = q{
@@ -165,15 +149,11 @@ my $dbh = $obj->dbh;
     };
     my $window_ns_sth = $dbh->prepare($window_ns);
 
-    $align_sth->execute();
-
     # for indel
-    while ( my @row = $align_sth->fetchrow_array ) {
-        my ($align_id) = @row;
+    for my $align_id (@align_ids) {
         print "Processing align_id $align_id\n";
 
-        $seq_sth->execute($align_id);
-        my ( $target_seq, $query_seq ) = $seq_sth->fetchrow_array;
+        my ( $target_seq, $query_seq ) = @{$obj->get_seqs($align_id)};
 
         $indel_sth->execute($align_id);
         while ( my @row = $indel_sth->fetchrow_array ) {
@@ -261,7 +241,6 @@ my $dbh = $obj->dbh;
     $window_sth->finish;
     $indel_extra_sth->finish;
     $indel_sth->finish;
-    $align_sth->finish;
 }
 
 $stopwatch->end_message;
