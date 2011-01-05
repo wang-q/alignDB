@@ -250,14 +250,14 @@ for my $chr_id ( $db_info_of{$target_db}->{chr_id_set}->elements ) {
             $inter_chr_set = $inter_chr_set->intersect($cur_chr_set);
         }
     }
-    
+
     $chr_set_of{$chr_id} = $inter_chr_set;
 }
 
-for my $chr_id (sort keys %chr_set_of) {
+for my $chr_id ( sort keys %chr_set_of ) {
     my $inter_chr_set = $chr_set_of{$chr_id};
-    my $chr_name = $db_info_of{$target_db}->{chrs}{$chr_id}{name};
-    
+    my $chr_name      = $db_info_of{$target_db}->{chrs}{$chr_id}{name};
+
     #----------------------------#
     # process each intersects
     #----------------------------#
@@ -320,8 +320,8 @@ SEG: for (@segments) {
             my $db_name_idx = $1;
             my $db_name     = $all_dbs[$db_name_idx];
             my $result      = pair_seq_stat(
-                $db_info_of{$db_name}->{target}{seqs},
-                $db_info_of{$db_name}->{query}{seqs},
+                $db_info_of{$db_name}->{target}{seq},
+                $db_info_of{$db_name}->{query}{seq},
             );
             my $seq_legnth = $result->[0];
             my $identities = $result->[2];
@@ -342,7 +342,7 @@ SEG: for (@segments) {
             my $max_length = 0;
             for my $db_name (@all_dbs) {
                 $max_length = max( $max_length,
-                    length $db_info_of{$db_name}->{target}{seqs} );
+                    length $db_info_of{$db_name}->{target}{seq} );
             }
             if ( $pos_count >= $max_length ) {
                 last;
@@ -351,7 +351,7 @@ SEG: for (@segments) {
             my @target_bases;
             for my $db_name (@all_dbs) {
                 push @target_bases,
-                    substr( $db_info_of{$db_name}->{target}{seqs},
+                    substr( $db_info_of{$db_name}->{target}{seq},
                     $pos_count - 1, 1 );
             }
 
@@ -371,12 +371,12 @@ SEG: for (@segments) {
                 }
                 else {
                     substr(
-                        $db_info_of{$db_name}->{target}{seqs},
+                        $db_info_of{$db_name}->{target}{seq},
                         $pos_count - 1,
                         0, '-'
                     );
                     substr(
-                        $db_info_of{$db_name}->{query}{seqs},
+                        $db_info_of{$db_name}->{query}{seq},
                         $pos_count - 1,
                         0, '-'
                     );
@@ -426,7 +426,7 @@ SEG: for (@segments) {
             open my $out_fh, '>', $outfile
                 or die("Cannot open output file $outfile");
             for my $name (@all_names) {
-                my $seq = $info_of{$name}->{seqs};
+                my $seq = $info_of{$name}->{seq};
                 print {$out_fh} ">", $info_of{$name}->{name}, "\n";
                 print {$out_fh} $seq, "\n";
             }
@@ -464,7 +464,7 @@ SEG: for (@segments) {
             # don't expand indel set
             my %indel_sets;
             for (@all_names) {
-                $indel_sets{$_} = find_indel_set( $info_of{$_}->{seqs} );
+                $indel_sets{$_} = find_indel_set( $info_of{$_}->{seq} );
             }
             my $outgroup_indel_set = $indel_sets{$outgroup};
             delete $indel_sets{$outgroup};
@@ -482,7 +482,7 @@ SEG: for (@segments) {
                 # trim sequence
                 for (@all_names) {
                     substr(
-                        $info_of{$_}->{seqs},
+                        $info_of{$_}->{seq},
                         $seg_start - 1,
                         $seg_end - $seg_start + 1, ''
                     );
@@ -556,7 +556,7 @@ SEG: for (@segments) {
             open my $out_fh, '>', $outfile
                 or die("Cannot open OUT file $outfile");
             for my $name (@all_names) {
-                my $seq = $info_of{$name}->{seqs};
+                my $seq = $info_of{$name}->{seq};
                 print {$out_fh} ">", $info_of{$name}->{name}, "\n";
                 print {$out_fh} $seq, "\n";
             }
@@ -627,40 +627,20 @@ sub build_seq {
     my $seg_start = shift;
     my $seg_end   = shift;
 
-    my $target_seq_query = q{
-        SELECT  t.target_seq,
-                s.chr_id,
-                s.chr_strand
-        FROM target t, sequence s
-        WHERE t.seq_id = s.seq_id
-        AND t.align_id = ?
-    };
-    my $query_seq_query = q{
-        SELECT  q.query_seq,
-                q.query_strand,
-                s.chr_id,
-                s.chr_strand
-        FROM query q, sequence s
-        WHERE q.seq_id = s.seq_id
-        AND q.align_id = ?
-    };
-
-    my $dbh      = $db_info->{obj}->{dbh};
+    my $obj      = $db_info->{obj};
     my $pos_obj  = $db_info->{pos_obj};
     my $align_id = $db_info->{align_id};
 
-    my $target_sth = $dbh->prepare($target_seq_query);
-    $target_sth->execute($align_id);
-    (   $db_info->{target}{full_seqs},
-        $db_info->{target}{chr_id},
-        $db_info->{target}{chr_strand},
-    ) = $target_sth->fetchrow_array;
+    my $target_info = $obj->get_target_info($align_id);
+    $db_info->{target}{chr_id}     = $target_info->{chr_id};
+    $db_info->{target}{chr_strand} = $target_info->{chr_strand};
 
-    my $query_sth = $dbh->prepare($query_seq_query);
-    $query_sth->execute($align_id);
-    (   $db_info->{query}{full_seqs}, $db_info->{query}{query_strand},
-        $db_info->{query}{chr_id},    $db_info->{query}{chr_strand},
-    ) = $query_sth->fetchrow_array;
+    my $query_info = $obj->get_query_info($align_id);
+    $db_info->{query}{chr_id}       = $query_info->{chr_id};
+    $db_info->{query}{chr_strand}   = $query_info->{chr_strand};
+    $db_info->{query}{query_strand} = $query_info->{query_strand};
+    
+    ($db_info->{query}{full_seq},$db_info->{target}{full_seq})   = @{$obj->get_seqs($align_id)};
 
     my $align_start = $pos_obj->at_align( $align_id, $seg_start );
     my $align_end   = $pos_obj->at_align( $align_id, $seg_end );
@@ -672,25 +652,23 @@ sub build_seq {
 
     my $align_length = $align_end - $align_start + 1;
 
-    $db_info->{target}{seqs} = substr(
-        $db_info->{target}{full_seqs},
+    $db_info->{target}{seq} = substr(
+        $db_info->{target}{full_seq},
         $align_start - 1,
         $align_length
     );
-    $db_info->{query}{seqs} = substr(
-        $db_info->{query}{full_seqs},
-        $align_start - 1,
-        $align_length
-    );
+    $db_info->{query}{seq}
+        = substr( $db_info->{query}{full_seq}, $align_start - 1,
+        $align_length );
 
-    unless (length $db_info->{target}{seqs} == length $db_info->{query}{seqs}
-        and length $db_info->{target}{seqs} > 0 )
+    unless (length $db_info->{target}{seq} == length $db_info->{query}{seq}
+        and length $db_info->{target}{seq} > 0 )
     {
         return " " x 8 . "seq-length error";
     }
 
-    delete $db_info->{target}{full_seqs};
-    delete $db_info->{query}{full_seqs};
+    delete $db_info->{target}{full_seq};
+    delete $db_info->{query}{full_seq};
 
     return;
 }
@@ -711,7 +689,7 @@ sub realign {
     my %indel_sets;
     for (@all_names) {
         $indel_sets{$_}
-            = find_indel_set( $info_of{$_}->{seqs}, $indel_expand );
+            = find_indel_set( $info_of{$_}->{seq}, $indel_expand );
     }
 
     my $realign_region = AlignDB::IntSpan->new;
@@ -747,7 +725,7 @@ sub realign {
         my @segments;
         for (@all_names) {
             my $seg = substr(
-                $info_of{$_}->{seqs},
+                $info_of{$_}->{seq},
                 $seg_start - 1,
                 $seg_end - $seg_start + 1
             );
@@ -759,7 +737,7 @@ sub realign {
         for (@all_names) {
             my $seg = shift @$realign_segments;
             substr(
-                $info_of{$_}->{seqs},
+                $info_of{$_}->{seq},
                 $seg_start - 1,
                 $seg_end - $seg_start + 1, $seg
             );
@@ -784,12 +762,12 @@ sub trim_hf {
     while (1) {
         my @first_column;
         for (@all_names) {
-            my $first_base = substr( $info_of{$_}->{seqs}, 0, 1 );
+            my $first_base = substr( $info_of{$_}->{seq}, 0, 1 );
             push @first_column, $first_base;
         }
         if ( any { $_ eq '-' } @first_column ) {
             for (@all_names) {
-                substr( $info_of{$_}->{seqs}, 0, 1, '' );
+                substr( $info_of{$_}->{seq}, 0, 1, '' );
             }
             print " " x 4, "Trim header indel\n";
         }
@@ -802,12 +780,12 @@ sub trim_hf {
     while (1) {
         my (@last_column);
         for (@all_names) {
-            my $last_base = substr( $info_of{$_}->{seqs}, -1, 1 );
+            my $last_base = substr( $info_of{$_}->{seq}, -1, 1 );
             push @last_column, $last_base;
         }
         if ( any { $_ eq '-' } @last_column ) {
             for (@all_names) {
-                substr( $info_of{$_}->{seqs}, -1, 1, '' );
+                substr( $info_of{$_}->{seq}, -1, 1, '' );
             }
             print " " x 4, "Trim footer indel\n";
         }
@@ -836,13 +814,13 @@ sub trim_outgroup {
 
     # add raw_seqs to outgroup info hash
     # it will be used in $goal_obj->add_align
-    $info_of{$outgroup}->{raw_seqs} = $info_of{$outgroup}->{seqs};
+    $info_of{$outgroup}->{raw_seq} = $info_of{$outgroup}->{seq};
 
     # don't expand indel set
     my %indel_sets;
     for ( 1 .. @all_names - 1 ) {
         my $name = $all_names[$_];
-        $indel_sets{$name} = find_indel_set( $info_of{$name}->{seqs} );
+        $indel_sets{$name} = find_indel_set( $info_of{$name}->{seq} );
     }
 
     # find trim_region
@@ -863,7 +841,7 @@ sub trim_outgroup {
         my $seg_end   = $_->[1];
         for (@all_names) {
             substr(
-                $info_of{$_}->{seqs},
+                $info_of{$_}->{seq},
                 $seg_start - 1,
                 $seg_end - $seg_start + 1, ''
             );
