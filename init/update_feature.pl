@@ -155,21 +155,6 @@ my $worker = sub {
     #----------------------------#
     # SQL query and DBI sths
     #----------------------------#
-    # alignments' chromosomal location
-    my $align_seq_query = q{
-        SELECT c.chr_name,
-               a.align_length,
-               s.chr_start,
-               s.chr_end,
-               t.target_seq
-        FROM align a, target t, sequence s, chromosome c
-        WHERE a.align_id = t.align_id
-        AND t.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
-        AND a.align_id = ?
-    };
-    my $align_seq_sth = $dbh->prepare($align_seq_query);
-
     # update align_extra table in the new feature column
     my $align_extra = q{
         INSERT INTO align_extra (
@@ -258,11 +243,14 @@ UPDATE: for my $align_id (@align_ids) {
         #----------------------------#
         # for each alignment
         #----------------------------#
-        $align_seq_sth->execute($align_id);
-        my ( $chr_name, $align_length, $chr_start, $chr_end, $target_seq )
-            = $align_seq_sth->fetchrow_array;
-        print "prosess align $align_id ",
-            "in $chr_name $chr_start - $chr_end\n";
+        my $target_info  = $obj->get_target_info($align_id);
+        my $chr_name     = $target_info->{chr_name};
+        my $chr_start    = $target_info->{chr_start};
+        my $chr_end      = $target_info->{chr_end};
+        my $align_length = $target_info->{align_length};
+        my ($target_seq) = @{ $obj->get_seqs($align_id) };
+        $obj->process_message($align_id);
+        
         next UPDATE if $chr_name =~ /rand|un|contig|hap|scaf/i;
 
         $chr_name =~ s/chr0?//i;
@@ -415,11 +403,10 @@ UPDATE: for my $align_id (@align_ids) {
                 #  $ensembl->locate_set_position($window_chr_set);
                 my $window_coding = $ensembl->feature_portion( '_cds_set',
                     $window_chr_set );
-                my $window_repeats
-                    = $ensembl->feature_portion( '_repeat_set',
+                my $window_repeats = $ensembl->feature_portion( '_repeat_set',
                     $window_chr_set );
-                $window_update_sth->execute( $window_coding,
-                    $window_repeats, $window_id, );
+                $window_update_sth->execute( $window_coding, $window_repeats,
+                    $window_id, );
             }
 
             $window_update_sth->finish;

@@ -19,7 +19,6 @@ use AlignDB;
 use AlignDB::Ensembl;
 use AlignDB::Position;
 use AlignDB::Multi;
-use AlignDB::Multi::Position;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -115,15 +114,13 @@ my $worker = sub {
     my $job       = shift;
     my @align_ids = @$job;
 
-    my ( $obj, $dbh, $pos_obj );
+    my $obj;
     if ( !$multi ) {
         $obj = AlignDB->new(
             mysql  => "$db:$server",
             user   => $username,
             passwd => $password,
         );
-        $dbh = $obj->dbh;
-        $pos_obj = AlignDB::Position->new( dbh => $dbh );
     }
     else {
         $obj = AlignDB::Multi->new(
@@ -131,9 +128,9 @@ my $worker = sub {
             user   => $username,
             passwd => $password,
         );
-        $dbh = $obj->dbh;
-        $pos_obj = AlignDB::Multi::Position->new( dbh => $dbh );
     }
+    my $dbh = $obj->dbh;
+    my $pos_obj = AlignDB::Position->new( dbh => $dbh );
     my $window_maker = $obj->window_maker;
 
     # ensembl handler
@@ -183,11 +180,15 @@ my $worker = sub {
 
     # for each alignment
     for my $align_id (@align_ids) {
-        my ( $chr_name, $chr_start, $chr_end, $target_runlist )
-            = $obj->get_target_info($align_id);
+        my $target_info    = $obj->get_target_info($align_id);
+        my $chr_name       = $target_info->{chr_name};
+        my $chr_start      = $target_info->{chr_start};
+        my $chr_end        = $target_info->{chr_end};
+        my $target_runlist = $target_info->{seq_runlist};
+
         next if $chr_name =~ /rand|un|contig|hap|scaf/i;
 
-        print "Prosess align $align_id in $chr_name $chr_start - $chr_end\n";
+        $obj->process_message($align_id);
 
         $chr_name =~ s/chr0?//i;
 
@@ -260,7 +261,7 @@ my $worker = sub {
             if ($transcript) {
                 $transcript = $transcript->transform('chromosome');
                 @exons      = @{ $transcript->get_all_Exons };
-                @exons = sort { $a->start <=> $b->start } @exons;
+                @exons      = sort { $a->start <=> $b->start } @exons;
                 $_          = $_->transform('chromosome') for @exons;
             }
             my $gene_multiexons = @exons;
@@ -559,30 +560,36 @@ my $worker = sub {
 
             # exon_id
             my $fetch_exon_id = $dbh->prepare(
-                "SELECT exon_id, prev_exon_id
+                q{
+                SELECT exon_id, prev_exon_id
                 FROM exon e, window w
                 WHERE e.window_id = w.window_id
-                AND align_id = ?"
+                AND align_id = ?
+                }
             );
             $fetch_exon_id->execute($align_id);
 
             # exon_info
             my $fetch_exon_info = $dbh->prepare(
-                'SELECT e.exon_tl_runlist
+                q{
+                SELECT e.exon_tl_runlist
                 FROM exon e
-                WHERE exon_id = ?'
+                WHERE exon_id = ?
+                }
             );
 
             # prepare exonsw_insert
             my $codingsw_insert = $dbh->prepare(
-                'INSERT INTO codingsw (
+                q{
+                INSERT INTO codingsw (
                     codingsw_id, window_id, exon_id, prev_exon_id, 
                     codingsw_type, codingsw_distance
                 )
                 VALUES (
                     NULL, ?, ?, ?,
                     ?, ?
-                )'
+                )
+                }
             );
 
             while ( my $ref = $fetch_exon_id->fetchrow_hashref ) {
@@ -681,7 +688,6 @@ __END__
         --username          username
         --password          password
         --ensembl           ensembl database name
-       
 
 =head1 OPTIONS
 

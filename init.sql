@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/5/2011 2:20:43 PM                          */
+/* Created on:     1/5/2011 6:46:58 PM                          */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -498,10 +498,8 @@ create table query
 (
    query_id                       int                            not null AUTO_INCREMENT,
    seq_id                         int,
-   align_id                       int,
-   query_seq                      longtext,
    query_strand                   char(1),
-   query_runlist                  text,
+   query_position                 int,
    primary key (query_id)
 )
 ENGINE = MyISAM;
@@ -515,21 +513,12 @@ create index sequence_query_FK on query
 );
 
 /*==============================================================*/
-/* Index: align_query_FK                                        */
-/*==============================================================*/
-create index align_query_FK on query
-(
-   align_id
-);
-
-/*==============================================================*/
 /* Table: reference                                             */
 /*==============================================================*/
 create table reference
 (
    ref_id                         int                            not null AUTO_INCREMENT,
-   align_id                       int,
-   ref_seq                        longtext,
+   seq_id                         int,
    ref_raw_seq                    longtext,
    ref_complex_indel              text,
    primary key (ref_id)
@@ -537,11 +526,11 @@ create table reference
 ENGINE = MyISAM;
 
 /*==============================================================*/
-/* Index: align_reference_FK                                    */
+/* Index: sequence_reference_FK                                 */
 /*==============================================================*/
-create index align_reference_FK on reference
+create index sequence_reference_FK on reference
 (
-   align_id
+   seq_id
 );
 
 /*==============================================================*/
@@ -574,11 +563,15 @@ create index window_segment_FK on segment
 create table sequence
 (
    seq_id                         int                            not null AUTO_INCREMENT,
+   align_id                       int,
    chr_id                         int,
    chr_start                      int,
    chr_end                        int,
    chr_strand                     char(1),
    seq_length                     int,
+   seq_seq                        longtext,
+   seq_gc                         double,
+   seq_runlist                    text,
    primary key (seq_id)
 )
 ENGINE = MyISAM;
@@ -589,6 +582,14 @@ ENGINE = MyISAM;
 create index chromosome_sequence_FK on sequence
 (
    chr_id
+);
+
+/*==============================================================*/
+/* Index: align_sequence_FK                                     */
+/*==============================================================*/
+create index align_sequence_FK on sequence
+(
+   align_id
 );
 
 /*==============================================================*/
@@ -685,10 +686,7 @@ create index snp_ssw_FK on ssw
 create table target
 (
    target_id                      int                            not null AUTO_INCREMENT,
-   align_id                       int,
    seq_id                         int,
-   target_seq                     longtext,
-   target_runlist                 text,
    primary key (target_id)
 )
 ENGINE = MyISAM;
@@ -699,14 +697,6 @@ ENGINE = MyISAM;
 create index sequence_target_FK on target
 (
    seq_id
-);
-
-/*==============================================================*/
-/* Index: align_target_FK                                       */
-/*==============================================================*/
-create index align_target_FK on target
-(
-   align_id
 );
 
 /*==============================================================*/

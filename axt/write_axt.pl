@@ -106,9 +106,11 @@ for my $chr (@chrs) {
         print "Processing align_id $align_id\n";
 
         # target
-        my ($target_chr_name, $target_chr_start,
-            $target_chr_end,  $target_runlist
-        ) = $obj->get_target_info($align_id);
+        my $target_info      = $obj->get_target_info($align_id);
+        my $target_chr_name  = $target_info->{chr_name};
+        my $target_chr_start = $target_info->{chr_start};
+        my $target_chr_end   = $target_info->{chr_end};
+        my $target_runlist   = $target_info->{seq_runlist};
 
         # query
         my ($query_chr_name, $query_chr_start, $query_chr_end,

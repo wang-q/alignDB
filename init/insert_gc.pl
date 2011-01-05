@@ -115,7 +115,7 @@ my @jobs;
 my $worker = sub {
     my $job       = shift;
     my @align_ids = @$job;
-    
+
     my $obj = AlignDB->new(
         mysql  => "$db:$server",
         user   => $username,
@@ -132,36 +132,28 @@ my $worker = sub {
         stat_window_step => $stat_window_step,
         alt_level        => $alt_level,
     );
-    for my $key (sort keys %opt) {
-        $obj->$key($opt{$key});
+    for my $key ( sort keys %opt ) {
+        $obj->$key( $opt{$key} );
     }
 
     # Database handler
     my $dbh = $obj->dbh;
 
-    # alignments' chromosomal location, target_seq and query_seq
+    # alignments' info
     my $align_seq_query = q{
-        SELECT c.chr_name,
-               a.align_length,
-               a.comparable_runlist,
-               s.chr_start,
-               s.chr_end
-        FROM align a, target t, sequence s, chromosome c
-        WHERE a.align_id = t.align_id
-        AND t.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
-        AND a.align_id = ?
+        SELECT a.align_length,
+               a.comparable_runlist
+        FROM align a
+        WHERE a.align_id = ?
     };
     my $align_seq_sth = $dbh->prepare($align_seq_query);
 
     for my $align_id (@align_ids) {
         $align_seq_sth->execute($align_id);
-        my ( $chr_name, $align_length, $comparable_runlist, $chr_start,
-            $chr_end, )
+        my ( $align_length, $comparable_runlist )
             = $align_seq_sth->fetchrow_array;
 
-        print "prosess align $align_id ",
-            "in $chr_name $chr_start - $chr_end\n";
+        $obj->process_message($align_id);
 
         # comparable runlist
         my $comparable_set = AlignDB::IntSpan->new($comparable_runlist);

@@ -149,10 +149,10 @@ sub parse_fasta_file {
             VALUES ( NULL, ? )
             }
         );
-        $seq_infos[1]->{chr_id}    = $target_chr_id;
-        $seq_infos[1]->{chr_start} = $target_chr_start;
-        $seq_infos[1]->{chr_end}   = $target_chr_end;
-        $seq_infos[1]->{strand}    = '+';
+        $seq_infos[1]->{chr_id}     = $target_chr_id;
+        $seq_infos[1]->{chr_start}  = $target_chr_start;
+        $seq_infos[1]->{chr_end}    = $target_chr_end;
+        $seq_infos[1]->{chr_strand} = '+';
         my $target_seq_id = $self->_insert_seq( $seq_infos[1] );
         $target_insert->execute($target_seq_id);
         $target_insert->finish;
@@ -283,9 +283,9 @@ sub parse_fasta_file {
             my $indel_gc = calc_gc_ratio($indel_seq);
 
             $indel_insert_sql->execute(
-                $align_id,  $prev_indel_id, $indel_start,
-                $indel_end, $indel_length,       $indel_seq,
-                $indel_gc,  $indel_frequency,    $indel_occured,
+                $align_id,  $prev_indel_id,   $indel_start,
+                $indel_end, $indel_length,    $indel_seq,
+                $indel_gc,  $indel_frequency, $indel_occured,
                 $indel_type,
             );
             ($prev_indel_id) = $self->last_insert_id;
@@ -383,12 +383,10 @@ sub parse_fasta_file {
                 }
 
                 $isw_insert_sql->execute(
-                    $indel_id,     $prev_indel_id,
-                    $isw_indel_id, $isw_start,
-                    $isw_end,      $isw_length,
-                    $isw_type,     $isw_distance,
-                    $isw_density,  $isw_difference,
-                    $isw_pi,       $isw_target_gc,
+                    $indel_id,       $prev_indel_id, $isw_indel_id,
+                    $isw_start,      $isw_end,       $isw_length,
+                    $isw_type,       $isw_distance,  $isw_density,
+                    $isw_difference, $isw_pi,        $isw_target_gc,
                     $isw_average_gc
                 );
                 my $isw_id = $self->last_insert_id;
@@ -450,10 +448,10 @@ sub _insert_seq {
     );
 
     $seq_insert->execute(
-        $seq_info->{chr_id},    $seq_info->{align_id},
-        $seq_info->{chr_start}, $seq_info->{chr_end},
-        $seq_info->{strand},    $seq_info->{length},
-        $seq_info->{seq},       $seq_info->{gc},
+        $seq_info->{chr_id},     $seq_info->{align_id},
+        $seq_info->{chr_start},  $seq_info->{chr_end},
+        $seq_info->{chr_strand}, $seq_info->{length},
+        $seq_info->{seq},        $seq_info->{gc},
         $seq_info->{runlist},
     );
 
@@ -636,7 +634,7 @@ sub update_indel {
             my $left_extand    = $indel_info->{$indel_id}{left_extand};
             my $right_extand   = $indel_info->{$indel_id}{right_extand};
             my $indel_slippate = 0;
-            
+
             next unless $indel_seq;
 
             if ( exists $min_reps->{$indel_length} ) {

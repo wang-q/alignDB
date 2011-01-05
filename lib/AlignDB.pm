@@ -1,5 +1,6 @@
 package AlignDB;
 use Moose;
+use Carp;
 use DBI;
 
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
@@ -73,9 +74,11 @@ sub _tvsq_id {
 
     my $tvsq_id;
     my $tvsq = $dbh->prepare(
-        'SELECT tvsq_id FROM tvsq
+        q{
+        SELECT tvsq_id FROM tvsq
         WHERE target_taxon_id = ?
-        AND query_taxon_id = ?'
+        AND query_taxon_id = ?
+        }
     );
     $tvsq->execute( $target_taxon_id, $query_taxon_id );
     while ( my @row = $tvsq->fetchrow_array ) {
@@ -85,16 +88,16 @@ sub _tvsq_id {
 
     unless ( defined $tvsq_id ) {
         my $tvsq_insert = $dbh->prepare(
-            'INSERT INTO tvsq (
+            q{
+            INSERT INTO tvsq (
                 tvsq_id, target_taxon_id, target_name,
-                query_taxon_id, query_name,
-                ref_taxon_id, ref_name
+                query_taxon_id, query_name, ref_taxon_id, ref_name
             )
             VALUES (
                 NULL, ?, ?,
-                ?, ?,
-                ?, ?
-            )'
+                ?, ?, ?, ?
+            )
+            }
         );
         $tvsq_insert->execute(
             $target_taxon_id, $target_name,  $query_taxon_id,
@@ -112,7 +115,8 @@ sub _insert_align {
     my $dbh = $self->dbh;
 
     my $align_insert = $dbh->prepare(
-        'INSERT INTO align (
+        q{
+        INSERT INTO align (
             align_id, tvsq_id, align_length,
             comparable_bases, identities, differences,
             gaps, ns, align_error,
@@ -125,7 +129,8 @@ sub _insert_align {
             ?, ?, ?,
             ?, ?, ?,
             NULL, NULL
-        )'
+        )
+        }
     );
 
     my $result = pair_seq_stat( $$target_seq_ref, $$query_seq_ref );
@@ -153,29 +158,36 @@ sub _insert_isw {
 
     # indel_id & prev_indel_id
     my $fetch_indel_id_isw = $dbh->prepare(
-        'SELECT indel_id, prev_indel_id
+        q{
+        SELECT indel_id, prev_indel_id
         FROM indel
-        WHERE align_id = ?'
+        WHERE align_id = ?
+        }
     );
     $fetch_indel_id_isw->execute($align_id);
 
     # indel_end
     my $fetch_prev_indel_end = $dbh->prepare(
-        'SELECT indel_end
+        q{
+        SELECT indel_end
         FROM indel
-        WHERE indel_id = ?'
+        WHERE indel_id = ?
+        }
     );
 
     # prev_indel_start
     my $fetch_indel_start = $dbh->prepare(
-        'SELECT indel_start
+        q{
+        SELECT indel_start
         FROM indel
-        WHERE indel_id = ?'
+        WHERE indel_id = ?
+        }
     );
 
     # prepare isw_insert
     my $isw_insert = $dbh->prepare(
-        'INSERT INTO isw (
+        q{
+        INSERT INTO isw (
             isw_id, indel_id, prev_indel_id,
             isw_start, isw_end, isw_length, 
             isw_type, isw_distance, isw_density,
@@ -190,11 +202,12 @@ sub _insert_isw {
             ?, ?, ?,
             ?, ?,
             NULL, NULL, NULL
-        )'
+        )
+        }
     );
 
     while ( my $ref = $fetch_indel_id_isw->fetchrow_hashref ) {
-        my $indel_id           = $ref->{indel_id};
+        my $indel_id      = $ref->{indel_id};
         my $prev_indel_id = $ref->{prev_indel_id};
 
         # bypass the first indel
@@ -229,7 +242,7 @@ sub _insert_isw {
             = $window_maker->interval_window( $align_set, $interval_start,
             $interval_end );
 
-        foreach my $isw (@isws) {
+        for my $isw (@isws) {
             my $isw_set    = $isw->{set};
             my $isw_start  = $isw_set->min;
             my $isw_end    = $isw_set->max;
@@ -271,35 +284,39 @@ sub _insert_snp {
 
     my %snp_site = %{ pair_snp_sites( $target_seq, $query_seq ) };
     my $snp_insert = $dbh->prepare(
-        'INSERT INTO snp (
+        q{
+        INSERT INTO snp (
             snp_id, isw_id, align_id, snp_pos,
             target_base, query_base, ref_base, snp_occured
         )
         VALUES (
             NULL, ?, ?, ?,
             ?, ?, ?, ?
-        )'
+        )
+        }
     );
 
     # isw_id
     my $fetch_isw_id = $dbh->prepare(
-        'SELECT isw_id
+        q{
+        SELECT isw_id
         FROM isw, indel
         WHERE isw.indel_id = indel.indel_id
         AND indel.align_id = ?
         AND isw.isw_start <= ?
-        AND isw.isw_end >= ?'
+        AND isw.isw_end >= ?
+        }
     );
 
     # %snp_site keys are snp positions,
     #   where is generated at align section
-    foreach ( sort { $a <=> $b } keys %snp_site ) {
+    for ( sort { $a <=> $b } keys %snp_site ) {
         $fetch_isw_id->execute( $align_id, $_, $_ );
         my ($isw_id)    = $fetch_isw_id->fetchrow_array;
         my $ref_base    = undef;
         my $snp_occured = undef;
-        if ( defined $ref_info->{seqs} ) {
-            $ref_base = substr( $ref_info->{seqs}, $_ - 1, 1 );
+        if ( defined $ref_info->{seq} ) {
+            $ref_base = substr( $ref_info->{seq}, $_ - 1, 1 );
             if ( $ref_base eq $snp_site{$_}{target_base} ) {
                 $snp_occured = "Q";
             }
@@ -334,37 +351,45 @@ sub _modify_isw {
 
     # indel_id & prev_indel_id
     my $fetch_indel_id = $dbh->prepare(
-        'SELECT i1.indel_id,
+        q{
+        SELECT i1.indel_id,
                 i1.indel_occured,
                 i2.indel_occured
         FROM indel i1, indel i2
         WHERE i1.prev_indel_id = i2.indel_id
         AND i1.align_id = ?
-        AND i1.left_extand >= ?'
+        AND i1.left_extand >= ?
+        }
     );
 
     # isw_id
     my $fetch_isw_id = $dbh->prepare(
-        'SELECT isw_id, isw_type
+        q{
+        SELECT isw_id, isw_type
         FROM isw
-        WHERE indel_id = ?'
+        WHERE indel_id = ?
+        }
     );
 
     # snp
     my $fetch_snp = $dbh->prepare(
-        'SELECT snp_occured, COUNT(*)
+        q{
+        SELECT snp_occured, COUNT(*)
         FROM snp
         WHERE isw_id = ?
-        GROUP BY snp_occured'
+        GROUP BY snp_occured
+        }
     );
 
     # update isw
     my $update_isw = $dbh->prepare(
-        'UPDATE isw
+        q{
+        UPDATE isw
         SET isw_d_indel = ? / isw_length,
             isw_d_noindel = ? /isw_length,
             isw_d_complex = ? /isw_length
-        WHERE isw_id = ?'
+        WHERE isw_id = ?
+        }
     );
 
     $fetch_indel_id->execute( $align_id, $windows_size );
@@ -439,15 +464,18 @@ sub _insert_ssw {
 
     # extreme_id & prev_extreme_id
     my $fetch_snp_id = $dbh->prepare(
-        'SELECT s.snp_id, s.snp_pos, s.snp_occured
+        q{
+        SELECT s.snp_id, s.snp_pos, s.snp_occured
         FROM snp s
-        WHERE s.align_id = ?'
+        WHERE s.align_id = ?
+        }
     );
     $fetch_snp_id->execute($align_id);
 
     # prepare ssw_insert
     my $ssw_insert = $dbh->prepare(
-        'INSERT INTO ssw (
+        q{
+        INSERT INTO ssw (
             ssw_id, snp_id, window_id,
             ssw_type, ssw_distance, 
             ssw_d_snp, ssw_d_nosnp, ssw_d_complex
@@ -456,7 +484,8 @@ sub _insert_ssw {
             NULL, ?, ?,
             ?, ?, 
             ?, ?, ?
-        )'
+        )
+        }
     );
 
     # store snp_info, use snp_index as key
@@ -465,14 +494,14 @@ sub _insert_ssw {
         my ( $snp_id, $snp_pos, $snp_occured ) = @row;
 
         # index of snp in the $comparable_set
-        my $snp_index = lookup_member( $comparable_set, $snp_pos );
+        my $snp_index = $comparable_set->lookup_member($snp_pos);
 
         $snp_info->{$snp_index}{snp_id}      = $snp_id;
         $snp_info->{$snp_index}{snp_pos}     = $snp_pos;
         $snp_info->{$snp_index}{snp_occured} = $snp_occured;
     }
 
-    foreach my $snp_index ( sort { $a <=> $b } keys %$snp_info ) {
+    for my $snp_index ( sort { $a <=> $b } keys %$snp_info ) {
         my $snp_id      = $snp_info->{$snp_index}{snp_id};
         my $snp_pos     = $snp_info->{$snp_index}{snp_pos};
         my $snp_occured = $snp_info->{$snp_index}{snp_occured};
@@ -488,7 +517,7 @@ sub _insert_ssw {
         # ssw has two types: L & R
         # More windows will be submitted in the following for-loop
         #   and if section
-        foreach my $ssw_type (qw/L R/) {
+        for my $ssw_type (qw/L R/) {
 
             # $ssw_start and $ssw_end are both index of $comprarable_set
             my ( $ssw_start, $ssw_end );
@@ -505,9 +534,8 @@ sub _insert_ssw {
             }
 
             # $gsw_distance is from 0 to $gsw_density
-        SSW: foreach my $i ( 0 .. $ssw_max_distance ) {
-                my $ssw_set
-                    = subset_span( $comparable_set, $ssw_start, $ssw_end );
+        SSW: for my $i ( 0 .. $ssw_max_distance ) {
+                my $ssw_set = $comparable_set->slice( $ssw_start, $ssw_end );
                 my $ssw_set_member_number = $ssw_set->cardinality;
                 unless ($ssw_set_member_number) {
                     last SSW;
@@ -555,6 +583,47 @@ sub _insert_ssw {
     return;
 }
 
+sub _insert_seq {
+    my $self     = shift;
+    my $seq_info = shift;
+
+    croak "Pass a seq to this method!\n" if !defined $seq_info->{seq};
+
+    for my $key (qw{chr_id chr_start chr_end chr_strand length gc runlist}) {
+        if ( !defined $seq_info->{$key} ) {
+            $seq_info->{$key} = undef;
+        }
+    }
+
+    # Get database handle
+    my $dbh = $self->dbh;
+
+    my $seq_insert = $dbh->prepare(
+        q{
+        INSERT INTO sequence (
+            seq_id, chr_id, align_id, chr_start, chr_end,
+            chr_strand, seq_length, seq_seq, seq_gc, seq_runlist
+        )
+        VALUES (
+            NULL, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?
+        )
+        }
+    );
+
+    $seq_insert->execute(
+        $seq_info->{chr_id},     $seq_info->{align_id},
+        $seq_info->{chr_start},  $seq_info->{chr_end},
+        $seq_info->{chr_strand}, $seq_info->{length},
+        $seq_info->{seq},        $seq_info->{gc},
+        $seq_info->{runlist},
+    );
+
+    my $seq_id = $self->last_insert_id;
+
+    return $seq_id;
+}
+
 ##################################################
 # Usage      : $self->add_align(
 #            :     $target_info, $query_info,
@@ -576,13 +645,13 @@ sub add_align {
 
     $self->{caching_refs} = $ref_info;
 
-    my $target_seq = $target_info->{seqs};
-    my $query_seq  = $query_info->{seqs};
+    my $target_seq = $target_info->{seq};
+    my $query_seq  = $query_info->{seq};
 
     my ( $ref_seq, $ref_raw_seq );
-    if ( defined $ref_info->{seqs} ) {
-        $ref_seq     = $ref_info->{seqs};
-        $ref_raw_seq = $ref_info->{raw_seqs};
+    if ( defined $ref_info->{seq} ) {
+        $ref_seq     = $ref_info->{seq};
+        $ref_raw_seq = $ref_info->{raw_seq};
     }
 
     my $dbh = $self->dbh;
@@ -603,28 +672,20 @@ sub add_align {
     my $query_name  = $query_info->{name}  || $query_taxon_id;
     my $ref_name    = $ref_info->{name}    || $ref_taxon_id;
 
-    # chr_id
-    my $target_chr_id = $target_info->{chr_id} || undef;
-    my $query_chr_id  = $query_info->{chr_id}  || undef;
-
-    # chr_name
-    my $target_chr_name = $target_info->{chr_name} || undef;
-    my $query_chr_name  = $query_info->{chr_name}  || undef;
-
-    # chr_start
-    my $target_chr_start = $target_info->{chr_start} || undef;
-    my $query_chr_start  = $query_info->{chr_start}  || undef;
-
-    # chr_end
-    my $target_chr_end = $target_info->{chr_end} || undef;
-    my $query_chr_end  = $query_info->{chr_end}  || undef;
-
-    # chr_strand
-    my $target_chr_strand = $target_info->{chr_strand} || undef;
-    my $query_chr_strand  = $query_info->{chr_strand}  || undef;
-
-    # query_strand
-    my $query_strand = $query_info->{query_strand} || "+";
+    for my $key (qw{chr_id chr_name chr_start chr_end chr_strand}) {
+        if ( !defined $target_info->{$key} ) {
+            $target_info->{$key} = undef;
+        }
+        if ( !defined $query_info->{$key} ) {
+            $query_info->{$key} = undef;
+        }
+        if ( defined $ref_info->{seq} ) {
+            if ( !defined $ref_info->{$key} ) {
+                $query_info->{$key} = undef;
+            }
+        }
+    }
+    $query_info->{query_strand} ||= "+";
 
     # Get tvsq_id from table tvsq or insert a new one
     my $tvsq_id = $self->_tvsq_id(
@@ -644,85 +705,77 @@ sub add_align {
     #----------------------------#
     my $align_id
         = $self->_insert_align( $tvsq_id, \$target_seq, \$query_seq );
-    print
-        "Prosess align $align_id ",
-        "in $target_chr_name $target_chr_start - $target_chr_end\n";
+    printf "Prosess align %s in %s %s - %s\n", $align_id,
+        $target_info->{chr_name}, $target_info->{chr_start},
+        $target_info->{chr_end};
 
     #----------------------------#
-    # INSERT INTO sequence, target, query
+    # INSERT INTO target, query
     #----------------------------#
-    {
-        my $sequence_insert = $dbh->prepare(
-            'INSERT INTO sequence (
-                seq_id, chr_id, chr_start, chr_end,
-                chr_strand, seq_length
-            )
-            VALUES (
-                NULL, ?, ?, ?,
-                ?, ?
-            )'
-        );
-        my $first_sequence = $target_seq;
-        $first_sequence =~ s/\-//g;
-        my $first_sequence_length = length $first_sequence;
-        $sequence_insert->execute(
-            $target_chr_id,  $target_chr_start,
-            $target_chr_end, $target_chr_strand,
-            $first_sequence_length,
-        );
-        my $target_seq_id = $self->last_insert_id;
+    {    # target
         my $target_insert = $dbh->prepare(
-            'INSERT INTO target (
-                target_id, align_id, seq_id,
-                target_seq, target_runlist
-            )
-            VALUES (
-                NULL, ?, ?,
-                ?, NULL
-            )'
+            q{
+            INSERT INTO target ( target_id, seq_id )
+            VALUES ( NULL, ? )
+            }
         );
-        $target_insert->execute( $align_id, $target_seq_id, $target_seq, );
+        $target_info->{align_id} = $align_id;
+        $target_info->{gc}       = calc_gc_ratio($target_seq);
+        my $seq_set   = AlignDB::IntSpan->new("1-$align_length");
+        my $indel_set = find_indel_set($target_seq);
+        $seq_set                = $seq_set->diff($indel_set);
+        $target_info->{runlist} = $seq_set->runlist;
+        $target_info->{length}  = $seq_set->cardinality;
+        my $target_seq_id = $self->_insert_seq($target_info);
+        $target_insert->execute($target_seq_id);
         $target_insert->finish;
+    }
 
-        my $second_sequence = $query_seq;
-        $second_sequence =~ s/\-//g;
-        my $second_sequence_length = length $second_sequence;
-        $sequence_insert->execute( $query_chr_id, $query_chr_start,
-            $query_chr_end, $query_chr_strand, $second_sequence_length, );
-        my $query_seq_id = $self->last_insert_id;
+    {    # and queries
         my $query_insert = $dbh->prepare(
-            'INSERT INTO query (
-                query_id, seq_id, align_id,
-                query_seq, query_strand, query_runlist
+            q{
+            INSERT INTO query (
+                query_id, seq_id, query_strand, query_position
             )
-            VALUES (
-                NULL, ?, ?,
-                ?, ?, NULL
-            )'
+            VALUES ( NULL, ?, ?, 0 )
+            }
         );
-        $query_insert->execute( $query_seq_id, $align_id, $query_seq,
-            $query_strand, );
+        $query_info->{align_id} = $align_id;
+        $query_info->{gc}       = calc_gc_ratio($query_seq);
+        my $seq_set   = AlignDB::IntSpan->new("1-$align_length");
+        my $indel_set = find_indel_set($query_seq);
+        $seq_set               = $seq_set->diff($indel_set);
+        $query_info->{runlist} = $seq_set->runlist;
+        $query_info->{length}  = $seq_set->cardinality;
+        my $query_seq_id = $self->_insert_seq($query_info);
+        $query_insert->execute( $query_seq_id, $query_info->{query_strand} );
         $query_insert->finish;
-        $sequence_insert->finish;
     }
 
     #----------------------------#
     # INSERT INTO reference
     #----------------------------#
-    if ( defined $ref_info->{seqs} ) {
+    if ($ref_seq) {
         my $ref_complex_indel = $ref_info->{complex};
         my $ref_insert        = $dbh->prepare(
-            'INSERT INTO reference (
-                ref_id, align_id,
-                ref_seq, ref_raw_seq, ref_complex_indel
+            q{
+            INSERT INTO reference (
+                ref_id, seq_id, ref_raw_seq, ref_complex_indel
             )
             VALUES (
-                NULL, ?,
-                ?, ?, ?
-            )'
+                NULL, ?, ?, ?
+            )
+            }
         );
-        $ref_insert->execute( $align_id, $ref_seq, $ref_raw_seq,
-            $ref_complex_indel );
+        $ref_info->{align_id} = $align_id;
+        $ref_info->{gc}       = calc_gc_ratio($ref_seq);
+        my $seq_set   = AlignDB::IntSpan->new("1-$align_length");
+        my $indel_set = find_indel_set($ref_seq);
+        $seq_set             = $seq_set->diff($indel_set);
+        $ref_info->{runlist} = $seq_set->runlist;
+        $ref_info->{length}  = $seq_set->cardinality;
+        my $ref_seq_id = $self->_insert_seq($ref_info);
+        $ref_insert->execute( $ref_seq_id, $ref_raw_seq, $ref_complex_indel );
         $ref_insert->finish;
     }
 
@@ -751,12 +804,12 @@ sub add_align {
             = @{ pair_indel_sites( $target_seq, $query_seq, $all_indel ) };
 
         my $complex_set = AlignDB::IntSpan->new;
-        if ( defined $ref_info->{seqs} ) {
+        if ( defined $ref_info->{seq} ) {
             $complex_set->add( $ref_info->{complex} );
         }
 
         my $prev_indel_id = 0;
-        foreach (@indel_site) {
+        for (@indel_site) {
 
             # $indel_occured:
             #   'C': complex indel
@@ -770,7 +823,7 @@ sub add_align {
             #   'N': noindel
             my $indel_occured = undef;
             my $indel_type    = undef;
-            if ( defined $ref_info->{seqs} ) {
+            if ( defined $ref_info->{seq} ) {
                 my $start  = $_->{start};
                 my $end    = $_->{end};
                 my $length = $_->{length};
@@ -789,9 +842,9 @@ sub add_align {
             }
             $indel_insert->execute(
                 $prev_indel_id, $align_id,         $_->{start},
-                $_->{end},           $_->{length},      $_->{seq},
-                $_->{insert},        $_->{left_extand}, $_->{right_extand},
-                $_->{gc},      $_->{dG},          $indel_occured,
+                $_->{end},      $_->{length},      $_->{seq},
+                $_->{insert},   $_->{left_extand}, $_->{right_extand},
+                $_->{gc},       $_->{dG},          $indel_occured,
                 $indel_type,
             );
             ($prev_indel_id) = $self->last_insert_id;
@@ -800,62 +853,22 @@ sub add_align {
     }
 
     #----------------------------#
-    # UPDATE target, query with runlist
+    # UPDATE align with runlist
     #----------------------------#
     {
         my $align_set      = AlignDB::IntSpan->new("1-$align_length");
         my $comparable_set = AlignDB::IntSpan->new;
-        my $indel_set      = AlignDB::IntSpan->new;
-
-        my $deletion_set  = AlignDB::IntSpan->new;
-        my $insertion_set = AlignDB::IntSpan->new;
-
-        # indel
-        my $fetch_indel = $dbh->prepare(
-            'SELECT indel_start, indel_end
-            FROM indel
-            WHERE align_id = ?
-            AND indel_insert = ?'
-        );
-
-        # for target insert, i.e. deletion in query
-        $fetch_indel->execute( $align_id, 'D' );
-        while ( my @row = $fetch_indel->fetchrow_array ) {
-            my ( $indel_start, $indel_end ) = @row;
-            $deletion_set->add("$indel_start-$indel_end");
-        }
-
-        # for query insert, i.e. insertion in query
-        $fetch_indel->execute( $align_id, 'I' );
-        while ( my @row = $fetch_indel->fetchrow_array ) {
-            my ( $indel_start, $indel_end ) = @row;
-            $insertion_set->add("$indel_start-$indel_end");
-        }
-
-        $indel_set = $insertion_set->union($deletion_set);
-        my $target_set = $align_set->diff($insertion_set);
-        my $query_set  = $align_set->diff($deletion_set);
-        $comparable_set = $align_set->diff($indel_set);
-
-        my $target_update = $dbh->prepare(
-            'UPDATE target
-            SET target_runlist = ?
-            WHERE align_id = ?'
-        );
-        $target_update->execute( $target_set->runlist, $align_id );
-
-        my $query_update = $dbh->prepare(
-            'UPDATE query
-            SET query_runlist = ?
-            WHERE align_id = ?'
-        );
-        $query_update->execute( $query_set->runlist, $align_id );
+        $comparable_set->add( $target_info->{runlist} );
+        $comparable_set->intersect( $query_info->{runlist} );
+        my $indel_set = $align_set->diff($comparable_set);
 
         my $align_update = $dbh->prepare(
-            'UPDATE align
+            q{
+            UPDATE align
             SET comparable_runlist = ?,
                 indel_runlist = ?
-            WHERE align_id = ?'
+            WHERE align_id = ?
+            }
         );
         $align_update->execute( $comparable_set->runlist, $indel_set->runlist,
             $align_id );
@@ -874,14 +887,14 @@ sub add_align {
     #----------------------------#
     # MODIFY isw
     #----------------------------#
-    if ( defined $ref_info->{seqs} ) {
+    if ( defined $ref_info->{seq} ) {
         $self->_modify_isw($align_id);
     }
 
     #----------------------------#
     # INSERT INTO ssw
     #----------------------------#
-    if ( defined $ref_info->{seqs} and $self->insert_ssw ) {
+    if ( defined $ref_info->{seq} and $self->insert_ssw ) {
         $self->_insert_ssw($align_id);
     }
 
@@ -978,7 +991,7 @@ sub parse_axt_file {
             chr_start  => $first_start,
             chr_end    => $first_end,
             chr_strand => $first_strand,
-            seqs       => $first_line,
+            seq        => $first_line,
         };
         my $query_info = {
             taxon_id     => $query_taxon_id,
@@ -989,7 +1002,7 @@ sub parse_axt_file {
             chr_end      => $second_end,
             chr_strand   => $second_strand,
             query_strand => $query_strand,
-            seqs         => $second_line,
+            seq          => $second_line,
         };
 
         if ($not_db) {
@@ -1029,15 +1042,21 @@ sub get_seqs {
         my $dbh = $self->dbh;
 
         my $target_sth = $dbh->prepare(
-            'SELECT t.target_seq
-            FROM target t
-            WHERE t.align_id = ?'
+            q{
+            SELECT s.seq_seq
+            FROM sequence s
+            INNER JOIN target t on s.seq_id = t.seq_id
+            WHERE s.align_id = ?
+            }
         );
 
         my $query_sth = $dbh->prepare(
-            'SELECT q.query_seq
-            FROM query q
-            WHERE q.align_id = ?'
+            q{
+            SELECT s.seq_seq
+            FROM sequence s
+            INNER JOIN query q on s.seq_id = q.seq_id
+            WHERE s.align_id = ?
+            }
         );
 
         $target_sth->execute($align_id);
@@ -1045,11 +1064,11 @@ sub get_seqs {
         $target_sth->finish;
 
         $query_sth->execute($align_id);
-        my ($query_seqs) = $query_sth->fetchrow_array;
+        my ($query_seq) = $query_sth->fetchrow_array;
         $query_sth->finish;
 
         $self->{caching_id} = $align_id;
-        $self->{caching_seqs} = [ $target_seq, $query_seqs ];
+        $self->{caching_seqs} = [ $target_seq, $query_seq ];
     }
 
     return $self->caching_seqs;
@@ -1062,9 +1081,11 @@ sub get_sets {
     my $dbh = $self->dbh;
 
     my $sth = $dbh->prepare(
-        'SELECT align_length, comparable_runlist, indel_runlist
+        q{
+        SELECT align_length, comparable_runlist, indel_runlist
         FROM align 
-        WHERE align_id = ?'
+        WHERE align_id = ?
+        }
     );
     $sth->execute($align_id);
     my ( $align_length, $comparable_runlist, $indel_runlist )
@@ -1182,7 +1203,7 @@ sub insert_window {
 
     my $dbh = $self->dbh;
 
-    my $window_sql = qq{
+    my $window_sql = q{
         INSERT INTO window (
             window_id, align_id, window_start, window_end, window_length,
             window_runlist, window_comparables, window_identities,
@@ -1362,7 +1383,7 @@ sub create_column {
         }
 
         $dbh->do(
-            qq{ALTER TABLE $table ADD COLUMN $column $column_definition} );
+            qq{ALTER TABLE $table ADD COLUMN $column $column_definition});
     }
 
     return;
@@ -1553,10 +1574,10 @@ sub get_align_ids_of_chr {
 
     my $query = q{
         SELECT a.align_id
-        FROM align a, target t, sequence s
-        WHERE a.align_id = t.align_id
-        AND t.seq_id = s.seq_id
-        AND s.chr_id = ?
+        FROM sequence s
+        INNER JOIN target t ON s.seq_id = t.seq_id
+        INNER JOIN align a ON s.align_id = a.align_id
+        WHERE s.chr_id = ?
         ORDER BY a.align_id
     };
 
@@ -1579,23 +1600,30 @@ sub get_target_info {
     my $dbh = $self->dbh;
 
     my $query = q{
-        SELECT c.chr_name,
+        SELECT c.taxon_id,
+               c.chr_id,
+               c.chr_name,
+               c.chr_length,
                s.chr_start,
                s.chr_end,
-               t.target_runlist
-        FROM target t, sequence s, chromosome c
-        WHERE t.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
-        AND t.align_id = ?
+               s.chr_strand,
+               s.seq_length,
+               s.seq_gc,
+               s.seq_runlist,
+               a.align_length
+        FROM sequence s 
+        INNER JOIN target t ON s.seq_id = t.seq_id
+        INNER JOIN chromosome c ON s.chr_id = c.chr_id
+        INNER JOIN align a ON s.align_id = a.align_id
+        WHERE s.align_id = ?
     };
 
     my $sth = $dbh->prepare($query);
     $sth->execute($align_id);
-    my ( $chr_name, $chr_start, $chr_end, $target_runlist )
-        = $sth->fetchrow_array;
+    my $hash_ref = $sth->fetchrow_hashref;
     $sth->finish;
 
-    return ( $chr_name, $chr_start, $chr_end, $target_runlist );
+    return $hash_ref;
 }
 
 sub get_query_info {
@@ -1605,24 +1633,32 @@ sub get_query_info {
     my $dbh = $self->dbh;
 
     my $query = q{
-        SELECT c.chr_name,
+        SELECT c.taxon_id,
+               c.chr_id,
+               c.chr_name,
+               c.chr_length,
                s.chr_start,
                s.chr_end,
-               q.query_runlist,
-               q.query_strand
-        FROM query q, sequence s, chromosome c
-        WHERE q.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
-        AND q.align_id = ?
+               s.chr_strand,
+               s.seq_length,
+               s.seq_gc,
+               s.seq_runlist,
+               a.align_length,
+               q.query_strand,
+               q.position
+        FROM sequence s 
+        INNER JOIN query q ON s.seq_id = q.seq_id
+        INNER JOIN chromosome c ON s.chr_id = c.chr_id
+        INNER JOIN align a ON s.align_id = a.align_id
+        WHERE s.align_id = ?
     };
 
     my $sth = $dbh->prepare($query);
     $sth->execute($align_id);
-    my ( $chr_name, $chr_start, $chr_end, $query_runlist, $query_strand )
-        = $sth->fetchrow_array;
+    my $hash_ref = $sth->fetchrow_hashref;
     $sth->finish;
 
-    return ( $chr_name, $chr_start, $chr_end, $query_runlist, $query_strand );
+    return $hash_ref;
 }
 
 ##################################################
@@ -1641,10 +1677,10 @@ sub get_target_chr_info {
 
     my $query = q{
         SELECT c.chr_id, c.chr_name, c.chr_length
-        FROM target t, sequence s, chromosome c
-        WHERE t.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
-        AND t.align_id = ?
+        FROM sequence s 
+        INNER JOIN target t ON s.seq_id = t.seq_id
+        INNER JOIN chromosome c ON s.chr_id = c.chr_id
+        WHERE s.align_id = ?
     };
 
     my $sth = $dbh->prepare($query);
@@ -1671,10 +1707,10 @@ sub get_query_chr_info {
 
     my $query = q{
         SELECT c.chr_id, c.chr_name, c.chr_length
-        FROM query q, sequence s, chromosome c
-        WHERE q.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
-        AND q.align_id = ?
+        FROM sequence s 
+        INNER JOIN query q ON s.seq_id = q.seq_id
+        INNER JOIN chromosome c ON s.chr_id = c.chr_id
+        WHERE s.align_id = ?
     };
 
     my $sth = $dbh->prepare($query);
@@ -1700,12 +1736,12 @@ sub get_chrs {
     my $dbh = $self->dbh;
 
     # select all _GOAL_ chromosomes in this database
-    my $chr_query = qq{
+    my $chr_query = q{
         # Processed chr
         SELECT c.chr_id, c.chr_name, c.chr_length
-        FROM _GOAL_ G, sequence s, chromosome c
-        WHERE G.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
+        FROM sequence s 
+        INNER JOIN _GOAL_ G ON s.seq_id = G.seq_id
+        INNER JOIN chromosome c ON s.chr_id = c.chr_id
         GROUP BY c.chr_id
         ORDER BY c.chr_id
     };
@@ -1717,6 +1753,19 @@ sub get_chrs {
     $sth->finish;
 
     return $array_ref;
+}
+
+sub process_message {
+    my $self = shift;
+    my $align_id = shift;
+    
+    my $target_info = $self->get_target_info($align_id);
+    
+    printf "Prosess align %s in %s %s - %s\n", $align_id,
+        $target_info->{chr_name}, $target_info->{chr_start},
+        $target_info->{chr_end};
+    
+    return;
 }
 
 sub add_meta {
@@ -1776,6 +1825,7 @@ no Moose;
 __PACKAGE__->meta->make_immutable;
 
 1;
+
 __END__
 
 =head1 NAME
@@ -1825,24 +1875,4 @@ Email: wangqiang1997{at}nju{dot}edu{dot}cn
 The rest of the documentation details each of the object methods.
 Internal methods are usually preceded with a _
 
-=head1 METHODS
-
-=cut
-
-=head2 new
-
- Title   :  new
- Usage   :  my $obj = AlignDB->new;
- Function:  Builds a new AlignDB object 
- Returns :  AlignDB initialized with the correct format
- Args    :  mysql  => dsn, e.g. 'alignDB:202.119.43.248'
-            user   => user
-            passwd => passwd
-            dbh    => database handle from DBI->connect
-            insert_dG      => dG, default 0
-            insert_ssw     => table: ssw, default 0
-
-The constructor C<new> creates and returns an C<AlignDB> object.
-
-=cut
 
