@@ -271,12 +271,6 @@ SEG: for (@segments) {
 
         print "$chr_name:$seg_start-$seg_end; length:$seg_length\n";
 
-        # target chr position
-        for my $db_name (@all_dbs) {
-            $db_info_of{$db_name}->{target}{chr_start} = $seg_start;
-            $db_info_of{$db_name}->{target}{chr_end}   = $seg_end;
-        }
-
         for my $db_name (@all_dbs) {
             my $pos_obj = $db_info_of{$db_name}->{pos_obj};
             my ( $align_id, $dummy ) = @{
@@ -659,6 +653,16 @@ sub build_seq {
     }
 
     my $align_length = $align_end - $align_start + 1;
+
+    # target chr position
+    $db_info->{target}{chr_start} = $seg_start;
+    $db_info->{target}{chr_end}   = $seg_end;
+
+    # query chr position
+    $db_info->{query}{chr_start}
+        = $pos_obj->at_query_chr( $align_id, $align_start );
+    $db_info->{query}{chr_end}
+        = $pos_obj->at_query_chr( $align_id, $align_end );
 
     $db_info->{target}{seq} = substr(
         $db_info->{target}{full_seq},
