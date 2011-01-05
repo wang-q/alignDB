@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/5/2011 12:58:58 PM                         */
+/* Created on:     1/5/2011 2:20:04 PM                          */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -624,6 +624,7 @@ create table window
    window_average_gc              double,
    window_coding                  double,
    window_repeats                 double,
+   window_ns_indel                double,
    primary key (window_id)
 )
 ENGINE = MyISAM;

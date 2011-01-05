@@ -133,8 +133,8 @@ my $summary = sub {
                    SUM(w.window_length) SUM_length,
                    SUM(w.window_indel) indel,
                    SUM(w.window_indel) / SUM(w.window_length) * 100 `INDEL/100bp`,
-                   SUM(w.window_feature3) `ns_indel`,
-                   SUM(w.window_feature3) / SUM(w.window_length) * 100 `ns_INDEL/100bp`
+                   SUM(w.window_ns_indel) `ns_indel`,
+                   SUM(w.window_ns_indel) / SUM(w.window_length) * 100 `ns_INDEL/100bp`
             FROM extreme e, window w, (SELECT SUM(comparable_bases) sum_length
                                        FROM align) a,
                                       (SELECT COUNT(indel_id) sum_indel
@@ -160,8 +160,8 @@ my $summary = sub {
                    SUM(w.window_length) SUM_length, 
                    SUM(w.window_indel) indel,
                    SUM(w.window_indel) / SUM(w.window_length) * 100 `INDEL/100bp`,
-                   SUM(w.window_feature3) `ns_indel`,
-                   SUM(w.window_feature3) / SUM(w.window_length) * 100 `ns_INDEL/100bp`
+                   SUM(w.window_ns_indel) `ns_indel`,
+                   SUM(w.window_ns_indel) / SUM(w.window_length) * 100 `ns_INDEL/100bp`
             FROM gsw g, window w, (SELECT SUM(comparable_bases) sum_length
                                    FROM align) a,
                                   (SELECT COUNT(indel_id) sum_indel
@@ -960,7 +960,7 @@ my $segment_gc_indel = sub {
                            w.window_indel `indel`,
                            w.window_average_gc `gc`,
                            s.segment_gc_CV `cv`,
-                           w.window_feature1 `coding`,
+                           w.window_coding `coding`,
                            w.window_length `length`
                     FROM segment s, window w
                     WHERE s.window_id = w.window_id
@@ -1075,7 +1075,7 @@ my $segment_std_indel = sub {
                            w.window_indel `indel`,
                            w.window_average_gc `gc`,
                            s.segment_gc_std `std`,
-                           w.window_feature1 `coding`,
+                           w.window_coding `coding`,
                            w.window_length `length`
                     FROM segment s, window w
                     WHERE s.window_id = w.window_id
@@ -1190,7 +1190,7 @@ my $segment_cv_indel = sub {
                            w.window_indel `indel`,
                            w.window_average_gc `gc`,
                            s.segment_gc_CV `cv`,
-                           w.window_feature1 `coding`,
+                           w.window_coding `coding`,
                            w.window_length `length`
                     FROM segment s, window w
                     WHERE s.window_id = w.window_id
@@ -1306,7 +1306,7 @@ my $segment_mdcw_indel = sub {
                            w.window_indel `indel`,
                            w.window_average_gc `gc`,
                            s.segment_gc_mdcw `mdcw`,
-                           w.window_feature1 `coding`,
+                           w.window_coding `coding`,
                            w.window_length `length`
                     FROM segment s, window w
                     WHERE s.window_id = w.window_id
@@ -1421,7 +1421,7 @@ my $segment_coding_indel = sub {
                            w.window_indel `indel`,
                            w.window_average_gc `gc`,
                            s.segment_gc_CV `cv`,
-                           w.window_feature1 `coding`,
+                           w.window_coding `coding`,
                            w.window_length `length`
                     FROM segment s, window w
                     WHERE s.window_id = w.window_id
@@ -1661,13 +1661,13 @@ my $segment_gc_indel_cr = sub {
                            w.window_indel `indel`,
                            w.window_average_gc `gc`,
                            s.segment_gc_CV `cv`,
-                           w.window_feature1 `coding`,
+                           w.window_coding `coding`,
                            w.window_length `length`
                     FROM segment s, window w
                     WHERE s.window_id = w.window_id
                     AND s.segment_type = ?
-                    AND w.window_feature1 = ?
-                    AND w.window_feature2 = ?
+                    AND w.window_coding = ?
+                    AND w.window_repeats = ?
                     ORDER BY cv DESC, pi, indel
             };
             my %option = (
@@ -1783,13 +1783,13 @@ my $segment_cv_indel_cr = sub {
                            w.window_indel `indel`,
                            w.window_average_gc `gc`,
                            s.segment_gc_CV `cv`,
-                           w.window_feature1 `coding`,
+                           w.window_coding `coding`,
                            w.window_length `length`
                     FROM segment s, window w
                     WHERE s.window_id = w.window_id
                     AND s.segment_type = ?
-                    AND w.window_feature1 = ?
-                    AND w.window_feature2 = ?
+                    AND w.window_coding = ?
+                    AND w.window_repeats = ?
                     ORDER BY cv DESC, pi, indel
             };
             my %option = (

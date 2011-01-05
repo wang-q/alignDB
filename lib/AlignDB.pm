@@ -1189,7 +1189,7 @@ sub insert_window {
             window_differences, window_indel, window_pi,
             window_target_gc, window_average_gc,
             window_target_dG, window_query_dG,
-            window_feature1, window_feature2, window_feature3
+            window_coding, window_repeats, window_ns_indel
         )
         VALUES (
             NULL, ?, ?, ?, ?,

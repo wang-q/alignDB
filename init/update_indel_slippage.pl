@@ -69,12 +69,12 @@ my $obj = AlignDB->new(
 my $dbh = $obj->dbh;
 
 # add a column indel_feature3 to indel_extra
-# add a column window_feature3 to window
+# add a column window_ns_indel to window
 {
     $obj->create_column( "indel_extra", "indel_feature3", "DOUBLE" );
     print "Table indel_extra altered\n";
 
-    $obj->create_column( "window", "window_feature3", "DOUBLE" );
+    $obj->create_column( "window", "window_ns_indel", "DOUBLE" );
     print "Table window altered\n";
 }
 
@@ -153,14 +153,14 @@ my $dbh = $obj->dbh;
     # update window table with slippage-like indel number
     my $window_update = q{
         UPDATE window
-        SET window_feature3 = IFNULL(window_feature3, 0) + 1
+        SET window_ns_indel = IFNULL(window_ns_indel, 0) + 1
         WHERE window_id = ?
     };
     my $window_update_sth = $dbh->prepare($window_update);
 
     my $window_ns = q{
         UPDATE window
-        SET window_feature3 = window_indel - IFNULL(window_feature3, 0)
+        SET window_ns_indel = window_indel - IFNULL(window_ns_indel, 0)
         WHERE align_id = ?
     };
     my $window_ns_sth = $dbh->prepare($window_ns);

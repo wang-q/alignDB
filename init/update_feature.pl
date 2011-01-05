@@ -248,7 +248,7 @@ my $worker = sub {
     # update window table in the new feature column
     my $window_update_query = q{
         UPDATE window
-        SET window_feature1 = ?, window_feature2 = ?
+        SET window_coding = ?, window_repeats = ?
         WHERE window_id = ?
     };
     my $window_update_sth = $dbh->prepare($window_update_query);
@@ -411,15 +411,15 @@ UPDATE: for my $align_id (@align_ids) {
                 my $window_chr_set
                     = $window_set->map_set( sub { $chr_pos[$_] } );
 
-                #my ($window_feature1, $window_feature2) =
+                #my ($window_coding, $window_repeats) =
                 #  $ensembl->locate_set_position($window_chr_set);
-                my $window_feature1 = $ensembl->feature_portion( '_cds_set',
+                my $window_coding = $ensembl->feature_portion( '_cds_set',
                     $window_chr_set );
-                my $window_feature2
+                my $window_repeats
                     = $ensembl->feature_portion( '_repeat_set',
                     $window_chr_set );
-                $window_update_sth->execute( $window_feature1,
-                    $window_feature2, $window_id, );
+                $window_update_sth->execute( $window_coding,
+                    $window_repeats, $window_id, );
             }
 
             $window_update_sth->finish;

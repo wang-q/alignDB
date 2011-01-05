@@ -145,8 +145,8 @@ my $summary_gene = sub {
                    SUM(w.window_indel) indel,
                    SUM(w.window_indel) / SUM(w.window_length) * 100
                    `INDEL/100bp`,
-                   SUM(w.window_feature3) `ns_indel`,
-                   SUM(w.window_feature3) / SUM(w.window_length) * 100
+                   SUM(w.window_ns_indel) `ns_indel`,
+                   SUM(w.window_ns_indel) / SUM(w.window_length) * 100
                    `ns_INDEL/100bp`
             FROM ofg o, window w
             WHERE w.window_id = o.window_id
@@ -177,8 +177,8 @@ my $summary_gene = sub {
                    SUM(w.window_indel) indel,
                    SUM(w.window_indel) / SUM(w.window_length) * 100
                    `INDEL/100bp`,
-                   SUM(w.window_feature3) `ns_indel`,
-                   SUM(w.window_feature3) / SUM(w.window_length) * 100
+                   SUM(w.window_ns_indel) `ns_indel`,
+                   SUM(w.window_ns_indel) / SUM(w.window_length) * 100
                    `ns_INDEL/100bp`
             FROM ofg o, window w, ofgsw s
             WHERE w.window_id = o.window_id
@@ -211,8 +211,8 @@ my $summary_gene = sub {
                    SUM(w.window_indel) indel,
                    SUM(w.window_indel) / SUM(w.window_length) * 100
                    `INDEL/100bp`,
-                   SUM(w.window_feature3) `ns_indel`,
-                   SUM(w.window_feature3) / SUM(w.window_length) * 100
+                   SUM(w.window_ns_indel) `ns_indel`,
+                   SUM(w.window_ns_indel) / SUM(w.window_length) * 100
                    `ns_INDEL/100bp`
             FROM ofg o, window w, ofgsw s
             WHERE w.window_id = o.window_id

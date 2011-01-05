@@ -682,7 +682,7 @@ GROUP BY isw_distance,
 #----------------------------------------------------------#
 # coding & CV                                         
 #----------------------------------------------------------#
-SELECT w.window_feature1 `coding`,
+SELECT w.window_coding `coding`,
        AVG(s.segment_gc_cv) `avg_cv`,
        STD(s.segment_gc_cv) `std_cv`,
        count(*) `count`
@@ -690,7 +690,7 @@ FROM segment s,
      window w
 WHERE s.window_id = w.window_id AND
       s.segment_type = '3' AND
-      w.window_feature1 IN (0, 1)
+      w.window_coding IN (0, 1)
 GROUP BY coding;
 
 #----------------------------------------------------------#
