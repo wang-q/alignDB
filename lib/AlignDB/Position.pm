@@ -40,11 +40,11 @@ sub update_target_info {
         SELECT a.align_length,
                s.chr_start,
                s.chr_end,
-               t.target_runlist
-        FROM align a, target t, sequence s
-        WHERE a.align_id = t.align_id
-        AND t.seq_id = s.seq_id
-        AND a.align_id = ?
+               s.seq_runlist
+        FROM align a
+        inner join sequence s on a.align_id = s.align_id
+        inner join target t on s.seq_id = t.seq_id
+        WHERE a.align_id = ?
     };
 
     my $align_sth = $dbh->prepare($align_query);
@@ -82,12 +82,12 @@ sub update_query_info {
         SELECT a.align_length,
                s.chr_start,
                s.chr_end,
-               q.query_runlist,
+               s.seq_runlist,
                q.query_strand
-        FROM align a, query q, sequence s
-        WHERE a.align_id = q.align_id
-        AND q.seq_id = s.seq_id
-        AND a.align_id = ?
+        FROM align a
+        inner join sequence s on a.align_id = s.align_id
+        inner join query q on s.seq_id = q.seq_id
+        WHERE a.align_id = ?
     };
 
     my $align_sth = $dbh->prepare($align_query);
@@ -356,13 +356,14 @@ sub positioning_align {
     }
     my $align_id_query = q{
         # align contain a chr position
-        SELECT t.align_id
-        FROM target t, sequence s, chromosome c
-        WHERE s.chr_id = c.chr_id
+        SELECT s.align_id
+        FROM sequence s
+        INNER JOIN target t ON s.seq_id = t.seq_id
+        INNER JOIN chromosome c ON s.chr_id = c.chr_id
+        WHERE 1 = 1
         AND c.chr_name like ?
         AND s.chr_start <= ?
         AND s.chr_end >= ?
-        AND t.seq_id = s.seq_id
     };
     my $align_id_sth = $dbh->prepare($align_id_query);
     $align_id_sth->execute( $chr, $start, $end );
@@ -383,13 +384,13 @@ sub positioning_align_chr_id {
     my $dbh = $self->dbh;
 
     my $align_id_query = q{
-        # align contain a chr position
-        SELECT t.align_id
-        FROM target t, sequence s
-        WHERE s.chr_id = ?
+        SELECT s.align_id
+        FROM sequence s
+        INNER JOIN target t ON s.seq_id = t.seq_id
+        WHERE 1 = 1
+        AND s.chr_id = ?
         AND s.chr_start <= ?
         AND s.chr_end >= ?
-        AND t.seq_id = s.seq_id
     };
     my $align_id_sth = $dbh->prepare($align_id_query);
     $align_id_sth->execute( $chr_id, $start, $end );
@@ -411,13 +412,14 @@ sub positioning_align_chr_name {
 
     my $align_id_query = q{
         # align contain a chr position
-        SELECT t.align_id
-        FROM target t, sequence s, chromosome c
-        WHERE c.chr_id = s.chr_id
+        SELECT s.align_id
+        FROM sequence s
+        INNER JOIN target t ON s.seq_id = t.seq_id
+        INNER JOIN chromosome c ON s.chr_id = c.chr_id
+        WHERE 1 = 1
         AND c.chr_name = ?
         AND s.chr_start <= ?
         AND s.chr_end >= ?
-        AND t.seq_id = s.seq_id
     };
     my $align_id_sth = $dbh->prepare($align_id_query);
     $align_id_sth->execute( $chr_name, $start, $end );
