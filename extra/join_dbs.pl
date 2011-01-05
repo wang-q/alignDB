@@ -301,7 +301,7 @@ SEG: for (@segments) {
         # get seq, use align coordinates
         #----------------------------#
         for my $db_name (@all_dbs) {
-            print " " x 4, "build $db_name seq\n";
+            print " " x 4, "build $db_name seqs\n";
             my $align_id = $db_info_of{$db_name}->{align_id};
 
             my $error
@@ -360,6 +360,11 @@ SEG: for (@segments) {
             }
             elsif ( all { $_ ne '-' } @target_bases ) {
                 warn " " x 8 . "align error in $pos_count, [@target_bases]\n";
+
+                my %target_seq_of
+                    = map { $_ => $db_info_of{$_}->{target}{seq} } @all_dbs;
+                DumpFile( "$chr_name-$seg_start-$seg_end.yml",
+                    \%target_seq_of );
                 next SEG;
             }
 
@@ -633,14 +638,17 @@ sub build_seq {
 
     my $target_info = $obj->get_target_info($align_id);
     $db_info->{target}{chr_id}     = $target_info->{chr_id};
+    $db_info->{target}{chr_name}   = $target_info->{chr_name};
     $db_info->{target}{chr_strand} = $target_info->{chr_strand};
 
     my $query_info = $obj->get_query_info($align_id);
     $db_info->{query}{chr_id}       = $query_info->{chr_id};
+    $db_info->{target}{chr_name}    = $target_info->{chr_name};
     $db_info->{query}{chr_strand}   = $query_info->{chr_strand};
     $db_info->{query}{query_strand} = $query_info->{query_strand};
-    
-    ($db_info->{query}{full_seq},$db_info->{target}{full_seq})   = @{$obj->get_seqs($align_id)};
+
+    ( $db_info->{target}{full_seq}, $db_info->{query}{full_seq} )
+        = @{ $obj->get_seqs($align_id) };
 
     my $align_start = $pos_obj->at_align( $align_id, $seg_start );
     my $align_end   = $pos_obj->at_align( $align_id, $seg_end );
