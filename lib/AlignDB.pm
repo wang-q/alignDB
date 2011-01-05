@@ -961,10 +961,10 @@ sub parse_axt_file {
 
         #print "$align_serial\n";
 
-        if ( $first_chr =~ /scaff|contig|super|bac|ran/i ) {
+        if ( $first_chr =~ /scaff|contig|super|bac|ran|gi_/i ) {
             $first_chr = 'chrUn';
         }
-        if ( $second_chr =~ /scaff|contig|super|bac|ran/i ) {
+        if ( $second_chr =~ /scaff|contig|super|bac|ran|gi_/i ) {
             $second_chr = 'chrUn';
         }
 
@@ -1613,7 +1613,7 @@ sub get_target_info {
                a.align_length
         FROM sequence s 
         INNER JOIN target t ON s.seq_id = t.seq_id
-        INNER JOIN chromosome c ON s.chr_id = c.chr_id
+        LEFT JOIN chromosome c ON s.chr_id = c.chr_id
         INNER JOIN align a ON s.align_id = a.align_id
         WHERE s.align_id = ?
     };
@@ -1645,10 +1645,10 @@ sub get_query_info {
                s.seq_runlist,
                a.align_length,
                q.query_strand,
-               q.position
+               q.query_position
         FROM sequence s 
         INNER JOIN query q ON s.seq_id = q.seq_id
-        INNER JOIN chromosome c ON s.chr_id = c.chr_id
+        LEFT JOIN chromosome c ON s.chr_id = c.chr_id
         INNER JOIN align a ON s.align_id = a.align_id
         WHERE s.align_id = ?
     };
