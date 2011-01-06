@@ -56,6 +56,12 @@ my $obj = AlignDB->new(
 # Database handler
 my $dbh = $obj->dbh;
 
+# get reference names via AlignDB methods
+my ( undef, undef, $ref_name ) = $obj->get_names;
+if ( !$ref_name or $ref_name eq 'NULL' ) {
+    die "$db is not a three-way alignDB\n";
+}
+
 {    # add a column segment_feature4 to segment
     $obj->create_column( "snp_extra", "snp_feature3", "DOUBLE" );
     print "Table snp_extra altered\n";

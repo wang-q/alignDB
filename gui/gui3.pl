@@ -1065,7 +1065,7 @@ sub on_button_upd_segment_clicked {
     return;
 }
 
-sub on_button_ref_outgroup_clicked {
+sub on_button_join_dbs_clicked {
     my $self   = shift;
     my $widget = shift;
 
@@ -1083,18 +1083,16 @@ sub on_button_ref_outgroup_clicked {
     my $outgroup = $self->get_value("combobox_outgroup");
 
     my $cmd
-        = "perl $FindBin::Bin/../extra/ref_outgroup.pl"
+        = "perl $FindBin::Bin/../extra/join_dbs.pl"
         . " --server=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
-        . " --first_db=$first_db"
-        . " --second_db=$second_db"
+        . " --dbs=$first_db,$second_db"
         . " --goal_db=$goal_db"
-        . " --target=$first"
-        . " --query=$second"
         . " --outgroup=$outgroup"
-        . " --chr_id_runlist=1-1000";
+        . " --target=$first"
+        . " --queries=$second";
 
     $self->exec_cmd($cmd);
     return;
@@ -1108,7 +1106,7 @@ sub on_button_upd_cpg_clicked {
     my $port     = $self->get_value("entry_port");
     my $username = $self->get_value("entry_username");
     my $password = $self->get_value("entry_password");
-    my $db_name  = $self->get_value("entry_db_name");
+    my $db_name  = $self->get_value("entry_goal_db");
 
     my $cmd
         = "perl $FindBin::Bin/../extra/update_snp_cpg.pl"

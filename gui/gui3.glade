@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <glade-interface>
-<!-- interface-requires gtk+ 2.6 -->
-<!-- interface-naming-policy toplevel-contextual -->
+  <!-- interface-requires gtk+ 2.6 -->
+  <!-- interface-naming-policy toplevel-contextual -->
   <widget class="GtkWindow" id="window_main">
     <property name="title" translatable="yes">alignDB GUI3</property>
     <property name="resizable">False</property>
@@ -109,7 +109,7 @@
                       <widget class="GtkLabel" id="label29">
                         <property name="visible">True</property>
                         <property name="xalign">0.43999999761581421</property>
-                        <property name="label" translatable="yes">Par.</property>
+                        <property name="label" translatable="yes">par.</property>
                       </widget>
                       <packing>
                         <property name="position">0</property>
@@ -1937,12 +1937,12 @@
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkButton" id="button_ref_outgroup">
-                            <property name="label" translatable="yes">Ref outgroup</property>
+                          <widget class="GtkButton" id="button_join_dbs">
+                            <property name="label" translatable="yes">Join dbs</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_ref_outgroup_clicked"/>
+                            <signal name="clicked" handler="on_button_join_dbs_clicked"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
