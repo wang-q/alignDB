@@ -251,7 +251,7 @@ UPDATE: for my $align_id (@align_ids) {
         my ($target_seq) = @{ $obj->get_seqs($align_id) };
         $obj->process_message($align_id);
         
-        next UPDATE if $chr_name =~ /rand|un|contig|hap|scaf/i;
+        next UPDATE if $chr_name =~ /rand|un|contig|hap|scaf|gi_/i;
 
         $chr_name =~ s/chr0?//i;
 

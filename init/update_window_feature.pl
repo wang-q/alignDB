@@ -29,12 +29,12 @@ my $stopwatch = AlignDB::Stopwatch->new(
 );
 
 # Database init values
-my $server     = $Config->{database}->{server};
-my $port       = $Config->{database}->{port};
-my $username   = $Config->{database}->{username};
-my $password   = $Config->{database}->{password};
-my $db         = $Config->{database}->{db};
-my $ensembl_db = $Config->{database}->{ensembl};
+my $server     = $Config->{database}{server};
+my $port       = $Config->{database}{port};
+my $username   = $Config->{database}{username};
+my $password   = $Config->{database}{password};
+my $db         = $Config->{database}{db};
+my $ensembl_db = $Config->{database}{ensembl};
 
 my $man  = 0;
 my $help = 0;
@@ -81,22 +81,6 @@ my $dbh = $obj->dbh;
         passwd => $password,
     );
 
-    # alignments' chromosomal location
-    my $align_seq_query = q{
-        SELECT c.chr_name,
-               a.align_length,
-               s.chr_start,
-               s.chr_end,
-               t.target_runlist,
-               t.target_seq
-        FROM align a, target t, sequence s, chromosome c
-        WHERE a.align_id = t.align_id
-        AND t.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
-        AND a.align_id = ?
-    };
-    my $align_seq_sth = $dbh->prepare($align_seq_query);
-
     # select all windows for this alignment
     my $window_query = q{
         SELECT window_id, window_runlist
@@ -116,13 +100,13 @@ my $dbh = $obj->dbh;
 
     # for each alignment
     for my $align_id (@align_ids) {
-        $align_seq_sth->execute($align_id);
-        my @row2 = $align_seq_sth->fetchrow_array;
-
-        my ( $chr_name, $align_length, $chr_start, $chr_end, $target_runlist,
-            $target_seq )
-            = @row2;
-        next if $chr_name =~ /rand|un|contig|hap|scaf/i;
+        my $target_info  = $obj->get_target_info($align_id);
+        my $chr_name     = $target_info->{chr_name};
+        my $chr_start    = $target_info->{chr_start};
+        my $chr_end      = $target_info->{chr_end};
+        my $align_length = $target_info->{align_length};
+        my ($target_seq) = @{ $obj->get_seqs($align_id) };
+        next if $chr_name =~ /rand|un|contig|hap|scaf|gi_/i;
 
         print "Prosess align $align_id in $chr_name $chr_start - $chr_end\n";
 
@@ -146,18 +130,17 @@ my $dbh = $obj->dbh;
         # for each window
         {
             $window_query_sth->execute($align_id);
-            while ( my @row5 = $window_query_sth->fetchrow_array ) {
-                my ( $window_id, $window_runlist ) = @row5;
+            while ( my @row = $window_query_sth->fetchrow_array ) {
+                my ( $window_id, $window_runlist ) = @row;
                 my $window_set     = AlignDB::IntSpan->new($window_runlist);
                 my $window_chr_set = $window_set->map_set( $chr_pos[$_] );
 
                 my $window_coding = $ensembl->feature_portion( '_cds_set',
                     $window_chr_set );
-                my $window_repeats
-                    = $ensembl->feature_portion( '_repeat_set',
+                my $window_repeats = $ensembl->feature_portion( '_repeat_set',
                     $window_chr_set );
-                $window_update_sth->execute( $window_coding,
-                    $window_repeats, $window_id, );
+                $window_update_sth->execute( $window_coding, $window_repeats,
+                    $window_id, );
             }
 
             $window_update_sth->finish;
@@ -171,7 +154,11 @@ $stopwatch->end_message;
 
 # store program running meta info to database
 END {
-    $obj->add_meta_stopwatch($stopwatch);
+    AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    )->add_meta_stopwatch($stopwatch);
 }
 exit;
 
