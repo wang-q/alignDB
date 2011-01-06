@@ -896,4 +896,6 @@ __END__
 
 $ perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11,S288CvsYJM789 \
 --goal_db S288CvsThree --no_insert=1 --trimmed_fasta=1 \
---outgroup 0query --target 0target --queries 1query,2query 
+--outgroup 0query --target 0target --queries 1query,2query
+
+$ perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar --outgroup 0query --target 0target --queries 1query
