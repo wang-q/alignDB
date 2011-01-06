@@ -132,65 +132,30 @@ sub write_slice {
     print "Output file is $outfile\n";
 
     # alignment
-    my $align_query = q{
-        SELECT t.align_id
-        FROM target t, sequence s, chromosome c
-        WHERE t.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
-        AND c.chr_name = ?
-    };
-    my $align_sth = $dbh->prepare($align_query);
-
-    # target's chromosomal location
-    my $target_query = q{
-        SELECT  c.chr_name,
-                s.chr_start,
-                s.chr_end,
-                t.target_seq,
-                t.target_runlist
-        FROM target t, sequence s, chromosome c
-        WHERE t.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
-        AND t.align_id = ?
-    };
-    my $target_sth = $dbh->prepare($target_query);
-
-    # query's chromosomal location
-    my $query_query = q{
-        SELECT  c.chr_name,
-                s.chr_start,
-                s.chr_end,
-                q.query_seq,
-                q.query_runlist,
-                q.query_strand
-        FROM query q, sequence s, chromosome c
-        WHERE q.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
-        AND q.align_id = ?
-    };
-    my $query_sth = $dbh->prepare($query_query);
+    my @align_ids = @{$obj->get_align_ids_of_chr_name($chr_name)};
 
     my %align_serial;
 
-    # for each align sequence
-    $align_sth->execute($chr_name);
-    while ( my @row = $align_sth->fetchrow_array ) {
+    for my $align_id (@align_ids) {
         local $| = 1;
-        my ($align_id) = @row;
-
         print "Processing align_id $align_id\n";
 
         # target
-        $target_sth->execute($align_id);
-        my ($target_chr_name, $target_chr_start, $target_chr_end,
-            $target_seq,      $target_runlist
-        ) = $target_sth->fetchrow_array;
+        my $target_info      = $obj->get_target_info($align_id);
+        my $target_chr_name  = $target_info->{chr_name};
+        my $target_chr_start = $target_info->{chr_start};
+        my $target_chr_end   = $target_info->{chr_end};
+        my $target_runlist   = $target_info->{seq_runlist};
 
         # query
-        $query_sth->execute($align_id);
-        my ($query_chr_name, $query_chr_start, $query_chr_end,
-            $query_seq,      $query_runlist,   $query_strand
-        ) = $query_sth->fetchrow_array;
+        my $query_info      = $obj->get_query_info($align_id);
+        my $query_chr_name  = $query_info->{chr_name};
+        my $query_chr_start = $query_info->{chr_start};
+        my $query_chr_end   = $query_info->{chr_end};
+        my $query_runlist   = $query_info->{seq_runlist};
+        my $query_strand    = $query_info->{query_strand};
+
+        my ( $target_seq, $query_seq ) = @{ $obj->get_seqs($align_id) };
 
         my $target_set = AlignDB::IntSpan->new($target_runlist);
         my $query_set  = AlignDB::IntSpan->new($query_runlist);

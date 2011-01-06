@@ -1593,6 +1593,34 @@ sub get_align_ids_of_chr {
     return \@align_ids;
 }
 
+sub get_align_ids_of_chr_name {
+    my $self   = shift;
+    my $chr_name = shift;
+
+    my $dbh = $self->dbh;
+
+    my $query = q{
+        SELECT a.align_id
+        FROM sequence s
+        INNER JOIN target t ON s.seq_id = t.seq_id
+        INNER JOIN align a ON s.align_id = a.align_id
+        INNER JOIN chromosome c on s.chr_id = c.chr_id
+        WHERE c.chr_name = ?
+        ORDER BY a.align_id
+    };
+
+    my @align_ids;
+
+    my $sth = $dbh->prepare($query);
+    $sth->execute($chr_name);
+    while ( my @row = $sth->fetchrow_array ) {
+        my ($align_id) = @row;
+        push @align_ids, $align_id;
+    }
+
+    return \@align_ids;
+}
+
 sub get_target_info {
     my $self     = shift;
     my $align_id = shift;
