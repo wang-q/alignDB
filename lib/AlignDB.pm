@@ -154,7 +154,7 @@ sub _insert_isw {
     my $dbh = $self->dbh;
 
     my ( $align_set, $comparable_set, $indel_set )
-        = $self->get_sets($align_id);
+        = @{ $self->get_sets($align_id) };
 
     # indel_id & prev_indel_id
     my $fetch_indel_id_isw = $dbh->prepare(
@@ -279,7 +279,7 @@ sub _insert_snp {
 
     my ( $target_seq, $query_seq ) = @{ $self->get_seqs($align_id) };
     my ( $align_set, $comparable_set, $indel_set )
-        = $self->get_sets($align_id);
+        = @{ $self->get_sets($align_id) };
     my $ref_info = $self->caching_refs;
 
     my %snp_site = %{ pair_snp_sites( $target_seq, $query_seq ) };
@@ -451,7 +451,7 @@ sub _insert_ssw {
     my $align_id = shift;
 
     my ( $align_set, $comparable_set, $indel_set )
-        = $self->get_sets($align_id);
+        = @{ $self->get_sets($align_id) };
 
     my $dbh = $self->dbh;
 
@@ -857,10 +857,10 @@ sub add_align {
     #----------------------------#
     {
         my $align_set      = AlignDB::IntSpan->new("1-$align_length");
-        my $comparable_set = AlignDB::IntSpan->new;
-        $comparable_set->add( $target_info->{runlist} );
-        $comparable_set->intersect( $query_info->{runlist} );
-        my $indel_set = $align_set->diff($comparable_set);
+        my $target_gap_set = $align_set->diff( $target_info->{runlist} );
+        my $query_gap_set  = $align_set->diff( $query_info->{runlist} );
+        my $indel_set      = $target_gap_set->union($query_gap_set);
+        my $comparable_set = $align_set->diff($indel_set);
 
         my $align_update = $dbh->prepare(
             q{
@@ -1096,7 +1096,7 @@ sub get_sets {
     my $comparable_set = AlignDB::IntSpan->new($comparable_runlist);
     my $indel_set      = AlignDB::IntSpan->new($indel_runlist);
 
-    return ( $align_set, $comparable_set, $indel_set );
+    return [ $align_set, $comparable_set, $indel_set ];
 }
 
 sub get_chr_id_hash {
@@ -1594,7 +1594,7 @@ sub get_align_ids_of_chr {
 }
 
 sub get_align_ids_of_chr_name {
-    my $self   = shift;
+    my $self     = shift;
     my $chr_name = shift;
 
     my $dbh = $self->dbh;
@@ -1784,15 +1784,15 @@ sub get_chrs {
 }
 
 sub process_message {
-    my $self = shift;
+    my $self     = shift;
     my $align_id = shift;
-    
+
     my $target_info = $self->get_target_info($align_id);
-    
+
     printf "Prosess align %s in %s %s - %s\n", $align_id,
         $target_info->{chr_name}, $target_info->{chr_start},
         $target_info->{chr_end};
-    
+
     return;
 }
 
