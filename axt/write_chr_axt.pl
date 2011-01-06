@@ -16,19 +16,19 @@ use AlignDB::Stopwatch;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new();
+my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
-# chr_id_runlist
-my $target_chr_id_runlist = $Config->{write}->{target_chr_id_runlist};
-my $query_chr_id_runlist  = $Config->{write}->{query_chr_id_runlist};
+# chr_id_runlistw
+my $target_chr_id_runlist = $Config->{write}{target_chr_id_runlist};
+my $query_chr_id_runlist  = $Config->{write}{query_chr_id_runlist};
 my $chr_flag;    # undef => all, 1 => in same chr, 2 => between two chrs
 
 my $man  = 0;
@@ -53,7 +53,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 # Init objects
 #----------------------------------------------------------#
-my $stopwatch = AlignDB::Stopwatch->new();
+my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Write .axt files from $db...");
 
 my $obj = AlignDB->new(
@@ -63,7 +63,7 @@ my $obj = AlignDB->new(
 );
 
 # Database handler
-my $dbh = $obj->dbh();
+my $dbh = $obj->dbh;
 
 #----------------------------------------------------------#
 # Write .axt files from alignDB
@@ -73,52 +73,33 @@ my $target_chr_id_set = AlignDB::IntSpan->new($target_chr_id_runlist);
 my $query_chr_id_set  = AlignDB::IntSpan->new($query_chr_id_runlist);
 
 # select all target_name and query_name in this database
-my ( $target_name, $query_name ) = $obj->get_names();
+my ( $target_name, $query_name ) = $obj->get_names;
 
 # alignment
 my $align_query = q{
-    SELECT a.align_id, a.align_length
-    FROM align a, target t, sequence s1, query q, sequence s2
-    WHERE a.align_id = t.align_id
-    AND t.seq_id = s1.seq_id
-    AND s1.chr_id = ?
-    AND a.align_id = q.align_id
-    AND q.seq_id = s2.seq_id
-    AND s2.chr_id = ?
-    ORDER BY a.align_id
+    SELECT 
+        a.align_id,   a.align_length
+    FROM
+        align a INNER JOIN sequence st
+            ON a.align_id = st.align_id
+        INNER JOIN target t
+            ON st.seq_id = t.seq_id
+        INNER JOIN sequence sq
+            ON a.align_id = sq.align_id
+        INNER JOIN query q
+            ON sq.seq_id = q.seq_id
+    WHERE
+        1 = 1 
+        AND st.chr_id = ? 
+        AND sq.chr_id = ?
+    ORDER BY
+        a.align_id
 };
 my $align_sth = $dbh->prepare($align_query);
 
-# target's chromosomal location
-my $target_query = q{
-    SELECT  c.chr_name,
-            s.chr_start,
-            s.chr_end,
-            t.target_seq
-    FROM target t, sequence s, chromosome c
-    WHERE t.seq_id = s.seq_id
-    AND s.chr_id = c.chr_id
-    AND t.align_id = ?
-};
-my $target_sth = $dbh->prepare($target_query);
-
-# query's chromosomal location
-my $query_query = q{
-    SELECT  c.chr_name,
-            s.chr_start,
-            s.chr_end,
-            q.query_seq,
-            q.query_strand
-    FROM query q, sequence s, chromosome c
-    WHERE q.seq_id = s.seq_id
-    AND s.chr_id = c.chr_id
-    AND q.align_id = ?
-};
-my $query_sth = $dbh->prepare($query_query);
-
 my @chr_pairs;
-for my $tchr_id ( $target_chr_id_set->elements() ) {
-    for my $qchr_id ( $query_chr_id_set->elements() ) {
+for my $tchr_id ( $target_chr_id_set->elements ) {
+    for my $qchr_id ( $query_chr_id_set->elements ) {
         if (defined $chr_flag and $chr_flag == 1) {# in same chr
             if ($tchr_id == $qchr_id) {
                 push @chr_pairs, [ $tchr_id, $qchr_id ];
@@ -135,7 +116,7 @@ for my $tchr_id ( $target_chr_id_set->elements() ) {
     }
 }
 
-foreach my $chr_pair (@chr_pairs) {
+for my $chr_pair (@chr_pairs) {
     my ( $tchr_id, $qchr_id ) = @{$chr_pair};
 
     my ($tchr_name) = $obj->get_chr_info($tchr_id);
@@ -155,20 +136,20 @@ foreach my $chr_pair (@chr_pairs) {
         my ( $align_id, $align_length ) = @row2;
 
         print "Processing align_id $align_id\n";
-
         # target
-        $target_sth->execute($align_id);
-        my ($target_chr_name, $target_chr_start,
-            $target_chr_end,  $target_seq,
-        ) = $target_sth->fetchrow_array;
-        print " " x 4, "target info fetched", " " x 10, "\r";
+        my $target_info      = $obj->get_target_info($align_id);
+        my $target_chr_name  = $target_info->{chr_name};
+        my $target_chr_start = $target_info->{chr_start};
+        my $target_chr_end   = $target_info->{chr_end};
 
         # query
-        $query_sth->execute($align_id);
-        my ($query_chr_name, $query_chr_start, $query_chr_end,
-            $query_seq,      $query_strand,
-        ) = $query_sth->fetchrow_array;
-        print " " x 4, "query info fetched", " " x 10, "\r";
+        my $query_info      = $obj->get_query_info($align_id);
+        my $query_chr_name  = $query_info->{chr_name};
+        my $query_chr_start = $query_info->{chr_start};
+        my $query_chr_end   = $query_info->{chr_end};
+        my $query_strand    = $query_info->{query_strand};
+
+        my ( $target_seq, $query_seq ) = @{ $obj->get_seqs($align_id) };
 
         my $score
             = ( $target_chr_end - $target_chr_start + 1 ) * 100;  # sham score
@@ -207,14 +188,13 @@ foreach my $chr_pair (@chr_pairs) {
         }
         my $outfile = "$db/noresult";
 
-        # append axt file
         open my $outfh, '>>', $outfile;
         print {$outfh} "$tchr_name vs. $qchr_name\n";
         close $outfh;
     }
 }
 
-$stopwatch->end_message();
+$stopwatch->end_message;
 exit;
 
 __END__
