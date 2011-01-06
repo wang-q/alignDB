@@ -60,35 +60,6 @@ sub empty_ofg_tables {
     return;
 }
 
-sub align_seq {
-    my $self     = shift;
-    my $align_id = shift;
-
-    my $dbh = $self->dbh;
-
-    # alignments' chromosomal location, target_seq and query_seq
-    my $align_seq_sth = $dbh->prepare(
-        q{
-        SELECT c.chr_name,
-               a.align_length,
-               s.chr_start,
-               s.chr_end,
-               t.target_seq,
-               t.target_runlist,
-               q.query_seq
-        FROM align a, target t, query q, sequence s, chromosome c
-        WHERE a.align_id = t.align_id
-        AND t.seq_id = s.seq_id
-        AND a.align_id = q.align_id
-        AND s.chr_id = c.chr_id
-        AND a.align_id = ?
-        }
-    );
-    $align_seq_sth->execute($align_id);
-
-    return $align_seq_sth->fetchrow_array;
-}
-
 sub insert_ofg {
     my $self        = shift;
     my $align_ids   = shift;
@@ -112,13 +83,17 @@ sub insert_ofg {
 
     # for each alignment
     for my $align_id (@$align_ids) {
-        my ($chr_name,   $align_length,   $chr_start, $chr_end,
-            $target_seq, $target_runlist, $query_seq
-        ) = $self->align_seq($align_id);
+        my $target_info    = $self->get_target_info($align_id);
+        my $chr_name       = $target_info->{chr_name};
+        my $chr_start      = $target_info->{chr_start};
+        my $chr_end        = $target_info->{chr_end};
+        my $align_length   = $target_info->{align_length};
+        my $target_runlist = $target_info->{target_runlist};
+        my ( $target_seq, $query_seq ) = @{ $self->get_seqs($align_id) };
 
         next if $chr_name =~ /rand|un|contig|hap|scaf/i;
 
-        print "Prosess align $align_id in $chr_name $chr_start - $chr_end\n";
+        $self->process_message;
 
         $chr_name =~ s/chr0?//i;
         my $chr_set = AlignDB::IntSpan->new("$chr_start-$chr_end");
@@ -191,9 +166,13 @@ sub insert_ofgsw {
     my $dbh          = $self->dbh;
     my $window_maker = $self->window_maker;
 
-    my ($chr_name,   $align_length,   $chr_start, $chr_end,
-        $target_seq, $target_runlist, $query_seq
-    ) = $self->align_seq($align_id);
+    my $target_info    = $self->get_target_info($align_id);
+    my $chr_name       = $target_info->{chr_name};
+    my $chr_start      = $target_info->{chr_start};
+    my $chr_end        = $target_info->{chr_end};
+    my $align_length   = $target_info->{align_length};
+    my $target_runlist = $target_info->{target_runlist};
+    my ( $target_seq, $query_seq ) = @{ $self->get_seqs($align_id) };
 
     # target runlist
     my $target_set = AlignDB::IntSpan->new($target_runlist);
