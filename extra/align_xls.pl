@@ -18,15 +18,15 @@ use AlignDB::Stopwatch;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new();
+my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 # format parameters
 my $wrap    = 50;
@@ -59,8 +59,8 @@ $outfile ||= "$db-align-$align_id.xls";
 #----------------------------------------------------------#
 # Init objects and SQL queries
 #----------------------------------------------------------#
-my $stopwatch = AlignDB::Stopwatch->new();
-$stopwatch->start_message("Init objects...");
+my $stopwatch = AlignDB::Stopwatch->new;
+$stopwatch->start_message("Writing xls...");
 
 my $obj = AlignDB->new(
     mysql  => "$db:$server",
@@ -68,7 +68,7 @@ my $obj = AlignDB->new(
     passwd => $password,
 );
 
-my $dbh = $obj->dbh();
+my $dbh = $obj->dbh;
 
 # get target, query and reference names via AlignDB methods
 my ( $target_name, $query_name, $ref_name ) = $obj->get_names($align_id);
@@ -86,10 +86,9 @@ my $snp_query = q{
            s.target_base,
            s.query_base,
            s.ref_base
-    FROM align a,
-         snp s
-    WHERE a.align_id = ? AND
-          a.align_id = s.align_id
+    FROM align a
+    INNER JOIN snp s ON a.align_id = s.align_id
+    WHERE a.align_id = ?
     ORDER BY s.snp_pos
 };
 my $snp_query_sth = $dbh->prepare($snp_query);
@@ -101,10 +100,9 @@ my $indel_query = q{
            i.indel_length,
            i.indel_occured,
            i.indel_type
-    FROM align a,
-         indel i
-    WHERE a.align_id = ? AND
-          a.align_id = i.align_id
+    FROM align a
+    INNER JOIN indel i ON a.align_id = i.align_id
+    WHERE a.align_id = ?
     ORDER BY i.indel_start
 };
 my $indel_query_sth = $dbh->prepare($indel_query);
@@ -114,7 +112,7 @@ my $workbook;
 unless ( $workbook = Spreadsheet::WriteExcel->new($outfile) ) {
     die "Cannot create Excel file $outfile\n";
 }
-my $sheet = $workbook->add_worksheet();
+my $sheet = $workbook->add_worksheet;
 
 #----------------------------------------------------------#
 # Get data
@@ -368,9 +366,9 @@ for ( 1 .. $section ) {
 $sheet->set_column( 0, 0,         $max_name_length + 2 );
 $sheet->set_column( 1, $wrap + 3, 1.6 );
 
-$workbook->close();
+$workbook->close;
 
-$stopwatch->end_message();
+$stopwatch->end_message;
 exit;
 
 __END__

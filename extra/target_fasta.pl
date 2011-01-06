@@ -14,17 +14,17 @@ use AlignDB;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new();
+my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
-my $outfile = "";
+my $outfile;
 
 my $man  = 0;
 my $help = 0;
@@ -48,7 +48,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 $outfile = "$db.fasta" unless $outfile;
 
-open OUTFH, ">$outfile";
+open my $outfh, '>', $outfile;
 
 my $obj = AlignDB->new(
     mysql  => "$db:$server",
@@ -56,7 +56,7 @@ my $obj = AlignDB->new(
     passwd => $password,
 );
 
-my $dbh = $obj->dbh();
+my $dbh = $obj->dbh;
 
 my $target_id_query = q{
     SELECT  target_id
@@ -68,29 +68,27 @@ my $target_query = q{
     SELECT  CONCAT(">target_id|", t.target_id),
             c.chr_name,
             CONCAT(s.chr_start, "-", s.chr_end),
-            t.target_seq
-    FROM target t, sequence s, chromosome c
+            s.seq_seq
+    FROM sequence s
+    INNER JOIN target t ON s.seq_id = t.seq_id
+    INNER JOIN chromosome c ON s.chr_id = c.chr_id
     WHERE t.target_id = ?
-    AND t.seq_id = s.seq_id
-    AND s.chr_id = c.chr_id
 };
 my $target_query_sth = $dbh->prepare($target_query);
 
 # for each chromosome
-$target_id_query_sth->execute();
-while ( my @row1 = $target_id_query_sth->fetchrow_array ) {
-    my ($target_id) = @row1;
-
+$target_id_query_sth->execute;
+while ( my ($target_id) = $target_id_query_sth->fetchrow_array ) {
     $target_query_sth->execute($target_id);
-    while ( my @row2 = $target_query_sth->fetchrow_array ) {
-        my $target_seq = pop @row2;
+    while ( my @row = $target_query_sth->fetchrow_array ) {
+        my $target_seq = pop @row;
         $target_seq =~ s/-//g;
-        my $head = join "|", @row2;
-        print OUTFH $head,       "\n";
-        print OUTFH $target_seq, "\n";
+        my $head = join "|", @row;
+        print {$outfh} $head,       "\n";
+        print {$outfh} $target_seq, "\n";
     }
 }
-close OUTFH;
+close $outfh;
 
 print "all done!!!\n";
 

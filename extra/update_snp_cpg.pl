@@ -15,15 +15,15 @@ use AlignDB::Stopwatch;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new();
+my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 my $man  = 0;
 my $help = 0;
@@ -44,7 +44,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 # init
 #----------------------------------------------------------#
-my $stopwatch = AlignDB::Stopwatch->new();
+my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Update CpG info of $db...");
 
 my $obj = AlignDB->new(
@@ -54,7 +54,7 @@ my $obj = AlignDB->new(
 );
 
 # Database handler
-my $dbh = $obj->dbh();
+my $dbh = $obj->dbh;
 
 {    # add a column segment_feature4 to segment
     $obj->create_column( "snp_extra", "snp_feature3", "DOUBLE" );
@@ -69,7 +69,7 @@ my $dbh = $obj->dbh();
         FROM snp_extra
     };
     my $sth = $dbh->prepare($sql_query);
-    $sth->execute();
+    $sth->execute;
     my ($count) = $sth->fetchrow_array;
 
     unless ($count) {
@@ -79,7 +79,7 @@ my $dbh = $obj->dbh();
             FROM snp
         };
         $sth = $dbh->prepare($sql_query);
-        $sth->execute();
+        $sth->execute;
     }
 }
 
@@ -89,7 +89,7 @@ my $dbh = $obj->dbh();
         FROM isw_extra
     };
     my $sth = $dbh->prepare($sql_query);
-    $sth->execute();
+    $sth->execute;
     my ($count) = $sth->fetchrow_array;
 
     unless ($count) {
@@ -99,7 +99,7 @@ my $dbh = $obj->dbh();
             FROM isw
         };
         $sth = $dbh->prepare($sql_query);
-        $sth->execute();
+        $sth->execute;
     }
 }
 
@@ -107,23 +107,7 @@ my $dbh = $obj->dbh();
 # start update
 #----------------------------------------------------------#
 {
-
-    # alignments
-    my $align_query = q{
-        SELECT align_id
-        FROM align 
-    };
-    my $align_sth = $dbh->prepare($align_query);
-
-    # sequence
-    my $seq_query = q{
-        SELECT t.target_seq, q.query_seq
-        FROM align a, target t, query q
-        WHERE a.align_id = ?
-        AND a.align_id = q.align_id
-        AND a.align_id = t.align_id
-    };
-    my $seq_sth = $dbh->prepare($seq_query);
+    my @align_ids = @{ $obj->get_align_ids };
 
     # select all snps in this alignment
     my $snp_query = q{
@@ -145,15 +129,10 @@ my $dbh = $obj->dbh();
     };
     my $snp_extra_sth = $dbh->prepare($snp_extra);
 
-    $align_sth->execute();
-
-    # for snp
-    while ( my @row = $align_sth->fetchrow_array ) {
-        my ($align_id) = @row;
+    for my $align_id (@align_ids) {
         print "Processing align_id $align_id\n";
 
-        $seq_sth->execute($align_id);
-        my ( $target_seq, $query_seq ) = $seq_sth->fetchrow_array;
+        my ( $target_seq, $query_seq ) = @{ $obj->get_seqs($align_id) };
 
         $snp_sth->execute($align_id);
         while ( my @row = $snp_sth->fetchrow_array ) {
@@ -206,7 +185,6 @@ my $dbh = $obj->dbh();
     $snp_extra_sth->finish;
     $snp_sth->finish;
 
-    $align_sth->finish;
 }
 
 {
@@ -246,11 +224,11 @@ my $dbh = $obj->dbh();
         WHERE isw_feature3 IS NULL
     };
     my $isw_null_sth = $dbh->prepare($isw_null);
-    $isw_null_sth->execute();
+    $isw_null_sth->execute;
 
 }
 
-$stopwatch->end_message();
+$stopwatch->end_message;
 exit;
 
 __END__

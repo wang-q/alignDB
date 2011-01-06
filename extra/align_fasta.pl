@@ -15,18 +15,18 @@ use AlignDB::IntSpan;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new();
+my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
-my $outfile_dir;
-my $align_id_runlist = 100;
+my $outdir;
+my $align_id_runlist = 1;
 
 my $man  = 0;
 my $help = 0;
@@ -39,7 +39,7 @@ GetOptions(
     'db=s'       => \$db,
     'username=s' => \$username,
     'password=s' => \$password,
-    'output=s'   => \$outfile_dir,
+    'output=s'   => \$outdir,
     'align_id=s' => \$align_id_runlist,
 ) or pod2usage(2);
 
@@ -49,10 +49,10 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 # Start
 #----------------------------------------------------------#
-$outfile_dir ||= "./$db";
-unless ( -e $outfile_dir ) {
-    mkdir $outfile_dir, 0777
-        or die "Cannot create \"$outfile_dir\" directory: $!";
+$outdir ||= "./$db";
+unless ( -e $outdir ) {
+    mkdir $outdir, 0777
+        or die "Cannot create \"$outdir\" directory: $!";
 }
 my $align_id_set = AlignDB::IntSpan->new($align_id_runlist);
 
@@ -61,37 +61,24 @@ my $obj = AlignDB->new(
     user   => $username,
     passwd => $password,
 );
-my $dbh = $obj->dbh();
+my $dbh = $obj->dbh;
 
-for my $align_id ( $align_id_set->elements() ) {
-    my $outfile = $outfile_dir . "/align-$align_id.fasta" ;
+for my $align_id ( $align_id_set->elements ) {
+    my $outfile = $outdir . "/align-$align_id.fasta";
     open my $out_fh, '>', $outfile;
     my ( $target_name, $query_name, $ref_name ) = $obj->get_names($align_id);
 
-    # target and query sequences
-    my $seq_query = q{
-        SELECT t.target_seq,
-               q.query_seq
-        FROM align a, target t, query q
-        WHERE a.align_id = ?
-        AND a.align_id = q.align_id
-        AND a.align_id = t.align_id
-    };
-    my $seq_sth = $dbh->prepare($seq_query);
-    $seq_sth->execute($align_id);
-
-    my ( $target_seq, $query_seq ) = $seq_sth->fetchrow_array;
+    my ( $target_seq, $query_seq ) = @{ $obj->get_seqs($align_id) };
 
     # reference sequences
     my $ref_seq_query = q{
-        SELECT r.ref_seq
-        FROM align a, reference r
-        WHERE a.align_id = ?
-        AND a.align_id = r.align_id
+        SELECT s.seq_seq
+        FROM sequence s
+        INNER JOIN reference r ON s.seq_id = r.seq_id
+        WHERE s.align_id = ?
     };
     my $ref_seq_sth = $dbh->prepare($ref_seq_query);
     $ref_seq_sth->execute($align_id);
-
     my ($ref_seq) = $ref_seq_sth->fetchrow_array;
 
     if ( defined $ref_seq ) {
