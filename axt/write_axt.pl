@@ -113,9 +113,12 @@ for my $chr (@chrs) {
         my $target_runlist   = $target_info->{seq_runlist};
 
         # query
-        my ($query_chr_name, $query_chr_start, $query_chr_end,
-            $query_runlist,  $query_strand
-        ) = $obj->get_query_info($align_id);
+        my $query_info      = $obj->get_query_info($align_id);
+        my $query_chr_name  = $query_info->{chr_name};
+        my $query_chr_start = $query_info->{chr_start};
+        my $query_chr_end   = $query_info->{chr_end};
+        my $query_runlist   = $query_info->{seq_runlist};
+        my $query_strand    = $query_info->{query_strand};
 
         my ( $target_seq, $query_seq ) = @{ $obj->get_seqs($align_id) };
         print "  sequences fetched", " " x 10, "\r";
