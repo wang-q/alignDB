@@ -67,7 +67,7 @@ GetOptions(
     'parallel=i'            => \$parallel,
     'lt|length_thredhold=i' => \$length_thredhold,
     'st|sum_threshold=i'    => \$sum_threshold,
-    'freq=s'                => \$all_freq,
+    'all_freq=s'                => \$all_freq,
     'run=s'                 => \$run,
 ) or pod2usage(2);
 

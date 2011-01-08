@@ -4,8 +4,11 @@ use warnings;
 
 use Template;
 
-my $dir = shift @ARGV;
-$dir ||= "/home/wangq/data/alignment/yeast";
+my $data_dir = shift @ARGV;
+$data_dir ||= "/home/wangq/data/alignment/yeast";
+
+my $pl_dir = shift @ARGV;
+$pl_dir ||= "/home/wangq/Scripts";
 
 {    # wgs
     my $tt   = Template->new;
@@ -23,7 +26,7 @@ $dir ||= "/home/wangq/data/alignment/yeast";
 
     my $text = <<'EOF';
 #!/bin/bash
-cd [% dir %]
+cd [% data_dir %]
 
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
@@ -31,13 +34,15 @@ gunzip -c [% item.name %]/*.gz > [% item.name %]/[% item.name %].fasta
 perl -p -i -e '/>/ and s/\>gi\|(\d+).*/\>gi_$1/' [% item.name %]/[% item.name %].fasta
 RepeatMasker [% item.name %]/*.fasta -species fungi -xsmall -s --parallel 8
 mv [% item.name %]/[% item.name %].fasta.masked [% item.name %]/[% item.name %].fa
-perl /home/wangq/Scripts/blastz/bz.pl -dt [% dir %]/S288C_58 -dq [% dir %]/[% item.name %] -dl [% dir %]/S288Cvs[% item.name %]_58 -s set02 -p 6 
-perl /home/wangq/Scripts/alignDB/extra/two_way_batch.pl -d S288Cvs[% item.name %] -e yeast_58 -t="4932,S288C" -q "[% item.taxon %],[% item.name %]" -a [% dir %]/S288Cvs[% item.name %]_58 -at 10000 -st 1000000 --parallel 4 --run all
+perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/S288C_58 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/S288Cvs[% item.name %]_58 -s set01 -p 6 
+perl [% pl_dir %]/alignDB/extra/two_way_batch.pl -d S288Cvs[% item.name %] -e yeast_58 -t="4932,S288C" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]/S288Cvs[% item.name %]_58 -at 10000 -st 1000000 --parallel 4 --run all
 
 [% END -%]
 EOF
 
-    $tt->process( \$text, { data => \@data, dir => $dir, }, "auto_wgs.sh" )
+    $tt->process( \$text,
+        { data => \@data, data_dir => $data_dir, pl_dir => $pl_dir, },
+        "auto_wgs.sh" )
         or die Template->error;
 }
 
@@ -52,23 +57,25 @@ EOF
 
     my $text = <<'EOF';
 #!/bin/bash
-cd [% dir %]
+cd [% data_dir %]
 
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
 RepeatMasker [% item.name %]/*.fasta -species fungi -xsmall -s --parallel 8
 mv [% item.name %]/[% item.name %].fasta.masked [% item.name %]/[% item.name %].fa
-perl /home/wangq/Scripts/blastz/bz.pl -dt [% dir %]/S288C_58 -dq [% dir %]/[% item.name %] -dl [% dir %]/S288Cvs[% item.name %]_58 -s set02 -p 6 
-perl /home/wangq/Scripts/alignDB/extra/two_way_batch.pl -d S288Cvs[% item.name %] -e yeast_58 -t="4932,S288C" -q "[% item.taxon %],[% item.name %]" -a [% dir %]/S288Cvs[% item.name %]_58 -at 10000 -st 1000000 --parallel 4 --run all
+perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/S288C_58 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/S288Cvs[% item.name %]_58 -s set01 -p 6 
+perl [% pl_dir %]/alignDB/extra/two_way_batch.pl -d S288Cvs[% item.name %] -e yeast_58 -t="4932,S288C" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]/S288Cvs[% item.name %]_58 -at 10000 -st 1000000 --parallel 4 --run all
 
 [% END -%]
 EOF
 
-    $tt->process( \$text, { data => \@data, dir => $dir, }, "auto_sgrp.sh" )
+    $tt->process( \$text,
+        { data => \@data, data_dir => $data_dir, pl_dir => $pl_dir, },
+        "auto_sgrp.sh" )
         or die Template->error;
 }
 
-{    # join dbs
+{    # multi
     my $tt   = Template->new;
     my @data = (
         {   goal_db  => 'S288CvsThree',
@@ -76,6 +83,15 @@ EOF
             outgroup => '0query',
             target   => '0target',
             queries  => '1query,2query',
+            all_freq => 3,
+        },
+        {   goal_db => 'S288CvsSix',
+            dbs     => 'S288CvsSpar,S288CvsRM11,S288CvsYJM789'
+                . ',S288CvsDBVPG6765,S288CvsSK1,S288CvsY55',
+            outgroup => '0query',
+            target   => '0target',
+            queries  => '1query,2query,3query,4query,5query',
+            all_freq => 6,
         },
         {   goal_db => 'S288CvsTen',
             dbs     => 'S288CvsSpar,S288CvsRM11,S288CvsYJM789'
@@ -85,28 +101,25 @@ EOF
             target   => '0target',
             queries  => '1query,2query,3query,4query,5query'
                 . ',6query,7query,8query,9query',
+            all_freq => 10,
         },
     );
 
     my $text = <<'EOF';
 #!/bin/bash
-cd [% dir %]
+cd [% data_dir %]
 
 [% FOREACH item IN data -%]
 # [% item.goal_db %]
-perl /home/wangq/Scripts/alignDB/extra/join_dbs.pl --dbs [% item.dbs %] \
-    --goal_db [% item.goal_db _ "_10k" %] --outgroup [% item.outgroup %] --target [% item.target %] \
-    --queries [% item.queries %] \
-    --no_insert=1 --trimmed_fasta=1 --length 10000
+perl [% pl_dir %]/alignDB/extra/join_dbs.pl --dbs [% item.dbs %] --goal_db [% item.goal_db _ "_10k" %] --outgroup [% item.outgroup %] --target [% item.target %] --queries [% item.queries %] --no_insert=1 --trimmed_fasta=1 --length 10000
 
-perl /home/wangq/Scripts/alignDB/extra/join_dbs.pl --dbs [% item.dbs %] \
-    --goal_db [% item.goal_db _ "_5k" %] --outgroup [% item.outgroup %] --target [% item.target %] \
-    --queries [% item.queries %] \
-    --no_insert=1 --trimmed_fasta=1 --length 5000
+perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% item.dbs %] -e yeast_58 -f [% data_dir %]/[% item.dbs %] --all_freq [% item.all_freq %] -lt 10000 -st 100000 --parallel=6 --run all
 
 [% END -%]
 EOF
 
-    $tt->process( \$text, { data => \@data, dir => $dir, }, "auto_joins.sh" )
+    $tt->process( \$text,
+        { data => \@data, data_dir => $data_dir, pl_dir => $pl_dir,  },
+        "auto_joins.sh" )
         or die Template->error;
 }
