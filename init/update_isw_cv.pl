@@ -12,7 +12,7 @@ use AlignDB::Util qw(:all);
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use AlignDB::Multi;
+use AlignDB;
 use AlignDB::GC;
 
 #----------------------------------------------------------#
@@ -93,22 +93,6 @@ my $dbh = $obj->dbh;
 
 my @align_ids = @{ $obj->get_align_ids };
 
-# alignments' chromosomal location
-my $align_seq_sth = $dbh->prepare(
-    q{
-    SELECT c.chr_name,
-           a.align_length,
-           s.seq_runlist,
-           s.chr_start,
-           s.chr_end
-    FROM align a, target t, sequence s, chromosome c
-    WHERE a.align_id = s.align_id
-    AND t.seq_id = s.seq_id
-    AND s.chr_id = c.chr_id
-    AND a.align_id = ?
-    }
-);
-
 my $isw_sth = $dbh->prepare(
     q{
     SELECT s.isw_id, s.isw_start, s.isw_end
@@ -127,11 +111,14 @@ my $isw_update_sth = $dbh->prepare(
 );
 
 for my $align_id (@align_ids) {
-    $align_seq_sth->execute($align_id);
-    my ( $chr_name, $align_length, $target_runlist, $chr_start, $chr_end, )
-        = $align_seq_sth->fetchrow_array;
+    my $target_info    = $obj->get_target_info($align_id);
+    my $chr_name       = $target_info->{chr_name};
+    my $chr_start      = $target_info->{chr_start};
+    my $chr_end        = $target_info->{chr_end};
+    my $target_runlist = $target_info->{seq_runlist};
+    my $align_length   = $target_info->{align_length};
 
-    print "prosess align $align_id ", "in $chr_name $chr_start - $chr_end\n";
+    print $obj->process_message;
 
     # comparable runlist
     my $target_set = AlignDB::IntSpan->new($target_runlist);
