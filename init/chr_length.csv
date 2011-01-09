@@ -389,6 +389,7 @@ taxon_id,chr,length,name,assembly
 39947,chrPt,134525,Nipponbare,eg5_58
 39947,chrSy,526915,Nipponbare,eg5_58
 39947,chrUn,862499,Nipponbare,eg5_58
+4538,chrUn,999999999,Ogla,wgs
 7227,chr2L,23011544,Dmel,e58/dm3
 7227,chr2LHet,368872,Dmel,e58/dm3
 7227,chr2R,21146708,Dmel,e58/dm3
