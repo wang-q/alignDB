@@ -19,9 +19,10 @@ $pl_dir ||= "/home/wangq/Scripts";
         { taxon => 574961, name => 'JAY291',     coverage => '162x', },
         { taxon => 538975, name => 'Sigma1278b', coverage => '45x', },
         { taxon => 643680, name => 'EC1118',     coverage => 'unknown', },
-        { taxon => 545124, name => 'AWRI1631',   coverage => '7x', },
-        { taxon => 538976, name => 'YPS163',     coverage => '2.8x', },
-        { taxon => 538975, name => 'M22',        coverage => '2.6x', },
+
+        #{ taxon => 545124, name => 'AWRI1631',   coverage => '7x', },
+        #{ taxon => 538976, name => 'YPS163',     coverage => '2.8x', },
+        #{ taxon => 538975, name => 'M22',        coverage => '2.6x', },
     );
 
     my $text = <<'EOF';
@@ -119,7 +120,7 @@ perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% item.goal_db _ "_10k" %
 EOF
 
     $tt->process( \$text,
-        { data => \@data, data_dir => $data_dir, pl_dir => $pl_dir,  },
+        { data => \@data, data_dir => $data_dir, pl_dir => $pl_dir, },
         "auto_joins.sh" )
         or die Template->error;
 }
