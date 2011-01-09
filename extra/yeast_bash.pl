@@ -113,7 +113,7 @@ cd [% data_dir %]
 # [% item.goal_db %]
 perl [% pl_dir %]/alignDB/extra/join_dbs.pl --dbs [% item.dbs %] --goal_db [% item.goal_db _ "_10k" %] --outgroup [% item.outgroup %] --target [% item.target %] --queries [% item.queries %] --no_insert=1 --trimmed_fasta=1 --length 10000
 
-perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% item.goal_db %] -e yeast_58 -f [% data_dir %]/[% item.goal_db %] --all_freq [% item.all_freq %] -lt 10000 -st 100000 --parallel=6 --run all
+perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% item.goal_db _ "_10k" %] -e yeast_58 -f [% data_dir %]/[% item.goal_db _ "_10k" %] --all_freq [% item.all_freq %] -lt 10000 -st 100000 --parallel=6 --run all
 
 [% END -%]
 EOF

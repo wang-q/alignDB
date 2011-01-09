@@ -415,7 +415,7 @@ SEG: for (@segments) {
             }
             my $first_taxon_id = $info_of{ $all_names[1] }->{taxon_id};
             my $outfile
-                = "$goal_db/" . "raw_"
+                = "./$goal_db/" . "raw_"
                 . "id$first_taxon_id" . "_"
                 . $chr_name . "_"
                 . $seg_start . "_"
@@ -545,7 +545,7 @@ SEG: for (@segments) {
             }
             my $first_taxon_id = $info_of{ $all_names[1] }->{taxon_id};
             my $outfile
-                = "$goal_db/"
+                = "./$goal_db/"
                 . "id$first_taxon_id" . "_"
                 . $chr_name . "_"
                 . $seg_start . "_"

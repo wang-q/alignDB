@@ -65,7 +65,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 $stopwatch->start_message("Update $db...");
 
-my $obj = AlignDB::Multi->new(
+my $obj = AlignDB->new(
     mysql  => "$db:$server",
     user   => $username,
     passwd => $password,
@@ -142,7 +142,7 @@ $stopwatch->end_message;
 # store program running meta info to database
 # this AlignDB object is just for storing meta info
 END {
-    AlignDB::Multi->new(
+    AlignDB->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
