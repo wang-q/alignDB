@@ -952,13 +952,27 @@
                           </packing>
                         </child>
                         <child>
+                          <widget class="GtkButton" id="button_update_isw_cv">
+                            <property name="label" translatable="yes">Upd. iswcv</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">True</property>
+                            <signal name="clicked" handler="on_button_update_isw_cv_clicked" after="yes"/>
+                          </widget>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                        <child>
                           <widget class="GtkVSeparator" id="vseparator2">
                             <property name="visible">True</property>
                             <property name="orientation">vertical</property>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
-                            <property name="position">2</property>
+                            <property name="position">3</property>
                           </packing>
                         </child>
                         <child>
@@ -972,7 +986,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
-                            <property name="position">3</property>
+                            <property name="position">4</property>
                           </packing>
                         </child>
                         <child>
@@ -987,7 +1001,7 @@
                             <property name="expand">False</property>
                             <property name="fill">False</property>
                             <property name="pack_type">end</property>
-                            <property name="position">4</property>
+                            <property name="position">5</property>
                           </packing>
                         </child>
                       </widget>
