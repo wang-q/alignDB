@@ -118,7 +118,7 @@ for my $align_id (@align_ids) {
     my $target_runlist = $target_info->{seq_runlist};
     my $align_length   = $target_info->{align_length};
 
-    print $obj->process_message;
+    print $obj->process_message($align_id);
 
     # comparable runlist
     my $target_set = AlignDB::IntSpan->new($target_runlist);

@@ -93,7 +93,7 @@ sub insert_ofg {
 
         next if $chr_name =~ /rand|un|contig|hap|scaf/i;
 
-        $self->process_message;
+        $self->process_message($align_id);
 
         $chr_name =~ s/chr0?//i;
         my $chr_set = AlignDB::IntSpan->new("$chr_start-$chr_end");
