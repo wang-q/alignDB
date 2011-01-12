@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/5/2011 6:46:58 PM                          */
+/* Created on:     1/13/2011 5:18:24 AM                         */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -130,8 +130,6 @@ create table exon
    exon_frame                     int,
    exon_rank                      int,
    exon_is_full                   int,
-   exon_tl_start                  int,
-   exon_tl_end                    int,
    exon_tl_runlist                text,
    exon_seq                       longtext,
    exon_peptide                   longtext,
@@ -229,11 +227,7 @@ create table gene
    gene_is_known                  int,
    gene_multitrans                int,
    gene_multiexons                int,
-   gene_tc_start                  int,
-   gene_tc_end                    int,
    gene_tc_runlist                text,
-   gene_tl_start                  int,
-   gene_tl_end                    int,
    gene_tl_runlist                text,
    gene_description               text,
    gene_go                        char(64),

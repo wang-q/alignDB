@@ -138,7 +138,7 @@ __END__
 
 =head1 NAME
 
-    update_gene_D.pl - Add Divergence of genes to a refrence, gene_feature5 
+    update_gene_D.pl - Add Divergence of genes to a refernce, gene_feature5 
 
 =head1 SYNOPSIS
 
