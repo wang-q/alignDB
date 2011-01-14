@@ -28,15 +28,15 @@ my $stopwatch = AlignDB::Stopwatch->new(
 );
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
-my $datalib        = $Config->{paralog}->{datalib};
-my $use_megablast  = $Config->{paralog}->{use_megablast};
-my $alignment_view = $Config->{paralog}->{alignment_view};
+my $datalib        = $Config->{paralog}{datalib};
+my $use_megablast  = $Config->{paralog}{use_megablast};
+my $alignment_view = $Config->{paralog}{alignment_view};
 
 my $man  = 0;
 my $help = 0;
@@ -59,9 +59,9 @@ GetOptions(
 pod2usage(1) if $help;
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
-$Config->{paralog}->{datalib}        = $datalib;
-$Config->{paralog}->{use_megablast}  = $use_megablast;
-$Config->{paralog}->{alignment_view} = $alignment_view;
+$Config->{paralog}{datalib}        = $datalib;
+$Config->{paralog}{use_megablast}  = $use_megablast;
+$Config->{paralog}{alignment_view} = $alignment_view;
 
 #----------------------------------------------------------#
 # init
@@ -86,75 +86,35 @@ my $paralog_obj = AlignDB::Paralog->new(
 );
 
 #----------------------------------------------------------#
-# Normal db operations
-#----------------------------------------------------------#
-# add a column align_feature4 to align_extra
-{
-    $obj->create_column( "align_extra", "align_feature4", "DOUBLE" );
-    print "Table align_extra altered\n";
-}
-
-# check values in column
-{
-    my $sql_query = qq{
-        SELECT COUNT(align_extra_id)
-        FROM align_extra
-    };
-    my $sth = $dbh->prepare($sql_query);
-    $sth->execute;
-    my ($count) = $sth->fetchrow_array;
-
-    unless ($count) {
-        $sql_query = qq{
-            INSERT INTO align_extra (align_id)
-            SELECT align.align_id
-            FROM align
-        };
-        $sth = $dbh->prepare($sql_query);
-        $sth->execute;
-    }
-}
-
-#----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
 {
 
     # update align table in the new feature column
-    my $align_extra = q{
-        UPDATE align_extra
-        SET align_feature4 = ?
+    my $align_update = q{
+        UPDATE align
+        SET align_paralog = ?
         WHERE align_id = ?
     };
-    my $align_extra_sth = $dbh->prepare($align_extra);
-
-    # sequence
-    my $seq_query = q{
-        SELECT s.seq_length, t.target_seq
-        FROM align a, target t, sequence s
-        WHERE a.align_id = ?
-        AND a.align_id = t.align_id
-        AND s.seq_id = t.seq_id
-    };
-    my $seq_sth = $dbh->prepare($seq_query);
+    my $align_update_sth = $dbh->prepare($align_update);
 
     # alignments
-    my $align_ids = $obj->get_align_ids;
+    my @align_ids = @{$obj->get_align_ids};
 
     # for each align
-    for my $align_id ( @{$align_ids} ) {
-        print "\nProcessing align_id $align_id\n";
+    for my $align_id ( @align_ids ) {
+        $obj->process_message($align_id);
 
-        $seq_sth->execute($align_id);
-        my ( $target_length, $target_seq ) = $seq_sth->fetchrow_array;
+        my ( $target_seq ) = @{$obj->get_seqs($align_id)};
         $target_seq =~ tr/-//d;
+        my $target_length = length $target_seq;
 
         my $report_ref  = $paralog_obj->web_blast( \$target_seq );
         my $paralog_set = $paralog_obj->paralog_cover($report_ref);
 
         my $coverage = $paralog_set->cardinality / $target_length;
 
-        $align_extra_sth->execute( $coverage, $align_id );
+        $align_update_sth->execute( $coverage, $align_id );
 
         print Dump {
             target_length => $target_length,
@@ -168,7 +128,11 @@ $stopwatch->end_message;
 
 # store program running meta info to database
 END {
-    $obj->add_meta_stopwatch($stopwatch);
+    AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    )->add_meta_stopwatch($stopwatch);
 }
 exit;
 

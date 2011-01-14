@@ -76,11 +76,6 @@ my $align_id_sth = $dbh->prepare(
     AND t.seq_id = s.seq_id'
 );
 
-my $delete_align_extra_sth = $dbh->prepare(
-    'DELETE FROM align_extra
-    WHERE align_id = ?'
-);
-
 my $delete_align_sth = $dbh->prepare(
     'DELETE FROM align
     WHERE align_id = ?'
@@ -242,7 +237,6 @@ while ( my ($align_id) = $align_id_sth->fetchrow_array ) {
     $delete_segment_sth->execute($align_id);
 
     # delete align
-    $delete_align_extra_sth->execute($align_id);
     $delete_align_sth->execute($align_id);
 }
 

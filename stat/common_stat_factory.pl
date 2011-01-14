@@ -2728,7 +2728,7 @@ my $align_paralog = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'align_extra', 'align_feature4' ) ) {
+    unless ( $write_obj->check_column( 'align', 'align_paralog' ) ) {
         return;
     }
 
@@ -2736,9 +2736,9 @@ my $align_paralog = sub {
     my $quartiles;
     {
         my $sql_query = q{
-            SELECT align_feature4
-            FROM align_extra
-            WHERE align_feature4 IS NOT NULL
+            SELECT align_paralog
+            FROM align
+            WHERE align_paralog IS NOT NULL
         };
         my %option = ( sql_query => $sql_query, );
         $quartiles = $write_obj->quantile_sql( \%option, 4 );
@@ -2781,10 +2781,10 @@ my $align_paralog = sub {
         {    # write contents
             my $thaw_sql = $sql_file->retrieve('common-align-0');
             $thaw_sql->add_where(
-                'align_extra.align_feature4' => { op => '>=', value => '1' }
+                'align.align_paralog' => { op => '>=', value => '1' }
             );
             $thaw_sql->add_where(
-                'align_extra.align_feature4' => { op => '<=', value => '1' }
+                'align.align_paralog' => { op => '<=', value => '1' }
             );
             my %option = (
                 sql_query  => $thaw_sql->as_sql,

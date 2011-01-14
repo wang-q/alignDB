@@ -3,7 +3,7 @@
 __CLASS__: AlignDB::SQL-0.103470
 _sql: "SELECT\n  isw.isw_distance distance,\n  AVG(isw.isw_pi) AVG_pi,\n  COUNT(*)
   COUNT,\n  STD(isw.isw_pi) STD_pi\nFROM indel\n  INNER JOIN isw ON\n    isw.indel_id
-  = indel.indel_id\n  INNER JOIN align_extra ON\n    align_extra.align_id = indel.align_id\nGROUP
+  = indel.indel_id\n  INNER JOIN align ON\n    align.align_id = indel.align_id\nGROUP
   BY\n  isw.isw_distance\n"
 bind: []
 from: []
@@ -16,8 +16,8 @@ joins:
   - condition: isw.indel_id = indel.indel_id
     table: isw
     type: inner
-  - condition: align_extra.align_id = indel.align_id
-    table: align_extra
+  - condition: align.align_id = indel.align_id
+    table: align
     type: inner
   table: indel
 replace: {}

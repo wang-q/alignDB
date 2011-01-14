@@ -93,10 +93,6 @@ my @align_ids;
         passwd => $password,
     );
 
-    if ($process_align) {
-        $obj->empty_table('align_extra');
-    }
-
     if ($process_indel) {
         $obj->empty_table('indel_extra');
     }

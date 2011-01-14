@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/15/2011 1:38:15 AM                         */
+/* Created on:     1/15/2011 2:07:53 AM                         */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -40,27 +40,6 @@ ENGINE = MyISAM;
 create index tvsq_align_FK on align
 (
    tvsq_id
-);
-
-/*==============================================================*/
-/* Table: align_extra                                           */
-/*==============================================================*/
-create table align_extra
-(
-   align_extra_id                 int                            not null AUTO_INCREMENT,
-   align_id                       int,
-   align_feature4                 double,
-   align_feature8                 text,
-   primary key (align_extra_id)
-)
-ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Index: align_align_extra_FK                                  */
-/*==============================================================*/
-create index align_align_extra_FK on align_extra
-(
-   align_id
 );
 
 /*==============================================================*/

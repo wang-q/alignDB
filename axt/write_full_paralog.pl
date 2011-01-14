@@ -16,17 +16,17 @@ use AlignDB::Stopwatch;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new();
+my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
-my $datalib = $Config->{paralog}->{datalib};
+my $datalib = $Config->{paralog}{datalib};
 
 my $man  = 0;
 my $help = 0;
@@ -50,7 +50,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 # init
 #----------------------------------------------------------#
-my $stopwatch = AlignDB::Stopwatch->new();
+my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Write paralog alignment files of $db...");
 
 my $obj = AlignDB->new(
@@ -60,10 +60,10 @@ my $obj = AlignDB->new(
 );
 
 # Database handler
-my $dbh = $obj->dbh();
+my $dbh = $obj->dbh;
 
 # build $paralog_obj with parameters from alignDB.ini
-my $paralog_obj = AlignDB::Paralog->new();
+my $paralog_obj = AlignDB::Paralog->new;
 
 # we need sequence, so couldn't use megablast
 $paralog_obj->use_megablast(0);
@@ -80,10 +80,9 @@ $paralog_obj->description_limit(2);
 #----------------------------------------------------------#
 # alignments
 my $align_query = q{
-    SELECT a.align_id, e.align_feature4
-    FROM align a, align_extra e
-    WHERE a.align_id = e.align_id
-    AND e.align_feature4 * a.align_length > 10000
+    SELECT a.align_id, a.align_paralog
+    FROM align a
+    WHERE a.align_paralog * a.align_length > 10000
 };
 my $align_sth = $dbh->prepare($align_query);
 
@@ -102,14 +101,14 @@ my $seq_query = q{
 };
 my $seq_sth = $dbh->prepare($seq_query);
 
-$align_sth->execute();
+$align_sth->execute;
 my $axt_serial = 0;
 
 # for each align
 while ( my @row = $align_sth->fetchrow_array ) {
-    my ( $align_id, $align_feature4 ) = @row;
+    my ( $align_id, $align_paralog ) = @row;
     print "\nProcessing align_id $align_id,",
-        " align_feature4 $align_feature4\n";
+        " align_paralog $align_paralog\n";
 
     $seq_sth->execute($align_id);
 
@@ -216,7 +215,7 @@ while ( my @row = $align_sth->fetchrow_array ) {
 
 $align_sth->finish;
 
-$stopwatch->end_message();
+$stopwatch->end_message;
 exit;
 
 __END__

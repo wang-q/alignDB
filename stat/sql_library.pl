@@ -458,8 +458,8 @@ sub ns { return AlignDB::SQL->new; }
 #       COUNT(isw_pi) COUNT,
 #       STD(isw_pi) STD_pi
 #FROM indel INNER JOIN isw ON isw.indel_id = indel.indel_id
-#           INNER JOIN align_extra ON align_extra.align_id = indel.align_id
-##WHERE align_extra.align_feature1 BETWEEN ? AND ?
+#           INNER JOIN align ON align.align_id = indel.align_id
+##WHERE align.align_coding BETWEEN ? AND ?
 #GROUP BY isw.isw_distance
 {
     my $sql = ns();
@@ -475,8 +475,8 @@ sub ns { return AlignDB::SQL->new; }
                 condition => 'isw.indel_id = indel.indel_id',
             },
             {   type      => 'inner',
-                table     => 'align_extra',
-                condition => 'align_extra.align_id = indel.align_id',
+                table     => 'align',
+                condition => 'align.align_id = indel.align_id',
             },
         ]
     );
