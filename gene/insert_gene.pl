@@ -9,6 +9,8 @@ use YAML qw(Dump Load DumpFile LoadFile);
 
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 
+use Bio::EnsEMBL::Registry;
+
 use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
@@ -16,7 +18,6 @@ use AlignDB::Stopwatch;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
-use AlignDB::Ensembl;
 use AlignDB::Position;
 use AlignDB::Multi;
 
@@ -41,6 +42,8 @@ my $password   = $Config->{database}{password};
 my $db         = $Config->{database}{db};
 my $ensembl_db = $Config->{database}{ensembl};
 
+my $reg_conf = "$FindBin::Bin/../ensembl_initrc.pm";
+
 my $insert_exonsw   = $Config->{gene}{insert_exonsw};
 my $insert_codingsw = $Config->{gene}{insert_codingsw};
 
@@ -64,6 +67,7 @@ GetOptions(
     'username=s'        => \$username,
     'password=s'        => \$password,
     'ensembl=s'         => \$ensembl_db,
+    'reg_conf=s'        => \$reg_conf,
     'insert_exonsw=s'   => \$insert_exonsw,
     'insert_codingsw=s' => \$insert_codingsw,
     'parallel=i'        => \$parallel,
@@ -78,6 +82,9 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 # init
 #----------------------------------------------------------#
 $stopwatch->start_message("Update Gene-related tables of $db...");
+
+# Configure the Bio::EnsEMBL::Registry
+Bio::EnsEMBL::Registry->load_all($reg_conf);
 
 my @jobs;
 {
@@ -129,17 +136,12 @@ my $worker = sub {
             passwd => $password,
         );
     }
-    my $dbh = $obj->dbh;
-    my $pos_obj = AlignDB::Position->new( dbh => $dbh );
+    my $dbh          = $obj->dbh;
+    my $pos_obj      = AlignDB::Position->new( dbh => $dbh );
     my $window_maker = $obj->window_maker;
 
-    # ensembl handler
-    my $ensembl = AlignDB::Ensembl->new(
-        server => $server,
-        db     => $ensembl_db,
-        user   => $username,
-        passwd => $password,
-    );
+    my $slice_adaptor
+        = Bio::EnsEMBL::Registry->get_adaptor( $ensembl_db, 'core', 'Slice' );
 
     # insert into gene
     my $gene_sth = $dbh->prepare(
@@ -148,13 +150,13 @@ my $worker = sub {
             gene_id, window_id, gene_stable_id,
             gene_external_name, gene_biotype, gene_strand,
             gene_is_full, gene_is_known, gene_multitrans, gene_multiexons,
-            gene_description
+            gene_tc_runlist, gene_tl_runlist, gene_description
         )
         VALUES (
             NULL, ?, ?,
             ?, ?, ?,
             ?, ?, ?, ?,
-            ?
+            ?, ?, ?
         )
     }
     );
@@ -194,9 +196,16 @@ my $worker = sub {
 
         my $target_set = AlignDB::IntSpan->new($target_runlist);
 
-        # make a new ensembl slice object
-        $ensembl->set_slice( $chr_name, $chr_start, $chr_end );
-        my $slice_obj     = $ensembl->slice_obj;
+        # obtain a slice
+        my $slice = $slice_adaptor->fetch_by_region( 'chromosome', $chr_name,
+            $chr_start, $chr_end );
+
+        # XXX evil hack
+        # For unknown reasons, ensembl public databases worked well, but local
+        # databases failed
+        $slice->{coord_system}{adaptor}{_is_sequence_level} = { 1 => 1 };
+        $slice->{coord_system}{sequence_level} = 1;
+
         my $slice_chr_set = AlignDB::IntSpan->new("$chr_start-$chr_end");
 
         # insert internal indels, that are, indels in target_set
@@ -206,7 +215,7 @@ my $worker = sub {
         #----------------------------#
         # INSERT INTO gene
         #----------------------------#
-        for my $gene ( @{ $slice_obj->get_all_Genes } ) {
+        for my $gene ( @{ $slice->get_all_Genes } ) {
             $gene = $gene->transform('chromosome');
 
             # gene information
@@ -266,17 +275,8 @@ my $worker = sub {
             }
             my $gene_multiexons = @exons;
 
-            # insert to table
-            $gene_sth->execute(
-                $cur_window_id,            $gene_info{stable_id},
-                $gene_info{external_name}, $gene_info{biotype},
-                $gene_info{strand},        $gene_is_full,
-                $gene_info{is_known},      $gene_multitrans,
-                $gene_multiexons,          $gene_info{description}
-            );
-            my $gene_id = $obj->last_insert_id;
-
-            next unless $gene_info{biotype} eq "protein_coding";
+            my $gene_tc_set = AlignDB::IntSpan->new;
+            my $gene_tl_set = AlignDB::IntSpan->new;
 
             #----------------------------#
             # PUSH INTO @exon_sites
@@ -286,7 +286,6 @@ my $worker = sub {
 
                 # exon information
                 my %exon_info;
-                $exon_info{gene_id} = $gene_id;
 
                 my @exon_methods = qw{
                     start end stable_id strand phase end_phase frame
@@ -323,23 +322,11 @@ my $worker = sub {
                     $exon_is_full = 0;
                 }
 
-                if ( $exon_info{coding_region_start} < $chr_start ) {
-                    $exon_info{coding_region_start} = $chr_start;
-                }
-                if ( $exon_info{coding_region_end} > $chr_end ) {
-                    $exon_info{coding_region_end} = $chr_end;
-                    $exon_is_full = 0;
-                }
-
-                # XXX: bioperl and ensembl conflict
-                my $exon_seq;
-
-                #my $exon_seq = $exon->seq->seq;
+                my $exon_seq = $exon->seq->seq;
                 my $exon_peptide;
-
-                #if ($transcript) {
-                #    $exon_peptide = $exon->peptide($transcript)->seq;
-                #}
+                if ($transcript) {
+                    $exon_peptide = $exon->peptide($transcript)->seq;
+                }
 
                 # exon position set
                 my $exon_start
@@ -354,18 +341,31 @@ my $worker = sub {
                 $exon_set = $exon_set->intersect($target_set);
 
                 # coding region set
-                my $coding_region_start = $pos_obj->at_align( $align_id,
-                    $exon_info{coding_region_start} );
-                my $coding_region_end = $pos_obj->at_align( $align_id,
-                    $exon_info{coding_region_end} );
-                if ( $coding_region_start >= $coding_region_end ) {
-                    print
-                        "Exon $exon_info{stable_id} coding_region wrong, start >= end\n";
-                    next;
+                my $coding_set = AlignDB::IntSpan->new;
+                if (    defined $exon_info{coding_region_start}
+                    and defined $exon_info{coding_region_end} )
+                {
+                    if ( $exon_info{coding_region_start} < $chr_start ) {
+                        $exon_info{coding_region_start} = $chr_start;
+                        $exon_is_full = 0;
+                    }
+                    if ( $exon_info{coding_region_end} > $chr_end ) {
+                        $exon_info{coding_region_end} = $chr_end;
+                        $exon_is_full = 0;
+                    }
+                    my $coding_region_start = $pos_obj->at_align( $align_id,
+                        $exon_info{coding_region_start} );
+                    my $coding_region_end = $pos_obj->at_align( $align_id,
+                        $exon_info{coding_region_end} );
+                    if ( $coding_region_start >= $coding_region_end ) {
+                        print
+                            "Exon $exon_info{stable_id} coding_region wrong, start >= end\n";
+                        next;
+                    }
+                    $coding_set->add(
+                        "$coding_region_start-$coding_region_end");
+                    $coding_set = $coding_set->intersect($target_set);
                 }
-                my $coding_set = AlignDB::IntSpan->new(
-                    "$coding_region_start-$coding_region_end");
-                $coding_set = $coding_set->intersect($target_set);
 
                 $exon_info{set}        = $exon_set;
                 $exon_info{is_full}    = $exon_is_full;
@@ -374,7 +374,21 @@ my $worker = sub {
                 $exon_info{peptide}    = $exon_peptide;
 
                 push @exon_sites, \%exon_info;
+
+                $gene_tc_set->add($exon_set);
+                $gene_tl_set->add($coding_set);
             }
+
+            # insert to table
+            $gene_sth->execute(
+                $cur_window_id,            $gene_info{stable_id},
+                $gene_info{external_name}, $gene_info{biotype},
+                $gene_info{strand},        $gene_is_full,
+                $gene_info{is_known},      $gene_multitrans,
+                $gene_multiexons,          $gene_tc_set->runlist,
+                $gene_tl_set->runlist,     $gene_info{description}
+            );
+            my $gene_id = $obj->last_insert_id;
 
             #----------------------------#
             # INSERT INTO exon
@@ -391,7 +405,7 @@ my $worker = sub {
 
                 $exon_sth->execute(
                     $prev_exon_id,           $cur_window_id,
-                    $exon_site->{gene_id},   $exon_site->{stable_id},
+                    $gene_id,                $exon_site->{stable_id},
                     $exon_site->{strand},    $exon_site->{phase},
                     $exon_site->{end_phase}, $exon_site->{frame},
                     $exon_site->{is_full},   $exon_site->{tl_runlist},
