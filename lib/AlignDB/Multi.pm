@@ -893,7 +893,10 @@ sub get_seqs {
         $target_sth->finish;
 
         $query_sth->execute($align_id);
-        my (@query_seqs) = $query_sth->fetchrow_array;
+        my @query_seqs;
+        while ( my ($query_seq) = $query_sth->fetchrow_array ) {
+            push @query_seqs, $query_seq;
+        }
         $query_sth->finish;
 
         $self->{caching_id} = $align_id;
