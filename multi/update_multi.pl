@@ -136,7 +136,10 @@ my $worker = sub {
         UPDATE align
         SET align_coding  = ?,
             align_repeats = ?,
-            align_te      = ?
+            align_te      = ?,
+            align_coding_runlist = ?,
+            align_repeats_runlist = ?,
+            align_te_runlist = ?
         WHERE align_id    = ?
     };
     my $align_feature_sth = $dbh->prepare($align_feature);
@@ -244,11 +247,11 @@ my $worker = sub {
             my $align_chr_start   = $chr_pos[1];
             my $align_chr_end     = $chr_pos[$align_length];
             my $align_chr_runlist = "$align_chr_start-$align_chr_end";
-            my $align_feature1
+            my $align_coding
                 = $ensembl->feature_portion( '_cds_set', $align_chr_runlist );
-            my $align_feature2 = $ensembl->feature_portion( '_repeat_set',
+            my $align_repeats = $ensembl->feature_portion( '_repeat_set',
                 $align_chr_runlist );
-            my $align_feature3
+            my $align_te
                 = $ensembl->feature_portion( '_te_set', $align_chr_runlist );
 
             # feature runlists
@@ -259,8 +262,9 @@ my $worker = sub {
             $repeat_set = $repeat_set->map_set( sub { $align_pos{$_} } );
             $te_set     = $te_set->map_set( sub     { $align_pos{$_} } );
             $align_feature_sth->execute(
-                $align_feature1, $align_feature2,
-                $align_feature3, $align_id,
+                $align_coding, $align_repeats,
+                $align_te,  $cds_set->runlist, $repeat_set->runlist,
+                $te_set->runlist, $align_id,
             );
 
             $align_feature_sth->finish;
@@ -326,8 +330,8 @@ my $worker = sub {
                 my $snp_chr_pos = $chr_pos[$snp_pos];
 
                 # coding and repeats
-                my $snp_feature1 = $cds_set->member($snp_chr_pos);
-                my $snp_feature2 = $repeat_set->member($snp_chr_pos);
+                my $snp_coding = $cds_set->member($snp_chr_pos);
+                my $snp_repeats = $repeat_set->member($snp_chr_pos);
 
                 # cpg
                 my $snp_feature3 = 0;
@@ -348,7 +352,7 @@ my $worker = sub {
                     }
                 }
 
-                $snp_feature_sth->execute( $snp_feature1, $snp_feature2,
+                $snp_feature_sth->execute( $snp_coding, $snp_repeats,
                     $snp_feature3, $snp_id, );
             }
 

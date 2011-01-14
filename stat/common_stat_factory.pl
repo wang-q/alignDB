@@ -2484,7 +2484,7 @@ my $align_coding = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'align_extra', 'align_feature1' ) ) {
+    unless ( $write_obj->check_column( 'align', 'align_coding' ) ) {
         return;
     }
 
@@ -2492,9 +2492,9 @@ my $align_coding = sub {
     my $quartiles;
     {
         my $sql_query = q{
-            SELECT align_feature1
-            FROM align_extra
-            WHERE align_feature1 IS NOT NULL
+            SELECT align_coding
+            FROM align
+            WHERE align_coding IS NOT NULL
         };
         my %option = ( sql_query => $sql_query, );
         $quartiles = $write_obj->quantile_sql( \%option, 4 );
@@ -2533,10 +2533,10 @@ my $align_coding = sub {
         {    # write contents
             my $thaw_sql = $sql_file->retrieve('common-align-0');
             $thaw_sql->add_where(
-                'align_extra.align_feature1' => { op => '>=', value => '1' }
+                'align.align_coding' => { op => '>=', value => '1' }
             );
             $thaw_sql->add_where(
-                'align_extra.align_feature1' => { op => '<=', value => '1' }
+                'align.align_coding' => { op => '<=', value => '1' }
             );
             my %option = (
                 sql_query  => $thaw_sql->as_sql,
@@ -2564,7 +2564,7 @@ my $align_repeat = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'align_extra', 'align_feature2' ) ) {
+    unless ( $write_obj->check_column( 'align', 'align_repeats' ) ) {
         return;
     }
 
@@ -2572,9 +2572,9 @@ my $align_repeat = sub {
     my $quartiles;
     {
         my $sql_query = q{
-            SELECT align_feature2
-            FROM align_extra
-            WHERE align_feature2 IS NOT NULL
+            SELECT align_repeats
+            FROM align
+            WHERE align_repeats IS NOT NULL
         };
         my %option = ( sql_query => $sql_query, );
         $quartiles = $write_obj->quantile_sql( \%option, 4 );
@@ -2613,10 +2613,10 @@ my $align_repeat = sub {
         {    # write contents
             my $thaw_sql = $sql_file->retrieve('common-align-0');
             $thaw_sql->add_where(
-                'align_extra.align_feature2' => { op => '>=', value => '1' }
+                'align.align_repeats' => { op => '>=', value => '1' }
             );
             $thaw_sql->add_where(
-                'align_extra.align_feature2' => { op => '<=', value => '1' }
+                'align.align_repeats' => { op => '<=', value => '1' }
             );
             my %option = (
                 sql_query  => $thaw_sql->as_sql,
@@ -2644,7 +2644,7 @@ my $align_te = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'align_extra', 'align_feature3' ) ) {
+    unless ( $write_obj->check_column( 'align', 'align_te' ) ) {
         return;
     }
 
@@ -2652,9 +2652,9 @@ my $align_te = sub {
     my $quartiles;
     {
         my $sql_query = q{
-            SELECT align_feature3
-            FROM align_extra
-            WHERE align_feature3 IS NOT NULL
+            SELECT align_te
+            FROM align
+            WHERE align_te IS NOT NULL
         };
         my %option = ( sql_query => $sql_query, );
         $quartiles = $write_obj->quantile_sql( \%option, 4 );
@@ -2697,10 +2697,10 @@ my $align_te = sub {
         {    # write contents
             my $thaw_sql = $sql_file->retrieve('common-align-0');
             $thaw_sql->add_where(
-                'align_extra.align_feature3' => { op => '>=', value => '1' }
+                'align.align_te' => { op => '>=', value => '1' }
             );
             $thaw_sql->add_where(
-                'align_extra.align_feature3' => { op => '<=', value => '1' }
+                'align.align_te' => { op => '<=', value => '1' }
             );
             my %option = (
                 sql_query  => $thaw_sql->as_sql,

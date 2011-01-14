@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/13/2011 5:18:24 AM                         */
+/* Created on:     1/15/2011 1:38:15 AM                         */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -22,6 +22,14 @@ create table align
    align_average_gc               double,
    comparable_runlist             text,
    indel_runlist                  text,
+   align_coding                   double,
+   align_repeats                  double,
+   align_te                       double,
+   align_paralog                  double,
+   align_coding_runlist           text,
+   align_repeats_runlist          text,
+   align_te_runlist               text,
+   align_paralog_runlist          text,
    primary key (align_id)
 )
 ENGINE = MyISAM;
@@ -41,13 +49,7 @@ create table align_extra
 (
    align_extra_id                 int                            not null AUTO_INCREMENT,
    align_id                       int,
-   align_feature1                 double,
-   align_feature2                 double,
-   align_feature3                 double,
    align_feature4                 double,
-   align_feature5                 text,
-   align_feature6                 text,
-   align_feature7                 text,
    align_feature8                 text,
    primary key (align_extra_id)
 )
@@ -599,6 +601,9 @@ create table snp
    query_base                     char(1),
    ref_base                       char(1),
    snp_occured                    char(1),
+   snp_coding                     double,
+   snp_repeats                    double,
+   snp_cpg                        double,
    primary key (snp_id)
 )
 ENGINE = MyISAM;

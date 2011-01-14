@@ -43,8 +43,6 @@ my $process_isw    = $Config->{feature}{isw};
 my $process_snp    = $Config->{feature}{snp};
 my $process_window = $Config->{feature}{window};
 
-my $align_id_runlist;    # only update align_ids in this set
-
 # run in parallel mode
 my $parallel = $Config->{feature}{parallel};
 
@@ -68,7 +66,6 @@ GetOptions(
     'process_isw=s'    => \$process_isw,
     'process_snp=s'    => \$process_snp,
     'process_window=s' => \$process_window,
-    'runlist=s'        => \$align_id_runlist,
     'parallel=i'       => \$parallel,
     'batch=i'          => \$batch_number,
 ) or pod2usage(2);
@@ -86,10 +83,7 @@ $stopwatch->start_message("Update annotations of $db...");
 # Clean previous data and find all align_ids
 #----------------------------#
 my @align_ids;
-if ($align_id_runlist) {
-    @align_ids = AlignDB::IntSpan->new($align_id_runlist)->elements;
-}
-else {
+{
     print "Clean previous data\n";
 
     # create alignDB object for this scope
@@ -155,20 +149,18 @@ my $worker = sub {
     #----------------------------#
     # SQL query and DBI sths
     #----------------------------#
-    # update align_extra table in the new feature column
-    my $align_extra = q{
-        INSERT INTO align_extra (
-            align_extra_id, align_id, 
-            align_feature1, align_feature2, align_feature3,
-            align_feature5, align_feature6, align_feature7
-        )
-        VALUES (
-            NULL, ?,
-            ?, ?, ?,
-            ?, ?, ?
-        )
+    # update align_update table in the new feature column
+    my $align_update = q{
+        UPDATE align
+        SET align_coding = ?,
+            align_repeats = ?,
+            align_te = ?,
+            align_coding_runlist = ?,
+            align_repeats_runlist = ?,
+            align_te_runlist = ?
+        WHERE align_id = ?
     };
-    my $align_extra_sth = $dbh->prepare($align_extra);
+    my $align_update_sth = $dbh->prepare($align_update);
 
     # select all indels in this alignment
     my $indel_query = q{
@@ -214,13 +206,13 @@ my $worker = sub {
     my $snp_query_sth = $dbh->prepare($snp_query);
 
     # update snp table in the new feature column
-    my $snp_extra = q{
-        INSERT INTO snp_extra   (
-            snp_extra_id, snp_id, snp_feature1, snp_feature2
-        )
-        VALUES (NULL, ?, ?, ?)
+    my $snp_update = q{
+        UPDATE snp
+        SET snp_coding = ?,
+            snp_repeats = ?
+        WHERE snp_id = ?
     };
-    my $snp_extra_sth = $dbh->prepare($snp_extra);
+    my $snp_update_sth = $dbh->prepare($snp_update);
 
     # select all windows for this alignment
     my $window_query = q{
@@ -250,7 +242,7 @@ UPDATE: for my $align_id (@align_ids) {
         my $align_length = $target_info->{align_length};
         my ($target_seq) = @{ $obj->get_seqs($align_id) };
         $obj->process_message($align_id);
-        
+
         next UPDATE if $chr_name =~ /rand|un|contig|hap|scaf|gi_/i;
 
         $chr_name =~ s/chr0?//i;
@@ -291,11 +283,11 @@ UPDATE: for my $align_id (@align_ids) {
             my $align_chr_start   = $chr_pos[1];
             my $align_chr_end     = $chr_pos[$align_length];
             my $align_chr_runlist = "$align_chr_start-$align_chr_end";
-            my $align_feature1
+            my $align_coding
                 = $ensembl->feature_portion( '_cds_set', $align_chr_runlist );
-            my $align_feature2 = $ensembl->feature_portion( '_repeat_set',
+            my $align_repeats = $ensembl->feature_portion( '_repeat_set',
                 $align_chr_runlist );
-            my $align_feature3
+            my $align_te
                 = $ensembl->feature_portion( '_te_set', $align_chr_runlist );
 
             # feature runlists
@@ -305,14 +297,11 @@ UPDATE: for my $align_id (@align_ids) {
             $cds_set    = $cds_set->map_set( sub    { $align_pos{$_} } );
             $repeat_set = $repeat_set->map_set( sub { $align_pos{$_} } );
             $te_set     = $te_set->map_set( sub     { $align_pos{$_} } );
-            $align_extra_sth->execute(
-                $align_id,         $align_feature1,
-                $align_feature2,   $align_feature3,
-                $cds_set->runlist, $repeat_set->runlist,
-                $te_set->runlist,
-            );
+            $align_update_sth->execute( $align_coding, $align_repeats,
+                $align_te, $cds_set->runlist, $repeat_set->runlist,
+                $te_set->runlist, $align_id, );
 
-            $align_extra_sth->finish;
+            $align_update_sth->finish;
         }
 
         #----------------------------#
@@ -378,13 +367,12 @@ UPDATE: for my $align_id (@align_ids) {
                 my ( $snp_id, $snp_pos ) = @row;
                 my $snp_chr_pos = $chr_pos[$snp_pos];
 
-                my $snp_feature1 = $cds_set->member($snp_chr_pos);
-                my $snp_feature2 = $repeat_set->member($snp_chr_pos);
-                $snp_extra_sth->execute( $snp_id, $snp_feature1,
-                    $snp_feature2 );
+                my $snp_coding  = $cds_set->member($snp_chr_pos);
+                my $snp_repeats = $repeat_set->member($snp_chr_pos);
+                $snp_update_sth->execute( $snp_coding, $snp_repeats, $snp_id,
+                );
             }
-
-            $snp_extra_sth->finish;
+            $snp_update_sth->finish;
             $snp_query_sth->finish;
         }
 

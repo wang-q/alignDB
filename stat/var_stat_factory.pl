@@ -324,20 +324,18 @@ my $snp_basic = sub {
     }
 
     # write contents -- coding
-    if ( $write_obj->check_column( 'snp_extra', 'snp_feature1' ) ) {
+    if ( $write_obj->check_column( 'snp', 'snp_coding' ) ) {
         my $query_name = 'Coding_type';
         $sheet_row++;
         my $sql_query = q{
-            SELECT CASE e.snp_feature1
-                     WHEN 0 THEN 'non_coding'
-                     WHEN 1 THEN 'coding'
-                     WHEN NULL THEN 'NULL'
-                     ELSE 'WRONG'
-                   END `coding`,
-                   COUNT(*) `COUNT`
-            FROM snp s,
-                 snp_extra e
-            WHERE s.snp_id = e.snp_id
+            SELECT  CASE e.snp_coding
+                        WHEN 0 THEN 'non_coding'
+                        WHEN 1 THEN 'coding'
+                        WHEN NULL THEN 'NULL'
+                        ELSE 'WRONG'
+                    END `coding`,
+                    COUNT(*) `COUNT`
+            FROM snp s
             GROUP BY coding
         };
         my %option = (
@@ -350,20 +348,18 @@ my $snp_basic = sub {
     }
 
     # write contents -- repeats
-    if ( $write_obj->check_column( 'snp_extra', 'snp_feature2' ) ) {
+    if ( $write_obj->check_column( 'snp', 'snp_repeats' ) ) {
         my $query_name = 'Repeat_type';
         $sheet_row++;
         my $sql_query = q{
-            SELECT CASE e.snp_feature2
-                     WHEN 0 THEN 'non_repeat'
-                     WHEN 1 THEN 'repeat' 
-                     WHEN NULL THEN 'NULL'
-                     ELSE 'WRONG'
-                   END `repeat`,
-                   COUNT(*) `COUNT`
-            FROM snp s,
-                 snp_extra e
-            WHERE s.snp_id = e.snp_id
+            SELECT  CASE e.snp_repeats
+                        WHEN 0 THEN 'non_repeat'
+                        WHEN 1 THEN 'repeat' 
+                        WHEN NULL THEN 'NULL'
+                        ELSE 'WRONG'
+                    END `repeat`,
+                    COUNT(*) `COUNT`
+            FROM snp s
             GROUP BY `repeat`
         };
         my %option = (

@@ -323,8 +323,6 @@ GROUP BY a.align_id
 # Indel slippage                               
 #----------------------------------------------------------#
 
-ALTER TABLE `indel_extra` ADD COLUMN `indel_feature3` DOUBLE;
-
 SELECT indel_feature3, COUNT(*)
 FROM indel, indel_extra
 WHERE indel.indel_id = indel_extra.indel_id
@@ -595,17 +593,6 @@ LIMIT 5000000;
 
 DELETE QUICK FROM isw_extra
 LIMIT 5000000;
-
-ALTER TABLE `indel_extra` MODIFY COLUMN `indel_feature1` DOUBLE,
-                          MODIFY COLUMN `indel_feature2` DOUBLE;
-                          
-ALTER TABLE `isw_extra` MODIFY COLUMN `isw_feature1` DOUBLE,
-                        MODIFY COLUMN `isw_feature2` DOUBLE;
-
-ALTER TABLE `snp_extra` MODIFY COLUMN `snp_feature1` DOUBLE,
-                        MODIFY COLUMN `snp_feature2` DOUBLE;
-
-
 
 #----------------------------------------------------------#
 # Fix errors                                         
