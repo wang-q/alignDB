@@ -328,7 +328,7 @@ my $snp_basic = sub {
         my $query_name = 'Coding_type';
         $sheet_row++;
         my $sql_query = q{
-            SELECT  CASE e.snp_coding
+            SELECT  CASE s.snp_coding
                         WHEN 0 THEN 'non_coding'
                         WHEN 1 THEN 'coding'
                         WHEN NULL THEN 'NULL'
@@ -352,7 +352,7 @@ my $snp_basic = sub {
         my $query_name = 'Repeat_type';
         $sheet_row++;
         my $sql_query = q{
-            SELECT  CASE e.snp_repeats
+            SELECT  CASE s.snp_repeats
                         WHEN 0 THEN 'non_repeat'
                         WHEN 1 THEN 'repeat' 
                         WHEN NULL THEN 'NULL'
@@ -372,20 +372,18 @@ my $snp_basic = sub {
     }
 
     # write contents -- CpG
-    if ( $write_obj->check_column( 'snp_extra', 'snp_feature3' ) ) {
+    if ( $write_obj->check_column( 'snp', 'snp_cpg' ) ) {
         my $query_name = 'CpG_type';
         $sheet_row++;
         my $sql_query = q{
-            SELECT CASE e.snp_feature3
+            SELECT CASE s.snp_cpg
                      WHEN 0 THEN 'non_CpG'
                      WHEN 1 THEN 'CpG' 
                      WHEN NULL THEN 'NULL'
                      ELSE 'WRONG'
                    END `cpg`,
                    COUNT(*) `COUNT`
-            FROM snp s,
-                 snp_extra e
-            WHERE s.snp_id = e.snp_id
+            FROM snp s
             GROUP BY cpg
         };
         my %option = (

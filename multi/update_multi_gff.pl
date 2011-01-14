@@ -378,7 +378,7 @@ my $worker_isw_cpg = sub {
         $isw_extra_sth->execute( $cpg, $isw_id );
     }
 
-    # update NULL value of isw_feature3 to 0
+    # update NULL value of isw_cpg_pi to 0
     my $isw_null = q{
         UPDATE isw
         SET isw_cpg_pi = 0

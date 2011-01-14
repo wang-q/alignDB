@@ -334,7 +334,7 @@ my $worker = sub {
                 my $snp_repeats = $repeat_set->member($snp_chr_pos);
 
                 # cpg
-                my $snp_feature3 = 0;
+                my $snp_cpg = 0;
 
                 my $left_base  = substr( $target_seq, $snp_pos - 2, 1 );
                 my $right_base = substr( $target_seq, $snp_pos,     1 );
@@ -343,17 +343,17 @@ my $worker = sub {
                 # On the reverse strand, is CpG to CpA
                 if ( $snp_mutant_to eq "C->T" ) {    # original base is C
                     if ( $right_base eq "G" ) {
-                        $snp_feature3 = 1;
+                        $snp_cpg = 1;
                     }
                 }
                 elsif ( $snp_mutant_to eq "G->A" ) {    # original base is G
                     if ( $left_base eq "C" ) {
-                        $snp_feature3 = 1;
+                        $snp_cpg = 1;
                     }
                 }
 
                 $snp_feature_sth->execute( $snp_coding, $snp_repeats,
-                    $snp_feature3, $snp_id, );
+                    $snp_cpg, $snp_id, );
             }
 
             $snp_feature_sth->finish;
@@ -404,7 +404,7 @@ my $worker_isw_cpg = sub {
         $isw_extra_sth->execute( $cpg, $isw_id );
     }
 
-    # update NULL value of isw_feature3 to 0
+    # update NULL value of isw_cpg_pi to 0
     my $isw_null = q{
         UPDATE isw
         SET isw_cpg_pi = 0

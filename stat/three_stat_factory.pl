@@ -2828,7 +2828,7 @@ my $distance_snp_non_cpg = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'snp_extra', 'snp_feature3' ) ) {
+    unless ( $write_obj->check_column( 'snp', 'snp_cpg' ) ) {
         return;
     }
 
@@ -2861,10 +2861,9 @@ my $distance_snp_non_cpg = sub {
         my $sql_query1 = q~
             # base change
             SELECT i.isw_distance distance, COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, snp_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND s.snp_id = e.snp_id
-            AND e.snp_feature3 = 0
+            AND s.snp_cpg = 0
             AND s.snp_occured IN ("T", "Q")
             AND i.isw_distance BETWEEN -1 AND 10
             GROUP BY i.isw_distance
@@ -2872,10 +2871,9 @@ my $distance_snp_non_cpg = sub {
         my $sql_query2 = q~
             # base change
             SELECT i.isw_distance distance, COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, snp_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND s.snp_id = e.snp_id
-            AND e.snp_feature3 = 0
+            AND s.snp_cpg = 0
             AND s.snp_occured IN ("T", "Q")
             AND CONCAT(ref_base, IF(s.snp_occured = "T", target_base, query_base)) = ?
             AND i.isw_distance BETWEEN -1 AND 10
@@ -2901,7 +2899,7 @@ my $distance_tri_trv_non_cpg = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'snp_extra', 'snp_feature3' ) ) {
+    unless ( $write_obj->check_column( 'snp', 'snp_cpg' ) ) {
         return;
     }
 
@@ -2939,39 +2937,35 @@ my $distance_tri_trv_non_cpg = sub {
         my $sql_query1 = q~
             # base change
             SELECT i.isw_distance distance, COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, snp_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND s.snp_id = e.snp_id
-            AND e.snp_feature3 = 0
+            AND s.snp_cpg = 0
             AND s.snp_occured IN ("T", "Q")
             AND i.isw_distance BETWEEN -1 AND 10
             GROUP BY i.isw_distance
             UNION
             SELECT '5-10', COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, snp_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND s.snp_id = e.snp_id
-            AND e.snp_feature3 = 0
+            AND s.snp_cpg = 0
             AND s.snp_occured IN ("T", "Q")
             AND i.isw_distance BETWEEN 5 AND 10
         ~;
         my $sql_query2 = q~
             # base change
             SELECT i.isw_distance distance, COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, snp_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND s.snp_id = e.snp_id
-            AND e.snp_feature3 = 0
+            AND s.snp_cpg = 0
             AND s.snp_occured IN ("T", "Q")
             AND CONCAT(ref_base, IF(s.snp_occured = "T", target_base, query_base)) IN (in_list)
             AND i.isw_distance BETWEEN -1 AND 10
             GROUP BY i.isw_distance
             UNION
             SELECT '5-10', COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, snp_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND s.snp_id = e.snp_id
-            AND e.snp_feature3 = 0
+            AND s.snp_cpg = 0
             AND s.snp_occured IN ("T", "Q")
             AND CONCAT(ref_base, IF(s.snp_occured = "T", target_base, query_base)) IN (in_list)
             AND i.isw_distance BETWEEN 5 AND 10
@@ -3189,7 +3183,7 @@ my $distance_cpg = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw_extra', 'isw_feature3' ) ) {
+    unless ( $write_obj->check_column( 'isw', 'isw_cpg_pi' ) ) {
         return;
     }
 
@@ -3213,49 +3207,16 @@ my $distance_cpg = sub {
             = $write_obj->write_header_sql( $sheet_name, \%option );
     }
 
-    # Without isw_feature3
-    ## write contents
-    #{
-    #    my $sql_query = q~
-    #        # distance effect
-    #        SELECT  i.isw_distance,
-    #                AVG(i.CpG/i.isw_length) * 100.0 `CpG/100bp`,
-    #                COUNT(*) COUNT
-    #        FROM
-    #            (SELECT  i.isw_id, i.isw_distance, i.isw_length,
-    #                    IFNULL(c.cpg, 0) CpG
-    #            FROM isw i
-    #            LEFT JOIN
-    #                (SELECT  i.isw_id id,
-    #                        COUNT(*) cpg
-    #                FROM isw i, snp s, snp_extra e
-    #                WHERE i.isw_id = s.isw_id
-    #                AND s.snp_id = e.snp_id
-    #                AND e.snp_feature3 = 1
-    #                GROUP BY i.isw_id) c
-    #            ON c.id = i.isw_id) i
-    #        GROUP BY i.isw_distance
-    #    ~;
-    #    my %option = (
-    #        sql_query => $sql_query,
-    #        sheet_row => $sheet_row,
-    #        sheet_col => $sheet_col,
-    #    );
-    #    ($sheet_row) = $write_obj->write_content_direct($sheet, \%option);
-    #}
-
     # write contents
     {
-        my $sql_query = q~
-            # distance effect
+        my $sql_query = q{
             SELECT isw_distance distance,
-                   AVG(isw_feature3) AVG_cpg,
-                   COUNT(isw_feature3) COUNT,
-                   STD(isw_feature3) STD
-            FROM isw i, isw_extra e
-            WHERE i.isw_id = e.isw_id
+                   AVG(isw_cpg_pi) AVG_cpg,
+                   COUNT(isw_cpg_pi) COUNT,
+                   STD(isw_cpg_pi) STD
+            FROM isw i
             GROUP BY isw_distance
-        ~;
+        };
         my %option = (
             sql_query => $sql_query,
             sheet_row => $sheet_row,
@@ -3267,15 +3228,13 @@ my $distance_cpg = sub {
     # write footer
     {
         $sheet_row += 2;
-        my $sql_query = q~
-            # isw average
+        my $sql_query = q{
             SELECT 'Total',
-                   AVG(isw_feature3) AVG_cpg,
-                   COUNT(isw_feature3) COUNT,
-                   STD(isw_feature3) STD
-            FROM isw i, isw_extra e
-            WHERE i.isw_id = e.isw_id
-        ~;
+                   AVG(isw_cpg_pi) AVG_cpg,
+                   COUNT(isw_cpg_pi) COUNT,
+                   STD(isw_cpg_pi) STD
+            FROM isw i
+        };
         my %option = (
             sql_query      => $sql_query,
             sheet_row      => $sheet_row,
