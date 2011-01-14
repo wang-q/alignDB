@@ -16,6 +16,7 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 use AlignDB::Position;
+use AlignDB::Multi;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -30,6 +31,8 @@ my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
+my $multi;
+
 my $man  = 0;
 my $help = 0;
 
@@ -41,6 +44,7 @@ GetOptions(
     'db=s'       => \$db,
     'username=s' => \$username,
     'password=s' => \$password,
+    'multi'      => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -52,105 +56,52 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Update dnds info of $db...");
 
-my $obj = AlignDB->new(
-    mysql  => "$db:$server",
-    user   => $username,
-    passwd => $password,
-);
+my $obj;
+if ( !$multi ) {
+    $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+}
+else {
+    $obj = AlignDB::Multi->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+}
 
 # Database handler
-my $dbh = $obj->dbh();
+my $dbh = $obj->dbh;
 
 my $pos_obj = AlignDB::Position->new( dbh => $dbh );
 my $codon_obj = AlignDB::Codon->new;
 
 # add columns
 {
-    $obj->create_column( "snp_extra", "snp_feature5", "INT" );     # exon_id
-    $obj->create_column( "snp_extra", "snp_feature6", "INT" );     # codon_pos
-    $obj->create_column( "snp_extra", "snp_feature7", "CHAR(3)" ); # codon_t
-    $obj->create_column( "snp_extra", "snp_feature8", "CHAR(3)" ); # codon_q
-    $obj->create_column( "snp_extra", "snp_feature9", "DOUBLE" );  # syn
-    $obj->create_column( "snp_extra", "snp_feature10", "DOUBLE" ); # non-syn
-    $obj->create_column( "snp_extra", "snp_feature11", "DOUBLE" ); # stop
-    print "Table snp_extra altered\n";
+    $obj->create_column( "snp", "exon_id",          "INT" );
+    $obj->create_column( "snp", "snp_codon_pos",    "INT" );
+    $obj->create_column( "snp", "snp_codons",  "CHAR(128)" );
+    $obj->create_column( "snp", "snp_syn",          "DOUBLE" );
+    $obj->create_column( "snp", "snp_nsy",          "DOUBLE" );
+    $obj->create_column( "snp", "snp_stop",         "DOUBLE" );
+    print "Table snp altered\n";
 
-    $obj->create_column( "isw_extra", "isw_feature9",  "DOUBLE" );   # syn
-    $obj->create_column( "isw_extra", "isw_feature10", "DOUBLE" );   # non-syn
-    $obj->create_column( "isw_extra", "isw_feature11", "DOUBLE" );   # stop
-    print "Table isw_extra altered\n";
-}
+    $obj->create_column( "isw", "isw_syn",  "DOUBLE" );
+    $obj->create_column( "isw", "isw_nsy",  "DOUBLE" );
+    $obj->create_column( "isw", "isw_stop", "DOUBLE" );
+    print "Table isw altered\n";
 
-# check rows in snp_extra
-{
-    my $sql_query = qq{
-        SELECT COUNT(snp_extra_id)
-        FROM snp_extra
-    };
-    my $sth = $dbh->prepare($sql_query);
-    $sth->execute();
-    my ($count) = $sth->fetchrow_array;
-
-    unless ($count) {
-        $sql_query = qq{
-            INSERT INTO snp_extra (snp_id)
-            SELECT snp.snp_id
-            FROM snp
-        };
-        $sth = $dbh->prepare($sql_query);
-        $sth->execute;
-    }
-}
-
-# check rows in isw_extra
-{
-    my $sql_query = qq{
-        SELECT COUNT(isw_extra_id)
-        FROM isw_extra
-    };
-    my $sth = $dbh->prepare($sql_query);
-    $sth->execute;
-    my ($count) = $sth->fetchrow_array;
-
-    unless ($count) {
-        $sql_query = qq{
-            INSERT INTO isw_extra (isw_id)
-            SELECT isw.isw_id
-            FROM isw
-        };
-        $sth = $dbh->prepare($sql_query);
-        $sth->execute;
-    }
+    $obj->create_column( "gene", "gene_syn",  "DOUBLE" );
+    $obj->create_column( "gene", "gene_nsy",  "DOUBLE" );
+    $obj->create_column( "gene", "gene_stop", "DOUBLE" );
+    print "Table gene altered\n";
 }
 
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
-# alignments
-my $align_query = q{
-    SELECT align_id
-    FROM align 
-};
-my $align_sth = $dbh->prepare($align_query);
-
-# alignments' chromosomal location, target_seq and query_seq
-my $align_seq_query = q{
-    SELECT c.chr_name,
-           a.align_length,
-           s.chr_start,
-           s.chr_end,
-           t.target_seq,
-           t.target_runlist,
-           q.query_seq
-    FROM align a, target t, query q, sequence s, chromosome c
-    WHERE a.align_id = t.align_id
-    AND t.seq_id = s.seq_id
-    AND a.align_id = q.align_id
-    AND s.chr_id = c.chr_id
-    AND a.align_id = ?
-};
-my $align_seq_sth = $dbh->prepare($align_seq_query);
-
 # select all exons which contain the snp
 my $exon_query = q{
     SELECT  e.exon_id, e.exon_strand, 
@@ -164,44 +115,38 @@ my $exon_sth = $dbh->prepare($exon_query);
 
 # select all coding snps in this alignment
 my $snp_query = q{
-    SELECT  s.snp_id, s.snp_pos, s.target_base, s.query_base
-    FROM snp s, snp_extra e
-    WHERE s.snp_id = e.snp_id
-    AND s.align_id = ?
-    AND e.snp_feature1 = 1
+    SELECT  s.snp_id, s.snp_pos
+    FROM snp s
+    WHERE s.align_id = ?
+    AND s.snp_coding = 1
 };
 my $snp_sth = $dbh->prepare($snp_query);
 
 # update snp table in the new feature column
-my $snp_extra = q{
-    UPDATE snp_extra
-    SET snp_feature5 = ?,
-        snp_feature6 = ?,
-        snp_feature7 = ?,
-        snp_feature8 = ?,
-        snp_feature9 = ?,
-        snp_feature10 = ?,
-        snp_feature11 = ?
+my $snp_update = q{
+    UPDATE snp
+    SET exon_id = ?,
+        snp_codon_pos = ?,
+        snp_codons = ?,
+        snp_syn = ?,
+        snp_nsy = ?,
+        snp_stop = ?
     WHERE snp_id = ?
 };
-my $snp_extra_sth = $dbh->prepare($snp_extra);
+my $snp_update_sth = $dbh->prepare($snp_update);
 
-$align_sth->execute;
+my @align_ids = @{ $obj->get_align_ids };
+ALIGN: for my $align_id (@align_ids) {
 
-# for snp
-ALIGN: while ( my @row = $align_sth->fetchrow_array ) {
-    my ($align_id) = @row;
-    print "Processing align_id $align_id\n";
+    my $target_info    = $obj->get_target_info($align_id);
+    my $chr_name       = $target_info->{chr_name};
+    my $target_runlist = $target_info->{seq_runlist};
+    my $align_length   = $target_info->{align_length};
 
-    $align_seq_sth->execute($align_id);
-    my ($chr_name,   $align_length,   $chr_start, $chr_end,
-        $target_seq, $target_runlist, $query_seq
-    ) = $align_seq_sth->fetchrow_array;
     next ALIGN if $chr_name =~ /rand|un|contig|hap|scaf/i;
 
-    print "Prosess align $align_id in $chr_name $chr_start - $chr_end\n";
-
-    $chr_name =~ s/chr0?//i;
+    $obj->process_message($align_id);
+    my ( $target_seq, @query_seqs ) = @{ $obj->get_seqs($align_id) };
 
     # target runlist
     my $target_set = AlignDB::IntSpan->new($target_runlist);
@@ -211,7 +156,7 @@ ALIGN: while ( my @row = $align_sth->fetchrow_array ) {
     $exon_sth->execute($align_id);
 EXON: while ( my @row = $exon_sth->fetchrow_array ) {
         my ( $exon_id, $exon_strand, $exon_tl_runlist, $exon_seq,
-            $exon_peptide )
+            $exon_peptide, )
             = @row;
 
         # extract exon seq in this align
@@ -220,7 +165,6 @@ EXON: while ( my @row = $exon_sth->fetchrow_array ) {
         if ( $exon_strand eq '-' ) {
             $exon_align_seq = revcom($exon_align_seq);
         }
-
         if ( index( $exon_seq, $exon_align_seq ) == -1 ) {
             print " " x 4, "Exon sequence does not match alignment\n";
 
@@ -261,9 +205,7 @@ EXON: while ( my @row = $exon_sth->fetchrow_array ) {
 
     $snp_sth->execute($align_id);
 SNP: while ( my @row = $snp_sth->fetchrow_array ) {
-        my ( $snp_id, $snp_pos, $target_base, $query_base ) = @row;
-
-        print "Processing SNP $snp_id, POS $snp_pos\n";
+        my ( $snp_id, $snp_pos, ) = @row;
 
         # only analysis the first exon match this snp
         my $exon;
@@ -328,105 +270,141 @@ SNP: while ( my @row = $snp_sth->fetchrow_array ) {
             }
             $codon_set = AlignDB::IntSpan->new("$codon_start-$codon_end");
         }
-
-        #print Dump {
-        #    exon_strand   => $exon_strand,
-        #    exon_frame   => $exon_frame,
-        #    exon_tl_set   => "$exon_tl_set",
-        #    exon_length   => $exon_tl_set->cardinality,
-        #    snp_pos       => $snp_pos,
-        #    snp_codon_pos => $snp_codon_pos,
-        #    codon_set     => "$codon_set",
-        #};
+        if ( $codon_set->cardinality > 3 ) {
+            print " " x 4, "Indels in this codon\n";
+            next SNP;
+        }
 
         # target codon and query codon
         my $codon_t = $codon_set->substr_span($target_seq);
-        my $codon_q = $codon_set->substr_span($query_seq);
         if ( $exon_strand eq '-' ) {
             $codon_t = revcom($codon_t);
-            $codon_q = revcom($codon_q);
+        }
+        my @codons = ($codon_t);
+        for my $query_seq (@query_seqs) {
+            my $codon_q = $codon_set->substr_span($query_seq);
+            if ( $exon_strand eq '-' ) {
+                $codon_q = revcom($codon_q);
+            }
+            push @codons, $codon_q;
         }
 
-        my ( $syn, $nsy, $stop ) = (0) x 3;
-        if (   $codon_obj->is_ter_codon($codon_t)
-            or $codon_obj->is_ter_codon($codon_q) )
-        {
-            $stop = 1;
-        }
-        else {
-            ( $syn, $nsy )
-                = $codon_obj->comp_codons( $codon_t, $codon_q,
-                $snp_codon_pos );
+        for (@codons) {
+            if (/\-/) {
+                print " " x 4, "Indels in this codon\n";
+                next SNP;
+            }
         }
 
-        #print Dump {
-        #    codon_t => $codon_t,
-        #    codon_q => $codon_q,
-        #    base_t  => $target_base,
-        #    base_q  => $query_base,
-        #    syn     => $syn,
-        #    nsy     => $nsy,
-        #    stop    => $stop,
-        #};
+        my ( @syns, @nsys, @stops );
+        for ( my $i = 0; $i <= $#codons; $i++ ) {
+            for ( my $j = $i + 1; $j <= $#codons; $j++ ) {
+                my $codon1 = $codons[$i];
+                my $codon2 = $codons[$j];
 
-        $snp_extra_sth->execute( $exon_id, $snp_codon_pos, $codon_t, $codon_q,
-            $syn, $nsy, $stop, $snp_id );
+                my ( $syn, $nsy, $stop ) = (0) x 3;
+                if (   $codon_obj->is_ter_codon($codon1)
+                    or $codon_obj->is_ter_codon($codon2) )
+                {
+                    $stop = 1;
+                }
+                else {
+                    ( $syn, $nsy )
+                        = $codon_obj->comp_codons( $codon1, $codon2,
+                        $snp_codon_pos );
+                }
+                push @syns,  $syn;
+                push @nsys,  $nsy;
+                push @stops, $stop;
+            }
+        }
+
+        $snp_update_sth->execute( $exon_id, $snp_codon_pos,
+            join( "|", @codons ),
+            average(@syns), average(@nsys), average(@stops), $snp_id );
     }
-
 }
-$snp_extra_sth->finish;
+$snp_update_sth->finish;
 $snp_sth->finish;
-
-$align_sth->finish;
 
 #----------------------------------------------------------#
 # isw_extra
 #----------------------------------------------------------#
 {
-    print "Processing isw_feature9, 10, 11\n";
+    print "Processing isw_syn, nsy, stop\n";
 
     my $isw_query = q{
         SELECT  i.isw_id id,
-                SUM(e.snp_feature9) /i.isw_length syn,
-                SUM(e.snp_feature10) /i.isw_length nsy,
-                SUM(e.snp_feature11) /i.isw_length stop
-        FROM isw i, snp s, snp_extra e
+                SUM(s.snp_syn) /i.isw_length syn,
+                SUM(s.snp_nsy) /i.isw_length nsy,
+                SUM(s.snp_stop) /i.isw_length stop
+        FROM isw i, snp s
         WHERE i.isw_id = s.isw_id
-        AND s.snp_id = e.snp_id
-        AND e.snp_feautre1 = 1
-        AND e.snp_feature5 IS NOT NULL
+        AND s.exon_id IS NOT NULL
         GROUP BY i.isw_id
     };
     my $isw_sth = $dbh->prepare($isw_query);
 
     # update isw table in the new feature column
-    my $isw_extra = q{
-        UPDATE isw_extra
-        SET isw_feature9 = ?,
-            isw_feature10 = ?,
-            isw_feature11 = ?
+    my $isw_update = q{
+        UPDATE isw
+        SET isw_syn = ?,
+            isw_nsy = ?,
+            isw_stop = ?
         WHERE isw_id = ?
     };
-    my $isw_extra_sth = $dbh->prepare($isw_extra);
+    my $isw_update_sth = $dbh->prepare($isw_update);
 
     # for isw
     $isw_sth->execute;
     while ( my @row = $isw_sth->fetchrow_array ) {
         my ( $isw_id, $syn, $nsy, $stop ) = @row;
-        $isw_extra_sth->execute( $syn, $nsy, $stop, $isw_id );
+        $isw_update_sth->execute( $syn, $nsy, $stop, $isw_id );
     }
+}
 
-    ## update NULL value of isw_feature3 to 0
-    #my $isw_null = q{
-    #    UPDATE isw_extra
-    #    SET isw_feature9 = 0,
-    #        isw_feature10 = 0,
-    #        isw_feature11 = 0
-    #    WHERE isw_feature9 IS NULL
-    #};
-    #my $isw_null_sth = $dbh->prepare($isw_null);
-    #$isw_null_sth->execute();
+#----------------------------------------------------------#
+# gene
+#----------------------------------------------------------#
+{
+    print "Processing gene_syn, nsy, stop\n";
 
+    my $gene_query = q{
+        SELECT  g.gene_id id,
+                g.gene_tl_runlist runlist,
+                SUM(s.snp_syn) syn,
+                SUM(s.snp_nsy) nsy,
+                SUM(s.snp_stop) stop
+        FROM gene g 
+        inner join exon e on g.gene_id = e.gene_id
+        inner join snp s on s.exon_id = e.exon_id
+        GROUP BY g.gene_id
+    };
+    my $gene_sth = $dbh->prepare($gene_query);
+
+    # update gene table in the new feature column
+    my $gene_update = q{
+        UPDATE gene
+        SET gene_syn = ?,
+            gene_nsy = ?,
+            gene_stop = ?
+        WHERE gene_id = ?
+    };
+    my $gene_update_sth = $dbh->prepare($gene_update);
+
+    # for gene
+    $gene_sth->execute;
+    while ( my @row = $gene_sth->fetchrow_array ) {
+        my ( $gene_id, $runlist, $syn, $nsy, $stop ) = @row;
+        my $set    = AlignDB::IntSpan->new($runlist);
+        my $length = $set->cardinality;
+        $gene_update_sth->execute(
+            $syn / $length,
+            $nsy / $length,
+            $stop / $length,
+            $gene_id
+        );
+    }
 }
 
 $stopwatch->end_message;
@@ -436,7 +414,7 @@ __END__
 
 =head1 NAME
 
-    update_snp_dnds.pl - Add additional synonymous/non-synonymous info
+    update_snp_dnds.pl - Add additional synonymous/non-synonymous/stop info
                          to alignDB
 
 =head1 SYNOPSIS
