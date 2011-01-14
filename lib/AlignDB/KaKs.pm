@@ -78,7 +78,7 @@ sub run {
         # check seqs
         my $pseq = $protein->seq;
         if ( $pseq =~ /\*/ and $pseq !~ /\*$/ ) {
-            die "provided a cDNA ["
+            confess "provided a cDNA ["
                 . $seq->display_id
                 . "] sequence with stop codon(s), PAML will choke!\n";
         }
