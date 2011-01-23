@@ -62,24 +62,6 @@ my $group = {
     group_ds0 => {},
 };
 
-my $taxon_id;
-{
-    my $sth = $dbh->prepare(
-        q{
-        SELECT 
-                c.taxon_id
-        FROM
-            sequence s
-            INNER JOIN target t
-                ON s.seq_id = t.seq_id
-            INNER JOIN chromosome c
-                ON s.chr_id = c.chr_id
-        }
-    );
-    $sth->execute;
-    ($taxon_id) = $sth->fetchrow_array;
-}
-
 {    # dn = 0, ds > 0
     my $sth = $dbh->prepare(
         q{
