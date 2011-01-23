@@ -1074,6 +1074,27 @@ sub get_seqs {
     return $self->caching_seqs;
 }
 
+sub get_seq_ref {
+    my $self     = shift;
+    my $align_id = shift;
+
+    my $dbh = $self->dbh;
+
+    my $sth = $dbh->prepare(
+        q{
+        SELECT s.seq_seq
+        FROM sequence s
+        INNER JOIN reference r on s.seq_id = r.seq_id
+        WHERE s.align_id = ?
+        }
+    );
+    $sth->execute($align_id);
+    my ($seq) = $sth->fetchrow_array;
+    $sth->finish;
+
+    return $seq;
+}
+
 sub get_sets {
     my $self     = shift;
     my $align_id = shift;
