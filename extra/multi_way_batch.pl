@@ -77,22 +77,22 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 # prepare to run tasks in @tasks
 my @tasks;
 if ( $run eq 'all' ) {
-    @tasks = ( 1 .. 14 );
+    @tasks = ( 1 .. 43 );
 }
 elsif ( $run eq 'basic' ) {
-    @tasks = (1);
+    @tasks = ( 1 .. 3 );
 }
 elsif ( $run eq 'common' ) {
-    @tasks = ( 1 .. 3, 8, 9, 11 );
+    @tasks = ( 1 .. 3, 30, 31, 40 );
 }
 elsif ( $run eq 'gc' ) {
-    @tasks = ( 1 .. 5, 8 .. 12 );
+    @tasks = ( 1 .. 3, 10, 11, 30 .. 32, 40, 41 );
 }
 elsif ( $run eq 'gene' ) {
-    @tasks = ( 1 .. 13 );
+    @tasks = ( 1 .. 3, 10, 11, 20, 21, 30 .. 33, 40 .. 42 );
 }
 elsif ( $run eq 'stat' ) {
-    @tasks = ( 11 .. 14 );
+    @tasks = ( 40 .. 42 );
 }
 else {
     $run =~ s/\"\'//s;
@@ -118,22 +118,22 @@ my $dispatch = {
         . " --fasta_dir=$fasta_dir"
         . " --length=$length_thredhold"
         . " --parallel=$parallel",
-    2 => undef,
-    3 => undef,
-    4 => "perl $FindBin::Bin/../multi/insert_gc_multi.pl"
+    2  => undef,
+    3  => undef,
+    10 => "perl $FindBin::Bin/../multi/insert_gc_multi.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
         . " --parallel=$parallel",
-    5 => "perl $FindBin::Bin/../init/update_isw_cv.pl"
+    11 => "perl $FindBin::Bin/../init/update_isw_cv.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name",
-    6 => "perl $FindBin::Bin/../gene/insert_gene.pl"
+    20 => "perl $FindBin::Bin/../gene/insert_gene.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
@@ -142,7 +142,7 @@ my $dispatch = {
         . " -e=$ensembl_db"
         . " --parallel=$parallel"
         . " --multi",
-    7 => "perl $FindBin::Bin/../gene/update_sw_cv.pl"
+    21 => "perl $FindBin::Bin/../gene/update_sw_cv.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
@@ -150,23 +150,30 @@ my $dispatch = {
         . " -d=$db_name"
         . " --parallel=$parallel"
         . " --multi",
-    8 => "perl $FindBin::Bin/../multi/update_multi.pl"
+    30 => "perl $FindBin::Bin/../multi/update_multi.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
         . " -e=$ensembl_db",
-    '8gff' => "perl $FindBin::Bin/../multi/update_multi_gff.pl"
+    '30gff' => "perl $FindBin::Bin/../multi/update_multi_gff.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
         . " --gff_file=$gff_file",
-    9  => undef,
-    10 => undef,
-    11 => "perl $FindBin::Bin/../stat/multi_stat_factory.pl"
+    31 => undef,
+    32 => undef,
+    33 => "perl $FindBin::Bin/../init/update_snp_dnds.pl"
+        . " -s=$server"
+        . " --port=$port"
+        . " -u=$username"
+        . " --password=$password"
+        . " -d=$db_name"
+        . " --multi",
+    40 => "perl $FindBin::Bin/../stat/multi_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
@@ -174,7 +181,7 @@ my $dispatch = {
         . " -d=$db_name"
         . " -o=$FindBin::Bin/../stat/$db_name.multi.xls"
         . " --freq=$all_freq",
-    12 => "perl $FindBin::Bin/../stat/mgc_stat_factory.pl"
+    41 => "perl $FindBin::Bin/../stat/mgc_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
@@ -182,14 +189,14 @@ my $dispatch = {
         . " -d=$db_name"
         . " -o=$FindBin::Bin/../stat/$db_name.mgc.xls"
         . " -t=$sum_threshold",
-    13 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
+    42 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
         . " -o=$FindBin::Bin/../stat/$db_name.gene.xls",
-    14 => "perl $FindBin::Bin/../stat/mvar_stat_factory.pl"
+    43 => "perl $FindBin::Bin/../stat/mvar_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
@@ -204,8 +211,8 @@ my $dispatch = {
 
 # use the dispatch template to generate $cmd
 for my $step (@tasks) {
-    if ( $gff_file and $step == 8 ) {
-        $step = '8gff';
+    if ( $gff_file and $step == 30 ) {
+        $step = '30gff';
     }
 
     my $cmd = $dispatch->{$step};

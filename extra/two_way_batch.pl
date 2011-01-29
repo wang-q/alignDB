@@ -84,22 +84,22 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 # prepare to run tasks in @tasks
 my @tasks;
 if ( $run eq 'all' ) {
-    @tasks = ( 1 .. 14 );
+    @tasks = ( 1 .. 43 );
 }
 elsif ( $run eq 'basic' ) {
     @tasks = ( 1 .. 3 );
 }
 elsif ( $run eq 'common' ) {
-    @tasks = ( 1 .. 3, 8, 9, 11 );
+    @tasks = ( 1 .. 3, 30, 31, 40 );
 }
 elsif ( $run eq 'gc' ) {
-    @tasks = ( 1 .. 5, 8 .. 12 );
+    @tasks = ( 1 .. 3, 10, 11, 30 .. 32, 40, 41 );
 }
 elsif ( $run eq 'gene' ) {
-    @tasks = ( 1 .. 13 );
+    @tasks = ( 1 .. 3, 10, 11, 20, 21, 30 .. 33, 40 .. 42 );
 }
 elsif ( $run eq 'stat' ) {
-    @tasks = ( 11 .. 13 );
+    @tasks = ( 40 .. 42 );
 }
 else {
     $run =~ s/\"\'//s;
@@ -139,20 +139,20 @@ my $dispatch = {
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name",
-    4 => "perl $FindBin::Bin/../init/insert_gc.pl"
+    10 => "perl $FindBin::Bin/../init/insert_gc.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
         . " --parallel=$parallel",
-    5 => "perl $FindBin::Bin/../init/update_isw_cv.pl"
+    11 => "perl $FindBin::Bin/../init/update_isw_cv.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name",
-    6 => "perl $FindBin::Bin/../gene/insert_gene.pl"
+    20 => "perl $FindBin::Bin/../gene/insert_gene.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
@@ -160,14 +160,14 @@ my $dispatch = {
         . " -d=$db_name"
         . " -e=$ensembl_db"
         . " --parallel=$parallel",
-    7 => "perl $FindBin::Bin/../gene/update_sw_cv.pl"
+    21 => "perl $FindBin::Bin/../gene/update_sw_cv.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
         . " --parallel=$parallel",
-    8 => "perl $FindBin::Bin/../init/update_feature.pl"
+    30 => "perl $FindBin::Bin/../init/update_feature.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
@@ -175,19 +175,25 @@ my $dispatch = {
         . " -d=$db_name"
         . " -e=$ensembl_db"
         . " --parallel=$parallel",
-    9 => "perl $FindBin::Bin/../init/update_indel_slippage.pl"
+    31 => "perl $FindBin::Bin/../init/update_indel_slippage.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name",
-    10 => "perl $FindBin::Bin/../init/update_segment.pl"
+    32 => "perl $FindBin::Bin/../init/update_segment.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name",
-    11 => "perl $FindBin::Bin/../stat/common_stat_factory.pl"
+    33 => "perl $FindBin::Bin/../init/update_snp_dnds.pl"
+        . " -s=$server"
+        . " --port=$port"
+        . " -u=$username"
+        . " --password=$password"
+        . " -d=$db_name",
+    40 => "perl $FindBin::Bin/../stat/common_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
@@ -195,7 +201,7 @@ my $dispatch = {
         . " -d=$db_name"
         . " -o=$FindBin::Bin/../stat/$db_name.common.xls"
         . " -t=$sum_threshold",
-    12 => "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
+    41 => "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
@@ -203,14 +209,14 @@ my $dispatch = {
         . " -d=$db_name"
         . " -o=$FindBin::Bin/../stat/$db_name.gc.xls"
         . " -t=$sum_threshold",
-    13 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
+    42 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
         . " -o=$FindBin::Bin/../stat/$db_name.gene.xls",
-    14 => undef,
+    43 => undef,
 };
 
 #----------------------------#
