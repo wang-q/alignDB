@@ -58,7 +58,7 @@ GetOptions(
 pod2usage(1) if $help;
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
-$outfile = "$db.indel.length$min_length-$max_length.xls" unless $outfile;
+$outfile = "$db.indel.length$min_length-$max_length.xlsx" unless $outfile;
 
 #----------------------------------------------------------#
 # init

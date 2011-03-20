@@ -58,7 +58,7 @@ my @tasks;
 
 if ( $run eq 'all' ) {
     @tasks = ( 1 .. 20 );
-    $outfile = "$db.multi.xls" unless $outfile;
+    $outfile = "$db.multi.xlsx" unless $outfile;
 }
 else {
     $run =~ s/\"\'//s;
@@ -74,7 +74,7 @@ else {
 
     unless ($outfile) {
         my $runlist = $set->runlist;
-        $outfile = "$db.multi.$runlist.xls";
+        $outfile = "$db.multi.$runlist.xlsx";
     }
 }
 

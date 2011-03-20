@@ -7,7 +7,7 @@ use lib "$FindBin::Bin/../";
 extends qw(AlignDB);
 use AlignDB::SQL;
 
-use Spreadsheet::WriteExcel;
+use Excel::Writer::XLSX;
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 use List::MoreUtils qw( all any );
 use YAML qw(Dump Load DumpFile LoadFile);
@@ -27,33 +27,39 @@ sub BUILD {
     # set outfile
     unless ( $self->outfile ) {
         $self->mysql =~ /^(.+):/;
-        $self->{outfile} = "$1.auto.xls";
+        $self->{outfile} = "$1.auto.xlsx";
     }
 
     # Create $workbook object
     my $workbook;
-    unless ( $workbook = Spreadsheet::WriteExcel->new( $self->outfile ) ) {
+    unless ( $workbook = Excel::Writer::XLSX->new( $self->outfile ) ) {
         carp "Cannot create Excel file.\n";
         return;
     }
     $self->{workbook} = $workbook;
 
     # set $workbook format
+    my %font = (
+        font => 'Arial',
+        size => 10,
+    );
     my $format = {
         HEADER => $workbook->add_format(
             align    => 'center',
             bg_color => 42,
             bold     => 1,
             bottom   => 2,
+            %font,
         ),
-        HIGHLIGHT => $workbook->add_format( color => 'blue' ),
-        NORMAL    => $workbook->add_format( color => 'black' ),
-        NAME      => $workbook->add_format( bold  => 1, color => 57 ),
-        TOTAL     => $workbook->add_format( bold  => 1, top => 2 ),
-        DATE => $workbook->add_format(
+        HIGHLIGHT => $workbook->add_format( color => 'blue',  %font, ),
+        NORMAL    => $workbook->add_format( color => 'black', %font, ),
+        NAME => $workbook->add_format( bold => 1, color => 57, %font, ),
+        TOTAL => $workbook->add_format( bold => 1, top => 2, %font, ),
+        DATE  => $workbook->add_format(
             bg_color   => 42,
             bold       => 1,
-            num_format => 'yy-m-d hh:mm'
+            num_format => 'yy-m-d hh:mm',
+            %font,
         ),
     };
     $self->{format} = $format;
@@ -1092,7 +1098,7 @@ sub DESTROY {
 1;
 
 #
-# A simple class to use DBI & Spreadsheet::WriteExcel to make excel files
+# A simple class to use DBI & Excel::Writer::XLSX to make excel files
 #
 # perl -e "print scalar localtime"
 # Tue Mar  7 19:22:28 2006

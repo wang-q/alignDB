@@ -53,7 +53,7 @@ GetOptions(
 pod2usage(1) if $help;
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
-$outfile = "$db.four.xls" unless $outfile;
+$outfile = "$db.four.xlsx" unless $outfile;
 
 # prepare to run tasks in @tasks
 my @tasks;
@@ -74,7 +74,7 @@ else {
     }
 
     my $runlist = $set->runlist();
-    $outfile =~ s/(\.xls)$/.$runlist$1/;
+    $outfile =~ s/(\.xlsx)$/.$runlist$1/;
 }
 
 #----------------------------------------------------------#
