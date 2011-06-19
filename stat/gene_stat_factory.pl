@@ -326,7 +326,7 @@ my $coding_all = sub {
 
     {    # write header
         my @headers
-            = qw{ distance AVG_pi AVG_Indel/100bp AVG_gc AVG_CV COUNT };
+            = qw{ distance AVG_pi AVG_Indel/100bp AVG_gc AVG_CV AVG_repeats COUNT };
         ( $sheet_row, $sheet_col ) = ( 0, 0 );
         my %option = (
             sheet_row => $sheet_row,
@@ -345,6 +345,7 @@ my $coding_all = sub {
                    `avg_indel/100bp`,
                    AVG (w.window_target_gc) `avg_gc`,
                    AVG (s.codingsw_cv) `avg_cv`,
+                   AVG (w.window_repeats) `avg_repeats`,
                    count(*) count
             FROM codingsw s,
                  window w,
@@ -418,7 +419,7 @@ my $exon_D = sub {
 
         {    # write header
             my @headers
-                = qw{ distance AVG_pi AVG_Indel/100bp AVG_gc AVG_CV COUNT };
+                = qw{ distance AVG_pi AVG_Indel/100bp AVG_gc AVG_CV AVG_repeats COUNT };
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -437,6 +438,7 @@ my $exon_D = sub {
                        `avg_indel/100bp`,
                        AVG (w.window_target_gc) `avg_gc`,
                        AVG (s.exonsw_cv) `avg_cv`,
+                       AVG (w.window_repeats) `avg_repeats`,
                        COUNT(*) count
                 FROM exonsw s,
                      window w,
@@ -499,7 +501,7 @@ my $exon_D_null = sub {
 
     {    # write header
         my @headers
-            = qw{ distance AVG_pi AVG_Indel/100bp AVG_gc AVG_CV COUNT };
+            = qw{ distance AVG_pi AVG_Indel/100bp AVG_gc AVG_CV AVG_repeats COUNT };
         ( $sheet_row, $sheet_col ) = ( 0, 0 );
         my %option = (
             sheet_row => $sheet_row,
@@ -518,6 +520,7 @@ my $exon_D_null = sub {
                    `avg_indel/100bp`,
                    AVG (w.window_target_gc) `avg_gc`,
                    AVG (s.exonsw_cv) `avg_cv`,
+                       AVG (w.window_repeats) `avg_repeats`,
                    COUNT(*) count
             FROM exonsw s,
                  window w,
@@ -594,7 +597,7 @@ my $exon_gc = sub {
 
         {    # write header
             my @headers
-                = qw{ distance AVG_pi AVG_Indel/100bp AVG_gc AVG_CV COUNT };
+                = qw{ distance AVG_pi AVG_Indel/100bp AVG_gc AVG_CV AVG_repeats COUNT };
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -613,6 +616,7 @@ my $exon_gc = sub {
                        `avg_indel/100bp`,
                        AVG (w.window_target_gc) `avg_gc`,
                        AVG (s.exonsw_cv) `avg_cv`,
+                       AVG (w.window_repeats) `avg_repeats`,
                        count(*) count
                 FROM exonsw s,
                      window w,
@@ -679,7 +683,7 @@ my $exon_ess = sub {
 
         {    # write header
             my @headers
-                = qw{ distance AVG_pi AVG_Indel/100bp AVG_gc AVG_CV COUNT };
+                = qw{ distance AVG_pi AVG_Indel/100bp AVG_gc AVG_CV AVG_repeats COUNT };
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -698,6 +702,7 @@ my $exon_ess = sub {
                        `avg_indel/100bp`,
                        AVG (w.window_target_gc) `avg_gc`,
                        AVG (s.exonsw_cv) `avg_cv`,
+                       AVG (w.window_repeats) `avg_repeats`,
                        count(*) count
                 FROM exonsw s,
                      window w,
@@ -747,12 +752,121 @@ my $exon_ess = sub {
     }
 };
 
+#----------------------------------------------------------#
+# worksheet -- coding_quan
+#----------------------------------------------------------#
+my $coding_quan = sub {
+
+    # if the target column of the target table does not contain
+    #   any values, skip this stat
+    return unless $write_obj->check_column( 'exonsw', 'exonsw_id' );
+    return unless $write_obj->check_column( 'gene',   'gene_feature10' );
+
+    # find quartiles
+    my $quartiles;
+    {
+        my $sql_query = q{
+            SELECT g.gene_feature10
+            FROM gene g
+            WHERE g.gene_feature10 is not null
+        };
+        my %option = ( sql_query => $sql_query, );
+        $quartiles = $write_obj->quantile_sql( \%option, 4 );
+    }
+
+    my @exon_levels = (
+        [ 1,     $quartiles->[0], $quartiles->[1] ],
+        [ 2,     $quartiles->[1], $quartiles->[2] ],
+        [ 3,     $quartiles->[2], $quartiles->[3] ],
+        [ 4,     $quartiles->[3], $quartiles->[4] ],
+    );
+    
+    print Dump \@exon_levels;
+
+    my $write_sheet = sub {
+        my ( $order, $low_border, $high_border ) = @_;
+        my $sheet_name = "coding_quan_$order";
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        {    # write header
+            my @headers
+                = qw{ distance AVG_pi AVG_Indel/100bp AVG_gc AVG_CV AVG_repeats COUNT };
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # query
+            my $sql_query = q{
+                SELECT s.codingsw_distance `distance`,
+                   AVG (w.window_pi) `avg_pi`,
+                   AVG (w.window_indel / w.window_length * 100) `avg_indel/100bp`,
+                   AVG (w.window_target_gc) `avg_gc`,
+                   AVG (s.codingsw_cv) `avg_cv`,
+                       AVG (w.window_repeats) `avg_repeats`,
+                   count(*) count
+                FROM codingsw s,
+                     window w,
+                     (
+                      SELECT s.codingsw_id
+                      FROM codingsw s,
+                           window w,
+                           exon e,
+                           gene g
+                      WHERE s.window_id = w.window_id AND
+                            ASCII (s.codingsw_type) IN (ASCII ('L'), ASCII ('R')) AND
+                            g.gene_feature10 BETWEEN ? AND ? AND
+                            e.exon_id = s.exon_id AND
+                            g.gene_id = e.gene_id
+                      UNION
+                      SELECT s.codingsw_id
+                      FROM codingsw s,
+                           exon e,
+                           window w,
+                           gene g
+                      WHERE s.exon_id = e.exon_id AND
+                            e.window_id = w.window_id AND
+                            ASCII (s.codingsw_type) IN (ASCII ('l'), ASCII ('r')) AND
+                            g.gene_feature10 BETWEEN ? AND ? AND
+                            g.gene_id = e.gene_id
+                     ) sw
+                WHERE s.window_id = w.window_id AND
+                      s.codingsw_id = sw.codingsw_id
+                GROUP BY s.codingsw_distance
+            };
+            my %option = (
+                sql_query => $sql_query,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                bind_value =>
+                    [ $low_border, $high_border, $low_border, $high_border ],
+            );
+
+            ($sheet_row)
+                = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
+    foreach (@exon_levels) {
+        &$write_sheet(@$_);
+    }
+};
+
 foreach my $n (@tasks) {
     if ( $n == 1 ) { &$summary_gene; next; }
     if ( $n == 2 ) { &$coding_all;   next; }
     if ( $n == 3 ) { &$exon_D;       &$exon_D_null; next; }
     if ( $n == 4 ) { &$exon_gc;      next; }
     if ( $n == 5 ) { &$exon_ess;     next; }
+    if ( $n == 6 ) { &$coding_quan;     next; }
 }
 
 $stopwatch->end_message;

@@ -91,6 +91,8 @@ $excel_obj->jc_correction if $jc_correction;
         exon_D_1 exon_D_2
         exon_D_3 exon_D_4
         exon_D_all exon_D_null
+        coding_quan_1 coding_quan_2
+        coding_quan_3 coding_quan_4
     };
 
     foreach (@sheets) {
@@ -113,7 +115,7 @@ $excel_obj->jc_correction if $jc_correction;
             Height       => 200,
             Width        => 320,
             Top          => 12.75,
-            Left         => 400,
+            Left         => 450,
         );
 
         $excel_obj->draw_y( $sheet_name, \%option );
@@ -136,6 +138,13 @@ $excel_obj->jc_correction if $jc_correction;
         $option{chart_serial}++;
         $option{y_column} = 5;
         $option{y_title}  = "CV";
+        $option{Top} += $option{Height} + 12.75;
+        $excel_obj->draw_y( $sheet_name, \%option );
+
+        # chart 4
+        $option{chart_serial}++;
+        $option{y_column} = 6;
+        $option{y_title}  = "Repeats proportion";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
     }
