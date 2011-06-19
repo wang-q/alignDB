@@ -5,7 +5,7 @@ bac_bz.pl -p 197 -t 192222 -r 360109
 bac_bz.pl -p 28901 -t 220341 -r 882884
 
 # Staphylococcus_aureus
-# 282458 Staphylococcus aureus subsp. aureus MRSA252 is more divergence than 273036 Staphylococcus aureus RF122
+# 282458 Staphylococcus aureus subsp. aureus MRSA252 is more divergent than 273036 Staphylococcus aureus RF122
 # To make 273036 more reliable as outgroup, I exclude 282458
 bac_bz.pl -p 1280 -t 93062 -r 273036 -e 282458
 

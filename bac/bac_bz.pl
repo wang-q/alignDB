@@ -293,6 +293,13 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
         . ( join ",", map { $_ . "query" } ( 1 .. scalar @query_ids - 1 ) )
         . " --dbs "
         . ( join ",", map { $target_id . "vs" . $_ } @query_ids ) . "\n\n";
+    
+    print {$fh} "# drop temp databases\n";
+    my $sql_cmd = "mysql -h$server -P$port -u$username -p$password ";
+    for (@query_ids) {
+        my $tempdb = $target_id . "vs" . $_;
+        print {$fh} $sql_cmd  . " -e \"DROP DATABASE IF EXISTS $tempdb;\"\n";
+    }
 
     close $fh;
 }

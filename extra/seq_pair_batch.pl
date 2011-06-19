@@ -96,7 +96,7 @@ for (@lines) {
         $tq = " -t=\"$t_base,$t_base\"" . " -q=\"$q_base,$q_base\"";
     }
 
-    my $common_file = File::Spec->catfile( $working_dir, "$db.common.xls" );
+    my $common_file = File::Spec->catfile( $working_dir, "$db.common.xlsx" );
 
     # use the dispatch template to generate $cmd
     for my $step ( 0 .. 3 ) {
