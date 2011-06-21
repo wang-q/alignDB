@@ -501,6 +501,11 @@ taxon_id,chr,length,name,assembly
 4098,chrP,155745,Ntom,
 147425,chrP,155371,Sbul,
 4113,chrP,155298,potato,
+3702,chr1,30427671,arabidopsis,eg58
+3702,chr2,19698289,arabidopsis,eg58
+3702,chr3,23459830,arabidopsis,eg58
+3702,chr4,18585056,arabidopsis,eg58
+3702,chr5,26975502,arabidopsis,eg58
 240015,NC_012483,4127356,Acidobacterium_capsulatum_ATCC_51196_240015,chr
 234267,NC_008536,9965640,Candidatus_Solibacter_usitatus_Ellin6076_234267,chr
 204669,NC_008009,5650368,Candidatus_Koribacter_versatilis_Ellin345_204669,chr
