@@ -10,6 +10,7 @@ use YAML qw(Dump Load DumpFile LoadFile);
 use DBI;
 use File::Find::Rule;
 use File::Spec;
+use File::Copy;
 use Text::Table;
 use List::MoreUtils qw(uniq);
 
@@ -216,11 +217,13 @@ my @query_ids;
 }
 
 my %dir_of;
+my $new_gff_file;
 {    # build fasta files
 
     # read all filenames, then grep
     print "Reading file list\n";
     my @fna_files = File::Find::Rule->file->name('*.fna')->in($base_dir);
+    my @gff_files = File::Find::Rule->file->name('*.gff')->in($base_dir);
 
     print "Rewrite seqs for every strains\n";
     for my $taxon_id ( $target_id, @query_ids ) {
@@ -258,8 +261,17 @@ my %dir_of;
             }
             close $out_fh;
             close $in_fh;
+            
+            if ($taxon_id eq $target_id) {
+                print "Copy target gff\n";
+                my ($gff_file) = grep {/$acc/} @gff_files;
+                $new_gff_file = File::Spec->catfile( $working_dir, "$acc.gff" );
+                copy($gff_file, $new_gff_file);
+            }
         }
     }
+    
+    
 }
 
 my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
@@ -276,11 +288,11 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
     open my $fh, '>', $cmd_file;
 
     print {$fh} "# bac_bz.pl\n";
-    print {$fh} $stopwatch->cmd_line, "\n\n";
+    print {$fh} "perl ", $stopwatch->cmd_line, "\n\n";
 
     print {$fh} "# seq_pair_batch.pl\n";
     print {$fh} "perl $FindBin::Bin/../extra/seq_pair_batch.pl"
-        . " -d 1 -p 2"
+        . " -d 1 -p 4"
         . " -f $seq_pair_file" . "\n\n";
 
     print {$fh} "# join_dbs.pl\n";
@@ -300,6 +312,15 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
         my $tempdb = $target_id . "vs" . $_;
         print {$fh} $sql_cmd  . " -e \"DROP DATABASE IF EXISTS $tempdb;\"\n";
     }
+    
+    print {$fh} "\n";
+    print {$fh} "# multi-way batch\n";
+    print {$fh} "perl $FindBin::Bin/../extra/multi_way_batch.pl"
+        . " -d $name_str"
+        . " -f $working_dir/$name_str"
+        . " -gff_file $new_gff_file"
+        . " --all_freq " . scalar @query_ids
+        . " -lt 10000 -st 100000 --parallel=4 --run all\n\n";
 
     close $fh;
 }

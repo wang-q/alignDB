@@ -179,7 +179,7 @@ my $dispatch = {
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
-        . " -o=$FindBin::Bin/../stat/$db_name.multi.xls"
+        . " -o=$FindBin::Bin/../stat/$db_name.multi.xlsx"
         . " --freq=$all_freq",
     41 => "perl $FindBin::Bin/../stat/mgc_stat_factory.pl"
         . " -s=$server"
@@ -187,7 +187,7 @@ my $dispatch = {
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
-        . " -o=$FindBin::Bin/../stat/$db_name.mgc.xls"
+        . " -o=$FindBin::Bin/../stat/$db_name.mgc.xlsx"
         . " -t=$sum_threshold",
     42 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
         . " -s=$server"
@@ -195,14 +195,14 @@ my $dispatch = {
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
-        . " -o=$FindBin::Bin/../stat/$db_name.gene.xls",
+        . " -o=$FindBin::Bin/../stat/$db_name.gene.xlsx",
     43 => "perl $FindBin::Bin/../stat/mvar_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
-        . " -o=$FindBin::Bin/../stat/$db_name.mvar.xls",
+        . " -o=$FindBin::Bin/../stat/$db_name.mvar.xlsx",
 };
 
 #----------------------------#
