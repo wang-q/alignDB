@@ -88,7 +88,7 @@ sub insert_ofg {
         my $chr_start      = $target_info->{chr_start};
         my $chr_end        = $target_info->{chr_end};
         my $align_length   = $target_info->{align_length};
-        my $target_runlist = $target_info->{target_runlist};
+        my $target_runlist = $target_info->{seq_runlist};
         my ( $target_seq, $query_seq ) = @{ $self->get_seqs($align_id) };
 
         next if $chr_name =~ /rand|un|contig|hap|scaf/i;
@@ -101,6 +101,7 @@ sub insert_ofg {
         # chr_ofg_set has intersect with chr_set
         #   ? there are ofgs in this alignmet
         #   : there is no ofg
+        next unless exists $chr_ofg_set->{$chr_name};
         next if $chr_ofg_set->{$chr_name}->intersect($chr_set)->is_empty;
         my @align_ofg;
         for (@$all_ofgs) {
@@ -135,7 +136,7 @@ sub insert_ofg {
             # ofg position set
             my $ofg_start = $pos_finder->at_align( $align_id, $ofg_set->min );
             my $ofg_end   = $pos_finder->at_align( $align_id, $ofg_set->max );
-            next if $ofg_start >= $ofg_end;
+            next if $ofg_start > $ofg_end;
             $ofg_set   = AlignDB::IntSpan->new("$ofg_start-$ofg_end");
             $ofg_set   = $ofg_set->intersect($target_set);
             $ofg_start = $ofg_set->min;
@@ -171,7 +172,7 @@ sub insert_ofgsw {
     my $chr_start      = $target_info->{chr_start};
     my $chr_end        = $target_info->{chr_end};
     my $align_length   = $target_info->{align_length};
-    my $target_runlist = $target_info->{target_runlist};
+    my $target_runlist = $target_info->{seq_runlist};
     my ( $target_seq, $query_seq ) = @{ $self->get_seqs($align_id) };
 
     # target runlist
