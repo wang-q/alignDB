@@ -96,10 +96,12 @@ for my $key ( sort keys %opt ) {
 # Database handler
 my $dbh = $obj->dbh;
 
-{    # add column exonsw_cv and codingsw_cv
+{    # add column
     $obj->create_column( "exonsw",   "exonsw_cv",   "DOUBLE" );
     $obj->create_column( "codingsw", "codingsw_cv", "DOUBLE" );
-    print "Table exonsw & codingsw altered\n";
+    $obj->create_column( "ofgsw",    "ofgsw_cv",    "DOUBLE" );
+    $obj->create_column( "isw",      "isw_cv",      "DOUBLE" );
+    print "Table exonsw, codingsw, ofgsw and isw altered\n";
 }
 
 #----------------------------------------------------------#
@@ -142,6 +144,40 @@ my $codingsw_update_sth = $dbh->prepare(
     }
 );
 
+my $ofgsw_sth = $dbh->prepare(
+    q{
+    SELECT s.ofgsw_id, w.window_runlist
+    FROM ofgsw s, window w
+    where s.window_id = w.window_id
+    and w.align_id = ?
+    }
+);
+
+my $ofgsw_update_sth = $dbh->prepare(
+    q{
+    UPDATE ofgsw
+    SET ofgsw_cv = ?
+    WHERE ofgsw_id = ?
+    }
+);
+
+my $isw_sth = $dbh->prepare(
+    q{
+    SELECT s.isw_id, s.isw_start, s.isw_end
+    FROM isw s, indel i
+    where s.isw_indel_id = i.indel_id
+    and i.align_id = ?
+    }
+);
+
+my $isw_update_sth = $dbh->prepare(
+    q{
+    UPDATE isw
+    SET isw_cv = ?
+    WHERE isw_id = ?
+    }
+);
+
 for my $align_id (@align_ids) {
     my $target_info    = $obj->get_target_info($align_id);
     my $target_runlist = $target_info->{seq_runlist};
@@ -176,6 +212,36 @@ for my $align_id (@align_ids) {
             = $obj->segment_gc_stat( $seqs_ref, $resize_set );
         $codingsw_update_sth->execute( $gc_cv, $codingsw_id );
     }
+
+    $ofgsw_sth->execute($align_id);
+    while ( my @row = $ofgsw_sth->fetchrow_array ) {
+        my ( $ofgsw_id, $window_runlist ) = @row;
+        my $window_set = AlignDB::IntSpan->new($window_runlist);
+        my $resize_set
+            = center_resize( $window_set, $target_set, $stat_segment_size );
+
+        next unless $resize_set;
+
+        my $seqs_ref = $obj->get_seqs($align_id);
+        my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
+            = $obj->segment_gc_stat( $seqs_ref, $resize_set );
+        $ofgsw_update_sth->execute( $gc_cv, $ofgsw_id );
+    }
+
+    $isw_sth->execute($align_id);
+    while ( my @row = $isw_sth->fetchrow_array ) {
+        my ( $isw_id, $start, $end ) = @row;
+        my $window_set = AlignDB::IntSpan->new("$start-$end");
+        my $resize_set
+            = center_resize( $window_set, $target_set, $stat_segment_size );
+
+        next unless $resize_set;
+
+        my $seqs_ref = $obj->get_seqs($align_id);
+        my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
+            = $obj->segment_gc_stat( $seqs_ref, $resize_set );
+        $isw_update_sth->execute( $gc_cv, $isw_id );
+    }
 }
 
 $stopwatch->end_message;
@@ -203,6 +269,8 @@ sub center_resize {
     my $midleft_parent_idx  = $parent_set->index($midleft);
     my $midright_parent_idx = $parent_set->index($midright);
 
+    return unless $midleft_parent_idx and $midright_parent_idx;
+
     # map to parent
     my $parent_size  = $parent_set->size;
     my $half_resize  = int( $resize / 2 );
@@ -220,7 +288,7 @@ __END__
 
 =head1 NAME
 
-    update_sw_cv.pl - CV for exonsw and codingsw
+    update_sw_cv.pl - CV for exonsw, codingsw and ofgsw
 
 =head1 SYNOPSIS
 
