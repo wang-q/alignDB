@@ -903,31 +903,6 @@ sub on_button_insert_gc_clicked {
     return;
 }
 
-sub on_button_update_isw_cv_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $server   = $self->get_value("entry_server");
-    my $port     = $self->get_value("entry_port");
-    my $username = $self->get_value("entry_username");
-    my $password = $self->get_value("entry_password");
-    my $db_name  = $self->get_value("entry_db_name");
-
-    my $parallel = $self->get_value("entry_parallel");
-
-    my $cmd
-        = "perl $FindBin::Bin/../init/update_isw_cv.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name"
-        . " --parallel=$parallel";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
 sub on_button_insert_gene_clicked {
     my $self   = shift;
     my $widget = shift;
@@ -973,7 +948,7 @@ sub on_button_upd_swcv_clicked {
     my $parallel = $self->get_value("entry_parallel");
 
     my $cmd
-        = "perl $FindBin::Bin/../gene/update_sw_cv.pl"
+        = "perl $FindBin::Bin/../init/update_sw_cv.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"

@@ -86,10 +86,10 @@ elsif ( $run eq 'common' ) {
     @tasks = ( 1 .. 3, 30, 31, 40 );
 }
 elsif ( $run eq 'gc' ) {
-    @tasks = ( 1 .. 3, 10, 11, 30 .. 32, 40, 41 );
+    @tasks = ( 1 .. 3, 10, 21, 30 .. 32, 40, 41 );
 }
 elsif ( $run eq 'gene' ) {
-    @tasks = ( 1 .. 3, 10, 11, 20, 21, 30 .. 33, 40 .. 42 );
+    @tasks = ( 1 .. 3, 10, 20, 21, 30 .. 33, 40 .. 42 );
 }
 elsif ( $run eq 'stat' ) {
     @tasks = ( 40 .. 42 );
@@ -127,12 +127,6 @@ my $dispatch = {
         . " --password=$password"
         . " -d=$db_name"
         . " --parallel=$parallel",
-    11 => "perl $FindBin::Bin/../init/update_isw_cv.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name",
     20 => "perl $FindBin::Bin/../gene/insert_gene.pl"
         . " -s=$server"
         . " --port=$port"
@@ -142,7 +136,7 @@ my $dispatch = {
         . " -e=$ensembl_db"
         . " --parallel=$parallel"
         . " --multi",
-    21 => "perl $FindBin::Bin/../gene/update_sw_cv.pl"
+    21 => "perl $FindBin::Bin/../init/update_sw_cv.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"

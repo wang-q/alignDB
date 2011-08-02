@@ -288,7 +288,7 @@ __END__
 
 =head1 NAME
 
-    update_sw_cv.pl - CV for exonsw, codingsw and ofgsw
+    update_sw_cv.pl - CV for exonsw, codingsw, ofgsw and isw
 
 =head1 SYNOPSIS
 
