@@ -170,9 +170,9 @@ sub segment_gc_stat {
     my $gc_mean = mean(@sliding_gcs);
     my $gc_std  = stddev(@sliding_gcs);
     my $gc_cv
-        = $gc_mean <= 0.5
-        ? $gc_std / $gc_mean
-        : $gc_std / ( 1 - $gc_mean );
+        = $gc_mean == 0 || $gc_mean == 1 ? undef
+        : $gc_mean <= 0.5 ? $gc_std / $gc_mean
+        :                   $gc_std / ( 1 - $gc_mean );
     my $gc_mdcw = _mdcw(@sliding_gcs);
 
     return ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw );
@@ -462,7 +462,7 @@ sub gc_wave {
     my $align_id       = shift;
     my $comparable_set = shift;
 
-    my @seqs   = @{$self->get_seqs($align_id)};
+    my @seqs = @{ $self->get_seqs($align_id) };
 
     my $comparable_number = $comparable_set->cardinality;
 
@@ -473,9 +473,9 @@ sub gc_wave {
     my @sliding_attrs;
     for my $i ( 0 .. $#sliding_windows ) {
         my $sliding_window = $sliding_windows[$i];
-        
-        my @sw_seqs = map {$sliding_window->substr_span($_)} @seqs;
-        my $sw_gc   = calc_gc_ratio(@sw_seqs);
+
+        my @sw_seqs = map { $sliding_window->substr_span($_) } @seqs;
+        my $sw_gc = calc_gc_ratio(@sw_seqs);
 
         my $sw_length = $sliding_window->cardinality;
         my $sw_span   = scalar $sliding_window->spans;
