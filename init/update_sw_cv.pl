@@ -165,7 +165,7 @@ my $isw_sth = $dbh->prepare(
     q{
     SELECT s.isw_id, s.isw_start, s.isw_end
     FROM isw s, indel i
-    where s.isw_indel_id = i.indel_id
+    where s.indel_id = i.indel_id
     and i.align_id = ?
     }
 );
