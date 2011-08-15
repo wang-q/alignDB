@@ -92,7 +92,7 @@ elsif ( $run eq 'gene' ) {
     @tasks = ( 1 .. 3, 10, 20, 21, 30 .. 33, 40 .. 42 );
 }
 elsif ( $run eq 'stat' ) {
-    @tasks = ( 40 .. 42 );
+    @tasks = ( 40 .. 43 );
 }
 else {
     $run =~ s/\"\'//s;
@@ -229,3 +229,5 @@ __END__
 perl multi_way_batch.pl -d S288CvsThree_10k -e yeast_58 -f F:/S288CvsThree_10k --all_freq 3 -lt 10000 -st 100000 --parallel=6 --run all
 
 perl multi_way_batch.pl -d S288CvsTen_10k -e yeast_58 -f F:/S288CvsTen_10k --all_freq 10 -lt 10000 -st 100000 --parallel=6 --run all
+
+perl multi_way_batch.pl -d S288CvsSix_10k --all_freq 6 -r stat
