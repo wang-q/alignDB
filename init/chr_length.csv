@@ -506,6 +506,10 @@ taxon_id,chr,length,name,assembly
 3702,chr3,23459830,arabidopsis,eg58
 3702,chr4,18585056,arabidopsis,eg58
 3702,chr5,26975502,arabidopsis,eg58
+900101,chrUn,999999999,Bur0,1001
+900102,chrUn,999999999,C24,1001
+900103,chrUn,999999999,Kro0,1001
+900104,chrUn,999999999,Ler1,1001
 240015,NC_012483,4127356,Acidobacterium_capsulatum_ATCC_51196_240015,chr
 234267,NC_008536,9965640,Candidatus_Solibacter_usitatus_Ellin6076_234267,chr
 204669,NC_008009,5650368,Candidatus_Koribacter_versatilis_Ellin345_204669,chr
