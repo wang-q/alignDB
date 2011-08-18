@@ -243,6 +243,7 @@ for my $chr_id ( $db_info_of{$target_db}->{chr_id_set}->elements ) {
     my $inter_chr_set = AlignDB::IntSpan->new;
     for my $db_name (@all_dbs) {
         my $cur_chr_set = $db_info_of{$db_name}->{chrs}{$chr_id}{set};
+        $cur_chr_set =  AlignDB::IntSpan->new unless $cur_chr_set;
         if ( $inter_chr_set->is_empty ) {
             $inter_chr_set = $cur_chr_set;
         }
@@ -842,6 +843,7 @@ sub trim_outgroup {
     }
 
     # trim all segments in trim_region
+    print " " x 4, "Delete trim region\n" if $trim_region->is_not_empty;
     for ( reverse $trim_region->spans ) {
         my $seg_start = $_->[0];
         my $seg_end   = $_->[1];
@@ -852,7 +854,6 @@ sub trim_outgroup {
                 $seg_end - $seg_start + 1, ''
             );
         }
-        print " " x 4, "Delete trim region $seg_start - $seg_end\n";
     }
 
     $info_of   = \%info_of;

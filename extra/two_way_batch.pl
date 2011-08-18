@@ -193,7 +193,7 @@ my $dispatch = {
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
-        . " -o=$FindBin::Bin/../stat/$db_name.common.xls"
+        . " -o=$FindBin::Bin/../stat/$db_name.common.xlsx"
         . " -t=$sum_threshold",
     41 => "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
         . " -s=$server"
@@ -201,7 +201,7 @@ my $dispatch = {
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
-        . " -o=$FindBin::Bin/../stat/$db_name.gc.xls"
+        . " -o=$FindBin::Bin/../stat/$db_name.gc.xlsx"
         . " -t=$sum_threshold",
     42 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
         . " -s=$server"
@@ -209,7 +209,7 @@ my $dispatch = {
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
-        . " -o=$FindBin::Bin/../stat/$db_name.gene.xls",
+        . " -o=$FindBin::Bin/../stat/$db_name.gene.xlsx",
     43 => undef,
 };
 
