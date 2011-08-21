@@ -235,4 +235,6 @@ exit;
 
 __END__
 
-perl two_way_batch.pl -d alignDB -e yeast_58 -t "4932,S288C" -q "285006,RM11" -a F:/S288CvsRM11 -at 10000 -st 1000000 --parallel=4 --run common
+perl two_way_batch.pl -d alignDB -e yeast_58 -t "4932,S288C" -q "285006,RM11" -a F:/S288CvsRM11 -at 10000 -st 1000000 --parallel 4 --run common
+
+perl two_way_batch.pl -d HumanvsChimp -e human_58 -t "9606,Human" -q "9598,Chimp" -a /home/wangq/data/UCSC/Human19vsChimp2 -at 10000 -st 10000000 --parallel 6 --run basic
