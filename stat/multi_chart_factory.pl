@@ -93,9 +93,9 @@ my @sheet_names = @{ $excel_obj->sheet_names };
 {
 
     #----------------------------#
-    # worksheet -- combined
+    # worksheet -- combined_pigccv
     #----------------------------#
-    my $sheet_name = 'combined';
+    my $sheet_name = 'combined_pigccv';
     my %option     = (
         chart_serial => 1,
         x_column     => 1,
@@ -108,65 +108,70 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         Height       => 200,
         Width        => 320,
         Top          => 12.75,
-        Left         => 200,
+        Left         => 520,
     );
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 2
+    $option{chart_serial}++;
+    $option{y_column} = 4;
+    $option{y_title}  = "GC proportion";
+    $option{Top} += $option{Height} + 12.75;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 3
+    $option{chart_serial}++;
+    $option{y_column} = 6;
+    $option{y_title}  = "CV";
+    $option{Top} += $option{Height} + 12.75;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
     # worksheet -- combined_pure_coding
     #----------------------------#
-    $sheet_name = 'combined_pure_coding';
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- combined_gc
-    #----------------------------#
-    $sheet_name = 'combined_gc';
-    $option{y_title} = "GC proportion";
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- combined_cv
-    #----------------------------#
-    $sheet_name = 'combined_cv';
-    $option{y_title} = "CV";
+    $sheet_name           = 'combined_pure_coding';
+    $option{chart_serial} = 1;
+    $option{y_column}     = 2;
+    $option{y_title}      = "Nucleotide diversity";
+    $option{Top}          = 12.75;
     $excel_obj->draw_y( $sheet_name, \%option );
 }
+
 {
 
     #----------------------------#
     # worksheet -- indel_distance_
     #----------------------------#
-    my @sheets = grep {/^pigccv/} @sheet_names;
+    my @sheets = grep {/^pigccv_freq/} @sheet_names;
     foreach (@sheets) {
         my $sheet_name = $_;
         my %option     = (
-            chart_serial  => 1,
-            x_column      => 1,
-            y_column      => 2,
-            first_row     => 3,
-            last_row      => 8,
-            x_max_scale   => 5,
-            x_title       => "Distance to indels (d1)",
-            y_title       => "Nucleotide diversity",
-            Height        => 200,
-            Width         => 320,
-            Top           => 12.75,
-            Left          => 520,
+            chart_serial => 1,
+            x_column     => 1,
+            y_column     => 2,
+            first_row    => 3,
+            last_row     => 8,
+            x_max_scale  => 5,
+            x_title      => "Distance to indels (d1)",
+            y_title      => "Nucleotide diversity",
+            Height       => 200,
+            Width        => 320,
+            Top          => 12.75,
+            Left         => 520,
         );
         $excel_obj->draw_y( $sheet_name, \%option );
 
         # chart 2
         $option{chart_serial}++;
-        $option{y_column}      = 4;
-        $option{y_title}       = "GC proportion";
+        $option{y_column} = 4;
+        $option{y_title}  = "GC proportion";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
 
         # chart 3
         $option{chart_serial}++;
-        $option{y_column}      = 6;
-        $option{y_title}       = "CV";
+        $option{y_column} = 6;
+        $option{y_title}  = "CV";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
     }

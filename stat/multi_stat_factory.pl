@@ -851,15 +851,16 @@ my $combined_distance = sub {
     }
 
     #----------------------------------------------------------#
-    # worksheet -- combined
+    # worksheet -- combined_pigccv
     #----------------------------------------------------------#
     {
-        my $sheet_name = 'combined';
+        my $sheet_name = 'combined_pigccv';
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
         {    # write header
-            my @headers = qw{AVG_distance AVG_pi COUNT STD_pi};
+            my @headers = qw{distance AVG_pi STD_pi AVG_gc STD_gc
+                AVG_cv STD_cv COUNT};
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -871,100 +872,27 @@ my $combined_distance = sub {
         }
 
         {    # write contents
-            my $thaw_sql = $sql_file->retrieve('common-distance_avg-0');
+            my $sql_query = q{
+                SELECT
+                    AVG(isw_distance) AVG_distance,
+                    AVG(isw_pi) AVG_pi,
+                    STD(isw_pi) STD_pi,
+                    AVG(isw_average_gc) AVG_gc,
+                    STD(isw_average_gc) STD_gc,
+                    AVG(isw_cv) AVG_cv,
+                    STD(isw_cv) STD_cv,
+                    COUNT(*) COUNT
+                FROM isw
+                WHERE isw_distance IN
+            };
             my %option   = (
-                sql_obj     => $thaw_sql,
+                sql_query     => $sql_query,
                 sheet_row   => $sheet_row,
                 sheet_col   => $sheet_col,
                 combined    => \@combined,
-                combine_col => 'isw_distance',
             );
             ($sheet_row)
-                = $write_obj->write_content_combine_obj( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    }
-
-    #----------------------------------------------------------#
-    # worksheet -- combined_gc
-    #----------------------------------------------------------#
-    {
-        my $sheet_name = 'combined_gc';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers = qw{AVG_distance AVG_gc COUNT STD_gc};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            my $thaw_sql = $sql_file->retrieve('common-distance_avg-0');
-            $thaw_sql->replace(
-                {   AVG_pi => 'AVG_gc',
-                    STD_pi => 'STD_gc',
-                    isw_pi => 'isw_average_gc',
-                }
-            );
-            my %option = (
-                sql_obj     => $thaw_sql,
-                sheet_row   => $sheet_row,
-                sheet_col   => $sheet_col,
-                combined    => \@combined,
-                combine_col => 'isw_distance',
-            );
-            ($sheet_row)
-                = $write_obj->write_content_combine_obj( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    }
-
-    #----------------------------------------------------------#
-    # worksheet -- combined_cv
-    #----------------------------------------------------------#
-    {
-        my $sheet_name = 'combined_cv';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers = qw{AVG_distance AVG_cv COUNT STD_cv};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            my $thaw_sql = $sql_file->retrieve('common-distance_avg-0');
-            $thaw_sql->replace(
-                {   AVG_pi => 'AVG_cv',
-                    STD_pi => 'STD_cv',
-                    isw_pi => 'isw_cv',
-                }
-            );
-            my %option = (
-                sql_obj     => $thaw_sql,
-                sheet_row   => $sheet_row,
-                sheet_col   => $sheet_col,
-                combined    => \@combined,
-                combine_col => 'isw_distance',
-            );
-            ($sheet_row)
-                = $write_obj->write_content_combine_obj( $sheet, \%option );
+                = $write_obj->write_content_combine( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1198,14 +1126,15 @@ my $frequency_pigccv = sub {
 
         {    # write contents
             my $sql_query = q{
-                SELECT  isw_distance,
-                        AVG(isw_pi) AVG_D,
-                        STD(isw_pi) STD_D,
-                        AVG(isw_average_gc) AVG_gc,
-                        STD(isw_average_gc) STD_gc,
-                        AVG(isw_cv) AVG_cv,
-                        STD(isw_cv) STD_cv,
-                        COUNT(*) COUNT
+                SELECT
+                    isw_distance,
+                    AVG(isw_pi) AVG_D,
+                    STD(isw_pi) STD_D,
+                    AVG(isw_average_gc) AVG_gc,
+                    STD(isw_average_gc) STD_gc,
+                    AVG(isw_cv) AVG_cv,
+                    STD(isw_cv) STD_cv,
+                    COUNT(*) COUNT
                 FROM    isw s, indel i
                 WHERE s.isw_indel_id = i.indel_id
                 AND i.indel_freq >= ?
