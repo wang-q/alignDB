@@ -83,7 +83,7 @@ elsif ( $run eq 'basic' ) {
     @tasks = ( 1 .. 3 );
 }
 elsif ( $run eq 'common' ) {
-    @tasks = ( 1 .. 3, 30, 31, 40 );
+    @tasks = ( 1 .. 3, 21, 30, 31, 40 );
 }
 elsif ( $run eq 'gc' ) {
     @tasks = ( 1 .. 3, 10, 21, 30 .. 32, 40, 41 );
