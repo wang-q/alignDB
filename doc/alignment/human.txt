@@ -1,0 +1,23 @@
+# Processing UCSC download
+perl two_way_batch.pl -d HumanvsRhesus -e human_58 -t="9606,Human" -q "9544,Rhesus" -a /home/wangq/data/UCSC/Human19vsRhesus2 -at 10000 -st 10000000 --parallel 8 --run all
+
+perl two_way_batch.pl -d HumanvsGorilla -e human_58 -t="9606,Human" -q "9595,Gorilla" -a /home/wangq/data/UCSC/Human19vsGorilla1 -at 10000 -st 10000000 --parallel 8 --run all
+
+perl two_way_batch.pl -d HumanvsOrangutan -e human_58 -t="9606,Human" -q "9601,Orangutan" -a /home/wangq/data/UCSC/Human19vsOrangutan2 -at 10000 -st 10000000 --parallel 8 --run all
+
+perl two_way_batch.pl -d HumanvsBaboon -e human_58 -t="9606,Human" -q "9555,Baboon" -a /home/wangq/data/UCSC/Human19vsBaboon1 -at 10000 -st 10000000 --parallel 8 --run all
+
+perl two_way_batch.pl -d HumanvsMarmoset -e human_58 -t="9606,Human" -q "9483,Marmoset" -a /home/wangq/data/UCSC/Human19vsMarmoset3 -at 10000 -st 10000000 --parallel 8 --run all
+
+perl two_way_batch.pl -d HumanvsTarsier -e human_58 -t="9606,Human" -q "9478,Tarsier" -a /home/wangq/data/UCSC/Human19vsTarsier1 -at 10000 -st 10000000 --parallel 8 --run all
+
+perl two_way_batch.pl -d HumanvsLemur -e human_58 -t="9606,Human" -q "30608,Lemur" -a /home/wangq/data/UCSC/Human19vsLemur1 -at 10000 -st 10000000 --parallel 8 --run all
+
+perl two_way_batch.pl -d HumanvsBushbaby -e human_58 -t="9606,Human" -q "30611,Bushbaby" -a /home/wangq/data/UCSC/Human19vsBushbaby1 -at 10000 -st 10000000 --parallel 8 --run all
+
+# Extract portions of features
+perl write_axt.pl -d HumanvsChimp -e human_58 --feature intron
+
+perl write_axt.pl -d HumanvsChimp -e human_58 --feature non_repeat
+
+perl two_way_batch.pl -d HumanvsChimp_intron -e human_58 -t="9606,Human" -q "9598,Chimp" -a /home/wangq/data/UCSC/Human19vsChimp2_intron -at 10000 -st 10000000 --parallel 6 --run gc

@@ -1,0 +1,23 @@
+all seqs use RepeatMasker, because nonchromosomal parts are too large
+
+$ perl write_masked_chr.pl -e rice_58 --dir /home/wangq/data/ensemblgenomes5_58/plants/fasta/oryza_sativa/dna
+
+$  perl write_masked_chr.pl -e indica_58 --dir /home/wangq/data/ensemblgenomes5_58/plants/fasta/oryza_indica/dna/
+
+# dsim
+perl fasta_dedup.pl /home/wangq/data/alignment/fly/dsim_58/chrUn.fasta
+perl -p -i -e '/>/ and s/EG://' chrUn.fasta
+perl -p -i -e '/>/ and s/EG:/chr/' *.fasta
+
+# dsec
+perl fasta_dedup.pl /home/wangq/data/alignment/fly/dsec_58/chrUn.fasta
+perl -p -i -e '/>/ and s/EG://' chrUn.fasta
+
+RepeatMasker *.fasta -species Flies -xsmall -s --parallel 8
+
+# full
+perl /home/wangq/Scripts/blastz/bz.pl -dt /home/wangq/data/alignment/fly/dsim_58 -dq /home/wangq/data/alignment/fly/dsec_58 -dl /home/wangq/data/alignment/fly/DsimvsDsec_58 -s set02 -p 6 
+
+perl two_way_batch.pl -d DsimvsDsec -e dsim_58 -t="7240,Dsim" -q "7238,Dsec" -a /home/wangq/data/alignment/fly/DsimvsDsec_58/ -at 10000 -st 1000000 --parallel 4 --run all
+
+

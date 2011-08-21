@@ -1,0 +1,20 @@
+S288C uses ensembl repeat annotation.
+
+All other seqs use RepeatMasker.
+
+$ perl write_masked_chr.pl -e yeast_58 --dir /home/wangq/data/ensembl58/saccharomyces_cerevisiae
+
+RepeatMasker *.fasta -species fungi -xsmall -s --parallel 8
+
+# simplify ncbi standard fasta header to GI only
+perl -p -i -e '/>/ and s/\>gi\|(\d+).*/\>gi_$1/' *.fasta
+
+perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11,S288CvsYJM789 --goal_db S288CvsThree --no_insert=1 --trimmed_fasta=1 --outgroup 0query --target 0target --queries 1query,2query 
+
+# WGS steps
+# Goto http://www.ncbi.nlm.nih.gov/Traces/wgs/?
+# search Saccharomyces cerevisiae. 
+# Prefix column lead to WGS project, where we could download gzipped fasta and project description.
+# GPID column lead to BioProject, which is useless.
+# Organism column lead to Taxonomy, save the content.
+# run extra/yeast_bash.pl to get bash scripts
