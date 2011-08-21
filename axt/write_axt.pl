@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
 use Getopt::Long;
 use Pod::Usage;
@@ -8,6 +9,7 @@ use Config::Tiny;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use AlignDB::IntSpan;
+use AlignDB::Run;
 use AlignDB::Stopwatch;
 
 use FindBin;
@@ -34,6 +36,9 @@ my $ensembl_db = $Config->{database}{ensembl};
 my $length_threshold = $Config->{write}{feature_threshold};
 my $feature          = $Config->{write}{feature};
 
+# run in parallel mode
+my $parallel = $Config->{feature}{parallel};
+
 my $man  = 0;
 my $help = 0;
 
@@ -48,6 +53,7 @@ GetOptions(
     'ensembl=s'  => \$ensembl_db,
     'length=i'   => \$length_threshold,
     'feature=s'  => \$feature,
+    'parallel=i' => \$parallel,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -59,46 +65,65 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Write .axt files from $db...");
 
-my $obj = AlignDB->new(
-    mysql  => "$db:$server",
-    user   => $username,
-    passwd => $password,
-);
+my @jobs;
+{
+    my $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
 
-# Database handler
-my $dbh = $obj->dbh;
-
-# ensembl handler
-my $ensembl = AlignDB::Ensembl->new(
-    server => $server,
-    db     => $ensembl_db,
-    user   => $username,
-    passwd => $password,
-);
-
-# position finder
-my $pos_obj = AlignDB::Position->new( dbh => $dbh );
+    # select all target chromosomes in this database
+    my @chrs = @{ $obj->get_chrs('target') };
+    @jobs = @chrs;
+}
 
 #----------------------------------------------------------#
-# Write .axt files from alignDB
+# worker
 #----------------------------------------------------------#
-# get target and query names
-my ( $target_name, $query_name ) = $obj->get_names;
-
-# select all target chromosomes in this database
-my @chrs = @{ $obj->get_chrs('target') };
-
-my %align_serial;
-
-# for each chromosome
-for my $chr (@chrs) {
+my $worker = sub {
+    my $job = shift;
+    my $chr = $job;
     local $| = 1;
+
+    #----------------------------#
+    # Init objects
+    #----------------------------#
+    my $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+
+    # Database handler
+    my $dbh = $obj->dbh;
+
+    # ensembl handler
+    my $ensembl = AlignDB::Ensembl->new(
+        server => $server,
+        db     => $ensembl_db,
+        user   => $username,
+        passwd => $password,
+    );
+
+    # position finder
+    my $pos_obj = AlignDB::Position->new( dbh => $dbh );
+
+    # get target and query names
+    my ( $target_name, $query_name ) = $obj->get_names;
+
     my ( $chr_id, $chr_name, $chr_length ) = @{$chr};
     print Dump {
         chr_id     => $chr_id,
         chr_name   => $chr_name,
         chr_length => $chr_length
     };
+
+    # prepare axt summary line
+    my $serial = 0;
+    my $dir    = "${db}_${feature}";
+    mkdir $dir, 0777 unless -e $dir;
+    my $filename = "$dir/$chr_name.$feature.axt";
 
     # for each align
     my @align_ids = @{ $obj->get_align_ids_of_chr($chr_id) };
@@ -121,7 +146,6 @@ for my $chr (@chrs) {
         my $query_strand    = $query_info->{query_strand};
 
         my ( $target_seq, $query_seq ) = @{ $obj->get_seqs($align_id) };
-        print "  sequences fetched", " " x 10, "\r";
 
         # make a new ensembl slice object
         my $ensembl_chr_name = $target_chr_name;
@@ -139,7 +163,6 @@ for my $chr (@chrs) {
 
         my $slice       = $ensembl->slice;
         my $ftr_chr_set = $slice->{"_$feature\_set"};
-        print "  annotation fetched", " " x 10, "\r";
 
         if ( $ftr_chr_set->empty ) {
             print "  No $feature, jump to next alignment\n";
@@ -163,10 +186,6 @@ for my $chr (@chrs) {
             my $seg_length = $seg_end - $seg_start + 1;
             next unless ( $seg_length > $length_threshold );
 
-            # prepare axt summary line
-            $align_serial{$target_chr_name}++;
-            my $serial = $align_serial{$target_chr_name} - 1;
-
             # align coordinates to target & query chromosome coordinates
             my $target_seg_start
                 = $pos_obj->at_target_chr( $align_id, $seg_start );
@@ -183,7 +202,7 @@ for my $chr (@chrs) {
 
             # append axt file
             {
-                open my $outfh, '>>', "$target_chr_name.$feature.axt";
+                open my $outfh, '>>', $filename;
                 print {$outfh} "$serial";
                 print {$outfh} " $target_chr_name";
                 print {$outfh} " $target_seg_start $target_seg_end";
@@ -197,11 +216,23 @@ for my $chr (@chrs) {
                 print {$outfh} "\n";
                 close $outfh;
             }
+
+            $serial++;
         }
 
         print "  finish write axt file\n";
     }
-}
+};
+
+#----------------------------------------------------------#
+# start update
+#----------------------------------------------------------#
+my $run = AlignDB::Run->new(
+    parallel => $parallel,
+    jobs     => \@jobs,
+    code     => $worker,
+);
+$run->run;
 
 $stopwatch->end_message;
 
