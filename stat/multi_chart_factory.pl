@@ -58,7 +58,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
 {
 
     #----------------------------#
-    # worksheet -- indel_distance_
+    # worksheet -- distance_
     #----------------------------#
     my @sheets = grep {/^distance/} @sheet_names;
     foreach (@sheets) {
@@ -140,7 +140,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
 {
 
     #----------------------------#
-    # worksheet -- indel_distance_
+    # worksheet -- pigccv_freq_
     #----------------------------#
     my @sheets = grep {/^pigccv_freq/} @sheet_names;
     foreach (@sheets) {

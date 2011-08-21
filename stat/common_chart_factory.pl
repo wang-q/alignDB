@@ -19,9 +19,9 @@ my $Config = Config::Tiny->new();
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # stat parameter
-my $jc_correction   = $Config->{stat}->{jc_correction};
-my $time_stamp      = $Config->{stat}->{time_stamp};
-my $add_index_sheet = $Config->{stat}->{add_index_sheet};
+my $jc_correction   = $Config->{stat}{jc_correction};
+my $time_stamp      = $Config->{stat}{time_stamp};
+my $add_index_sheet = $Config->{stat}{add_index_sheet};
 
 my $infile  = '';
 my $outfile = '';
@@ -48,7 +48,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 # Init section
 #----------------------------------------------------------#
-my $stopwatch = AlignDB::Stopwatch->new();
+my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Processing $infile...");
 
 my $excel_obj;
@@ -81,6 +81,51 @@ $excel_obj->jc_correction if $jc_correction;
     #----------------------------#
     # worksheet -- combined_distance
     #----------------------------#
+    my @sheets = qw{
+        combined_distance distance_coding distance_non_coding
+        combined_density density_coding density_non_coding
+    };
+    for my $sheet_name (@sheets) {
+        my %option = (
+            chart_serial => 1,
+            x_column     => 1,
+            y_column     => 2,
+            first_row    => 3,
+            last_row     => 33,
+            x_max_scale  => 30,
+            x_title      => "Distance to indels (d1)",
+            y_title      => "Nucleotide diversity",
+            Height       => 200,
+            Width        => 320,
+            Top          => 12.75,
+            Left         => 520,
+        );
+        if ( $sheet_name =~ /density/ ) {
+            $option{x_title} = "Reciprocal of indel density (d2)";
+        }
+        $excel_obj->draw_y( $sheet_name, \%option );
+
+        # chart 2
+        $option{chart_serial}++;
+        $option{y_column} = 4;
+        $option{y_title}  = "GC proportion";
+        $option{Top} += $option{Height} + 12.75;
+        $excel_obj->draw_y( $sheet_name, \%option );
+
+        # chart 3
+        $option{chart_serial}++;
+        $option{y_column} = 6;
+        $option{y_title}  = "CV";
+        $option{Top} += $option{Height} + 12.75;
+        $excel_obj->draw_y( $sheet_name, \%option );
+    }
+}
+
+{
+
+    #----------------------------#
+    # worksheet -- combined_distance
+    #----------------------------#
     my $sheet_name = 'combined_distance';
     my %option     = (
         chart_serial => 1,
@@ -97,22 +142,7 @@ $excel_obj->jc_correction if $jc_correction;
         Top          => 12.75,
         Left         => 200,
     );
-
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- distance_coding
-    #----------------------------#
-    $sheet_name = 'distance_coding';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- distance_non_coding
-    #----------------------------#
-    $sheet_name = 'distance_non_coding';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
+    #$excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
     # worksheet -- distance_non_slip
@@ -176,24 +206,10 @@ $excel_obj->jc_correction if $jc_correction;
     # worksheet -- distance_gc
     #----------------------------#
     $sheet_name           = 'distance_gc';
-    $option{y_title}      = "G + C proportion";
+    $option{y_title}      = "GC proportion";
     $option{y_scale_unit} = 0.01;
 
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- distance_gc_coding
-    #----------------------------#
-    $sheet_name = 'distance_gc_coding';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- distance_gc_non_coding
-    #----------------------------#
-    $sheet_name = 'distance_gc_non_coding';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
+    #$excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
     # worksheet -- distance_gc_non_slip
@@ -256,44 +272,16 @@ $excel_obj->jc_correction if $jc_correction;
         Left         => 200,
     );
 
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- density_coding
-    #----------------------------#
-    $sheet_name = 'density_coding';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- density_non_coding
-    #----------------------------#
-    $sheet_name = 'density_non_coding';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
+    #$excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
     # worksheet -- density_gc
     #----------------------------#
     $sheet_name           = 'density_gc';
-    $option{y_title}      = "G + C proportion";
+    $option{y_title}      = "GC proportion";
     $option{y_scale_unit} = 0.01;
 
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- density_gc_coding
-    #----------------------------#
-    $sheet_name = 'density_gc_coding';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- density_gc_non_coding
-    #----------------------------#
-    $sheet_name = 'density_gc_non_coding';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
+    #$excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
     # worksheet -- density_dG
@@ -613,25 +601,23 @@ $stopwatch->end_message();
 exit;
 
 __END__
-
-    'help|?'   => \$help,
-    'man'      => \$man,
-    'infile=s' => \$infile,
-    'outfile=s' => \$outfile,
     
+    'replace=s'         => \%replace,
 =head1 NAME
 
-    chart_factory.pl - Use Win32::OLE to automate Excel chart
+    common_chart_factory.pl - Use Win32::OLE to automate Excel chart
 
 =head1 SYNOPSIS
 
-    chart_factory.pl [options]
+    common_chart_factory.pl [options]
      Options:
-       --help            brief help message
-       --man             full documentation
-       --infile          input file name (full path)
-       --outfile         output file name
-       --jc              Jukes & Cantor correction
+       --help           brief help message
+       --man            full documentation
+       --infile         input file name (full path)
+       --outfile        output file name
+       --jc             Jukes & Cantor correction
+       --replace        replace text when charting
+                        --replace diversity=divergence
        
 
 =head1 OPTIONS
