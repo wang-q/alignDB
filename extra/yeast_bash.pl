@@ -20,9 +20,30 @@ $pl_dir ||= "/home/wangq/Scripts";
         { taxon => 538975, name => 'Sigma1278b', coverage => '45x', },
         { taxon => 643680, name => 'EC1118',     coverage => 'unknown', },
 
+        # wustl 11 yeast strains
+        { taxon => 929587, name => 'CBS_7960', coverage => '17x', },
+        { taxon => 464025, name => 'CLIB215',  coverage => '16.9x', },
+        { taxon => 929629, name => 'CLIB324',  coverage => '7.14x', },
+        { taxon => 947035, name => 'CLIB382',  coverage => '5.96x', },
+        { taxon => 947036, name => 'FL100',    coverage => '7.1x', },
+        { taxon => 947039, name => 'PW5',      coverage => '16.10x', },
+        { taxon => 929585, name => 'T7',       coverage => '25.4x', },
+        { taxon => 471859, name => 'T73',      coverage => '13.9x', },
+        { taxon => 947040, name => 'UC5',      coverage => '15.7x', },
+        { taxon => 462210, name => 'Y10',      coverage => '6.6x', },
+        { taxon => 929586, name => 'YJM269',   coverage => '16.7x', },
+
+        # wine
+        { taxon => 764097, name => 'AWRI796',     coverage => '20x', },
+        { taxon => 764098, name => 'Lalvin_QA23', coverage => '20x', },
+        { taxon => 764099, name => 'Vin13',       coverage => '20x', },
+        { taxon => 764100, name => 'VL3',         coverage => '20x', },
+        { taxon => 764101, name => 'FostersO',    coverage => '20x', },
+        { taxon => 764102, name => 'FostersB',    coverage => '20x', },
+
         #{ taxon => 545124, name => 'AWRI1631',   coverage => '7x', },
-        #{ taxon => 538976, name => 'YPS163',     coverage => '2.8x', },
         #{ taxon => 538975, name => 'M22',        coverage => '2.6x', },
+        #{ taxon => 538976, name => 'YPS163',     coverage => '2.8x', },
     );
 
     my $text = <<'EOF';
@@ -35,7 +56,7 @@ gunzip -c [% item.name %]/*.gz > [% item.name %]/[% item.name %].fasta
 perl -p -i -e '/>/ and s/\>gi\|(\d+).*/\>gi_$1/' [% item.name %]/[% item.name %].fasta
 RepeatMasker [% item.name %]/*.fasta -species fungi -xsmall -s --parallel 8
 mv [% item.name %]/[% item.name %].fasta.masked [% item.name %]/[% item.name %].fa
-perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/S288C_58 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/S288Cvs[% item.name %]_58 -s set01 -p 6 
+perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/S288C_58 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/S288Cvs[% item.name %]_58 -s set11 -p 6 
 perl [% pl_dir %]/alignDB/extra/two_way_batch.pl -d S288Cvs[% item.name %] -e yeast_58 -t="4932,S288C" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]/S288Cvs[% item.name %]_58 -at 10000 -st 1000000 --parallel 4 --run all
 
 [% END -%]
@@ -64,7 +85,7 @@ cd [% data_dir %]
 # [% item.name %] [% item.coverage %]
 RepeatMasker [% item.name %]/*.fasta -species fungi -xsmall -s --parallel 8
 mv [% item.name %]/[% item.name %].fasta.masked [% item.name %]/[% item.name %].fa
-perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/S288C_58 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/S288Cvs[% item.name %]_58 -s set01 -p 6 
+perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/S288C_58 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/S288Cvs[% item.name %]_58 -s set11 -p 6 
 perl [% pl_dir %]/alignDB/extra/two_way_batch.pl -d S288Cvs[% item.name %] -e yeast_58 -t="4932,S288C" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]/S288Cvs[% item.name %]_58 -at 10000 -st 1000000 --parallel 4 --run all
 
 [% END -%]
