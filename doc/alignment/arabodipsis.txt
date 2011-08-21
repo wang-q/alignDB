@@ -47,7 +47,7 @@ perl two_way_batch.pl -d AthvsLyrata -e ath_58 -t="3702,Ath" -q "59689,Lyrata" -
 perl two_way_batch.pl -d AthvsBur0 -e ath_58 -t="3702,Ath" -q "900101,Bur0"    -a e:\data\alignment\arabidopsis\AthvsBur0_58\ -at 10000 -st 1000000 --parallel 4 --run basic
 perl two_way_batch.pl -d AthvsC24 -e ath_58 -t="3702,Ath" -q "900102,C24"      -a e:\data\alignment\arabidopsis\AthvsC24_58\ -at 10000 -st 1000000 --parallel 4 --run basic
 perl two_way_batch.pl -d AthvsKro0 -e ath_58 -t="3702,Ath" -q "900103,Kro0"    -a e:\data\alignment\arabidopsis\AthvsKro0_58\ -at 10000 -st 1000000 --parallel 4 --run basic
-perl two_way_batch.pl -d AthvsLer1 -e ath_58 -t="3702,Ath" -q "900104,Ler1"    -a e:\data\alignment\arabidopsis\AthvsLer1_58\ -at 10000 -st 1000000 --parallel 4 --run basic
+perl two_way_batch.pl -d AthvsLer1 -e ath_58 -t="3702,Ath" -q "900104,Ler1"    -a e:\data\alignment\arabidopsis\AthvsLer1_58\ -at 10000 -st 1000000 --parallel 4 --run common
 
 #perl two_way_batch.pl -d AthvsLyrata -e ath_58 -t="3702,Ath" -q "59689,Lyrata" -a /home/wangq/data/alignment/arabidopsis/AthvsLyrata_58/ -at 10000 -st 1000000 --parallel 6 --run all
 perl two_way_batch.pl -d AthvsLyrata_5k -e ath_58 -t="3702,Ath" -q "59689,Lyrata" -a /home/wangq/data/alignment/arabidopsis/AthvsLyrata_58/ -at 5000 -st 1000000 --parallel 6 --run all

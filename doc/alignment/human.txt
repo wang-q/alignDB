@@ -15,9 +15,15 @@ perl two_way_batch.pl -d HumanvsLemur -e human_58 -t="9606,Human" -q "30608,Lemu
 
 perl two_way_batch.pl -d HumanvsBushbaby -e human_58 -t="9606,Human" -q "30611,Bushbaby" -a /home/wangq/data/UCSC/Human19vsBushbaby1 -at 10000 -st 10000000 --parallel 8 --run all
 
+# chimp3
+perl two_way_batch.pl -d HumanvsChimp3 -e human_58 -t="9606,Human" -q "9598,Chimp" -a /home/wangq/data/UCSC/Human19vsChimp3 -at 10000 -st 10000000 --parallel 8 --run all
+
+
 # Extract portions of features
 perl write_axt.pl -d HumanvsChimp -e human_58 --feature intron
 
 perl write_axt.pl -d HumanvsChimp -e human_58 --feature non_repeat
 
 perl two_way_batch.pl -d HumanvsChimp_intron -e human_58 -t="9606,Human" -q "9598,Chimp" -a /home/wangq/data/UCSC/Human19vsChimp2_intron -at 10000 -st 10000000 --parallel 6 --run gc
+perl common_chart_factory.pl --replace diversity=divergence -i HumanvsChimp_intron.common.xlsx
+perl gc_chart_factory.pl --replace diversity=divergence -i HumanvsChimp_intron.gc.xlsx
