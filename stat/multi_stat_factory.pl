@@ -859,7 +859,7 @@ my $combined_distance = sub {
         my ( $sheet_row, $sheet_col );
 
         {    # write header
-            my @headers = qw{distance AVG_pi STD_pi AVG_gc STD_gc
+            my @headers = qw{AVG_distance AVG_pi STD_pi AVG_gc STD_gc
                 AVG_cv STD_cv COUNT};
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
