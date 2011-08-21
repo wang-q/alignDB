@@ -7,6 +7,7 @@ use Pod::Usage;
 use Config::Tiny;
 use YAML qw(Dump Load DumpFile LoadFile);
 
+use AlignDB::Run;
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(:all);
 
@@ -40,9 +41,11 @@ my $stat_segment_size = 500;
 my $stat_window_size  = $Config->{gc}{stat_window_size};
 my $stat_window_step  = $Config->{gc}{stat_window_step};
 
-# XXX not done yet
 # run in parallel mode
 my $parallel = $Config->{feature}{parallel};
+
+# number of alignments process in one child process
+my $batch_number = $Config->{feature}{batch};
 
 my $multi;
 
@@ -58,6 +61,7 @@ GetOptions(
     'username=s' => \$username,
     'password=s' => \$password,
     'parallel=i' => \$parallel,
+    'batch=i'    => \$batch_number,
     'multi'      => \$multi,
 ) or pod2usage(2);
 
@@ -69,180 +73,213 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 $stopwatch->start_message("Update $db...");
 
-my $obj;
-if ( !$multi ) {
-    $obj = AlignDB->new(
+#----------------------------#
+# Create columnas and find all align_ids
+#----------------------------#
+my @align_ids;
+{
+    my $obj = AlignDB->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
     );
-}
-else {
-    $obj = AlignDB::Multi->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-}
-AlignDB::GC->meta->apply($obj);
-my %opt = (
-    stat_window_size => $stat_window_size,
-    stat_window_step => $stat_window_step,
-);
-for my $key ( sort keys %opt ) {
-    $obj->$key( $opt{$key} );
-}
 
-# Database handler
-my $dbh = $obj->dbh;
-
-{    # add column
+    # add column
     $obj->create_column( "exonsw",   "exonsw_cv",   "DOUBLE" );
     $obj->create_column( "codingsw", "codingsw_cv", "DOUBLE" );
     $obj->create_column( "ofgsw",    "ofgsw_cv",    "DOUBLE" );
     $obj->create_column( "isw",      "isw_cv",      "DOUBLE" );
     print "Table exonsw, codingsw, ofgsw and isw altered\n";
+
+    @align_ids = @{ $obj->get_align_ids };
+}
+
+my @jobs;
+while ( scalar @align_ids ) {
+    my @batching = splice @align_ids, 0, $batch_number;
+    push @jobs, [@batching];
 }
 
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
 
-my @align_ids = @{ $obj->get_align_ids };
+my $worker = sub {
+    my $job       = shift;
+    my @align_ids = @$job;
 
-my $exonsw_sth = $dbh->prepare(
-    q{
-    SELECT s.exonsw_id, w.window_runlist
-    FROM exonsw s, window w
-    where s.window_id = w.window_id
-    and w.align_id = ?
+    my $obj;
+    if ( !$multi ) {
+        $obj = AlignDB->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
     }
+    else {
+        $obj = AlignDB::Multi->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+    }
+    
+    AlignDB::GC->meta->apply($obj);
+    my %opt = (
+        stat_window_size => $stat_window_size,
+        stat_window_step => $stat_window_step,
+    );
+    for my $key ( sort keys %opt ) {
+        $obj->$key( $opt{$key} );
+    }
+
+    # Database handler
+    my $dbh = $obj->dbh;
+
+    my $exonsw_sth = $dbh->prepare(
+        q{
+        SELECT s.exonsw_id, w.window_runlist
+        FROM exonsw s, window w
+        where s.window_id = w.window_id
+        and w.align_id = ?
+        }
+    );
+
+    my $exonsw_update_sth = $dbh->prepare(
+        q{
+        UPDATE exonsw
+        SET exonsw_cv = ?
+        WHERE exonsw_id = ?
+        }
+    );
+
+    my $codingsw_sth = $dbh->prepare(
+        q{
+        SELECT s.codingsw_id, w.window_runlist
+        FROM codingsw s, window w
+        where s.window_id = w.window_id
+        and w.align_id = ?
+        }
+    );
+
+    my $codingsw_update_sth = $dbh->prepare(
+        q{
+        UPDATE codingsw
+        SET codingsw_cv = ?
+        WHERE codingsw_id = ?
+        }
+    );
+
+    my $ofgsw_sth = $dbh->prepare(
+        q{
+        SELECT s.ofgsw_id, w.window_runlist
+        FROM ofgsw s, window w
+        where s.window_id = w.window_id
+        and w.align_id = ?
+        }
+    );
+
+    my $ofgsw_update_sth = $dbh->prepare(
+        q{
+        UPDATE ofgsw
+        SET ofgsw_cv = ?
+        WHERE ofgsw_id = ?
+        }
+    );
+
+    my $isw_sth = $dbh->prepare(
+        q{
+        SELECT s.isw_id, s.isw_start, s.isw_end
+        FROM isw s, indel i
+        where s.indel_id = i.indel_id
+        and i.align_id = ?
+        }
+    );
+
+    my $isw_update_sth = $dbh->prepare(
+        q{
+        UPDATE isw
+        SET isw_cv = ?
+        WHERE isw_id = ?
+        }
+    );
+
+    for my $align_id (@align_ids) {
+        my $target_info    = $obj->get_target_info($align_id);
+        my $target_runlist = $target_info->{seq_runlist};
+
+        $obj->process_message($align_id);
+
+        # sliding in target_set
+        my $target_set = AlignDB::IntSpan->new($target_runlist);
+
+        $exonsw_sth->execute($align_id);
+        while ( my @row = $exonsw_sth->fetchrow_array ) {
+            my ( $exonsw_id, $window_runlist ) = @row;
+            my $window_set = AlignDB::IntSpan->new($window_runlist);
+            my $resize_set = center_resize( $window_set, $target_set,
+                $stat_segment_size );
+
+            my $seqs_ref = $obj->get_seqs($align_id);
+            my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
+                = $obj->segment_gc_stat( $seqs_ref, $resize_set );
+            $exonsw_update_sth->execute( $gc_cv, $exonsw_id );
+        }
+
+        $codingsw_sth->execute($align_id);
+        while ( my @row = $codingsw_sth->fetchrow_array ) {
+            my ( $codingsw_id, $window_runlist ) = @row;
+            my $window_set = AlignDB::IntSpan->new($window_runlist);
+            my $resize_set = center_resize( $window_set, $target_set,
+                $stat_segment_size );
+
+            my $seqs_ref = $obj->get_seqs($align_id);
+            my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
+                = $obj->segment_gc_stat( $seqs_ref, $resize_set );
+            $codingsw_update_sth->execute( $gc_cv, $codingsw_id );
+        }
+
+        $ofgsw_sth->execute($align_id);
+        while ( my @row = $ofgsw_sth->fetchrow_array ) {
+            my ( $ofgsw_id, $window_runlist ) = @row;
+            my $window_set = AlignDB::IntSpan->new($window_runlist);
+            my $resize_set = center_resize( $window_set, $target_set,
+                $stat_segment_size );
+
+            next unless $resize_set;
+
+            my $seqs_ref = $obj->get_seqs($align_id);
+            my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
+                = $obj->segment_gc_stat( $seqs_ref, $resize_set );
+            $ofgsw_update_sth->execute( $gc_cv, $ofgsw_id );
+        }
+
+        $isw_sth->execute($align_id);
+        while ( my @row = $isw_sth->fetchrow_array ) {
+            my ( $isw_id, $start, $end ) = @row;
+            my $window_set = AlignDB::IntSpan->new("$start-$end");
+            my $resize_set = center_resize( $window_set, $target_set,
+                $stat_segment_size );
+
+            next unless $resize_set;
+
+            my $seqs_ref = $obj->get_seqs($align_id);
+            my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
+                = $obj->segment_gc_stat( $seqs_ref, $resize_set );
+            $isw_update_sth->execute( $gc_cv, $isw_id );
+        }
+    }
+};
+
+#----------------------------------------------------------#
+# start update
+#----------------------------------------------------------#
+my $run = AlignDB::Run->new(
+    parallel => $parallel,
+    jobs     => \@jobs,
+    code     => $worker,
 );
-
-my $exonsw_update_sth = $dbh->prepare(
-    q{
-    UPDATE exonsw
-    SET exonsw_cv = ?
-    WHERE exonsw_id = ?
-    }
-);
-
-my $codingsw_sth = $dbh->prepare(
-    q{
-    SELECT s.codingsw_id, w.window_runlist
-    FROM codingsw s, window w
-    where s.window_id = w.window_id
-    and w.align_id = ?
-    }
-);
-
-my $codingsw_update_sth = $dbh->prepare(
-    q{
-    UPDATE codingsw
-    SET codingsw_cv = ?
-    WHERE codingsw_id = ?
-    }
-);
-
-my $ofgsw_sth = $dbh->prepare(
-    q{
-    SELECT s.ofgsw_id, w.window_runlist
-    FROM ofgsw s, window w
-    where s.window_id = w.window_id
-    and w.align_id = ?
-    }
-);
-
-my $ofgsw_update_sth = $dbh->prepare(
-    q{
-    UPDATE ofgsw
-    SET ofgsw_cv = ?
-    WHERE ofgsw_id = ?
-    }
-);
-
-my $isw_sth = $dbh->prepare(
-    q{
-    SELECT s.isw_id, s.isw_start, s.isw_end
-    FROM isw s, indel i
-    where s.indel_id = i.indel_id
-    and i.align_id = ?
-    }
-);
-
-my $isw_update_sth = $dbh->prepare(
-    q{
-    UPDATE isw
-    SET isw_cv = ?
-    WHERE isw_id = ?
-    }
-);
-
-for my $align_id (@align_ids) {
-    my $target_info    = $obj->get_target_info($align_id);
-    my $target_runlist = $target_info->{seq_runlist};
-
-    $obj->process_message($align_id);
-
-    # sliding in target_set
-    my $target_set = AlignDB::IntSpan->new($target_runlist);
-
-    $exonsw_sth->execute($align_id);
-    while ( my @row = $exonsw_sth->fetchrow_array ) {
-        my ( $exonsw_id, $window_runlist ) = @row;
-        my $window_set = AlignDB::IntSpan->new($window_runlist);
-        my $resize_set
-            = center_resize( $window_set, $target_set, $stat_segment_size );
-
-        my $seqs_ref = $obj->get_seqs($align_id);
-        my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-            = $obj->segment_gc_stat( $seqs_ref, $resize_set );
-        $exonsw_update_sth->execute( $gc_cv, $exonsw_id );
-    }
-
-    $codingsw_sth->execute($align_id);
-    while ( my @row = $codingsw_sth->fetchrow_array ) {
-        my ( $codingsw_id, $window_runlist ) = @row;
-        my $window_set = AlignDB::IntSpan->new($window_runlist);
-        my $resize_set
-            = center_resize( $window_set, $target_set, $stat_segment_size );
-
-        my $seqs_ref = $obj->get_seqs($align_id);
-        my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-            = $obj->segment_gc_stat( $seqs_ref, $resize_set );
-        $codingsw_update_sth->execute( $gc_cv, $codingsw_id );
-    }
-
-    $ofgsw_sth->execute($align_id);
-    while ( my @row = $ofgsw_sth->fetchrow_array ) {
-        my ( $ofgsw_id, $window_runlist ) = @row;
-        my $window_set = AlignDB::IntSpan->new($window_runlist);
-        my $resize_set
-            = center_resize( $window_set, $target_set, $stat_segment_size );
-
-        next unless $resize_set;
-
-        my $seqs_ref = $obj->get_seqs($align_id);
-        my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-            = $obj->segment_gc_stat( $seqs_ref, $resize_set );
-        $ofgsw_update_sth->execute( $gc_cv, $ofgsw_id );
-    }
-
-    $isw_sth->execute($align_id);
-    while ( my @row = $isw_sth->fetchrow_array ) {
-        my ( $isw_id, $start, $end ) = @row;
-        my $window_set = AlignDB::IntSpan->new("$start-$end");
-        my $resize_set
-            = center_resize( $window_set, $target_set, $stat_segment_size );
-
-        next unless $resize_set;
-
-        my $seqs_ref = $obj->get_seqs($align_id);
-        my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-            = $obj->segment_gc_stat( $seqs_ref, $resize_set );
-        $isw_update_sth->execute( $gc_cv, $isw_id );
-    }
-}
+$run->run;
 
 $stopwatch->end_message;
 
