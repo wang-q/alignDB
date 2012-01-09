@@ -162,6 +162,10 @@ my $combined_dnds = sub {
 # worksheet -- distance(frequecy)
 #----------------------------------------------------------#
 my $frequency_dnds = sub {
+    unless ( $write_obj->check_column( 'indel', 'indel_freq' ) ) {
+        return;
+    }
+    
     my @freq_levels = ( [ 1, 1, 1 ] );
 
     my $write_sheet = sub {

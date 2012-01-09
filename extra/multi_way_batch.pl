@@ -45,8 +45,6 @@ my $run = "all";
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
 
-my $all_freq;
-
 # stat parameter
 my $sum_threshold = $Config->{stat}{sum_threshold};
 
@@ -67,7 +65,6 @@ GetOptions(
     'parallel=i'            => \$parallel,
     'lt|length_thredhold=i' => \$length_thredhold,
     'st|sum_threshold=i'    => \$sum_threshold,
-    'all_freq=s'            => \$all_freq,
     'run=s'                 => \$run,
 ) or pod2usage(2);
 
@@ -77,22 +74,22 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 # prepare to run tasks in @tasks
 my @tasks;
 if ( $run eq 'all' ) {
-    @tasks = ( 1 .. 43 );
+    @tasks = ( 1 .. 44 );
 }
 elsif ( $run eq 'basic' ) {
     @tasks = ( 1 .. 3 );
 }
 elsif ( $run eq 'common' ) {
-    @tasks = ( 1 .. 3, 21, 30, 31, 40 );
+    @tasks = ( 1 .. 3, 21, 30, 31, 40, 43 );
 }
 elsif ( $run eq 'gc' ) {
     @tasks = ( 1 .. 3, 10, 21, 30 .. 32, 40, 41 );
 }
 elsif ( $run eq 'gene' ) {
-    @tasks = ( 1 .. 3, 10, 20, 21, 30 .. 33, 40 .. 42 );
+    @tasks = ( 1 .. 3, 10, 20, 21, 30 .. 33, 40 .. 42, 44 );
 }
 elsif ( $run eq 'stat' ) {
-    @tasks = ( 40 .. 43 );
+    @tasks = ( 40 .. 44 );
 }
 else {
     $run =~ s/\"\'//s;
@@ -196,6 +193,13 @@ my $dispatch = {
         . " --password=$password"
         . " -d=$db_name"
         . " -o=$FindBin::Bin/../stat/$db_name.mvar.xlsx",
+    44 => "perl $FindBin::Bin/../stat/dnds_stat_factory.pl"
+        . " -s=$server"
+        . " --port=$port"
+        . " -u=$username"
+        . " --password=$password"
+        . " -d=$db_name"
+        . " -o=$FindBin::Bin/../stat/$db_name.dnds.xlsx",
 };
 
 #----------------------------#
@@ -225,8 +229,10 @@ exit;
 
 __END__
 
-perl multi_way_batch.pl -d S288CvsThree_10k -e yeast_58 -f F:/S288CvsThree_10k --all_freq 3 -lt 10000 -st 100000 --parallel=6 --run all
+=head1 SYNOPSIS
 
-perl multi_way_batch.pl -d S288CvsTen_10k -e yeast_58 -f F:/S288CvsTen_10k --all_freq 10 -lt 10000 -st 100000 --parallel=6 --run all
+perl multi_way_batch.pl -d S288CvsThree_10k -e yeast_58 -f F:/S288CvsThree_10k -lt 10000 -st 100000 --parallel=6 --run all
 
-perl multi_way_batch.pl -d S288CvsSix_10k --all_freq 6 -r stat
+perl multi_way_batch.pl -d S288CvsTen_10k -e yeast_58 -f F:/S288CvsTen_10k -lt 10000 -st 100000 --parallel=6 --run all
+
+perl multi_way_batch.pl -d S288CvsSix_10k -r stat
