@@ -1,4 +1,4 @@
-ath and lyrata uses ensembl repeat annotation.
+Ath and lyrata uses ensembl repeat annotation.
 
 All other seqs use RepeatMasker.
 
@@ -56,6 +56,11 @@ perl two_way_batch.pl -d AthvsC24 -e ath_58 -t="3702,Ath" -q "900102,C24"      -
 perl two_way_batch.pl -d AthvsKro0 -e ath_58 -t="3702,Ath" -q "900103,Kro0"    -a /home/wangq/data/alignment/arabidopsis/AthvsKro0_58/ -at 10000 -st 1000000 --parallel 6 --run all
 perl two_way_batch.pl -d AthvsLer1 -e ath_58 -t="3702,Ath" -q "900104,Ler1"    -a /home/wangq/data/alignment/arabidopsis/AthvsLer1_58/ -at 10000 -st 1000000 --parallel 6 --run all
 
+# three-way
+perl join_dbs.pl --dbs AthvsLyrata_5k,AthvsLer1 --goal_db AthvsLer1refLyrata  --length 5000 --outgroup 0query --target 0target --queries 1query
+
+
+# multi-way
 perl join_dbs.pl --dbs AthvsLyrata,AthvsBur0,AthvsC24,AthvsKro0,AthvsLer1 --goal_db AthvsFive --no_insert=1 --trimmed_fasta=1 --outgroup 0query --target 0target --queries 1query,2query,3query,4query 
 #perl join_dbs.pl --dbs AthvsBur0,AthvsC24,AthvsKro0,AthvsLer1 --goal_db AthvsAthFour --no_insert=1 --trimmed_fasta=1 --outgroup 0query --target 0target --queries 1query,2query,3query 
 #perl join_dbs.pl --dbs AthvsLyrata,AthvsLer1 --goal_db AthvsLer1refLyrata --no_insert=1 --trimmed_fasta=1 --outgroup 0query --target 0target --queries 1query

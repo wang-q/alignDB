@@ -590,7 +590,7 @@ $excel_obj->jc_correction if $jc_correction;
 # POST Processing
 #----------------------------------------------------------#
 # add time stamp to "summary" sheet
-$excel_obj->time_stamp("summary") if $time_stamp;
+$excel_obj->time_stamp("basic") if $time_stamp;
 
 # add an index sheet
 $excel_obj->add_index_sheet if $add_index_sheet;

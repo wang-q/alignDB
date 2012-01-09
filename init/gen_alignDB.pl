@@ -133,7 +133,7 @@ my $run = AlignDB::Run->new(
 );
 $run->run;
 
-$stopwatch->block_message( "All files have been processed.", "duration" );
+$stopwatch->end_message( "All files have been processed." );
 
 # store program running meta info to database
 # this AlignDB object is just for storing meta info

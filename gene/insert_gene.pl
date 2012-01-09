@@ -42,7 +42,7 @@ my $password   = $Config->{database}{password};
 my $db         = $Config->{database}{db};
 my $ensembl_db = $Config->{database}{ensembl};
 
-my $reg_conf = "$FindBin::Bin/../ensembl_initrc.pm";
+my $reg_conf = "$FindBin::Bin/../ensembl.initrc.pm";
 
 my $insert_exonsw   = $Config->{gene}{insert_exonsw};
 my $insert_codingsw = $Config->{gene}{insert_codingsw};

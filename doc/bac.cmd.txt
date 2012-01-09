@@ -27,7 +27,7 @@ Runtime 14 seconds.
 # 2. bac_db.pl
 #----------------------------------------------------------#
 
-e:\wq\Scripts\alignDB\bac>perl bac_db.pl
+>perl bac_db.pl
 ==============================
 Init bac DB...
 Start at: Sat Dec  4 23:34:57 2010

@@ -45,7 +45,7 @@ my $run = "all";
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
 
-my $all_freq = 3;
+my $all_freq;
 
 # stat parameter
 my $sum_threshold = $Config->{stat}{sum_threshold};
@@ -160,7 +160,7 @@ my $dispatch = {
         . " --gff_file=$gff_file",
     31 => undef,
     32 => undef,
-    33 => "perl $FindBin::Bin/../init/update_snp_dnds.pl"
+    33 => "perl $FindBin::Bin/../gene/update_snp_dnds.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
@@ -173,8 +173,7 @@ my $dispatch = {
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
-        . " -o=$FindBin::Bin/../stat/$db_name.multi.xlsx"
-        . " --freq=$all_freq",
+        . " -o=$FindBin::Bin/../stat/$db_name.multi.xlsx",
     41 => "perl $FindBin::Bin/../stat/mgc_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"

@@ -55,7 +55,6 @@ my $trimmed_fasta    = $Config->{ref}{trimmed_fasta};
 my $reduce_end       = $Config->{ref}{reduce_end};
 
 my $no_insert       = 0;
-my $discard_paralog = 0;
 my $discard_distant = 0;
 
 # realign parameters
@@ -86,7 +85,6 @@ GetOptions(
     'reduce_end=i'      => \$reduce_end,
     'init_db=s'         => \$init_db,
     'no_insert=s'       => \$no_insert,
-    'discard_paralog=s' => \$discard_paralog,
     'discard_distant=s' => \$discard_distant,
     'indel_expand=i'    => \$indel_expand,
     'indel_join=i'      => \$indel_join,
@@ -285,9 +283,6 @@ SEG: for (@segments) {
             }
             elsif ( defined $dummy ) {
                 warn " " x 4, "Overlapped alignment in $db_name!\n";
-                if ($discard_paralog) {
-                    next SEG;
-                }
             }
             $db_info_of{$db_name}->{align_id} = $align_id;
         }
@@ -709,7 +704,6 @@ sub realign {
         data  => $all_names,
     );
     while ( my @combo = $combinat->next_combination ) {
-        print " " x 8, "pairwise correction @combo\n";
         my $intersect_set = AlignDB::IntSpan->new;
         my $union_set     = AlignDB::IntSpan->new;
         $intersect_set
@@ -890,7 +884,6 @@ __END__
                             for two dependent datasets, use 0
         --init_db           call init_alignDB.pl
         --no_insert         don't insert into goal_db actually
-        --discard_paralog
         --discard_distant
         --indel_expand
         --indel_join

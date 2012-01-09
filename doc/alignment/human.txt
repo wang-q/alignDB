@@ -1,3 +1,11 @@
+cd /d D:\wq\Scripts\alignDB\extra
+
+# go back to human18
+perl two_way_batch.pl -d HumanvsRhesus -e human_54 -t="9606,Human" -q "9544,Rhesus" -a D:\data\UCSC\goldenPath\hg18\vsRheMac2\axtNet -at 10000 -st 10000000 --parallel 8 --run gc
+perl two_way_batch.pl -d HumanvsOrangutan -e human_54 -t="9606,Human" -q "9601,Orangutan" -a D:\data\UCSC\goldenPath\hg18\vsPonAbe2\axtNet -at 10000 -st 10000000 --parallel 8 --run gc
+perl two_way_batch.pl -d HumanvsChimp -e human_54 -t="9606,Human" -q "9598,Chimp" -a D:\data\UCSC\goldenPath\hg18\vsPanTro2\axtNet -at 10000 -st 10000000 --parallel 8 --run "21,30-32,40-41"
+
+
 # Processing UCSC download
 perl two_way_batch.pl -d HumanvsRhesus -e human_58 -t="9606,Human" -q "9544,Rhesus" -a /home/wangq/data/UCSC/Human19vsRhesus2 -at 10000 -st 10000000 --parallel 8 --run all
 
@@ -27,3 +35,11 @@ perl write_axt.pl -d HumanvsChimp -e human_58 --feature non_repeat
 perl two_way_batch.pl -d HumanvsChimp_intron -e human_58 -t="9606,Human" -q "9598,Chimp" -a /home/wangq/data/UCSC/Human19vsChimp2_intron -at 10000 -st 10000000 --parallel 6 --run gc
 perl common_chart_factory.pl --replace diversity=divergence -i HumanvsChimp_intron.common.xlsx
 perl gc_chart_factory.pl --replace diversity=divergence -i HumanvsChimp_intron.gc.xlsx
+
+# three-way
+perl join_dbs.pl --dbs HumanvsOrangutan,HumanvsChimp --goal_db HumanvsChimprefOrangutan --outgroup 0query --target 0target --queries 1query 
+perl join_dbs.pl --dbs HumanvsRhesus,HumanvsChimp --goal_db HumanvsChimprefRhesus --outgroup 0query --target 0target --queries 1query 
+
+perl two_way_batch.pl -d HumanvsChimprefOrangutan -e human_58 -st 10000000 --parallel 8 --run 3-50
+perl two_way_batch.pl -d HumanvsChimprefRhesus -e human_58 -st 10000000 --parallel 8 --run 3-50
+

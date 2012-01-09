@@ -650,7 +650,7 @@ sub on_button_auto_common_stat_file_clicked {
     my $widget = shift;
 
     my $db_name = $self->get_value("entry_db_name");
-    my $outfile = "$FindBin::Bin/../stat/$db_name.common.xls";
+    my $outfile = "$FindBin::Bin/../stat/$db_name.common.xlsx";
     $outfile = File::Spec->rel2abs($outfile);
     $self->set_value( "entry_common_stat_file", $outfile );
 
@@ -662,7 +662,7 @@ sub on_button_auto_gc_stat_file_clicked {
     my $widget = shift;
 
     my $db_name = $self->get_value("entry_db_name");
-    my $outfile = "$FindBin::Bin/../stat/$db_name.gc.xls";
+    my $outfile = "$FindBin::Bin/../stat/$db_name.gc.xlsx";
     $outfile = File::Spec->rel2abs($outfile);
     $self->set_value( "entry_gc_stat_file", $outfile );
 
@@ -674,7 +674,7 @@ sub on_button_auto_three_stat_file_clicked {
     my $widget = shift;
 
     my $db_name = $self->get_value("entry_goal_db");
-    my $outfile = "$FindBin::Bin/../stat/$db_name.three.xls";
+    my $outfile = "$FindBin::Bin/../stat/$db_name.three.xlsx";
     $outfile = File::Spec->rel2abs($outfile);
     $self->set_value( "entry_three_stat_file", $outfile );
 

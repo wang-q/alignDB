@@ -16,7 +16,7 @@ Runtime 14 seconds.
 ==============================
 
 #----------------------------------------------------------#
-# 2. insert_gene.pl
+# 2. \gene>update_gene_feature.pl 
 #----------------------------------------------------------#
 E:\wq\Scripts\alignDB\gene>update_gene_feature.pl -d=alignDB
 

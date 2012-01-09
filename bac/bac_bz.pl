@@ -47,6 +47,11 @@ my $target_id;
 my $ref_id;
 my $exclude_ids = '0';
 
+# use custom name_str
+# working dir and goal db name
+# mysql restrict db name length 64
+my $name_str;
+
 # Database init values
 my $server   = $Config->{database}{server};
 my $port     = $Config->{database}{port};
@@ -72,6 +77,7 @@ GetOptions(
     't|target_id=i'   => \$target_id,
     'r|ref_id=i'      => \$ref_id,
     'e|exclude=s'     => \$exclude_ids,
+    'n|name_str=s'    => \$name_str,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -80,7 +86,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 # init
 #----------------------------------------------------------#
-$stopwatch->start_message("Blastz whole species");
+$stopwatch->start_message("Preparing Blastz whole species");
 
 my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
 
@@ -125,23 +131,24 @@ my $id_str;
     $id_str = '(' . ( join ",", $id_set->as_array ) . ')';
 }
 
-my $name_str;
 {    # making working dir
-    my $sth = $dbh->prepare(
-        qq{
+    if ( !$name_str ) {
+        my $sth = $dbh->prepare(
+            qq{
         SELECT DISTINCT species
         FROM strain st
         WHERE st.taxonomy_id IN $id_str
         }
-    );
-    $sth->execute;
+        );
+        $sth->execute;
 
-    while ( my ($name) = $sth->fetchrow_array ) {
-        $name_str .= "_$name";
+        while ( my ($name) = $sth->fetchrow_array ) {
+            $name_str .= "_$name";
+        }
+        $name_str =~ s/\W/_/g;
+        $name_str =~ s/^_+//g;
+        $name_str =~ s/\s+/_/g;
     }
-    $name_str =~ s/\W/_/g;
-    $name_str =~ s/^_+//g;
-    $name_str =~ s/\s+/_/g;
 
     print "Working on $name_str\n";
     $working_dir = File::Spec->catdir( $working_dir, $name_str );
@@ -175,20 +182,24 @@ my @query_ids;
         $table->load( \@row );
     }
 
+    my $table_file = File::Spec->catfile( $working_dir, "table.txt" );
+    open my $fh, '>', $table_file;
+    print {$fh} $table;
+    print $table;
+    print "\n";
+
     {
-        my $table_file = File::Spec->catfile( $working_dir, "table.txt" );
-        open my $fh, '>', $table_file;
-        print {$fh} $table;
-        print $table;
-        print "\n";
-        close $fh;
+        my $message = "There are " . scalar @strains . " strains\n";
+        print {$fh} $message;
+        print $message;
     }
-    print "There are " . scalar @strains . " strains\n";
 
     if ($target_id) {
         my ($exist) = grep { $_->[0] == $target_id } @strains;
         if ( defined $exist ) {
-            print "Use [$exist->[1]] as target, as you wish.\n";
+            my $message = "Use [$exist->[1]] as target, as you wish.\n";
+            print {$fh} $message;
+            print $message;
         }
         else {
             print "Taxon $target_id doesn't exist, please check.\n";
@@ -197,16 +208,21 @@ my @query_ids;
     }
     else {
         $target_id = $strains[0]->[0];
-        print
-            "Use [$strains[0]->[1]] as target, the oldest strain on NCBI.\n";
+        my $message
+            = "Use [$strains[0]->[1]] as target, the oldest strain on NCBI.\n";
+        print {$fh} $message;
+        print $message;
     }
 
     @query_ids = map { $_->[0] == $target_id ? () : $_->[0] } @strains;
-    
+
     if ($ref_id) {
         my ($exist) = grep { $_ == $ref_id } @query_ids;
-        if (defined $exist) {
-            print "Use [$exist] as reference, as you wish.\n";
+        if ( defined $exist ) {
+            my $message = "Use [$exist] as reference, as you wish.\n";
+            print {$fh} $message;
+            print $message;
+
             @query_ids = map { $_ == $ref_id ? () : $_ } @query_ids;
             unshift @query_ids, $ref_id;
         }
@@ -214,10 +230,12 @@ my @query_ids;
             print "Taxon $ref_id doesn't exist, please check.\n";
         }
     }
+
+    close $fh;
 }
 
 my %dir_of;
-my $new_gff_file;
+my @new_gff_files;
 {    # build fasta files
 
     # read all filenames, then grep
@@ -261,17 +279,17 @@ my $new_gff_file;
             }
             close $out_fh;
             close $in_fh;
-            
-            if ($taxon_id eq $target_id) {
+
+            if ( $taxon_id eq $target_id ) {
                 print "Copy target gff\n";
                 my ($gff_file) = grep {/$acc/} @gff_files;
-                $new_gff_file = File::Spec->catfile( $working_dir, "$acc.gff" );
-                copy($gff_file, $new_gff_file);
+                my $new_gff_file
+                    = File::Spec->catfile( $working_dir, "$acc.gff" );
+                push @new_gff_files, $new_gff_file;
+                copy( $gff_file, $new_gff_file );
             }
         }
     }
-    
-    
 }
 
 my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
@@ -284,43 +302,54 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
 }
 
 {
-    my $cmd_file = File::Spec->catfile( $working_dir, "cmd.txt" );
+    my $cmd_file = File::Spec->catfile( $working_dir, "cmd.bat" );
     open my $fh, '>', $cmd_file;
 
-    print {$fh} "# bac_bz.pl\n";
-    print {$fh} "perl ", $stopwatch->cmd_line, "\n\n";
+    print {$fh} "REM bac_bz.pl\n";
+    print {$fh} "REM perl ", $stopwatch->cmd_line, "\n\n";
 
-    print {$fh} "# seq_pair_batch.pl\n";
+    print {$fh} "cd /d $working_dir\n\n";
+
+    print {$fh} "REM seq_pair_batch.pl\n";
     print {$fh} "perl $FindBin::Bin/../extra/seq_pair_batch.pl"
         . " -d 1 -p 4"
-        . " -f $seq_pair_file" . "\n\n";
+        . " -f $seq_pair_file"
+        . " -at 1000"
+        . " -st 100000" . "\n\n";
 
-    print {$fh} "# join_dbs.pl\n";
+    print {$fh} "REM basicstat\n";
+    print {$fh} "perl $FindBin::Bin/../fig/collect_common_basic.pl"
+        . " $working_dir\n\n";
+
+    print {$fh} "REM join_dbs.pl\n";
     print {$fh} "perl $FindBin::Bin/../extra/join_dbs.pl"
         . " --no_insert 1 --trimmed_fasta 1"
-        . " --length 1000 --reduce_end 10"
+        . " --length 1000"
+        . " --reduce_end 10"
         . " --goal_db $name_str"
         . " --outgroup 0query --target 0target"
         . " --queries "
         . ( join ",", map { $_ . "query" } ( 1 .. scalar @query_ids - 1 ) )
         . " --dbs "
         . ( join ",", map { $target_id . "vs" . $_ } @query_ids ) . "\n\n";
-    
-    print {$fh} "# drop temp databases\n";
+
+    print {$fh} "REM drop temp databases\n";
     my $sql_cmd = "mysql -h$server -P$port -u$username -p$password ";
     for (@query_ids) {
         my $tempdb = $target_id . "vs" . $_;
-        print {$fh} $sql_cmd  . " -e \"DROP DATABASE IF EXISTS $tempdb;\"\n";
+        print {$fh} $sql_cmd . " -e \"DROP DATABASE IF EXISTS $tempdb;\"\n";
     }
-    
     print {$fh} "\n";
-    print {$fh} "# multi-way batch\n";
+
+    print {$fh} "REM multi-way batch\n";
     print {$fh} "perl $FindBin::Bin/../extra/multi_way_batch.pl"
         . " -d $name_str"
         . " -f $working_dir/$name_str"
-        . " -gff_file $new_gff_file"
-        . " --all_freq " . scalar @query_ids
-        . " -lt 10000 -st 100000 --parallel=4 --run all\n\n";
+        . " -gff_file "
+        . join( ",", @new_gff_files )
+        . " -lt 1000 -st 100000 --parallel=4 --run 1-3,10,21,30-32,40,41,43\n\n";
+
+    print {$fh} "cd ..\n\n";
 
     close $fh;
 }

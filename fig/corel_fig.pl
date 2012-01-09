@@ -92,6 +92,10 @@ for my $filename ( sort keys %{$charts} ) {
 
     # open xls file
     my $efile = file( $base_dir, $filename )->stringify;
+    if (! -e $efile) {
+        warn "File not exists: $efile\n";
+        next;
+    }
     my $workbook;
     unless ( $workbook = $excel->Workbooks->Open($efile) ) {
         die "Cannot open xls file\n";
@@ -125,6 +129,10 @@ for my $filename ( sort keys %{$ranges} ) {
 
     # open xls file
     my $efile = file( $base_dir, $filename )->stringify;
+    if (! -e $efile) {
+        warn "File not exists: $efile\n";
+        next;
+    }
     my $workbook;
     unless ( $workbook = $excel->Workbooks->Open($efile) ) {
         die "Cannot open xls file\n";

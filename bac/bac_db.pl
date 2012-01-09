@@ -30,7 +30,6 @@ my $stopwatch = AlignDB::Stopwatch->new(
 # running options
 my $strain_file  = $Config->{bac}{strain_file};
 my $seq_file     = $Config->{bac}{seq_file};
-my $species_file = $Config->{bac}{species_file};
 
 # Database init values
 my $server   = $Config->{database}{server};
@@ -84,11 +83,11 @@ $stopwatch->start_message("Init bac DB...");
     }
 }
 
+my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
+
 #----------------------------#
 # Filling table strain
 #----------------------------#
-my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
-
 {
     $stopwatch->block_message("Loading $strain_file");
 
@@ -104,65 +103,20 @@ my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
     $load_sth->finish;
 }
 
+#----------------------------#
+# Set gc=0 to null
+#----------------------------#
 {
-    $stopwatch->block_message("Update species and genus memberships");
-
-    # find species contains multiply strains
-    my %species_member_of;
-    my $species_sth = $dbh->prepare(
-        qq{
-        SELECT species, count(taxonomy_id)
-        FROM   strain
-        GROUP BY species
-        }
-    );
-    $species_sth->execute;
-    while ( my @row = $species_sth->fetchrow_array ) {
-        my ( $species, $count ) = @row;
-        $species_member_of{$species} = $count;
-    }
-    $species_sth->finish;
-
-    # find genus contains multiply species
-    my %genus_member_of;
-    my $genus_sth = $dbh->prepare(
-        qq{
-        SELECT genus, count(distinct species), count(taxonomy_id)
-        FROM   strain
-        GROUP BY genus
-        }
-    );
-    $genus_sth->execute;
-    while ( my @row = $genus_sth->fetchrow_array ) {
-        my ( $genus, $species_count, $strain_count ) = @row;
-        $genus_member_of{$genus} = [ $species_count, $strain_count ];
-    }
-    $genus_sth->finish;
-
+    $stopwatch->block_message("Set gc=0 to null");
+    
     my $update_sth = $dbh->prepare(
         qq{
-        UPDATE  strain
-        SET     species_member = ?,
-                genus_species_member = ?,
-                genus_strain_member = ?
-        WHERE   taxonomy_id = ?
+        update strain
+        set gc_content = null
+        where gc_content = 0
         }
     );
-    my $id_sth = $dbh->prepare(
-        qq{
-        SELECT taxonomy_id, species, genus
-        FROM   strain
-        }
-    );
-    $id_sth->execute;
-    while ( my @row = $id_sth->fetchrow_array ) {
-        my ( $taxonomy_id, $species, $genus ) = @row;
-        $update_sth->execute(
-            $species_member_of{$species},  $genus_member_of{$genus}->[0],
-            $genus_member_of{$genus}->[1], $taxonomy_id
-        );
-    }
-    $id_sth->finish;
+    $update_sth->execute;
     $update_sth->finish;
 }
 
@@ -182,42 +136,6 @@ my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
     );
     $load_sth->execute;
     $load_sth->finish;
-}
-
-#----------------------------#
-# Output a summary csv file
-#----------------------------#
-{
-    $stopwatch->block_message("Writing $species_file");
-
-    # prepare output csv file
-    my $csv = Text::CSV_XS->new( { binary => 1, eol => "\n" } );
-    open my $csv_fh, ">", $species_file or die "$species_file: $!";
-    my @headers
-        = qw{species chr_number avg_genome_size avg_gc species_member genus_species_member genus_strain_member};
-    $csv->print( $csv_fh, \@headers );
-
-    # print species' member, chr_number and genus_member
-    my $species_count_sth = $dbh->prepare(
-        qq{
-        SELECT  species,
-                number_of_chromosomes,
-                avg(genome_size),
-                avg(gc_content),
-                species_member,
-                genus_species_member,
-                genus_strain_member
-        FROM    strain
-        WHERE   number_of_chromosomes > 0
-        GROUP BY species
-        }
-    );
-    $species_count_sth->execute;
-    while ( my @row = $species_count_sth->fetchrow_array ) {
-        $csv->print( $csv_fh, \@row );
-    }
-    $species_count_sth->finish;
-    close $csv_fh;
 }
 
 #----------------------------#
@@ -283,6 +201,73 @@ my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
     for (@nok_ids) {
         $update_sth->execute($_);
     }
+    $update_sth->finish;
+}
+
+#----------------------------#
+# Count members
+#----------------------------#
+{
+    $stopwatch->block_message("Update species and genus memberships");
+
+    # find species contains multiply strains
+    my %species_member_of;
+    my $species_sth = $dbh->prepare(
+        qq{
+        SELECT species, count(taxonomy_id)
+        FROM   strain
+        WHERE seq_ok = 1
+        GROUP BY species
+        }
+    );
+    $species_sth->execute;
+    while ( my @row = $species_sth->fetchrow_array ) {
+        my ( $species, $count ) = @row;
+        $species_member_of{$species} = $count;
+    }
+    $species_sth->finish;
+
+    # find genus contains multiply species
+    my %genus_member_of;
+    my $genus_sth = $dbh->prepare(
+        qq{
+        SELECT genus, count(distinct species), count(taxonomy_id)
+        FROM   strain
+        WHERE seq_ok = 1
+        GROUP BY genus
+        }
+    );
+    $genus_sth->execute;
+    while ( my @row = $genus_sth->fetchrow_array ) {
+        my ( $genus, $species_count, $strain_count ) = @row;
+        $genus_member_of{$genus} = [ $species_count, $strain_count ];
+    }
+    $genus_sth->finish;
+
+    my $update_sth = $dbh->prepare(
+        qq{
+        UPDATE  strain
+        SET     species_member = ?,
+                genus_species_member = ?,
+                genus_strain_member = ?
+        WHERE   taxonomy_id = ?
+        }
+    );
+    my $id_sth = $dbh->prepare(
+        qq{
+        SELECT taxonomy_id, species, genus
+        FROM   strain
+        }
+    );
+    $id_sth->execute;
+    while ( my @row = $id_sth->fetchrow_array ) {
+        my ( $taxonomy_id, $species, $genus ) = @row;
+        $update_sth->execute(
+            $species_member_of{$species},  $genus_member_of{$genus}->[0],
+            $genus_member_of{$genus}->[1], $taxonomy_id
+        );
+    }
+    $id_sth->finish;
     $update_sth->finish;
 }
 

@@ -195,6 +195,13 @@ sub write_row_direct {
     my $sheet_row = $option->{sheet_row};
     my $sheet_col = $option->{sheet_col};
 
+    # query name
+    my $query_name = $option->{query_name};
+    if ( defined $query_name ) {
+        $sheet->write( $sheet_row, $sheet_col - 1, $query_name,
+            $fmt->{NAME} );
+    }
+
     # array_ref
     my $row = $option->{row};
 

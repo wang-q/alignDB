@@ -32,8 +32,11 @@ my $stopwatch = AlignDB::Stopwatch->new(
 # run in parallel mode
 my $parallel = 1;
 
+my $axt_threshold = $Config->{generate}{axt_threshold};
+my $sum_threshold = $Config->{stat}{sum_threshold};
+
 # running options
-my $bz        = "$FindBin::Bin/../../blastz/bz.pl";
+my $bz = "$FindBin::Bin/../../blastz/bz.pl";
 my $pair_file;
 
 my $dir_as_taxon;
@@ -42,12 +45,14 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'           => \$help,
-    'man'              => \$man,
-    'b|bz=s'           => \$bz,
-    'p|parallel=i'     => \$parallel,
-    'f|pair_file=s'    => \$pair_file,
-    'd|dir_as_taxon=s' => \$dir_as_taxon,
+    'help|?'             => \$help,
+    'man'                => \$man,
+    'b|bz=s'             => \$bz,
+    'p|parallel=i'       => \$parallel,
+    'at|axt_threshold=i' => \$axt_threshold,
+    'st|sum_threshold=i' => \$sum_threshold,
+    'f|pair_file=s'      => \$pair_file,
+    'd|dir_as_taxon=s'   => \$dir_as_taxon,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -64,13 +69,22 @@ open my $fh, '>', $report;
 my $tt = Template->new;
 
 my $dispatch = {
-    0 =>
-        qq{ perl $bz -dt [% tfile %] -dq [% qfile %] -dl [% ldir %] -s set02 --parallel [% parallel %]},
-    1 => qq{ perl $FindBin::Bin/../init/init_alignDB.pl --db [% db %] },
-    2 =>
-        qq{ perl $FindBin::Bin/../init/gen_alignDB.pl --db [% db %] -a [% ldir %] [% tq %] --length 1000 --parallel [% parallel %]},
-    3 =>
-        qq{ perl $FindBin::Bin/../stat/common_stat_factory.pl --db [% db %] -o [% common_file %] -threshold 100000 },
+    0 => "perl $bz"
+        . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
+        . " -s set02 --parallel [% parallel %]",
+    1 => "perl $FindBin::Bin/../init/init_alignDB.pl" . " --db [% db %] ",
+    2 => "perl $FindBin::Bin/../init/gen_alignDB.pl"
+        . " --db [% db %]"
+        . " -a [% ldir %] [% tq %]"
+        . " --length [% at %]"
+        . " --parallel [% parallel %]",
+    21 => "perl $FindBin::Bin/../init/update_sw_cv.pl"
+        . " --db [% db %]"
+        . " --parallel [% parallel %]",
+    40 => "perl $FindBin::Bin/../stat/common_stat_factory.pl"
+        . " --db [% db %]"
+        . " -o [% common_file %]"
+        . " -threshold [% st %]",
 };
 
 #----------------------------#
@@ -99,7 +113,7 @@ for (@lines) {
     my $common_file = File::Spec->catfile( $working_dir, "$db.common.xlsx" );
 
     # use the dispatch template to generate $cmd
-    for my $step ( 0 .. 3 ) {
+    for my $step ( 0 .. 2, 21, 40 ) {
 
         my $cmd;
         $tt->process(
@@ -111,6 +125,8 @@ for (@lines) {
                 tq          => $tq,
                 parallel    => $parallel,
                 common_file => $common_file,
+                at          => $axt_threshold,
+                st          => $sum_threshold,
             },
             \$cmd
         ) or die Template->error;

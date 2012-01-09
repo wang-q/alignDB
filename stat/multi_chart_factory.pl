@@ -44,6 +44,9 @@ my $excel_obj = AlignDB::Excel->new( infile => $infile, );
 if ($outfile) {
     $excel_obj->outfile($outfile);
 }
+else {
+    $outfile = $excel_obj->outfile;
+}
 
 #----------------------------------------------------------#
 # START
@@ -76,7 +79,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             Height        => 200,
             Width         => 320,
             Top           => 12.75,
-            Left          => 520,
+            Left          => 650,
         );
         $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -95,46 +98,38 @@ my @sheet_names = @{ $excel_obj->sheet_names };
     #----------------------------#
     # worksheet -- combined_pigccv
     #----------------------------#
-    my $sheet_name = 'combined_pigccv';
-    my %option     = (
-        chart_serial => 1,
-        x_column     => 1,
-        y_column     => 2,
-        first_row    => 3,
-        last_row     => 33,
-        x_max_scale  => 30,
-        x_title      => "Distance to indels (d1)",
-        y_title      => "Nucleotide diversity",
-        Height       => 200,
-        Width        => 320,
-        Top          => 12.75,
-        Left         => 520,
-    );
-    $excel_obj->draw_y( $sheet_name, \%option );
+    for (qw{combined_pigccv combined_pure_coding combined_pure_noncoding}) {
+        my $sheet_name = $_;
+        my %option     = (
+            chart_serial => 1,
+            x_column     => 1,
+            y_column     => 2,
+            first_row    => 3,
+            last_row     => 33,
+            x_max_scale  => 30,
+            x_title      => "Distance to indels (d1)",
+            y_title      => "Nucleotide diversity",
+            Height       => 200,
+            Width        => 320,
+            Top          => 12.75,
+            Left         => 650,
+        );
+        $excel_obj->draw_y( $sheet_name, \%option );
 
-    # chart 2
-    $option{chart_serial}++;
-    $option{y_column} = 4;
-    $option{y_title}  = "GC proportion";
-    $option{Top} += $option{Height} + 12.75;
-    $excel_obj->draw_y( $sheet_name, \%option );
+        # chart 2
+        $option{chart_serial}++;
+        $option{y_column} = 4;
+        $option{y_title}  = "GC proportion";
+        $option{Top} += $option{Height} + 12.75;
+        $excel_obj->draw_y( $sheet_name, \%option );
 
-    # chart 3
-    $option{chart_serial}++;
-    $option{y_column} = 6;
-    $option{y_title}  = "CV";
-    $option{Top} += $option{Height} + 12.75;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- combined_pure_coding
-    #----------------------------#
-    $sheet_name           = 'combined_pure_coding';
-    $option{chart_serial} = 1;
-    $option{y_column}     = 2;
-    $option{y_title}      = "Nucleotide diversity";
-    $option{Top}          = 12.75;
-    $excel_obj->draw_y( $sheet_name, \%option );
+        # chart 3
+        $option{chart_serial}++;
+        $option{y_column} = 6;
+        $option{y_title}  = "CV";
+        $option{Top} += $option{Height} + 12.75;
+        $excel_obj->draw_y( $sheet_name, \%option );
+    }
 }
 
 {
@@ -157,7 +152,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             Height       => 200,
             Width        => 320,
             Top          => 12.75,
-            Left         => 520,
+            Left         => 650,
         );
         $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -180,8 +175,8 @@ my @sheet_names = @{ $excel_obj->sheet_names };
 #----------------------------------------------------------#
 # POST Processing
 #----------------------------------------------------------#
-# add time stamp to "summary" sheet
-$excel_obj->time_stamp("summary") if $time_stamp;
+# add time stamp to "basic" sheet
+$excel_obj->time_stamp("basic") if $time_stamp;
 
 # add an index sheet
 $excel_obj->add_index_sheet if $add_index_sheet;

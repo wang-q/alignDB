@@ -18,19 +18,19 @@ use AlignDB::SQL::Library;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new();
+my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 # stat parameter
-my $run           = $Config->{stat}->{run};
-my $sum_threshold = $Config->{stat}->{sum_threshold};
+my $run           = $Config->{stat}{run};
+my $sum_threshold = $Config->{stat}{sum_threshold};
 my $outfile       = "";
 
 my $man  = 0;
@@ -79,7 +79,7 @@ else {
 #----------------------------------------------------------#
 # Init section
 #----------------------------------------------------------#
-my $stopwatch = AlignDB::Stopwatch->new();
+my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
 my $write_obj = AlignDB::WriteExcel->new(
@@ -91,77 +91,6 @@ my $write_obj = AlignDB::WriteExcel->new(
 
 my $lib = "$FindBin::Bin/sql.lib";
 my $sql_file = AlignDB::SQL::Library->new( lib => $lib );
-
-#----------------------------------------------------------#
-# worksheet -- summary
-#----------------------------------------------------------#
-my $summary = sub {
-    my $sheet_name = 'summary';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # write header
-        my $query_name = 'Item';
-        my @headers    = qw{AVG MIN MAX STD COUNT SUM};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            query_name => $query_name,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
-
-    my $column_stat = sub {
-        my $query_name = shift;
-        my $table      = shift;
-        my $column     = shift;
-        my $where      = shift;
-
-        my $sql_query = q{
-            # summray stat of _COLUMN_
-            SELECT AVG(_COLUMN_) AVG,
-                   MIN(_COLUMN_) MIN,
-                   MAX(_COLUMN_) MAX,
-                   STD(_COLUMN_) STD,
-                   COUNT(_COLUMN_) COUNT,
-                   SUM(_COLUMN_) SUM
-            FROM _TABLE_
-        };
-
-        $sql_query =~ s/_TABLE_/$table/g;
-        $sql_query =~ s/_COLUMN_/$column/g;
-        $sql_query .= $where if $where;
-
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-        );
-
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    };
-
-    {    # write contents
-        $column_stat->( 'align_length',       'align', 'align_length' );
-        $column_stat->( 'indel_length',       'indel', 'indel_length' );
-        $column_stat->( 'indel_left_extand',  'indel', 'left_extand' );
-        $column_stat->( 'indel_right_extand', 'indel', 'right_extand' );
-        $column_stat->(
-            'indel_windows', 'isw',
-            'isw_length',    'WHERE isw_distance <= 0'
-        );
-        $column_stat->(
-            'indel_free_windows', 'isw',
-            'isw_length',         'WHERE isw_distance > 0'
-        );
-    }
-
-    print "Sheet \"$sheet_name\" has been generated.\n";
-};
 
 #----------------------------------------------------------#
 # worksheet -- basic
@@ -233,7 +162,7 @@ my $basic = sub {
     }
 
     {    # write contents
-        my $query_name = 'Indels / 100 bp';
+        my $query_name = 'Indels per 100 bp';
         my $sql_query  = q{
             SELECT  SUM(i.indel) / SUM(a.comparable_bases) * 100.0
             FROM    align a,
@@ -285,6 +214,77 @@ my $basic = sub {
             sheet_col  => $sheet_col,
         );
         ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
+# worksheet -- summary
+#----------------------------------------------------------#
+my $summary = sub {
+    my $sheet_name = 'summary';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my $query_name = 'Item';
+        my @headers    = qw{AVG MIN MAX STD COUNT SUM};
+        ( $sheet_row, $sheet_col ) = ( 0, 1 );
+        my %option = (
+            query_name => $query_name,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            header     => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    my $column_stat = sub {
+        my $query_name = shift;
+        my $table      = shift;
+        my $column     = shift;
+        my $where      = shift;
+
+        my $sql_query = q{
+            # summray stat of _COLUMN_
+            SELECT AVG(_COLUMN_) AVG,
+                   MIN(_COLUMN_) MIN,
+                   MAX(_COLUMN_) MAX,
+                   STD(_COLUMN_) STD,
+                   COUNT(_COLUMN_) COUNT,
+                   SUM(_COLUMN_) SUM
+            FROM _TABLE_
+        };
+
+        $sql_query =~ s/_TABLE_/$table/g;
+        $sql_query =~ s/_COLUMN_/$column/g;
+        $sql_query .= $where if $where;
+
+        my %option = (
+            query_name => $query_name,
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+        );
+
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    };
+
+    {    # write contents
+        $column_stat->( 'align_length',       'align', 'align_length' );
+        $column_stat->( 'indel_length',       'indel', 'indel_length' );
+        $column_stat->( 'indel_left_extand',  'indel', 'left_extand' );
+        $column_stat->( 'indel_right_extand', 'indel', 'right_extand' );
+        $column_stat->(
+            'indel_windows', 'isw',
+            'isw_length',    'WHERE isw_distance <= 0'
+        );
+        $column_stat->(
+            'indel_free_windows', 'isw',
+            'isw_length',         'WHERE isw_distance > 0'
+        );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -2647,7 +2647,7 @@ my $align_paralog = sub {
 };
 
 foreach my $n (@tasks) {
-    if ( $n == 1 ) { &$summary;  &$basic;             next; }
+    if ( $n == 1 ) { &$basic;    &$summary;           next; }
     if ( $n == 2 ) { &$distance; &$combined_distance; next; }
     if ( $n == 3 )  { &$group_distance;     next; }
     if ( $n == 4 )  { &$distance_coding;    &$distance_non_coding; next; }

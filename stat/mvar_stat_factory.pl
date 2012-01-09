@@ -389,7 +389,7 @@ my $indel_list = sub {
 
     {    # write header
         my @headers = qw{indel_id taxon_id chr_name indel_start indel_end
-            indel_length indel_seq indel_gc indel_freq indel_type
+            indel_length indel_seq indel_gc indel_freq indel_occured indel_type
             indel_slippage indel_coding indel_repeats};
         ( $sheet_row, $sheet_col ) = ( 0, 0 );
         my %option = (
@@ -405,7 +405,7 @@ my $indel_list = sub {
         my $sql_query = q{
             SELECT  i.indel_id, ta.taxon_id, c.chr_name,
                     i.indel_start, i.indel_end, i.indel_length, i.indel_seq,
-                    i.indel_gc, i.indel_freq, i.indel_type,
+                    i.indel_gc, i.indel_freq, i.indel_occured, i.indel_type,
                     i.indel_slippage, i.indel_coding, i.indel_repeats
             FROM    indel i, align a, sequence s,
                     target t, chromosome c, taxon ta

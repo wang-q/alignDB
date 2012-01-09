@@ -24,6 +24,13 @@ use AlignDB::Multi;
 my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
+# record ARGV and Config
+my $stopwatch = AlignDB::Stopwatch->new(
+    program_name => $0,
+    program_argv => [@ARGV],
+    program_conf => $Config,
+);
+
 # Database init values
 my $server   = $Config->{database}{server};
 my $port     = $Config->{database}{port};
@@ -53,7 +60,6 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 # init
 #----------------------------------------------------------#
-my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Update dnds info of $db...");
 
 my $obj;
@@ -80,12 +86,12 @@ my $codon_obj = AlignDB::Codon->new;
 
 # add columns
 {
-    $obj->create_column( "snp", "exon_id",          "INT" );
-    $obj->create_column( "snp", "snp_codon_pos",    "INT" );
-    $obj->create_column( "snp", "snp_codons",  "CHAR(128)" );
-    $obj->create_column( "snp", "snp_syn",          "DOUBLE" );
-    $obj->create_column( "snp", "snp_nsy",          "DOUBLE" );
-    $obj->create_column( "snp", "snp_stop",         "DOUBLE" );
+    $obj->create_column( "snp", "exon_id",       "INT" );
+    $obj->create_column( "snp", "snp_codon_pos", "INT" );
+    $obj->create_column( "snp", "snp_codons",    "CHAR(128)" );
+    $obj->create_column( "snp", "snp_syn",       "DOUBLE" );
+    $obj->create_column( "snp", "snp_nsy",       "DOUBLE" );
+    $obj->create_column( "snp", "snp_stop",      "DOUBLE" );
     print "Table snp altered\n";
 
     $obj->create_column( "isw", "isw_syn",  "DOUBLE" );
@@ -408,6 +414,16 @@ $snp_sth->finish;
 }
 
 $stopwatch->end_message;
+
+# store program running meta info to database
+# this AlignDB object is just for storing meta info
+END {
+    AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    )->add_meta_stopwatch($stopwatch);
+}
 exit;
 
 __END__

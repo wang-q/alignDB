@@ -33,23 +33,18 @@ GetOptions(
 pod2usage(1) if $help;
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
-
 #----------------------------------------------------------#
 # Init section
 #----------------------------------------------------------#
 my $stopwatch = AlignDB::Stopwatch->new();
 $stopwatch->start_message("Processing $infile...");
 
-my $excel_obj;
+my $excel_obj = AlignDB::Excel->new( infile => $infile, );
 if ($outfile) {
-    $excel_obj = AlignDB::Excel->new(
-        infile  => $infile,
-        outfile => $outfile,
-    );
+    $excel_obj->outfile($outfile);
 }
 else {
-    $excel_obj = AlignDB::Excel->new( infile => $infile, );
-    $outfile = $excel_obj->get_outfile;
+    $outfile = $excel_obj->outfile;
 }
 
 #----------------------------------------------------------#
@@ -60,54 +55,82 @@ if ($jc_correction) {
     $excel_obj->jc_correction;
 }
 
-# add time stamp
-if ($time_stamp) {
-    $excel_obj->time_stamp("summary");
-}
-
+#----------------------------------------------------------#
 # draw charts section
-#
+#----------------------------------------------------------#
+my @sheet_names = @{ $excel_obj->sheet_names };
 
 {
 
     #----------------------------#
-    # worksheet -- gene_ess, exon_ess, exon_gc
+    # worksheet -- dnds
     #----------------------------#
-    my @sheets = qw{
-        distance
-    };
+    my @sheets = grep {/^combined_dnds/} @sheet_names;
 
     foreach (@sheets) {
         my $sheet_name = $_;
-        #my $x_title = /gene/ ? "Distance to gene"
-        #    : /exon/ ? "Distance to exon"
-        #    :          "Distance to coding";
-        my %option = (
-            chart_serial => 1,
-            x_column     => 1,
-            y_column     => 3,
+        my %option     = (
+            chart_serial  => 1,
+            x_column      => 1,
+            y_column      => 3,
             y_last_column => 4,
-            first_row    => 3,
-            last_row     => 33,
-            x_min_scale  => 0,
-            x_max_scale  => 30,
-            y_scale_unit => 0.005,
-            x_title      => "Distance to indel",
-            y_title      => "Syn - Non-syn",
-            Height       => 283.7,
-            Width        => 453.9,
-            Top          => 12.75,
-            Left         => 400,
+            first_row     => 3,
+            last_row      => 33,
+            x_min_scale   => 0,
+            x_max_scale   => 30,
+            x_title       => "Distance to indels (d1)",
+            y_title       => "Syn - Nonsyn",
+            Height        => 200,
+            Width         => 320,
+            Top           => 12.75,
+            Left          => 550,
         );
 
         $excel_obj->draw_y( $sheet_name, \%option );
 
         # chart 2
         $option{chart_serial}++;
-        $option{y_column}     = 7;
+        $option{y_column}      = 7;
         $option{y_last_column} = 7;
-        $option{y_scale_unit} = 0.01;
-        $option{y_title}      = "dn/ds";
+        $option{y_title}       = "dn/ds";
+        $option{Top} += $option{Height} + 12.75;
+        $excel_obj->draw_y( $sheet_name, \%option );
+    }
+}
+
+{
+
+    #----------------------------#
+    # worksheet -- dnds
+    #----------------------------#
+    my @sheets = grep {/^dnds_freq/} @sheet_names;
+
+    foreach (@sheets) {
+        my $sheet_name = $_;
+        my %option     = (
+            chart_serial  => 1,
+            x_column      => 1,
+            y_column      => 3,
+            y_last_column => 4,
+            first_row     => 3,
+            last_row      => 8,
+            x_min_scale   => 0,
+            x_max_scale   => 5,
+            x_title       => "Distance to indels (d1)",
+            y_title       => "Syn - Nonsyn",
+            Height        => 200,
+            Width         => 320,
+            Top           => 12.75,
+            Left          => 550,
+        );
+
+        $excel_obj->draw_y( $sheet_name, \%option );
+
+        # chart 2
+        $option{chart_serial}++;
+        $option{y_column}      = 7;
+        $option{y_last_column} = 7;
+        $option{y_title}       = "dn/ds";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
     }
@@ -115,7 +138,7 @@ if ($time_stamp) {
 
 print "$outfile has been generated.\n";
 
-$stopwatch->end_message();
+$stopwatch->end_message;
 exit;
 
 __END__

@@ -9,6 +9,8 @@ use YAML qw(Dump Load DumpFile LoadFile);
 
 use Bio::Tools::GFF;
 
+use File::Basename;
+
 use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
@@ -43,7 +45,7 @@ my $parallel = $Config->{feature}->{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{feature}->{batch};
 
-my $gff_file;
+my $gff_files;
 
 my $man  = 0;
 my $help = 0;
@@ -56,7 +58,7 @@ GetOptions(
     'db=s'       => \$db,
     'username=s' => \$username,
     'password=s' => \$password,
-    'gff_file=s' => \$gff_file,
+    'gff_file=s' => \$gff_files,      # support multiply file, seperated by ,
     'parallel=i' => \$parallel,
     'batch=i'    => \$batch_number,
 ) or pod2usage(2);
@@ -70,16 +72,23 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 # other objects are initiated in subroutines
 $stopwatch->start_message("Update annotations of $db...");
 
-my $gff_obj = Bio::Tools::GFF->new(
-    -file        => $gff_file,
-    -gff_version => 3
-);
+my $cds_set_of = {};
+for my $file ( split /\,/, $gff_files ) {
 
-my $cds_set = AlignDB::IntSpan->new;
-while ( my $feature = $gff_obj->next_feature ) {
-    if ( $feature->primary_tag eq 'CDS' ) {
-        $cds_set->add_range( $feature->start, $feature->end );
+    my $basename = basename( $file, '.gff', '.gff3' );
+    print "Loading annotations for [$basename]\n";
+    my $gff_obj = Bio::Tools::GFF->new(
+        -file        => $file,
+        -gff_version => 3
+    );
+
+    my $cds_set = AlignDB::IntSpan->new;
+    while ( my $feature = $gff_obj->next_feature ) {
+        if ( $feature->primary_tag eq 'CDS' ) {
+            $cds_set->add_range( $feature->start, $feature->end );
+        }
     }
+    $cds_set_of->{$basename} = $cds_set;
 }
 
 #----------------------------#
@@ -245,8 +254,8 @@ my $worker = sub {
             my $align_chr_start   = $chr_pos[1];
             my $align_chr_end     = $chr_pos[$align_length];
             my $align_chr_runlist = "$align_chr_start-$align_chr_end";
-            my $align_coding
-                = feature_portion( $cds_set, $align_chr_runlist );
+            my $align_coding      = feature_portion( $cds_set_of->{$chr_name},
+                $align_chr_runlist );
 
             $align_feature_sth->execute( $align_coding, undef, undef,
                 $align_id, );
@@ -265,8 +274,8 @@ my $worker = sub {
 
             {
                 my $indel_chr_runlist = "$indel_chr_start-$indel_chr_end";
-                my $indel_coding
-                    = feature_portion( $cds_set, $indel_chr_runlist );
+                my $indel_coding = feature_portion( $cds_set_of->{$chr_name},
+                    $indel_chr_runlist );
 
                 $indel_feature_sth->execute( $indel_coding, undef, $indel_id,
                 );
@@ -285,7 +294,8 @@ my $worker = sub {
 
                     my $isw_chr_runlist = "$isw_chr_start-$isw_chr_end";
                     my $isw_coding
-                        = feature_portion( $cds_set, $isw_chr_runlist );
+                        = feature_portion( $cds_set_of->{$chr_name},
+                        $isw_chr_runlist );
 
                     $isw_feature_sth->execute( $isw_coding, undef, $isw_id, );
                 }
@@ -306,7 +316,8 @@ my $worker = sub {
                 my $snp_chr_pos = $chr_pos[$snp_pos];
 
                 # coding and repeats
-                my $snp_coding = $cds_set->member($snp_chr_pos);
+                my $snp_coding
+                    = $cds_set_of->{$chr_name}->member($snp_chr_pos);
 
                 # cpg
                 my $snp_cpg = 0;

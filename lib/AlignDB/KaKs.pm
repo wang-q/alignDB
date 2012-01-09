@@ -41,7 +41,8 @@ sub BUILD {
         $self->seq_of($seqs);
     }
 
-    my $aln_factory = Bio::Tools::Run::Alignment::Clustalw->new;
+    my $aln_factory
+        = Bio::Tools::Run::Alignment::Clustalw->new( -verbose => -1 );
     unless ( $aln_factory->executable ) {
         confess "Could not find the executable for clustalw\n";
     }
@@ -51,7 +52,8 @@ sub BUILD {
         -params => {
             'runmode' => -2,
             'seqtype' => 1,
-        }
+        },
+        -verbose => -1,
     );
     unless ( $kaks_factory->executable ) {
         die "Could not find the executable for codeml\n";
@@ -126,7 +128,7 @@ sub run {
         }
     }
     $self->{results} = \@results;
-    
+
     return;
 }
 

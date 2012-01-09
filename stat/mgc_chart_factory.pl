@@ -52,6 +52,9 @@ my $excel_obj = AlignDB::Excel->new( infile => $infile, );
 if ($outfile) {
     $excel_obj->outfile($outfile);
 }
+else {
+    $outfile = $excel_obj->outfile;
+}
 
 #----------------------------------------------------------#
 # START
@@ -67,7 +70,7 @@ $excel_obj->jc_correction if $jc_correction;
     #----------------------------#
     # worksheet -- segment_gc_indel_
     #----------------------------#
-    foreach ( 'A', 0 .. 4 ) {
+    for ( 'A', 0 .. 4 ) {
         my $sheet_name = 'segment_gc_indel_' . $_;
         my %option     = (
             chart_serial => 1,
@@ -78,12 +81,13 @@ $excel_obj->jc_correction if $jc_correction;
             Height       => 200,
             Width        => 320,
             Top          => 12.75,
-            Left         => 400,
+            Left         => 650,
             without_line => 1,
             marker_size  => 5,
             add_trend    => 1,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 2
         $option{chart_serial}++;
@@ -91,6 +95,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{y_title}  = "Indel per 100bp";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 3
         $option{chart_serial}++;
@@ -98,12 +103,13 @@ $excel_obj->jc_correction if $jc_correction;
         $option{y_title}  = "GC proportion CV";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
     }
 
     #----------------------------#
     # worksheet -- segment_std_indel_
     #----------------------------#
-    foreach ( 'A', 0 .. 4 ) {
+    for ( 'A', 0 .. 4 ) {
         my $sheet_name = 'segment_std_indel_' . $_;
         my %option     = (
             chart_serial => 1,
@@ -114,12 +120,13 @@ $excel_obj->jc_correction if $jc_correction;
             Height       => 200,
             Width        => 320,
             Top          => 12.75,
-            Left         => 400,
+            Left         => 650,
             without_line => 1,
             marker_size  => 5,
             add_trend    => 1,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 2
         $option{chart_serial}++;
@@ -127,6 +134,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{y_title}  = "Indel per 100bp";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 3
         $option{chart_serial}++;
@@ -134,12 +142,13 @@ $excel_obj->jc_correction if $jc_correction;
         $option{y_title}  = "GC proportion";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
     }
 
     #----------------------------#
     # worksheet -- segment_cv_indel_
     #----------------------------#
-    foreach ( 'A', 0 .. 4 ) {
+    for ( 'A', 0 .. 4 ) {
         my $sheet_name = 'segment_cv_indel_' . $_;
         my %option     = (
             chart_serial => 1,
@@ -150,12 +159,13 @@ $excel_obj->jc_correction if $jc_correction;
             Height       => 200,
             Width        => 320,
             Top          => 12.75,
-            Left         => 400,
+            Left         => 650,
             without_line => 1,
             marker_size  => 5,
             add_trend    => 1,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 2
         $option{chart_serial}++;
@@ -163,6 +173,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{y_title}  = "Indel per 100bp";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 3
         $option{chart_serial}++;
@@ -170,12 +181,13 @@ $excel_obj->jc_correction if $jc_correction;
         $option{y_title}  = "GC proportion";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
     }
 
     #----------------------------#
     # worksheet -- segment_mdcw_indel_
     #----------------------------#
-    foreach ( 'A', 0 .. 4 ) {
+    for ( 'A', 0 .. 4 ) {
         my $sheet_name = 'segment_mdcw_indel_' . $_;
         my %option     = (
             chart_serial => 1,
@@ -186,12 +198,13 @@ $excel_obj->jc_correction if $jc_correction;
             Height       => 200,
             Width        => 320,
             Top          => 12.75,
-            Left         => 400,
+            Left         => 650,
             without_line => 1,
             marker_size  => 5,
             add_trend    => 1,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 2
         $option{chart_serial}++;
@@ -199,6 +212,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{y_title}  = "Indel per 100bp";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 3
         $option{chart_serial}++;
@@ -206,6 +220,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{y_title}  = "GC proportion";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
     }
 }
 

@@ -22,17 +22,17 @@ my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 # stat parameter
-my $run     = $Config->{stat}->{run};
+my $run     = $Config->{stat}{run};
 my $outfile = "";
 
-my $all_freq = 6;
+my $all_freq;
 
 my $help = 0;
 my $man  = 0;
@@ -94,11 +94,169 @@ my $write_obj = AlignDB::WriteExcel->new(
 my $lib = "$FindBin::Bin/sql.lib";
 my $sql_file = AlignDB::SQL::Library->new( lib => $lib );
 
+#----------------------------#
+# count freq
+#----------------------------#
+if ( !$all_freq ) {
+    my $dbh = $write_obj->dbh;
+
+    my $sql_query = q{
+            SELECT DISTINCT COUNT(q.query_id) + 1
+            FROM  query q, sequence s
+            WHERE q.seq_id = s.seq_id
+            GROUP BY s.align_id
+        };
+    my $sth = $dbh->prepare($sql_query);
+
+    my @counts;
+    $sth->execute;
+    while ( my ($count) = $sth->fetchrow_array ) {
+        push @counts, $count;
+    }
+    if ( scalar @counts > 1 ) {
+        die "Database corrupts, freqs are not consistent\n";
+    }
+
+    $all_freq = $counts[0];
+}
+
 my @freqs;
 foreach ( 1 .. $all_freq - 1 ) {
     my $name = $_ . "of" . $all_freq;
     push @freqs, [ $name, $_, $_ ];
 }
+
+#----------------------------------------------------------#
+# worksheet -- basic
+#----------------------------------------------------------#
+my $basic = sub {
+    my $sheet_name = 'basic';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my $query_name = 'Item';
+        my @headers    = qw{VALUE};
+        ( $sheet_row, $sheet_col ) = ( 0, 1 );
+        my %option = (
+            query_name => $query_name,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            header     => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $query_name = 'No. of strains';
+        my @headers    = ($all_freq);
+        my %option     = (
+            query_name => $query_name,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            row        => [$all_freq],
+        );
+        ($sheet_row) = $write_obj->write_row_direct( $sheet, \%option );
+    }
+
+    {    # write contents
+        my $query_name = 'Target length (Mb)';
+        my $sql_query  = q{
+            SELECT  SUM(s.seq_length) / 1000000.00
+            FROM    sequence s, target t
+            WHERE   s.seq_id = t.seq_id
+        };
+        my %option = (
+            query_name => $query_name,
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    {    # write contents
+        my $query_name = 'Aligned length (Mb)';
+        my $sql_query  = q{
+            SELECT  SUM(a.align_length) / 1000000.00
+            FROM    align a
+        };
+        my %option = (
+            query_name => $query_name,
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    {    # write contents
+        my $query_name = 'Indels per 100 bp';
+        my $sql_query  = q{
+            SELECT  SUM(a.align_indels) / SUM(a.align_comparables) * 100.0
+            FROM    align a
+        };
+        my %option = (
+            query_name => $query_name,
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    {    # write contents
+        my $query_name = 'SNPs per 100 bp';
+        my $sql_query  = q{
+            SELECT  SUM(a.align_differences) / SUM(a.align_comparables) * 100.0
+            FROM    align a
+        };
+        my %option = (
+            query_name => $query_name,
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    {    # write contents
+        my $query_name = 'D on average';
+        my $sql_query  = q{
+            SELECT -0.75 * log2( 1 - ( 4.0 / 3.0 ) * original.Pi )
+            FROM (
+                SELECT SUM(a.align_differences) * 1.0 / SUM(a.align_comparables) Pi
+                FROM align a
+                ) original
+        };
+        my %option = (
+            query_name => $query_name,
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    {    # write contents
+        my $query_name = 'GC-content';
+        my $sql_query  = q{
+            SELECT sum(a.align_length * a.align_average_gc )
+                   / sum(a.align_length)
+            FROM align a
+        };
+        my %option = (
+            query_name => $query_name,
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
 
 #----------------------------------------------------------#
 # worksheet -- summary
@@ -172,10 +330,10 @@ my $summary = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- summary
+# worksheet -- summary_indel
 #----------------------------------------------------------#
-my $summary_limit = sub {
-    my $sheet_name = 'summary_limit';
+my $summary_indel = sub {
+    my $sheet_name = 'summary_indel';
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
@@ -231,7 +389,7 @@ my $summary_limit = sub {
 
         # all indels
         $column_stat->(
-            'indel_length',   'indel i',
+            'all',            'indel i',
             'i.indel_length', q{WHERE i.indel_slippage = 0}
         );
 
@@ -239,7 +397,7 @@ my $summary_limit = sub {
             my ( $name, $lower, $upper ) = @$level;
 
             $column_stat->(
-                'indel_freq_' . $name, 'indel i',
+                'all_' . $name, 'indel i',
                 'i.indel_length',
                 qq{WHERE i.indel_freq >= $lower
                     AND i.indel_freq <= $upper
@@ -251,7 +409,7 @@ my $summary_limit = sub {
 
         # insertions
         $column_stat->(
-            'indel_ins',
+            'ins',
             'indel i',
             'i.indel_length',
             q{WHERE i.indel_slippage = 0
@@ -262,7 +420,7 @@ my $summary_limit = sub {
             my ( $name, $lower, $upper ) = @$level;
 
             $column_stat->(
-                'indel_ins_freq_' . $name, 'indel i',
+                'ins_' . $name, 'indel i',
                 'i.indel_length',
                 qq{WHERE i.indel_freq >= $lower
                     AND i.indel_freq <= $upper
@@ -275,7 +433,7 @@ my $summary_limit = sub {
 
         # deletions
         $column_stat->(
-            'indel_length_deletion',
+            'del',
             'indel i',
             'i.indel_length',
             q{WHERE i.indel_slippage = 0
@@ -286,7 +444,7 @@ my $summary_limit = sub {
             my ( $name, $lower, $upper ) = @$level;
 
             $column_stat->(
-                'indel_del_freq_' . $name, 'indel i',
+                'del_' . $name, 'indel i',
                 'i.indel_length',
                 qq{WHERE i.indel_freq >= $lower
                     AND i.indel_freq <= $upper
@@ -834,7 +992,11 @@ my $indel_length_insdel = sub {
     }
 };
 
-my $combined_distance = sub {
+my $combined_pigccv = sub {
+
+    #----------------------------------------------------------#
+    # worksheet -- combined_pigccv
+    #----------------------------------------------------------#
 
     # make combine
     my @combined;
@@ -849,10 +1011,6 @@ my $combined_distance = sub {
         );
         @combined = @{ $write_obj->make_combine( \%option ) };
     }
-
-    #----------------------------------------------------------#
-    # worksheet -- combined_pigccv
-    #----------------------------------------------------------#
     {
         my $sheet_name = 'combined_pigccv';
         my $sheet;
@@ -885,11 +1043,11 @@ my $combined_distance = sub {
                 FROM isw
                 WHERE isw_distance IN
             };
-            my %option   = (
-                sql_query     => $sql_query,
-                sheet_row   => $sheet_row,
-                sheet_col   => $sheet_col,
-                combined    => \@combined,
+            my %option = (
+                sql_query => $sql_query,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                combined  => \@combined,
             );
             ($sheet_row)
                 = $write_obj->write_content_combine( $sheet, \%option );
@@ -898,20 +1056,19 @@ my $combined_distance = sub {
         print "Sheet \"$sheet_name\" has been generated.\n";
     }
 
+    #----------------------------------------------------------#
+    # worksheet -- combined_pure_coding
+    #----------------------------------------------------------#
+
     # make combine
     @combined = ();
     {
         my $sql_query = q{
-                SELECT
-                    i.isw_distance,
-                    COUNT(*) COUNT
-                FROM
-                    (SELECT i.isw_id, i.isw_distance,
-                            ifnull(i.isw_pi * count(s.snp_id) / i.isw_differences, 0) `isw_pi`
-                    FROM isw i
-                    LEFT JOIN snp s ON i.isw_id = s.isw_id AND s.snp_coding = 1
-                    INNER JOIN indel on i.isw_indel_id = indel.indel_id AND indel.indel_coding = 1
-                    GROUP BY i.isw_id) i
+                SELECT  i.isw_distance,
+                        COUNT(*) COUNT
+                FROM isw i
+                inner join indel on i.isw_indel_id = indel.indel_id and indel.indel_coding = 1
+                where i.isw_coding = 1
                 group by i.isw_distance
             };
         my $threshold  = 1000;
@@ -923,17 +1080,14 @@ my $combined_distance = sub {
         );
         @combined = @{ $write_obj->make_combine( \%option ) };
     }
-
-    #----------------------------------------------------------#
-    # worksheet -- combined_pure_coding
-    #----------------------------------------------------------#
     {
         my $sheet_name = 'combined_pure_coding';
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
         {    # write header
-            my @headers = qw{AVG_distance AVG_pi COUNT STD_pi};
+            my @headers = qw{AVG_distance AVG_pi STD_pi AVG_gc STD_gc
+                AVG_cv STD_cv COUNT};
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -949,16 +1103,87 @@ my $combined_distance = sub {
                 SELECT
                     AVG(isw_distance) AVG_distance,
                     AVG(isw_pi) AVG_pi,
-                    COUNT(*) COUNT,
-                    STD(isw_pi) STD_pi
-                FROM
-                    (SELECT i.isw_id, i.isw_distance,
-                            ifnull(i.isw_pi * count(s.snp_id) / i.isw_differences, 0) `isw_pi`
-                    FROM isw i
-                    LEFT JOIN snp s ON i.isw_id = s.isw_id AND s.snp_coding = 1
-                    INNER JOIN indel on i.isw_indel_id = indel.indel_id AND indel.indel_coding = 1
-                    GROUP BY i.isw_id) i
-                WHERE isw_distance IN
+                    STD(isw_pi) STD_pi,
+                    AVG(isw_average_gc) AVG_gc,
+                    STD(isw_average_gc) STD_gc,
+                    AVG(isw_cv) AVG_cv,
+                    STD(isw_cv) STD_cv,
+                    COUNT(*) COUNT
+                FROM isw i
+                INNER JOIN indel ON i.isw_indel_id = indel.indel_id AND indel.indel_coding = 1
+                WHERE i.isw_coding = 1
+                AND isw_distance IN
+            };
+            my %option = (
+                sql_query => $sql_query,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                combined  => \@combined,
+            );
+            ($sheet_row)
+                = $write_obj->write_content_combine( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    }
+
+    #----------------------------------------------------------#
+    # worksheet -- combined_pure_noncoding
+    #----------------------------------------------------------#
+
+    # make combine
+    @combined = ();
+    {
+        my $sql_query = q{
+                SELECT  i.isw_distance,
+                        COUNT(*) COUNT
+                FROM isw i
+                inner join indel on i.isw_indel_id = indel.indel_id and indel.indel_coding = 0
+                where i.isw_coding = 0
+                group by i.isw_distance
+            };
+        my $threshold  = 1000;
+        my $standalone = [ -1, 0 ];
+        my %option     = (
+            sql_query  => $sql_query,
+            threshold  => $threshold,
+            standalone => $standalone,
+        );
+        @combined = @{ $write_obj->make_combine( \%option ) };
+    }
+    {
+        my $sheet_name = 'combined_pure_noncoding';
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        {    # write header
+            my @headers = qw{AVG_distance AVG_pi STD_pi AVG_gc STD_gc
+                AVG_cv STD_cv COUNT};
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            my $sql_query = q{
+                SELECT
+                    AVG(isw_distance) AVG_distance,
+                    AVG(isw_pi) AVG_pi,
+                    STD(isw_pi) STD_pi,
+                    AVG(isw_average_gc) AVG_gc,
+                    STD(isw_average_gc) STD_gc,
+                    AVG(isw_cv) AVG_cv,
+                    STD(isw_cv) STD_cv,
+                    COUNT(*) COUNT
+                FROM isw i
+                INNER JOIN indel ON i.isw_indel_id = indel.indel_id AND indel.indel_coding = 0
+                WHERE i.isw_coding = 0
+                AND isw_distance IN
             };
             my %option = (
                 sql_query => $sql_query,
@@ -1159,9 +1384,8 @@ my $frequency_pigccv = sub {
     }
 };
 
-
 foreach my $n (@tasks) {
-    if ( $n == 1 ) { &$summary;  &$summary_limit;   next; }
+    if ( $n == 1 ) { &$basic; &$summary; &$summary_indel; next; }
     if ( $n == 2 ) { &$distance; &$distance_length; next; }
     if ( $n == 3 )  { &$frequency_distance;   next; }
     if ( $n == 4 )  { &$distance2;            next; }
@@ -1171,8 +1395,8 @@ foreach my $n (@tasks) {
     if ( $n == 8 )  { &$indel_length;         next; }
     if ( $n == 9 )  { &$indel_length_freq;    next; }
     if ( $n == 10 ) { &$indel_length_insdel;  next; }
-    if ( $n == 11 ) { &$combined_distance;    next; }
-    if ( $n == 12 ) { &$frequency_pigccv;    next; }
+    if ( $n == 11 ) { &$combined_pigccv;      next; }
+    if ( $n == 12 ) { &$frequency_pigccv;     next; }
     if ( $n == 22 ) { &$di_dn_ttest;          next; }
     if ( $n == 23 ) { &$frequency_distance2;  next; }
     if ( $n == 24 ) { &$frequency_distance3;  next; }
