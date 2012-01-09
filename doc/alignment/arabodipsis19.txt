@@ -1,0 +1,118 @@
+ath and lyrata chromosomes use ensembl repeat annotation.
+
+All other seqs and lyrata chrUn use RepeatMasker.
+
+> perl build_ensembl.pl  -e d:\data\ensemblgenomes12_65\plants\mysql\arabidopsis_thaliana_core_12_65_10\ --initdb --db ath_65
+> perl write_masked_chr.pl -e ath_65
+> perl write_masked_chr.pl --dir d:\data\alignment\arabidopsis19\ath_65\ -y d:\wq\Scripts\alignDB\util\ath_65_repeat.yml
+
+> perl build_ensembl.pl  -e d:\data\ensemblgenomes12_65\plants\mysql\arabidopsis_lyrata_core_12_65_10\ --initdb --db lyrata_65
+> perl write_masked_chr.pl -e lyrata_65 
+> perl write_masked_chr.pl --dir d:\data\alignment\arabidopsis19\lyrata_65\ -y d:\wq\Scripts\alignDB\util\lyrata_65_repeat.yml
+
+$ perl arabidopsis19_bash.pl
+$ bash auto_ath19_file.sh
+
+$ RepeatMasker /home/wangq/data/alignment/arabidopsis19/lyrata_65/chrUn.fa -species arabidopsis -xsmall -s --parallel 4
+
+#----------------------------#
+# blastz set11
+#----------------------------#
+1. blastz, lav2axt.pl
+perl d:\wq\Scripts\blastz\bz.pl -dt d:\data\alignment\arabidopsis19\ath_65 -dq d:\data\alignment\arabidopsis19\lyrata_65\ -dl d:\data\alignment\arabidopsis19\AthvsLyrata_set11_1\ -s set11 -p 4
+
+2. blastz, lpcna.pl
+md d:\data\alignment\arabidopsis19\AthvsLyrata_set11_2\
+copy  d:\data\alignment\arabidopsis19\AthvsLyrata_set11_1\*.lav d:\data\alignment\arabidopsis19\AthvsLyrata_set11_2\
+perl ~/Scripts/blastz/lpcna.pl -dt /home/wangq/data/alignment/arabidopsis19/ath_65 -dq /home/wangq/data/alignment/arabidopsis19/lyrata_65 -dl /home/wangq/data/alignment/arabidopsis19/AthvsLyrata_set11_2
+
+3. blastz C=0, lpcna.pl
+perl d:\wq\Scripts\blastz\bz.pl -dt d:\data\alignment\arabidopsis19\ath_65 -dq d:\data\alignment\arabidopsis19\lyrata_65\ -dl d:\data\alignment\arabidopsis19\AthvsLyrata_set11_3\ -s set11 -p 4 -C 0 --noaxt
+perl ~/Scripts/blastz/lpcna.pl -dt /home/wangq/data/alignment/arabidopsis19/ath_65 -dq /home/wangq/data/alignment/arabidopsis19/lyrata_65 -dl /home/wangq/data/alignment/arabidopsis19/AthvsLyrata_set11_3
+
+4. lastz C=0, lpcna.pl
+perl /home/wangq/Scripts/blastz/bz.pl -dt /home/wangq/data/alignment/arabidopsis19/ath_65 -dq /home/wangq/data/alignment/arabidopsis19/lyrata_65 -dl /home/wangq/data/alignment/arabidopsis19/AthvsLyrata_set11_4 -s set11 -p 4 -C 0 --noaxt -pb lastz --lastz
+perl ~/Scripts/blastz/lpcna.pl -dt /home/wangq/data/alignment/arabidopsis19/ath_65 -dq /home/wangq/data/alignment/arabidopsis19/lyrata_65 -dl /home/wangq/data/alignment/arabidopsis19/AthvsLyrata_set11_4
+
+#----------------------------#
+# stats
+#----------------------------#
+1.
+perl two_way_batch.pl -d AthvsLyrata_set11_1 -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set11_1\ -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+perl two_way_batch.pl -d AthvsLyrata_set11_1_5k -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set11_1\ -at 5000 -st 1000000 --parallel 4 --run 1-3,21,40
+perl two_way_batch.pl -d AthvsLyrata_set11_1_1k -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set11_1\ -at 1000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+2.
+perl two_way_batch.pl -d AthvsLyrata_set11_2 -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set11_2\ -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+perl two_way_batch.pl -d AthvsLyrata_set11_2_5k -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set11_2\ -at 5000 -st 1000000 --parallel 4 --run 1-3,21,40
+perl two_way_batch.pl -d AthvsLyrata_set11_2_1k -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set11_2\ -at 1000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+3.
+perl two_way_batch.pl -d AthvsLyrata_set11_3 -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set11_3\ -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+perl two_way_batch.pl -d AthvsLyrata_set11_3_5k -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set11_3\ -at 5000 -st 1000000 --parallel 4 --run 1-3,21,40
+perl two_way_batch.pl -d AthvsLyrata_set11_3_1k -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set11_3\ -at 1000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+4.
+perl two_way_batch.pl -d AthvsLyrata_set11_4 -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set11_4\ -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+perl two_way_batch.pl -d AthvsLyrata_set11_4_5k -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set11_4\ -at 5000 -st 1000000 --parallel 4 --run 1-3,21,40
+perl two_way_batch.pl -d AthvsLyrata_set11_4_1k -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set11_4\ -at 1000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+#----------------------------#
+# blastz set01
+#----------------------------#
+1. blastz, lav2axt.pl set01
+perl d:\wq\Scripts\blastz\bz.pl -dt d:\data\alignment\arabidopsis19\ath_65 -dq d:\data\alignment\arabidopsis19\lyrata_65\ -dl d:\data\alignment\arabidopsis19\AthvsLyrata_set01_1\ -s set01 -p 4
+
+2. blastz, lpcna.pl
+md d:\data\alignment\arabidopsis19\AthvsLyrata_set01_2\
+copy  d:\data\alignment\arabidopsis19\AthvsLyrata_set01_1\*.lav d:\data\alignment\arabidopsis19\AthvsLyrata_set01_2\
+perl ~/Scripts/blastz/lpcna.pl -dt /home/wangq/data/alignment/arabidopsis19/ath_65 -dq /home/wangq/data/alignment/arabidopsis19/lyrata_65 -dl /home/wangq/data/alignment/arabidopsis19/AthvsLyrata_set01_2
+
+4. lastz C=0, lpcna.pl
+perl /home/wangq/Scripts/blastz/bz.pl -dt /home/wangq/data/alignment/arabidopsis19/ath_65 -dq /home/wangq/data/alignment/arabidopsis19/lyrata_65 -dl /home/wangq/data/alignment/arabidopsis19/AthvsLyrata_set01_4 -s set01 -p 4 -C 0 --noaxt -pb lastz --lastz
+perl ~/Scripts/blastz/lpcna.pl -dt /home/wangq/data/alignment/arabidopsis19/ath_65 -dq /home/wangq/data/alignment/arabidopsis19/lyrata_65 -dl /home/wangq/data/alignment/arabidopsis19/AthvsLyrata_set01_4
+
+#----------------------------#
+# stats
+#----------------------------#
+1.
+perl two_way_batch.pl -d AthvsLyrata_set01_1 -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set01_1\ -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+perl two_way_batch.pl -d AthvsLyrata_set01_1_5k -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set01_1\ -at 5000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+2.
+perl two_way_batch.pl -d AthvsLyrata_set01_2 -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set01_2\ -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+4.
+perl two_way_batch.pl -d AthvsLyrata_set01_4 -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set01_4\ -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+perl two_way_batch.pl -d AthvsLyrata_set01_4_5k -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set01_4\ -at 5000 -st 1000000 --parallel 4 --run 1-3,21,40
+perl two_way_batch.pl -d AthvsLyrata_set01_4_1k -t="3702,Ath" -q "59689,Lyrata" -a d:\data\alignment\arabidopsis19\AthvsLyrata_set01_4\ -at 1000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+#----------------------------#
+# blastz vsLer_0
+#----------------------------#
+1. blastz, lav2axt.pl
+perl d:\wq\Scripts\blastz\bz.pl -dt d:\data\alignment\arabidopsis19\ath_65 -dq d:\data\alignment\arabidopsis19\Ler_0\ -dl d:\data\alignment\arabidopsis19\AthvsLer_0_set11_1\ -s set11 -p 4
+
+2. blastz, lpcna.pl
+md d:\data\alignment\arabidopsis19\AthvsLer_0_set11_2\
+copy  d:\data\alignment\arabidopsis19\AthvsLer_0_set11_1\*.lav d:\data\alignment\arabidopsis19\AthvsLer_0_set11_2\
+perl ~/Scripts/blastz/lpcna.pl -dt /home/wangq/data/alignment/arabidopsis19/ath_65 -dq /home/wangq/data/alignment/arabidopsis19/Ler_0 -dl /home/wangq/data/alignment/arabidopsis19/AthvsLer_0_set11_2
+
+5. lastz C=0, lpcna.pl, --paired
+perl /home/wangq/Scripts/blastz/bz.pl -dt /home/wangq/data/alignment/arabidopsis19/ath_65 -dq /home/wangq/data/alignment/arabidopsis19/Ler_0 -dl /home/wangq/data/alignment/arabidopsis19/AthvsLer_0_set11_5 -s set01 -p 4 -C 0 --noaxt -pb lastz --lastz --paired
+perl ~/Scripts/blastz/lpcna.pl -dt /home/wangq/data/alignment/arabidopsis19/ath_65 -dq /home/wangq/data/alignment/arabidopsis19/lyrata_65 -dl /home/wangq/data/alignment/arabidopsis19/AthvsLer_0_set11_5
+
+
+#----------------------------#
+# stats
+#----------------------------#
+1.
+perl two_way_batch.pl -d AthvsLer_0_set11_1 -t="3702,Ath" -q "900207,Ler_0" -a d:\data\alignment\arabidopsis19\AthvsLer_0_set11_1\ -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+2.
+perl two_way_batch.pl -d AthvsLer_0_set11_2 -t="3702,Ath" -q "900207,Ler_0" -a d:\data\alignment\arabidopsis19\AthvsLer_0_set11_2\ -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+5.
+perl two_way_batch.pl -d AthvsLer_0_set11_5 -t="3702,Ath" -q "900207,Ler_0" -a d:\data\alignment\arabidopsis19\AthvsLer_0_set11_5\ -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+
