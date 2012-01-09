@@ -200,11 +200,13 @@ my $worker = sub {
         my $slice = $slice_adaptor->fetch_by_region( 'chromosome', $chr_name,
             $chr_start, $chr_end );
 
+        # This is caused by mysqlimport fault on Windows
+        # Currently, import on Linux and then copy back to Windows
         # XXX evil hack
         # For unknown reasons, ensembl public databases worked well, but local
         # databases failed
-        $slice->{coord_system}{adaptor}{_is_sequence_level} = { 1 => 1 };
-        $slice->{coord_system}{sequence_level} = 1;
+        #$slice->{coord_system}{adaptor}{_is_sequence_level} = { 1 => 1 };
+        #$slice->{coord_system}{sequence_level} = 1;
 
         my $slice_chr_set = AlignDB::IntSpan->new("$chr_start-$chr_end");
 
