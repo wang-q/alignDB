@@ -10,14 +10,16 @@ use File::Spec;
 use String::Compare;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-my $store_dir = shift || "~/data/alignment/mouse17";
+my $store_dir = shift
+    || File::Spec->catdir( $ENV{HOME}, "data/alignment/mouse17" );
+
 {    # on linux
-    my $data_dir    = "~/data/alignment/mouse17";
-    my $pl_dir      = "~/Scripts";
-    my $kentbin_dir = "~/bin/x86_64";
+    my $data_dir = File::Spec->catdir( $ENV{HOME}, "data/alignment/mouse17" );
+    my $pl_dir   = File::Spec->catdir( $ENV{HOME}, "Scripts" );
+    my $kentbin_dir = File::Spec->catdir( $ENV{HOME}, "bin/x86_64" );
 
     # nature 2011
-    my $seq_dir = "~/data/sanger/mouse_reseq";
+    my $seq_dir = File::Spec->catdir( $ENV{HOME}, "data/sanger/mouse_reseq" );
 
     my $tt = Template->new;
 
@@ -114,7 +116,7 @@ EOF
             pl_dir      => $pl_dir,
             kentbin_dir => $kentbin_dir
         },
-        File::Spec->catfile( $store_dir, "auto_ath19_file.sh" )
+        File::Spec->catfile( $store_dir, "auto_mouse17_file.sh" )
     ) or die Template->error;
 
     $text = <<'EOF';
@@ -142,7 +144,36 @@ EOF
             pl_dir      => $pl_dir,
             kentbin_dir => $kentbin_dir
         },
-        File::Spec->catfile( $store_dir, "auto_ath19_rm.sh" )
+        File::Spec->catfile( $store_dir, "auto_mouse17_rm.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+#!/bin/bash
+cd [% data_dir %]
+
+#----------------------------#
+# repeatmasker
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
+# for i in [% item.dir %]/*.fasta; do bsub -n 8 -J [% item.name %]_`basename $i .fasta` RepeatMasker $i -species mouse -xsmall -s --parallel 8; done;
+bsub -n 8 -J [% item.name %] RepeatMasker [% item.dir %]/*.fasta -species mouse -xsmall -s --parallel 8
+
+[% END -%]
+
+# find [% data_dir %] -name "*.fasta.masked" | sed "s/\.fasta\.masked$//" | xargs -i echo mv {}.fasta.masked {}.fa | sh
+# find [% item.dir %] | grep -v fa$ | xargs rm -fr
+
+EOF
+
+    $tt->process(
+        \$text,
+        {   data        => \@data,
+            data_dir    => $data_dir,
+            pl_dir      => $pl_dir,
+            kentbin_dir => $kentbin_dir
+        },
+        File::Spec->catfile( $store_dir, "auto_mouse17_rm_bsub.sh" )
     ) or die Template->error;
 
     $text = <<'EOF';
@@ -170,7 +201,7 @@ EOF
             pl_dir      => $pl_dir,
             kentbin_dir => $kentbin_dir
         },
-        File::Spec->catfile( $store_dir, "auto_ath19_bz.sh" )
+        File::Spec->catfile( $store_dir, "auto_mouse17_bz.sh" )
     ) or die Template->error;
 }
 
