@@ -130,6 +130,10 @@ cd [% data_dir %]
 # [% item.name %] [% item.coverage %]
 RepeatMasker [% item.dir %]/*.fasta -species mouse -xsmall -s --parallel 4
 
+[% END -%]
+
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
 find [% item.dir %] -name "*.fasta.masked" | sed "s/\.fasta\.masked$//" | xargs -i echo mv {}.fasta.masked {}.fa | sh
 # find [% item.dir %] | grep -v fa$ | xargs rm -fr
 
@@ -152,7 +156,7 @@ EOF
 cd [% data_dir %]
 
 #----------------------------#
-# repeatmasker
+# repeatmasker on all fasta
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
@@ -161,6 +165,9 @@ bsub -n 8 -J [% item.name %] RepeatMasker [% item.dir %]/*.fasta -species mouse 
 
 [% END -%]
 
+#----------------------------#
+# find failed rm jobs
+#----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
 perl -e 'for $i (0..30) { $i = sprintf qq{%02d}, $i; $str = qq{[% item.dir %]/$i}; next if ! -e qq{$str.fasta}; next if -e qq{$str.fasta.masked}; next if -e qq{$str.fa}; print qq{ bsub -n 8 -J [% item.name %]_$i RepeatMasker $str.fasta -species mouse -xsmall -s --parallel 8 \n};}' >> catchup.txt
@@ -219,13 +226,8 @@ cd [% data_dir %]
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
-for i in [% data_dir %]/Mouse9/*.fa; do echo 'for j in [% data_dir %]/[% item.name %]/*.fa; do bsub lastz '$i' $j  E=30 O=400 Y=3400 L=2200 K=3000 Q=[% pl_dir %]/blastz/matrix/similar --ambiguous=iupac --output=[% data_dir %]/Mousevs[% item.name %]/`basename '$i' .fa`-`basename $j .fa`.lav; done'; done
-
-# perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/Mouse9 -dq [% data_dir %]/[% item.name %] \
-#     -dl [% data_dir %]/Mousevs[% item.name %] -s set01 -p 4 --noaxt -pb lastz --lastz
-
-# perl [% pl_dir %]/blastz/lpcna.pl -dt [% data_dir %]/Mouse9 -dq [% data_dir %]/[% item.name %] \
-#     -dl [% data_dir %]/Mousevs[% item.name %]
+# for i in [% data_dir %]/Mouse9/*.fa; do echo 'for j in [% data_dir %]/[% item.name %]/*.fa; do bsub lastz '$i' $j  E=30 O=400 Y=3400 L=2200 K=3000 Q=[% pl_dir %]/blastz/matrix/similar --ambiguous=iupac --output=[% data_dir %]/Mousevs[% item.name %]/`basename '$i' .fa`-`basename $j .fa`.lav; done'; done
+bsub -n 8 -J [% item.name %] perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/Mouse9 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Mousevs[% item.name %] -s set01 -p 8 --noaxt -pb lastz --lastz
 
 [% END -%]
 
