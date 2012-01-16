@@ -201,6 +201,13 @@ cd [% data_dir %]
 perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/Mouse9 -dq [% data_dir %]/[% item.name %] \
     -dl [% data_dir %]/Mousevs[% item.name %] -s set01 -p 4 --noaxt -pb lastz --lastz
 
+[% END -%]
+
+#----------------------------#
+# lpcna
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
 perl [% pl_dir %]/blastz/lpcna.pl -dt [% data_dir %]/Mouse9 -dq [% data_dir %]/[% item.name %] \
     -dl [% data_dir %]/Mousevs[% item.name %]
 
@@ -243,135 +250,79 @@ EOF
     ) or die Template->error;
 }
 
-#{    # on windows
-#    my $data_dir = "d:/data/alignment/arabidopsis19";
-#    my $pl_dir   = "d:/wq/Scripts";
-#
-#    my $tt = Template->new;
-#
-#    my @data = (
-#        { taxon => 900301, name => "C57BL_6N",    coverage => 29.29, },
-#        { taxon => 900302, name => "129P2",       coverage => 43.78, },
-#        { taxon => 900303, name => "129S1_SvImJ", coverage => 27.25, },
-#        { taxon => 900304, name => "129S5",       coverage => 19.05, },
-#        { taxon => 900305, name => "A_J",         coverage => 26.68, },
-#        { taxon => 900306, name => "AKR_J",       coverage => 40.61, },
-#        { taxon => 900307, name => "BALBc_J",     coverage => 24.9, },
-#        { taxon => 900308, name => "C3H_HeJ",     coverage => 35.17, },
-#        { taxon => 900309, name => "CAST_Ei",     coverage => 24.57, },
-#        { taxon => 900310, name => "CBA_J",       coverage => 29.34, },
-#        { taxon => 900311, name => "DBA_2J",      coverage => 24.67, },
-#        { taxon => 900312, name => "LP_J",        coverage => 27.67, },
-#        { taxon => 900313, name => "NOD",         coverage => 28.75, },
-#        { taxon => 900314, name => "NZO",         coverage => 17.31, },
-#        { taxon => 900315, name => "PWK_Ph",      coverage => 25.38, },
-#        { taxon => 900316, name => "Spretus_Ei",  coverage => 26.68, },
-#        { taxon => 900317, name => "WSB_Ei",      coverage => 18.26, },
-#    );
-#
-#    my $text = <<'EOF';
-#cd /d [% data_dir %]
-#
-#REM #----------------------------#
-#REM # stat
-#REM #----------------------------#
-#[% FOREACH item IN data -%]
-#REM # [% item.name %] [% item.coverage %]
-#perl [% pl_dir %]\alignDB\extra\two_way_batch.pl -d Athvs[% item.name %] -t="3702,Ath" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]\Athvs[% item.name %] -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
-#
-#[% END -%]
-#
-#EOF
-#    $tt->process(
-#        \$text,
-#        {   data     => \@data,
-#            data_dir => $data_dir,
-#            pl_dir   => $pl_dir,
-#        },
-#        File::Spec->catfile( $store_dir, "auto_ath19_stat.bat" )
-#    ) or die Template->error;
-#
-#    $text = <<'EOF';
-#cd /d [% data_dir %]
-#
-#REM #----------------------------#
-#REM # multi
-#REM #----------------------------#
-#perl [% pl_dir %]/alignDB/extra/join_dbs.pl --dbs [% dbs %] --goal_db [% goal_db %] --outgroup [% outgroup %] --target [% target %] --queries [% queries %] --no_insert=1 --trimmed_fasta=1 --length 1000
-#
-#perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% goal_db %] -e ath_65 -f [% data_dir %]/[% goal_db %]  -lt 1000 -st 100000 --parallel 4 --run all
-#
-#EOF
-#
-#    my @names = ( "Lyrata", map { $_->{name} } @data );
-#    my $dbs = join ',', map { "Athvs" . $_ } @names;
-#    my $queries = join ',', map { $_ . "query" } ( 1 .. scalar @names - 1 );
-#    $tt->process(
-#        \$text,
-#        {   goal_db  => "AthvsNineteen",
-#            outgroup => '0query',
-#            target   => '0target',
-#            dbs      => $dbs,
-#            queries  => $queries,
-#            data_dir => $data_dir,
-#            pl_dir   => $pl_dir,
-#        },
-#        File::Spec->catfile( $store_dir, "auto_ath19_multi.bat" )
-#    ) or die Template->error;
-#}
+{    # on windows
+    my $data_dir = "d:/data/alignment/mouse17";
+    my $pl_dir   = "d:/wq/Scripts";
 
-#{    # multi
-#    my $tt         = Template->new;
-#    my $strains_of = {
-#        S288CvsYJM789refSpar => [qw{ Spar YJM789 }],
-#        S288CvsThree         => [qw{ Spar RM11 YJM789 }],
-#        S288CvsSix           => [qw{ Spar RM11 YJM789 DBVPG6765 SK1 Y55 }],
-#        S288CvsGE10M18       => [
-#            qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 T7 AWRI796
-#                Lalvin_QA23 Vin13 VL3 FostersO FostersB Kyokai_no__7 DBVPG6765
-#                SK1 Y55 W303
-#                }
-#        ],
-#        S288CvsALL32 => [
-#            qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 CBS_7960 CLIB215
-#                CLIB324 FL100 Y10 YJM269 CLIB382 PW5 T7 T73 UC5 AWRI796
-#                Lalvin_QA23 Vin13 VL3 FostersO FostersB EC9_8 Kyokai_no__7
-#                AWRI1631 M22 YPS163 DBVPG6765 SK1 Y55 W303
-#                }
-#        ],
-#    };
-#
-#    my @data;
-#    for my $dbname ( sort keys %{$strains_of} ) {
-#        my @strains = @{ $strains_of->{$dbname} };
-#        my $dbs     = join ',', map {"S288Cvs$_"} @strains;
-#        my $queries = join ',',
-#            map { $_ . "query" } ( 1 .. scalar @strains - 1 );
-#        push @data,
-#            {
-#            goal_db  => $dbname,
-#            outgroup => '0query',
-#            target   => '0target',
-#            dbs      => $dbs,
-#            queries  => $queries,
-#            };
-#    }
-#
-#    my $text = <<'EOF';
-##!/bin/bash
-#cd [% data_dir %]
-#
-#[% FOREACH item IN data -%]
-## [% item.goal_db %]
-#perl [% pl_dir %]/alignDB/extra/join_dbs.pl --dbs [% item.dbs %] --goal_db [% item.goal_db %] --outgroup [% item.outgroup %] --target [% item.target %] --queries [% item.queries %] --no_insert=1 --trimmed_fasta=1 --length 1000
-#
-#perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% item.goal_db %] -e yeast_58 -f [% data_dir %]/[% item.goal_db %]  -lt 1000 -st 100000 --parallel 4 --run all
-#
-#[% END -%]
-#EOF
-#
-#    $tt->process( \$text,
-#        { data => \@data, data_dir => $data_dir, pl_dir => $pl_dir, },
-#        "auto_joins.sh" )
-#        or die Template->error;
-#}
+    my $tt = Template->new;
+
+    my @data = (
+        { taxon => 900302, name => "129P2",       coverage => 43.78, },
+        { taxon => 900303, name => "129S1_SvImJ", coverage => 27.25, },
+        { taxon => 900304, name => "129S5",       coverage => 19.05, },
+        { taxon => 900305, name => "A_J",         coverage => 26.68, },
+        { taxon => 900306, name => "AKR_J",       coverage => 40.61, },
+        { taxon => 900307, name => "BALBc_J",     coverage => 24.9, },
+        { taxon => 900308, name => "C3H_HeJ",     coverage => 35.17, },
+        { taxon => 900301, name => "C57BL_6N",    coverage => 29.29, },
+        { taxon => 900309, name => "CAST_Ei",     coverage => 24.57, },
+        { taxon => 900310, name => "CBA_J",       coverage => 29.34, },
+        { taxon => 900311, name => "DBA_2J",      coverage => 24.67, },
+        { taxon => 900312, name => "LP_J",        coverage => 27.67, },
+        { taxon => 900313, name => "NOD",         coverage => 28.75, },
+        { taxon => 900314, name => "NZO",         coverage => 17.31, },
+        { taxon => 900315, name => "PWK_Ph",      coverage => 25.38, },
+        { taxon => 900316, name => "Spretus_Ei",  coverage => 26.68, },
+        { taxon => 900317, name => "WSB_Ei",      coverage => 18.26, },
+    );
+
+    my $text = <<'EOF';
+cd /d [% data_dir %]
+
+REM #----------------------------#
+REM # stat
+REM #----------------------------#
+[% FOREACH item IN data -%]
+REM # [% item.name %] [% item.coverage %]
+perl [% pl_dir %]\alignDB\extra\two_way_batch.pl -d Mousevs[% item.name %] -t="10090,Mouse" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]\Mousevs[% item.name %] -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data     => \@data,
+            data_dir => $data_dir,
+            pl_dir   => $pl_dir,
+        },
+        File::Spec->catfile( $store_dir, "auto_mouse17_stat.bat" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+cd /d [% data_dir %]
+
+REM #----------------------------#
+REM # multi
+REM #----------------------------#
+perl [% pl_dir %]/alignDB/extra/join_dbs.pl --dbs [% dbs %] --goal_db [% goal_db %] --outgroup [% outgroup %] --target [% target %] --queries [% queries %] --no_insert=1 --trimmed_fasta=1 --length 1000
+
+perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% goal_db %] -e mouse_65 -f [% data_dir %]/[% goal_db %]  -lt 1000 -st 100000 --parallel 4 --run all
+
+EOF
+
+    my @names = ( "Lyrata", map { $_->{name} } @data );
+    my $dbs = join ',', map { "Athvs" . $_ } @names;
+    my $queries = join ',', map { $_ . "query" } ( 1 .. scalar @names - 1 );
+    $tt->process(
+        \$text,
+        {   goal_db  => "MousevsSeventeen",
+            outgroup => '0query',
+            target   => '0target',
+            dbs      => $dbs,
+            queries  => $queries,
+            data_dir => $data_dir,
+            pl_dir   => $pl_dir,
+        },
+        File::Spec->catfile( $store_dir, "auto_mouse17_multi.bat" )
+    ) or die Template->error;
+}
