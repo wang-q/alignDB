@@ -238,6 +238,15 @@ bsub -n 8 -J [% item.name %] perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/M
 
 [% END -%]
 
+#----------------------------#
+# lpcna
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
+bsub -n 8 -J [% item.name %] perl [% pl_dir %]/blastz/lpcna.pl -dt [% data_dir %]/Mouse9 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Mousevs[% item.name %] -p 8
+
+[% END -%]
+
 EOF
     $tt->process(
         \$text,
@@ -247,6 +256,36 @@ EOF
             kentbin_dir => $kentbin_dir
         },
         File::Spec->catfile( $store_dir, "auto_mouse17_bz_bsub.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+#!/bin/bash
+
+#----------------------------#
+# tar-gzip
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
+cd [% data_dir %]/Mousevs[% item.name %]/
+
+tar -czvf lav.tar.gz   [*.lav   --remove-files
+tar -czvf psl.tar.gz   [*.psl   --remove-files
+tar -czvf chain.tar.gz [*.chain --remove-files
+gzip *.chain
+gzip net/*
+gzip axtNet/*.axt
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data        => \@data,
+            data_dir    => $data_dir,
+            pl_dir      => $pl_dir,
+            kentbin_dir => $kentbin_dir
+        },
+        File::Spec->catfile( $store_dir, "auto_mouse17_compress.sh" )
     ) or die Template->error;
 }
 
