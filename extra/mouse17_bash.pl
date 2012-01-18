@@ -277,6 +277,16 @@ gzip axtNet/*.axt
 
 [% END -%]
 
+#----------------------------#
+# only keeps chr.2bit files
+#----------------------------#
+# find [% data_dir %] -name "*.fa" | xargs rm
+# find [% data_dir %] -name "*.fasta" | xargs rm
+# find [% data_dir %] -name "*.fasta.cat" | xargs rm
+# find [% data_dir %] -name "*.fasta.out" | xargs rm
+# find [% data_dir %] -name "*.fasta.ref" | xargs rm
+# find [% data_dir %] -name "*.fasta.tbl" | xargs rm
+
 EOF
     $tt->process(
         \$text,
@@ -285,7 +295,7 @@ EOF
             pl_dir      => $pl_dir,
             kentbin_dir => $kentbin_dir
         },
-        File::Spec->catfile( $store_dir, "auto_mouse17_compress.sh" )
+        File::Spec->catfile( $store_dir, "auto_mouse17_clean.sh" )
     ) or die Template->error;
 }
 
