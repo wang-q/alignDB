@@ -88,6 +88,26 @@ my $port = 3306;
     );
 }
 
+{    # nipponbare
+    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
+        -host    => $host,
+        -user    => $user,
+        -pass    => $pass,
+        -port    => $port,
+        -species => 'Oryza sativa',
+        -group   => 'core',
+        -dbname  => 'nip_65',
+    );
+
+    @aliases
+        = ( 'Or_sativa', 'Oryza_sativa', 'rice', 'nip', 'nip_65');
+
+    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
+        -species => 'Oryza sativa',
+        -alias   => \@aliases
+    );
+}
+
 {    # compara
     Bio::EnsEMBL::Compara::DBSQL::DBAdaptor->new(
         -host    => $host,
