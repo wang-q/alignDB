@@ -137,11 +137,12 @@ $excel_obj->jc_correction if $jc_correction;
         y_scale_unit => 0.001,
         x_title      => "Distance to indels (D1)",
         y_title      => "Nucleotide diversity",
-        Height       => 283.7,
-        Width        => 453.9,
+        Height       => 200,
+        Width        => 320,
         Top          => 12.75,
-        Left         => 200,
+        Left         => 520,
     );
+
     #$excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
@@ -266,10 +267,10 @@ $excel_obj->jc_correction if $jc_correction;
         y_scale_unit => 0.001,
         x_title      => "Indel density (d2)",
         y_title      => "Nucleotide diversity",
-        Height       => 283.7,
-        Width        => 453.9,
+        Height       => 200,
+        Width        => 320,
         Top          => 12.75,
-        Left         => 200,
+        Left         => 520,
     );
 
     #$excel_obj->draw_y( $sheet_name, \%option );
@@ -320,8 +321,8 @@ $excel_obj->jc_correction if $jc_correction;
         y_scale_unit   => 0.001,
         x_title        => "Distance to indels (d1)",
         y_title        => "Nucleotide diversity",
-        Height         => 283.7,
-        Width          => 453.9,
+        Height         => 200,
+        Width          => 320,
         Top            => 12.75 * 17,
         Left           => 360,
         group_name     => \@group_name,
@@ -460,10 +461,10 @@ $excel_obj->jc_correction if $jc_correction;
         y_scale_unit => 0.5,
         x_title      => "Nucleotide diversity",
         y_title      => "SNP/Indel ratio",
-        Height       => 283.7,
-        Width        => 453.9,
+        Height       => 200,
+        Width        => 320,
         Top          => 12.75,
-        Left         => 320,
+        Left         => 520,
     );
 
     $excel_obj->draw_xy( $sheet_name, \%option );
@@ -491,6 +492,8 @@ $excel_obj->jc_correction if $jc_correction;
         y_scale_unit   => 0.001,
         x_title        => "Distance to indels (d1)",
         y_title        => "Nucleotide diversity",
+        Height         => 200,
+        Width          => 320,
         Height         => 283.7,
         Width          => 453.9,
         Top            => 12.75 * 38,
@@ -536,6 +539,8 @@ $excel_obj->jc_correction if $jc_correction;
         y_scale_unit   => 2,
         x_title        => "Subsitution Type",
         y_title        => "Proportion of substitutions",
+        Height         => 200,
+        Width          => 320,
         Height         => 283.7,
         Width          => 453.9,
         Top            => 12.75 * 17,
@@ -567,10 +572,10 @@ $excel_obj->jc_correction if $jc_correction;
         y_scale_unit  => 0.05,
         x_title       => "Indel density (d2)",
         y_title       => "Proportion of substitutions",
-        Height        => 283.7,
-        Width         => 453.9,
+        Height        => 200,
+        Width         => 320,
         Top           => 12.75,
-        Left          => 200,
+        Left          => 520,
     );
 
     $excel_obj->draw_y( $sheet_name, \%option );
