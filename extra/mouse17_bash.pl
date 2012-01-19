@@ -333,7 +333,7 @@ REM # stat
 REM #----------------------------#
 [% FOREACH item IN data -%]
 REM # [% item.name %] [% item.coverage %]
-perl [% pl_dir %]\alignDB\extra\two_way_batch.pl -d Mousevs[% item.name %] -t="10090,Mouse" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]\Mousevs[% item.name %] -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+perl [% pl_dir %]\alignDB\extra\two_way_batch.pl -d Mousevs[% item.name %] -t="10090,Mouse" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]\Mousevs[% item.name %] -at 10000 -st 10000000 --parallel 4 --run 1-3,21,40
 
 [% END -%]
 
@@ -355,7 +355,7 @@ REM # multi
 REM #----------------------------#
 perl [% pl_dir %]/alignDB/extra/join_dbs.pl --dbs [% dbs %] --goal_db [% goal_db %] --outgroup [% outgroup %] --target [% target %] --queries [% queries %] --no_insert=1 --trimmed_fasta=1 --length 1000
 
-perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% goal_db %] -e mouse_65 -f [% data_dir %]/[% goal_db %]  -lt 1000 -st 100000 --parallel 4 --run all
+perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% goal_db %] -e mouse_65 -f [% data_dir %]/[% goal_db %]  -lt 1000 -st 10000000 --parallel 4 --run all
 
 EOF
 
