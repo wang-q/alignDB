@@ -253,6 +253,10 @@ SNP: while ( my @row = $snp_sth->fetchrow_array ) {
                 print " " x 4, "Can't calc codon positions\n";
                 next SNP;
             }
+            elsif ( $codon_start >= $codon_end) {
+                print " " x 4, "Codon start-end error\n";
+                next SNP;
+            }
             $codon_set = AlignDB::IntSpan->new("$codon_start-$codon_end");
         }
         else {
@@ -272,6 +276,10 @@ SNP: while ( my @row = $snp_sth->fetchrow_array ) {
             my $codon_end = $exon_tl_set->at( $codon_start_index + 2 );
             if ( !defined $codon_start or !defined $codon_end ) {
                 print " " x 4, "Can't calc codon positions\n";
+                next SNP;
+            }
+            elsif ( $codon_start >= $codon_end) {
+                print " " x 4, "Codon start-end error\n";
                 next SNP;
             }
             $codon_set = AlignDB::IntSpan->new("$codon_start-$codon_end");
