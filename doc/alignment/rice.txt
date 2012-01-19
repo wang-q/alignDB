@@ -1,3 +1,7 @@
+#----------------------------#
+# eg58
+#----------------------------#
+
 nip uses ensembl repeat annotation
 9311 also uses ensembl repeat annotation, but exclude nonchromosomal
 
@@ -8,7 +12,7 @@ perl /home/wangq/Scripts/blastz/bz.pl -dt /home/wangq/data/alignment/rice/nip_58
 perl /home/wangq/Scripts/blastz/bz.pl -dt /home/wangq/data/alignment/rice/nip_58 -dq /home/wangq/data/alignment/rice/9311_58 -dl /home/wangq/data/alignment/rice/Nipvs9311_58_paired -s set01 -p 6 --paired
 
 # lastz
-perl /home/wangq/Scripts/blastz/bz.pl -dt /home/wangq/data/alignment/rice/nip_58 -dq /home/wangq/data/alignment/rice/9311_58 -dl /home/wangq/data/alignment/rice/Nipvs9311_58_paired_lastz -s set01 -p 6 --paired -pb lastz
+perl /home/wangq/Scripts/blastz/bz.pl -dt /home/wangq/data/alignment/rice/nip_58 -dq /home/wangq/data/alignment/rice/9311_58 -dl /home/wangq/data/alignment/rice/Nipvs9311_58_paired_lastz -s set01 -p 6 --paired -pb lastz --lastz
 
 
 perl two_way_batch.pl -d Nipvs9311 -e rice_58 -t="39947,Nip" -q "39946,9311" -a /home/wangq/data/alignment/rice/Nipvs9311_58 -at 10000 -st 1000000 --parallel 6 --run all
@@ -19,3 +23,13 @@ RepeatMasker Ogla/*.fasta -species rice -xsmall -s --parallel 8
 mv Ogla/Ogla.fasta.masked Ogla/Ogla.fa
 perl /home/wangq/Scripts/blastz/bz.pl -dt /home/wangq/data/alignment/rice/nip_58 -dq /home/wangq/data/alignment/rice/Ogla -dl /home/wangq/data/alignment/rice/NipvsOgla_58_set11 -s set11 -p 6 
 perl /home/wangq/Scripts/alignDB/extra/two_way_batch.pl -d NipvsOgla_58_set11 -e rice_58 -t="39947,Nip" -q "4538,Ogla" -a /home/wangq/data/alignment/rice/NipvsOgla_58_set11 -at 10000 -st 1000000 --parallel 6 --run all
+
+#----------------------------#
+# eg65
+#----------------------------#
+bsub -n 8 -J Nipvs9311_bz perl /gpfssan1/home/wangq/Scripts/blastz/bz.pl -dt /gpfssan1/home/wangq/data/alignment/rice/nip_65 -dq /gpfssan1/home/wangq/data/alignment/rice/9311_65 -dl /gpfssan1/home/wangq/data/alignment/rice/Nipvs9311_65 -s set01 -p 8 --noaxt -pb lastz --lastz
+
+bsub -n 8 -J Nipvs9311_lpcna perl /gpfssan1/home/wangq/Scripts/blastz/lpcna.pl -dt /gpfssan1/home/wangq/data/alignment/rice/nip_65 -dq /gpfssan1/home/wangq/data/alignment/rice/9311_65 -dl /gpfssan1/home/wangq/data/alignment/rice/Nipvs9311_65 -p 8
+
+perl two_way_batch.pl -d Nipvs9311 -e nip_65 -t="39947,Nip" -q "39946,9311" -a /home/wangq/data/alignment/rice/Nipvs9311_65 -at 10000 -st 10000000 --parallel 4 --run all
+
