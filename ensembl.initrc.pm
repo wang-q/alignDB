@@ -5,7 +5,7 @@ use Bio::EnsEMBL::DBSQL::DBAdaptor;
 use Bio::EnsEMBL::Compara::DBSQL::DBAdaptor;
 
 my @aliases;
-my $host = 'localhost';
+my $host = 'c01n09';
 my $user = 'alignDB';
 my $pass = 'alignDB';
 my $port = 3306;
@@ -100,10 +100,50 @@ my $port = 3306;
     );
 
     @aliases
-        = ( 'Or_sativa', 'Oryza_sativa', 'rice', 'nip', 'nip_65');
+        = ( 'O_sativa', 'Oryza_sativa', 'rice', 'nip', 'nip_65');
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
         -species => 'Oryza sativa',
+        -alias   => \@aliases
+    );
+}
+
+{    # fly
+    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
+        -host    => $host,
+        -user    => $user,
+        -pass    => $pass,
+        -port    => $port,
+        -species => 'Drosophila melanogaster',
+        -group   => 'core',
+        -dbname  => 'fly_65',
+    );
+
+    @aliases
+        = ( 'D_melanogaster', 'Drosophila_melanogaster', 'Dmel', 'fly', 'fly_65');
+
+    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
+        -species => 'Drosophila melanogaster',
+        -alias   => \@aliases
+    );
+}
+
+{    # Dsim
+    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
+        -host    => $host,
+        -user    => $user,
+        -pass    => $pass,
+        -port    => $port,
+        -species => 'Drosophila simulans',
+        -group   => 'core',
+        -dbname  => 'fly_65',
+    );
+
+    @aliases
+        = ( 'D_simulans', 'Drosophila_simulans', 'Dsim',  'Dsim_65');
+
+    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
+        -species => 'Drosophila simulans',
         -alias   => \@aliases
     );
 }
