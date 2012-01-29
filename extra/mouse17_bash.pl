@@ -299,9 +299,9 @@ EOF
     ) or die Template->error;
 }
 
-{    # on windows
-    my $data_dir = "d:/data/alignment/mouse17";
-    my $pl_dir   = "d:/wq/Scripts";
+{    # on linux
+    my $data_dir = File::Spec->catdir( $ENV{HOME}, "data/alignment/mouse17" );
+    my $pl_dir   = File::Spec->catdir( $ENV{HOME}, "Scripts" );
 
     my $tt = Template->new;
 
@@ -344,34 +344,59 @@ EOF
             data_dir => $data_dir,
             pl_dir   => $pl_dir,
         },
-        File::Spec->catfile( $store_dir, "auto_mouse17_stat.bat" )
+        File::Spec->catfile( $store_dir, "auto_mouse17_stat.sh" )
     ) or die Template->error;
 
-    $text = <<'EOF';
-cd /d [% data_dir %]
+    my $strains_of = {
+        MousevsNine => [
+            qw{ Spretus_Ei_1k 129P2 129S1_SvImJ A_J AKR_J C3H_HeJ CBA_J LP_J NOD }
+        ],
+        MousevsEleven => [
+            qw{ Spretus_Ei_1k 129P2 129S1_SvImJ A_J AKR_J C3H_HeJ CBA_J LP_J NOD
+                CAST_Ei PWK_Ph }
+        ],
+        MousevsThirteen => [
+            qw{ Spretus_Ei_1k 129P2 129S1_SvImJ 129S5 A_J AKR_J BALBc_J C3H_HeJ
+                CBA_J DBA_2J LP_J NOD NZO }
+        ],
+        MousevsSixteen => [
+            qw{ Spretus_Ei_1k 129P2 129S1_SvImJ 129S5 A_J AKR_J BALBc_J C3H_HeJ
+                CBA_J DBA_2J LP_J NOD NZO CAST_Ei PWK_Ph WSB_Ei }
+        ],
+    };
 
-REM #----------------------------#
-REM # multi
-REM #----------------------------#
-perl [% pl_dir %]/alignDB/extra/join_dbs.pl --dbs [% dbs %] --goal_db [% goal_db %] --outgroup [% outgroup %] --target [% target %] --queries [% queries %] --no_insert=1 --trimmed_fasta=1 --length 1000
-
-perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% goal_db %] -e mouse_65 -f [% data_dir %]/[% goal_db %]  -lt 1000 -st 10000000 --parallel 4 --run all
-
-EOF
-
-    my @names = ( "Lyrata", map { $_->{name} } @data );
-    my $dbs = join ',', map { "Athvs" . $_ } @names;
-    my $queries = join ',', map { $_ . "query" } ( 1 .. scalar @names - 1 );
-    $tt->process(
-        \$text,
-        {   goal_db  => "MousevsSeventeen",
+    my @group;
+    for my $dbname ( sort keys %{$strains_of} ) {
+        my @strains = @{ $strains_of->{$dbname} };
+        my $dbs     = join ',', map { "Mousevs" . $_ } @strains;
+        my $queries = join ',',
+            map { $_ . "query" } ( 1 .. scalar @strains - 1 );
+        push @group,
+            {
+            goal_db  => $dbname,
             outgroup => '0query',
             target   => '0target',
             dbs      => $dbs,
             queries  => $queries,
-            data_dir => $data_dir,
-            pl_dir   => $pl_dir,
-        },
-        File::Spec->catfile( $store_dir, "auto_mouse17_multi.bat" )
+            };
+    }
+
+    $text = <<'EOF';
+#!/bin/bash
+cd [% data_dir %]
+
+[% FOREACH item IN data -%]
+# [% item.goal_db %]
+perl [% pl_dir %]/alignDB/extra/join_dbs.pl --dbs [% item.dbs %] --goal_db [% item.goal_db %] --outgroup [% item.outgroup %] --target [% item.target %] --queries [% item.queries %] --no_insert=1 --trimmed_fasta=1 --length 1000
+
+perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% item.goal_db %] -e mouse_65 -f [% data_dir %]/[% item.goal_db %]  -lt 1000 -st 10000000 --parallel 8 --run all
+
+[% END -%]
+EOF
+
+    $tt->process(
+        \$text,
+        { data => \@group, data_dir => $data_dir, pl_dir => $pl_dir, },
+        File::Spec->catfile( $store_dir, "auto_mouse17_multi.sh" )
     ) or die Template->error;
 }
