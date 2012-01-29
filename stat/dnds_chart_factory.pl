@@ -75,14 +75,14 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             y_column      => 3,
             y_last_column => 4,
             first_row     => 3,
-            last_row      => 33,
+            last_row      => 18,
             x_min_scale   => 0,
-            x_max_scale   => 30,
+            x_max_scale   => 15,
             x_title       => "Distance to indels (d1)",
             y_title       => "Syn - Nonsyn",
             Height        => 200,
-            Width         => 320,
-            Top           => 12.75,
+            Width         => 220,
+            Top           => 14.25,
             Left          => 550,
         );
 
@@ -93,7 +93,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         $option{y_column}      = 7;
         $option{y_last_column} = 7;
         $option{y_title}       = "dn/ds";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_y( $sheet_name, \%option );
     }
 }
@@ -119,8 +119,8 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             x_title       => "Distance to indels (d1)",
             y_title       => "Syn - Nonsyn",
             Height        => 200,
-            Width         => 320,
-            Top           => 12.75,
+            Width         => 220,
+            Top           => 14.25,
             Left          => 550,
         );
 
@@ -131,7 +131,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         $option{y_column}      = 7;
         $option{y_last_column} = 7;
         $option{y_title}       = "dn/ds";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_y( $sheet_name, \%option );
     }
 }

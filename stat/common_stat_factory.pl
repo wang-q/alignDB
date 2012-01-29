@@ -1069,7 +1069,7 @@ my $dd_group = sub {
         }
 
         my @dd_density_group
-            = ( [ 1, 2 ], [ 3, 10 ], [ 11, 28 ], [ 29, 999 ], );
+            = ( [ 1, 2 ], [ 3, 10 ], [ 11, 18 ], [ 19, 999 ], );
 
         {    # write contents
             my $thaw_sql = $sql_file->retrieve('common-dd_group-4');

@@ -91,17 +91,19 @@ $excel_obj->jc_correction if $jc_correction;
             x_column     => 1,
             y_column     => 2,
             first_row    => 3,
-            last_row     => 33,
-            x_max_scale  => 30,
+            last_row     => 18,
+            x_max_scale  => 15,
             x_title      => "Distance to indels (d1)",
             y_title      => "Nucleotide diversity",
             Height       => 200,
-            Width        => 320,
-            Top          => 12.75,
+            Width        => 220,
+            Top          => 14.25,
             Left         => 520,
         );
         if ( $sheet_name =~ /density/ ) {
-            $option{x_title} = "Reciprocal of indel density (d2)";
+            $option{x_title}     = "Reciprocal of indel density (d2)";
+            $option{last_row}    = 33;
+            $option{x_max_scale} = 30;
         }
         $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -109,14 +111,14 @@ $excel_obj->jc_correction if $jc_correction;
         $option{chart_serial}++;
         $option{y_column} = 4;
         $option{y_title}  = "GC proportion";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_y( $sheet_name, \%option );
 
         # chart 3
         $option{chart_serial}++;
         $option{y_column} = 6;
         $option{y_title}  = "CV";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_y( $sheet_name, \%option );
     }
 }
@@ -134,12 +136,11 @@ $excel_obj->jc_correction if $jc_correction;
         first_row    => 3,
         last_row     => 33,
         x_max_scale  => 30,
-        y_scale_unit => 0.001,
         x_title      => "Distance to indels (D1)",
         y_title      => "Nucleotide diversity",
         Height       => 200,
         Width        => 320,
-        Top          => 12.75,
+        Top          => 14.25,
         Left         => 520,
     );
 
@@ -206,9 +207,8 @@ $excel_obj->jc_correction if $jc_correction;
     #----------------------------#
     # worksheet -- distance_gc
     #----------------------------#
-    $sheet_name           = 'distance_gc';
-    $option{y_title}      = "GC proportion";
-    $option{y_scale_unit} = 0.01;
+    $sheet_name = 'distance_gc';
+    $option{y_title} = "GC proportion";
 
     #$excel_obj->draw_y( $sheet_name, \%option );
 
@@ -229,9 +229,8 @@ $excel_obj->jc_correction if $jc_correction;
     #----------------------------#
     # worksheet -- distance_dG
     #----------------------------#
-    $sheet_name           = 'distance_dG';
-    $option{y_title}      = "delta G";
-    $option{y_scale_unit} = 0.01;
+    $sheet_name = 'distance_dG';
+    $option{y_title} = "delta G";
 
     $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -264,12 +263,11 @@ $excel_obj->jc_correction if $jc_correction;
         first_row    => 3,
         last_row     => 63,
         x_max_scale  => 60,
-        y_scale_unit => 0.001,
         x_title      => "Indel density (d2)",
         y_title      => "Nucleotide diversity",
         Height       => 200,
         Width        => 320,
-        Top          => 12.75,
+        Top          => 14.25,
         Left         => 520,
     );
 
@@ -278,18 +276,16 @@ $excel_obj->jc_correction if $jc_correction;
     #----------------------------#
     # worksheet -- density_gc
     #----------------------------#
-    $sheet_name           = 'density_gc';
-    $option{y_title}      = "GC proportion";
-    $option{y_scale_unit} = 0.01;
+    $sheet_name = 'density_gc';
+    $option{y_title} = "GC proportion";
 
     #$excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
     # worksheet -- density_dG
     #----------------------------#
-    $sheet_name           = 'density_dG';
-    $option{y_title}      = "delta G";
-    $option{y_scale_unit} = 0.01;
+    $sheet_name = 'density_dG';
+    $option{y_title} = "delta G";
 
     $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -318,12 +314,11 @@ $excel_obj->jc_correction if $jc_correction;
     my @group_name = qw/1--5 6--10 11--50 51--300/;
     my %option     = (
         chart_serial   => 1,
-        y_scale_unit   => 0.001,
         x_title        => "Distance to indels (d1)",
         y_title        => "Nucleotide diversity",
         Height         => 200,
         Width          => 320,
-        Top            => 12.75 * 17,
+        Top            => 14.25 * 17,
         Left           => 360,
         group_name     => \@group_name,
         section_top    => 2,
@@ -457,13 +452,11 @@ $excel_obj->jc_correction if $jc_correction;
         chart_serial => 1,
         x_column     => 2,
         y_column     => 3,
-        x_scale_unit => 0.005,
-        y_scale_unit => 0.5,
         x_title      => "Nucleotide diversity",
         y_title      => "SNP/Indel ratio",
         Height       => 200,
         Width        => 320,
-        Top          => 12.75,
+        Top          => 14.25,
         Left         => 520,
     );
 
@@ -489,15 +482,14 @@ $excel_obj->jc_correction if $jc_correction;
         = qw/200--399 400--799 800--1199 1200--1999 2000--2999 >=3000/;
     my %option = (
         chart_serial   => 1,
-        y_scale_unit   => 0.001,
         x_title        => "Distance to indels (d1)",
         y_title        => "Nucleotide diversity",
         Height         => 200,
         Width          => 320,
-        Height         => 283.7,
-        Width          => 453.9,
-        Top            => 12.75 * 38,
-        Left           => 360,
+        Height         => 200,
+        Width          => 320,
+        Top            => 14.25 * 38,
+        Left           => 520,
         group_name     => \@group_name,
         section_top    => 2,
         section_end    => 36,
@@ -510,10 +502,14 @@ $excel_obj->jc_correction if $jc_correction;
     #----------------------------#
     # worksheet -- dd_group_gc
     #----------------------------#
-    $sheet_name         = 'dd_group_gc';
-    @group_name         = qw/200--599 600--1399 1400--2999 >=3000/;
-    $option{group_name} = \@group_name;
-    $option{y_title}    = "GC proportion";
+    $sheet_name             = 'dd_group_gc';
+    @group_name             = qw/200--599 600--1399 1400--2999 >=3000/;
+    $option{group_name}     = \@group_name;
+    $option{Top}            = 14.25 * 28;
+    $option{section_top}    = 2;
+    $option{section_end}    = 26;
+    $option{section_length} = 25;
+    $option{y_title}        = "GC proportion";
 
     $excel_obj->draw_dd( $sheet_name, \%option );
 
@@ -543,7 +539,7 @@ $excel_obj->jc_correction if $jc_correction;
         Width          => 320,
         Height         => 283.7,
         Width          => 453.9,
-        Top            => 12.75 * 17,
+        Top            => 14.25 * 17,
         Left           => 360,
         group_name     => \@group_name,
         section_top    => 2,
@@ -569,12 +565,11 @@ $excel_obj->jc_correction if $jc_correction;
         first_row     => 3,
         last_row      => 63,
         x_max_scale   => 60,
-        y_scale_unit  => 0.05,
         x_title       => "Indel density (d2)",
         y_title       => "Proportion of substitutions",
         Height        => 200,
         Width         => 320,
-        Top           => 12.75,
+        Top           => 14.25,
         Left          => 520,
     );
 
