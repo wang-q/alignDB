@@ -5,7 +5,7 @@ use Bio::EnsEMBL::DBSQL::DBAdaptor;
 use Bio::EnsEMBL::Compara::DBSQL::DBAdaptor;
 
 my @aliases;
-my $host = 'c01n09';
+my $host = 'localhost';
 my $user = 'alignDB';
 my $pass = 'alignDB';
 my $port = 3306;
@@ -136,14 +136,34 @@ my $port = 3306;
         -port    => $port,
         -species => 'Drosophila simulans',
         -group   => 'core',
-        -dbname  => 'fly_65',
+        -dbname  => 'dsim_65',
     );
 
     @aliases
-        = ( 'D_simulans', 'Drosophila_simulans', 'Dsim',  'Dsim_65');
+        = ( 'D_simulans', 'Drosophila_simulans', 'Dsim',  'dsim_65');
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
         -species => 'Drosophila simulans',
+        -alias   => \@aliases
+    );
+}
+
+{    # Dyak
+    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
+        -host    => $host,
+        -user    => $user,
+        -pass    => $pass,
+        -port    => $port,
+        -species => 'Drosophila yakuba',
+        -group   => 'core',
+        -dbname  => 'dyak_65',
+    );
+
+    @aliases
+        = ( 'D_yakuba', 'Drosophila_yakuba', 'Dyak',  'dyak_65');
+
+    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
+        -species => 'Drosophila yakuba',
         -alias   => \@aliases
     );
 }
