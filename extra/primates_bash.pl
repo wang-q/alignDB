@@ -172,7 +172,7 @@ cd [% data_dir %]
 # Ensembl annotation or RepeatMasker
 #----------------------------#
 [% FOREACH item IN data -%]
-# [% item.name %]
+# [% item.name %] [% item.coverage %]
 echo [% item.name %]
 
 cd [% item.dir %]
@@ -221,7 +221,7 @@ cd [% data_dir %]
 # repeatmasker on all fasta
 #----------------------------#
 [% FOREACH item IN data -%]
-# [% item.name %]
+# [% item.name %] [% item.coverage %]
 # for i in [% item.dir %]/*.fasta; do bsub -n 8 -J [% item.name %]_`basename $i .fasta` RepeatMasker $i -species Primates -xsmall --parallel 8; done;
 bsub -n 8 -J [% item.name %]-rm RepeatMasker [% item.dir %]/*.fasta -species Primates -xsmall --parallel 8
 
@@ -259,7 +259,7 @@ cd [% data_dir %]
 # blastz
 #----------------------------#
 [% FOREACH item IN data -%]
-# [% item.name %]
+# [% item.name %] [% item.coverage %]
 # To avoid memory overflow, set parallel to 6
 bsub -n 8 -J [% item.name %]-bz perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/human -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Humanvs[% item.name FILTER ucfirst %] -s set01 -p 6 --noaxt -pb lastz --lastz
 
@@ -285,52 +285,46 @@ EOF
         File::Spec->catfile( $store_dir, "auto_primates_bz_bsub.sh" )
     ) or die Template->error;
 
-    #
-    #    $text = <<'EOF';
-##!/bin/bash
-    #
-##----------------------------#
-## tar-gzip
-##----------------------------#
-    #[% FOREACH item IN data -%]
-## [% item.name %] [% item.coverage %]
-    #cd [% data_dir %]/Mousevs[% item.name %]/
-    #
-    #tar -czvf lav.tar.gz   [*.lav   --remove-files
-    #tar -czvf psl.tar.gz   [*.psl   --remove-files
-    #tar -czvf chain.tar.gz [*.chain --remove-files
-    #gzip *.chain
-    #gzip net/*
-    #gzip axtNet/*.axt
-    #
-    #[% END -%]
-    #
-##----------------------------#
-## only keeps chr.2bit files
-##----------------------------#
-## find [% data_dir %] -name "*.fa" | xargs rm
-## find [% data_dir %] -name "*.fasta" | xargs rm
-## find [% data_dir %] -name "*.fasta.cat" | xargs rm
-## find [% data_dir %] -name "*.fasta.out" | xargs rm
-## find [% data_dir %] -name "*.fasta.ref" | xargs rm
-## find [% data_dir %] -name "*.fasta.tbl" | xargs rm
-## grep -lir "Successfully completed" output* | xargs rm
-    #
-    #EOF
-    #    $tt->process(
-    #        \$text,
-    #        {   data        => \@data,
-    #            data_dir    => $data_dir,
-    #            pl_dir      => $pl_dir,
-    #            kentbin_dir => $kentbin_dir
-    #        },
-    #        File::Spec->catfile( $store_dir, "auto_mouse17_clean.sh" )
-    #    ) or die Template->error;
+    $text = <<'EOF';
+#!/bin/bash
+    
+#----------------------------#
+# tar-gzip
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
+cd [% data_dir %]/Humanvs[% item.name FILTER ucfirst %]/
+
+tar -czvf lav.tar.gz   [*.lav   --remove-files
+tar -czvf psl.tar.gz   [*.psl   --remove-files
+tar -czvf chain.tar.gz [*.chain --remove-files
+gzip *.chain
+gzip net/*
+gzip axtNet/*.axt
+
+[% END -%]
+    
+#----------------------------#
+# only keeps chr.2bit files
+#----------------------------#
+# find [% data_dir %] -name "*.fa" | xargs rm
+# find [% data_dir %] -name "*.fasta*" | xargs rm
+
+EOF
+    $tt->process(
+        \$text,
+        {   data        => \@data,
+            data_dir    => $data_dir,
+            pl_dir      => $pl_dir,
+            kentbin_dir => $kentbin_dir
+        },
+        File::Spec->catfile( $store_dir, "auto_primates_clean.sh" )
+    ) or die Template->error;
 }
 
 {    # on windows
-    my $data_dir = File::Spec->catdir( "d:/data/alignment/human" );
-    my $pl_dir   = File::Spec->catdir( "d:/wq/Scripts" );
+    my $data_dir = File::Spec->catdir("d:/data/alignment/human");
+    my $pl_dir   = File::Spec->catdir("d:/wq/Scripts");
 
     my $tt = Template->new;
 
@@ -346,7 +340,7 @@ EOF
         { taxon => 30608, name => "lemur", },
         { taxon => 30611, name => "bushbaby", },
     );
-    
+
     my $text = <<'EOF';
 cd /d [% data_dir %]
 
@@ -355,7 +349,7 @@ cd /d [% data_dir %]
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %]
-perl [% pl_dir %]/alignDB/extra/two_way_batch.pl -d Humanvs[% item.name %] -t="9606,human" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]/Humanvs[% item.name FILTER ucfirst %] -at 10000 -st 10000000 --parallel 4 --run 1-3,21,40
+perl [% pl_dir %]/alignDB/extra/two_way_batch.pl -d Humanvs[% item.name FILTER ucfirst %] -t="9606,human" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]/Humanvs[% item.name FILTER ucfirst %] -at 10000 -st 10000000 --parallel 4 --run 1-3,21,40
 
 [% END -%]
 
