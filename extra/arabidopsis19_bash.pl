@@ -10,14 +10,14 @@ use File::Spec;
 use String::Compare;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-my $store_dir = shift || "/home/wangq/data/alignment/arabidopsis19";
+my $store_dir = shift || File::Spec->catdir( $ENV{HOME}, "data/alignment/arabidopsis19" );
 {    # on linux
-    my $data_dir    = "/home/wangq/data/alignment/arabidopsis19";
-    my $pl_dir      = "/home/wangq/Scripts";
-    my $kentbin_dir = "/home/wangq/bin/x86_64";
+    my $data_dir    = File::Spec->catdir( $ENV{HOME}, "data/alignment/arabidopsis19" );
+    my $pl_dir      = File::Spec->catdir( $ENV{HOME}, "Scripts" );
+    my $kentbin_dir = File::Spec->catdir( $ENV{HOME}, "bin/x86_64" );
 
     # nature 2011
-    my $seq_dir = "/home/wangq/data/1001/19genomes/fasta/MASKED";
+    my $seq_dir = File::Spec->catdir( $ENV{HOME}, "data/1001/19genomes/fasta/MASKED" );
 
     my $tt = Template->new;
 
@@ -110,7 +110,7 @@ find [% item.dir %] -name "*.fa" | sed "s/\.fa$//" | xargs -i echo mv {}.fa {}.f
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.origin %]
-RepeatMasker [% item.dir %]/*.fasta -species arabidopsis -xsmall -s --parallel 4
+RepeatMasker [% item.dir %]/*.fasta -species arabidopsis -xsmall --parallel 4
 
 find [% item.dir %] -name "*.fasta.masked" | sed "s/\.fasta\.masked$//" | xargs -i echo mv {}.fasta.masked {}.fa | sh
 
@@ -141,7 +141,7 @@ perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/ath_65 -dq [% data_dir %]/[% i
     -dl [% data_dir %]/Athvs[% item.name %] -s set01 -p 4 --noaxt -pb lastz --lastz --paired
 
 perl [% pl_dir %]/blastz/lpcna.pl -dt [% data_dir %]/ath_65 -dq [% data_dir %]/[% item.name %] \
-    -dl [% data_dir %]/Athvs[% item.name %]
+    -dl [% data_dir %]/Athvs[% item.name %] -p 4
 
 [% END -%]
 
@@ -154,6 +154,42 @@ EOF
             kentbin_dir => $kentbin_dir
         },
         File::Spec->catfile( $store_dir, "auto_ath19_bz.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+#!/bin/bash
+    
+#----------------------------#
+# tar-gzip
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
+cd [% data_dir %]/Athvs[% item.name %]/
+
+tar -czvf lav.tar.gz   [*.lav   --remove-files
+tar -czvf psl.tar.gz   [*.psl   --remove-files
+tar -czvf chain.tar.gz [*.chain --remove-files
+gzip *.chain
+gzip net/*
+gzip axtNet/*.axt
+
+[% END -%]
+    
+#----------------------------#
+# only keeps chr.2bit files
+#----------------------------#
+# find [% data_dir %] -name "*.fa" | xargs rm
+# find [% data_dir %] -name "*.fasta*" | xargs rm
+
+EOF
+    $tt->process(
+        \$text,
+        {   data        => \@data,
+            data_dir    => $data_dir,
+            pl_dir      => $pl_dir,
+            kentbin_dir => $kentbin_dir
+        },
+        File::Spec->catfile( $store_dir, "auto_ath19_clean.sh" )
     ) or die Template->error;
 }
 
