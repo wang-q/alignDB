@@ -2,6 +2,10 @@
 #----------------------------#
 # align from scratch
 #----------------------------#
+
+#----------------------------#
+# RepeatMasker or Ensembl annotation
+#----------------------------#
 # human
 mkdir ~/data/alignment/human
 mkdir ~/data/alignment/human/human_65
@@ -17,32 +21,34 @@ find . -name "HG*" | xargs rm
 ~/perl5/bin/rename 's/^/chr/' *.fa
 perl -p -i -e '/>/ and s/\>/\>chr/' *.fa
 
-perl write_masked_chr.pl -e human_65
-perl write_masked_chr.pl -y human_65_repeat.yml --dir ~/data/alignment/human/human_65
+perl ~/Scripts/alignDB/util/write_masked_chr.pl -e human_65
+perl ~/Scripts/alignDB/util/write_masked_chr.pl -y human_65_repeat.yml --dir ~/data/alignment/human/human_65
 
 find . -name "*fa" | xargs rm
-~/perl5/bin/rename 's/\.masked//' *.masked
+~/perl5/bin/rename 's/\.masked//' *.fa.masked
 
 # chimp
 mkdir ~/data/alignment/human/chimp_65
-cd ~/data/ensembl65/pan_troglodytes/dna/
-find -name "*dna.toplevel*" | xargs gzip -d -c > ~/data/alignment/human/chimp_65/toplevel.fa
 cd ~/data/alignment/human/chimp_65/
+find ~/data/ensembl65/pan_troglodytes/dna/ -name "*dna.toplevel*" | xargs gzip -d -c > toplevel.fa
 ~/bin/x86_64/faCount toplevel.fa | perl -aln -e 'next if $F[0] eq 'total'; print $F[0] if $F[1] > 100000; print $F[0] if $F[1] > 10000  and $F[6]/$F[1] < 0.05' | uniq > listFile
 ~/bin/x86_64/faSomeRecords toplevel.fa listFile toplevel.filtered.fa
 ~/bin/x86_64/faSplit byname toplevel.filtered.fa .
-
-cat GL* > chrUn.fasta
-rm GL*
-cat AACZ* >> chrUn.fasta
-rm AACA*
 rm toplevel.fa toplevel.filtered.fa listFile
 
-~/perl5/bin/rename 's/^/chr/' *.fa
-perl -p -i -e '/>/ and s/\>/\>chr/' *.fa
-~/perl5/bin/rename 's/fa$/fasta/' *.fa
+perl ~/Scripts/alignDB/util/build_ensembl.pl --initdb --db chimp_65 --ensembl ~/data/ensembl65/pan_troglodytes_core_65_214
 
-bsub -n 8 -J chimp-RM RepeatMasker ~/data/alignment/human/chimp_65/*.fasta -species Primates -xsmall -s --parallel 8
+perl ~/Scripts/alignDB/util/write_masked_chr.pl -e chimp_65
+perl ~/Scripts/alignDB/util/write_masked_chr.pl -y chimp_65_repeat.yml --dir ~/data/alignment/human/chimp_65
+
+find . -name "*fa" | xargs rm
+~/perl5/bin/rename 's/\.masked//' *.fa.masked
+~/perl5/bin/rename 's/^/chr/' *.fa
+
+if [ -f chrUn.fasta ]; then bsub -n 8 -J chimp-RM RepeatMasker ~/data/alignment/human/chimp_65/chrUn.fasta -species Primates -xsmall -s --parallel 8; fi;
+
+if [ -f chrUn.fasta.masked]; then ~/perl5/bin/rename 's/fasta.masked$/fa/' *.fasta.masked; fi;
+find ~/data/alignment/human/chimp_65/ -type f -name "*fasta*" | xargs rm 
 
 # gorilla
 mkdir ~/data/alignment/human/gorilla_65
@@ -53,27 +59,41 @@ cd ~/data/alignment/human/gorilla_65/
 ~/bin/x86_64/faSomeRecords toplevel.fa listFile toplevel.filtered.fa
 ~/bin/x86_64/faSplit byname toplevel.filtered.fa .
 
-cat cutchr.fa unplaced.fa > chrUn.fasta
-rm cutchr.fa unplaced.fa 
 rm toplevel.fa toplevel.filtered.fa listFile
 
 ~/perl5/bin/rename 's/^/chr/' *.fa
 perl -p -i -e '/>/ and s/\>/\>chr/' *.fa
-~/perl5/bin/rename 's/fa$/fasta/' *.fa
 
-bsub -n 8 -J gorilla-RM RepeatMasker ~/data/alignment/human/gorilla_65/*.fasta -species Primates -xsmall -s --parallel 8
+perl ~/Scripts/alignDB/util/build_ensembl.pl --initdb --db gorilla_65 --ensembl ~/data/ensembl65/gorilla_gorilla_core_65_31
 
-perl ~/Scripts/alignDB/util/build_ensembl.pl --initdb --db gorilla_65 --ensembl ~/data/ensemblgenomes12_65/metazoa/mysql/drosophila_yakuba_core_12_65_13
+perl ~/Scripts/alignDB/util/write_masked_chr.pl -e gorilla_65
+perl ~/Scripts/alignDB/util/write_masked_chr.pl -y gorilla_65_repeat.yml --dir ~/data/alignment/human/gorilla_65
 
+find . -name "*fa" | xargs rm
+~/perl5/bin/rename 's/\.masked//' *.fa.masked
 
 # orangutan
 mkdir ~/data/alignment/human/orangutan_65
-cd ~/data/ensembl65/pongo_abelii/dna
-find -name "*dna.toplevel*" | xargs gzip -d -c > ~/data/alignment/human/orangutan_65/toplevel.fa
 cd ~/data/alignment/human/orangutan_65/
+
+find ~/data/ensembl65/pongo_abelii/dna -name "*dna.toplevel*" | xargs gzip -d -c > toplevel.fa
 ~/bin/x86_64/faCount toplevel.fa | perl -aln -e 'next if $F[0] eq 'total'; print $F[0] if $F[1] > 100000; print $F[0] if $F[1] > 10000  and $F[6]/$F[1] < 0.05' | uniq > listFile
 ~/bin/x86_64/faSomeRecords toplevel.fa listFile toplevel.filtered.fa
 ~/bin/x86_64/faSplit byname toplevel.filtered.fa .
+rm toplevel.fa toplevel.filtered.fa listFile
+
+perl ~/Scripts/alignDB/util/build_ensembl.pl --initdb --db orangutan_65 --ensembl ~/data/ensembl65/pongo_abelii_core_65_1
+
+perl ~/Scripts/alignDB/util/write_masked_chr.pl -e orangutan_65
+perl ~/Scripts/alignDB/util/write_masked_chr.pl -y orangutan_65_repeat.yml --dir ~/data/alignment/human/orangutan_65
+
+~/perl5/bin/rename 's/^/chr/' *.fa
+perl -p -i -e '/>/ and s/\>/\>chr/' *.fa
+
+find . -name "*fa" | xargs rm
+~/perl5/bin/rename 's/\.masked//' *.fa.masked
+
+# gibbon
 
 # rhesus
 mkdir ~/data/alignment/human/rhesus_65
@@ -88,7 +108,33 @@ cat 1099* > chrUn.fasta
 rm 1099*
 rm toplevel.fa toplevel.filtered.fa listFile
 
-bsub -n 8 -J rhesus-RM RepeatMasker ~/data/alignment/human/rhesus_65/*.fasta -species Primates -xsmall -s --parallel 8
+~/perl5/bin/rename 's/^/chr/' *.fa
+perl -p -i -e '/>/ and s/\>/\>chr/' *.fa
+
+perl ~/Scripts/alignDB/util/build_ensembl.pl --initdb --db rhesus_65 --ensembl ~/data/ensembl65/macaca_mulatta_core_65_10
+
+perl ~/Scripts/alignDB/util/write_masked_chr.pl -e rhesus_65
+perl ~/Scripts/alignDB/util/write_masked_chr.pl -y rhesus_65_repeat.yml --dir ~/data/alignment/human/rhesus_65
+
+find . -name "*fa" | xargs rm
+~/perl5/bin/rename 's/\.masked//' *.fa.masked
+
+bsub -n 8 -J rhesus-RM RepeatMasker ~/data/alignment/human/rhesus_65/chrUn.fasta -species Primates -xsmall -s --parallel 8
+
+~/perl5/bin/rename 's/fasta.masked$/fa/' ~/data/alignment/human/rhesus_65/*.fasta.masked
+find ~/data/alignment/human/rhesus_65/ -type f -name "*fasta*" | xargs rm 
+
+# marmoset
+
+# tarsier
+
+# lemur
+
+# bushbaby
+
+#----------------------------#
+# blastz
+#----------------------------#
 
 ##############################
 cd /d D:\wq\Scripts\alignDB\extra
