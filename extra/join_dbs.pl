@@ -57,6 +57,8 @@ my $reduce_end       = $Config->{ref}{reduce_end};
 my $no_insert       = 0;
 my $discard_distant = 0;
 
+my $crude_only = 0;
+
 # realign parameters
 my $indel_expand = $Config->{ref}{indel_expand};
 my $indel_join   = $Config->{ref}{indel_join};
@@ -80,6 +82,7 @@ GetOptions(
     'target=s'          => \$target,
     'queries=s'         => \$queries,
     'length=i'          => \$length_threshold,
+    'crude_only=s'      => \$crude_only,
     'raw_fasta=s'       => \$raw_fasta,
     'trimmed_fasta=s'   => \$trimmed_fasta,
     'reduce_end=i'      => \$reduce_end,
@@ -97,6 +100,10 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 # perl init_alignDB.pl
 #----------------------------------------------------------#
 $stopwatch->start_message("Joining DBs...");
+
+if ($crude_only) {
+    $no_insert = 1;
+}
 
 if ( !$no_insert and $init_db and $goal_db ) {
     my $cmd
@@ -165,9 +172,8 @@ for (@all_dbs) {
         pos_obj => $cur_pos_obj,
     };
 
-    (   $db_info_of{$_}->{target}{taxon_id},
-        $db_info_of{$_}->{query}{taxon_id},
-    ) = $cur_obj->get_taxon_ids;
+    ( $db_info_of{$_}->{target}{taxon_id}, $db_info_of{$_}->{query}{taxon_id}, )
+        = $cur_obj->get_taxon_ids;
 
     ( $db_info_of{$_}->{target}{name}, $db_info_of{$_}->{query}{name}, )
         = $cur_obj->get_names;
@@ -241,7 +247,7 @@ for my $chr_id ( $db_info_of{$target_db}->{chr_id_set}->elements ) {
     my $inter_chr_set = AlignDB::IntSpan->new;
     for my $db_name (@all_dbs) {
         my $cur_chr_set = $db_info_of{$db_name}->{chrs}{$chr_id}{set};
-        $cur_chr_set =  AlignDB::IntSpan->new unless $cur_chr_set;
+        $cur_chr_set = AlignDB::IntSpan->new unless $cur_chr_set;
         if ( $inter_chr_set->is_empty ) {
             $inter_chr_set = $cur_chr_set;
         }
@@ -350,6 +356,7 @@ SEG: for (@segments) {
             }
             elsif ( all { $_ ne '-' } @target_bases ) {
                 warn " " x 8 . "align error in $pos_count, [@target_bases]\n";
+
                 #my %target_seq_of
                 #    = map { $_ => $db_info_of{$_}->{target}{seq} } @all_dbs;
                 #DumpFile( "$chr_name-$seg_start-$seg_end.yml",
@@ -394,6 +401,36 @@ SEG: for (@segments) {
         }
 
         #----------------------------#
+        # output peusdo-aligned fasta, need be refined later
+        # skip all processing thereafter
+        #----------------------------#
+        if ($crude_only) {
+            my $goal_db_crude = "$goal_db.crude";
+            unless ( -e $goal_db_crude ) {
+                mkdir $goal_db_crude, 0777
+                    or die "Cannot create [$goal_db_crude] directory: $!";
+            }
+            my $first_taxon_id = $info_of{ $all_names[1] }->{taxon_id};
+            my $outfile
+                = "./$goal_db_crude/"
+                . "id$first_taxon_id"
+                . "_$chr_name"
+                . "_$seg_start"
+                . "_$seg_end" . ".fas";
+            print " " x 4, "$outfile\n";
+            open my $out_fh, '>', $outfile
+                or die("Cannot open output file $outfile");
+            for my $name (@all_names) {
+                my $seq = $info_of{$name}->{seq};
+                print {$out_fh} ">", $info_of{$name}->{name}, "\n";
+                print {$out_fh} $seq, "\n";
+            }
+            close $out_fh;
+
+            next SEG;
+        }
+
+        #----------------------------#
         # clustalw realign indel_flank region
         #----------------------------#
         {
@@ -405,17 +442,18 @@ SEG: for (@segments) {
         # output a raw fasta alignment for further use
         #----------------------------#
         if ($raw_fasta) {
-            unless ( -e $goal_db ) {
-                mkdir $goal_db, 0777
-                    or die "Cannot create \"$goal_db\" directory: $!";
+            my $goal_db_raw = "$goal_db.raw";
+            unless ( -e $goal_db_raw ) {
+                mkdir $goal_db_raw, 0777
+                    or die "Cannot create [$goal_db_raw] directory: $!";
             }
             my $first_taxon_id = $info_of{ $all_names[1] }->{taxon_id};
             my $outfile
-                = "./$goal_db/" . "raw_"
-                . "id$first_taxon_id" . "_"
-                . $chr_name . "_"
-                . $seg_start . "_"
-                . $seg_end . ".fas";
+                = "./$goal_db_raw/"
+                . "id$first_taxon_id"
+                . "_$chr_name"
+                . "_$seg_start"
+                . "_$seg_end" . ".fas";
             print " " x 4, "$outfile\n";
             open my $out_fh, '>', $outfile
                 or die("Cannot open output file $outfile");
@@ -495,8 +533,8 @@ SEG: for (@segments) {
                 # modify all related set
                 $union_set = $union_set->banish_span( $seg_start, $seg_end );
                 for (@ingroup_names) {
-                    $indel_sets{$_} = $indel_sets{$_}
-                        ->banish_span( $seg_start, $seg_end );
+                    $indel_sets{$_}
+                        = $indel_sets{$_}->banish_span( $seg_start, $seg_end );
                 }
                 $outgroup_indel_set->banish_span( $seg_start, $seg_end );
                 $complex_region
@@ -513,8 +551,7 @@ SEG: for (@segments) {
                 for my $out_span ( $outgroup_intersect_set->runlists ) {
 
                     for my $union_span ( $union_set->runlists ) {
-                        my $sub_union_set
-                            = AlignDB::IntSpan->new($union_span);
+                        my $sub_union_set = AlignDB::IntSpan->new($union_span);
 
                         # union_set > intersect_set
                         if ( $sub_union_set->larger_than($out_span) ) {
@@ -542,10 +579,10 @@ SEG: for (@segments) {
             my $first_taxon_id = $info_of{ $all_names[1] }->{taxon_id};
             my $outfile
                 = "./$goal_db/"
-                . "id$first_taxon_id" . "_"
-                . $chr_name . "_"
-                . $seg_start . "_"
-                . $seg_end . ".fas";
+                . "id$first_taxon_id"
+                . "_$chr_name"
+                . "_$seg_start"
+                . "_$seg_end" . ".fas";
             print " " x 4, "$outfile\n";
             open my $out_fh, '>', $outfile
                 or die("Cannot open OUT file $outfile");
@@ -564,14 +601,13 @@ SEG: for (@segments) {
                 data  => \@ingroup_names,
             );
             while ( my @combo = $combinat->next_combination ) {
-                @combo = sort { $ingroup_order{$a} <=> $ingroup_order{$b} }
-                    @combo;
+                @combo
+                    = sort { $ingroup_order{$a} <=> $ingroup_order{$b} } @combo;
                 my ( $tname, $qname ) = @combo;
                 print "insert $tname $qname\n";
                 my $cur_align_id
-                    = $goal_obj->add_align( $info_of{$tname},
-                    $info_of{$qname}, $info_of{$outgroup},
-                    $info_of{$outgroup}->{all_indel} );
+                    = $goal_obj->add_align( $info_of{$tname}, $info_of{$qname},
+                    $info_of{$outgroup}, $info_of{$outgroup}->{all_indel} );
                 push @align_ids, $cur_align_id;
             }
         }
@@ -659,11 +695,9 @@ sub build_seq {
     $db_info->{query}{chr_end}
         = $pos_obj->at_query_chr( $align_id, $align_end );
 
-    $db_info->{target}{seq} = substr(
-        $db_info->{target}{full_seq},
-        $align_start - 1,
-        $align_length
-    );
+    $db_info->{target}{seq}
+        = substr( $db_info->{target}{full_seq}, $align_start - 1,
+        $align_length );
     $db_info->{query}{seq}
         = substr( $db_info->{query}{full_seq}, $align_start - 1,
         $align_length );
@@ -687,15 +721,14 @@ sub realign {
     my $info_of   = shift;
     my $all_names = shift;
 
-    my %info_of   = %{$info_of};
+    my %info_of = %{$info_of};
 
     # use AlignDB::IntSpan to find nearby indels
     #   expand indel by a range of $indel_expand
 
     my %indel_sets;
     for (@$all_names) {
-        $indel_sets{$_}
-            = find_indel_set( $info_of{$_}->{seq}, $indel_expand );
+        $indel_sets{$_} = find_indel_set( $info_of{$_}->{seq}, $indel_expand );
     }
 
     my $realign_region = AlignDB::IntSpan->new;
@@ -749,7 +782,7 @@ sub realign {
         }
     }
 
-    $info_of   = \%info_of;
+    $info_of = \%info_of;
 }
 
 #----------------------------#
@@ -759,7 +792,7 @@ sub trim_hf {
     my $info_of   = shift;
     my $all_names = shift;
 
-    my %info_of   = %{$info_of};
+    my %info_of = %{$info_of};
 
     # header indels
     while (1) {
@@ -797,7 +830,7 @@ sub trim_hf {
         }
     }
 
-    $info_of   = \%info_of;
+    $info_of = \%info_of;
 }
 
 #----------------------------#
@@ -811,7 +844,7 @@ sub trim_outgroup {
     my $info_of   = shift;
     my $all_names = shift;
 
-    my %info_of   = %{$info_of};
+    my %info_of = %{$info_of};
 
     # add raw_seqs to outgroup info hash
     # it will be used in $goal_obj->add_align
@@ -850,7 +883,7 @@ sub trim_outgroup {
         }
     }
 
-    $info_of   = \%info_of;
+    $info_of = \%info_of;
 }
 
 __END__
