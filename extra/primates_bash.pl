@@ -248,7 +248,7 @@ EOF
             pl_dir      => $pl_dir,
             kentbin_dir => $kentbin_dir
         },
-        File::Spec->catfile( $store_dir, "auto_primates_rm_bsub.sh" )
+        File::Spec->catfile( $store_dir, "auto_primates_rm.sh" )
     ) or die Template->error;
 
     $text = <<'EOF';
@@ -259,19 +259,23 @@ cd [% data_dir %]
 # blastz
 #----------------------------#
 [% FOREACH item IN data -%]
+[% IF item.name != 'human' -%]
 # [% item.name %] [% item.coverage %]
 # To avoid memory overflow, set parallel to 6
 bsub -n 8 -J [% item.name %]-bz perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/human -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Humanvs[% item.name FILTER ucfirst %] -s set01 -p 6 --noaxt -pb lastz --lastz
 
+[% END -%]
 [% END -%]
 
 #----------------------------#
 # lpcna
 #----------------------------#
 [% FOREACH item IN data -%]
+[% IF item.name != 'human' -%]
 # [% item.name %] [% item.coverage %]
 bsub -n 8 -J [% item.name %]-axt perl [% pl_dir %]/blastz/lpcna.pl -dt [% data_dir %]/human -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Humanvs[% item.name FILTER ucfirst %] -p 8
 
+[% END -%]
 [% END -%]
 
 EOF
@@ -282,7 +286,7 @@ EOF
             pl_dir      => $pl_dir,
             kentbin_dir => $kentbin_dir
         },
-        File::Spec->catfile( $store_dir, "auto_primates_bz_bsub.sh" )
+        File::Spec->catfile( $store_dir, "auto_primates_bz.sh" )
     ) or die Template->error;
 
     $text = <<'EOF';
@@ -292,6 +296,7 @@ EOF
 # tar-gzip
 #----------------------------#
 [% FOREACH item IN data -%]
+[% IF item.name != 'human' -%]
 # [% item.name %] [% item.coverage %]
 cd [% data_dir %]/Humanvs[% item.name FILTER ucfirst %]/
 
@@ -302,6 +307,7 @@ gzip *.chain
 gzip net/*
 gzip axtNet/*.axt
 
+[% END -%]
 [% END -%]
     
 #----------------------------#
@@ -319,6 +325,31 @@ EOF
             kentbin_dir => $kentbin_dir
         },
         File::Spec->catfile( $store_dir, "auto_primates_clean.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+#!/bin/bash
+    
+#----------------------------#
+# amp
+#----------------------------#
+[% FOREACH item IN data -%]
+[% IF item.name != 'human' -%]
+# [% item.name %] [% item.coverage %]
+perl [% pl_dir %]/blastz/amp.pl -dt [% data_dir %]/human -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Humanvs[% item.name FILTER ucfirst %] -p 8
+
+[% END -%]
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data        => \@data,
+            data_dir    => $data_dir,
+            pl_dir      => $pl_dir,
+            kentbin_dir => $kentbin_dir
+        },
+        File::Spec->catfile( $store_dir, "auto_primates_amp.sh" )
     ) or die Template->error;
 }
 
@@ -348,9 +379,11 @@ cd /d [% data_dir %]
 # stat
 #----------------------------#
 [% FOREACH item IN data -%]
+[% IF item.name != 'human' -%]
 # [% item.name %]
 perl [% pl_dir %]/alignDB/extra/two_way_batch.pl -d Humanvs[% item.name FILTER ucfirst %] -t="9606,human" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]/Humanvs[% item.name FILTER ucfirst %] -at 10000 -st 10000000 --parallel 4 --run 1-3,21,40
 
+[% END -%]
 [% END -%]
 
 EOF
@@ -363,4 +396,56 @@ EOF
         File::Spec->catfile( $store_dir, "auto_primates_stat.bat" )
     ) or die Template->error;
 
+}
+
+{    # multiz
+    my $data_dir    = File::Spec->catdir( $ENV{HOME}, "data/alignment/human" );
+    my $pl_dir      = File::Spec->catdir( $ENV{HOME}, "Scripts" );
+    
+    my $tt         = Template->new;
+    my $strains_of = {
+        HumanvsChimpRhesus => [qw{ chimp rhesus }],
+        HumanvsIV          => [qw{ chimp gorilla orangutan rhesus }],
+        HumanvsVI   => [qw{ chimp gorilla orangutan gibbon rhesus marmoset }],
+        HumanvsVIII => [
+            qw{ chimp gorilla orangutan gibbon rhesus marmoset lemur bushbaby}],
+    };
+
+    my @data;
+    for my $key ( sort keys %{$strains_of} ) {
+        my @strains = @{ $strains_of->{$key} };
+        push @data,
+            {
+            out_dir => $key,
+            strains => \@strains,
+            };
+    }
+    
+    my $text = <<'EOF';
+#!/bin/bash
+    
+#----------------------------#
+# mz
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+bsub -n 8 -J [% item.out_dir %]-mz perl [% pl_dir %]/blastz/mz.pl \
+    [% FOREACH st IN item.strains -%]
+    -d [% data_dir %]/Humanvs[% st FILTER ucfirst %] \
+    [% END -%]
+    --tree [% data_dir %]/primates_11way.nwk \
+    --out [% data_dir %]/[% item.out_dir %] \
+    -syn -p 8
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data        => \@data,
+            data_dir    => $data_dir,
+            pl_dir      => $pl_dir,
+        },
+        File::Spec->catfile( $store_dir, "auto_primates_mz.sh" )
+    ) or die Template->error;
 }
