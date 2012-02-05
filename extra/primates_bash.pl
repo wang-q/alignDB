@@ -399,13 +399,13 @@ EOF
 }
 
 {    # multiz
-    my $data_dir    = File::Spec->catdir( $ENV{HOME}, "data/alignment/human" );
-    my $pl_dir      = File::Spec->catdir( $ENV{HOME}, "Scripts" );
-    
+    my $data_dir = File::Spec->catdir( $ENV{HOME}, "data/alignment/human" );
+    my $pl_dir   = File::Spec->catdir( $ENV{HOME}, "Scripts" );
+
     my $tt         = Template->new;
     my $strains_of = {
-        HumanvsChimpRhesus => [qw{ chimp rhesus }],
-        HumanvsIV          => [qw{ chimp gorilla orangutan rhesus }],
+        HumanvsCR   => [qw{ chimp rhesus }],
+        HumanvsCGOR => [qw{ chimp gorilla orangutan rhesus }],
         HumanvsVI   => [qw{ chimp gorilla orangutan gibbon rhesus marmoset }],
         HumanvsVIII => [
             qw{ chimp gorilla orangutan gibbon rhesus marmoset lemur bushbaby}],
@@ -420,7 +420,7 @@ EOF
             strains => \@strains,
             };
     }
-    
+
     my $text = <<'EOF';
 #!/bin/bash
     
@@ -442,10 +442,67 @@ bsub -n 8 -J [% item.out_dir %]-mz perl [% pl_dir %]/blastz/mz.pl \
 EOF
     $tt->process(
         \$text,
-        {   data        => \@data,
-            data_dir    => $data_dir,
-            pl_dir      => $pl_dir,
+        {   data     => \@data,
+            data_dir => $data_dir,
+            pl_dir   => $pl_dir,
         },
         File::Spec->catfile( $store_dir, "auto_primates_mz.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+#----------------------------#
+# maf2fasta
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+perl [% pl_dir %]/alignDB/util/maf2fasta.pl \
+    --has_outgroup --id 9606 -p 8 --block \
+    -i [% data_dir %]/[% item.out_dir %] \
+    -o [% data_dir %]/[% item.out_dir %]_fasta
+
+[% END -%]
+
+#----------------------------#
+# mafft
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+bsub -n 8 -J [% item.out_dir %]-mafft perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
+    --msa mafft --block -p 8 \
+    -i [% data_dir %]/[% item.out_dir %]_fasta \
+    -o [% data_dir %]/[% item.out_dir %]_mafft
+
+[% END -%]
+
+#----------------------------#
+# muscle-quick
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+bsub -n 8 -J [% item.out_dir %]-muscle perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
+    --msa muscle --quick --block -p 8 \
+    -i [% data_dir %]/[% item.out_dir %]_fasta \
+    -o [% data_dir %]/[% item.out_dir %]_muscle
+
+[% END -%]
+
+#----------------------------#
+# clean
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+cd [% data_dir %]
+rm -fr [% item.out_dir %]_fasta
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data     => \@data,
+            data_dir => $data_dir,
+            pl_dir   => $pl_dir,
+        },
+        File::Spec->catfile( $store_dir, "auto_primates_maf_fasta.sh" )
     ) or die Template->error;
 }
