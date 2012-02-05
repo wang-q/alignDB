@@ -10,14 +10,17 @@ use File::Spec;
 use String::Compare;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-my $store_dir = shift || File::Spec->catdir( $ENV{HOME}, "data/alignment/arabidopsis19" );
+my $store_dir = shift
+    || File::Spec->catdir( $ENV{HOME}, "data/alignment/arabidopsis19" );
 {    # on linux
-    my $data_dir    = File::Spec->catdir( $ENV{HOME}, "data/alignment/arabidopsis19" );
+    my $data_dir
+        = File::Spec->catdir( $ENV{HOME}, "data/alignment/arabidopsis19" );
     my $pl_dir      = File::Spec->catdir( $ENV{HOME}, "Scripts" );
     my $kentbin_dir = File::Spec->catdir( $ENV{HOME}, "bin/x86_64" );
 
     # nature 2011
-    my $seq_dir = File::Spec->catdir( $ENV{HOME}, "data/1001/19genomes/fasta/MASKED" );
+    my $seq_dir
+        = File::Spec->catdir( $ENV{HOME}, "data/1001/19genomes/fasta/MASKED" );
 
     my $tt = Template->new;
 
@@ -191,6 +194,29 @@ EOF
         },
         File::Spec->catfile( $store_dir, "auto_ath19_clean.sh" )
     ) or die Template->error;
+
+    $text = <<'EOF';
+#!/bin/bash
+    
+#----------------------------#
+# amp
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
+perl [% pl_dir %]/blastz/amp.pl -dt [% data_dir %]/ath_65 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Athvs[% item.name FILTER ucfirst %] -p 8
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data => [ { name => "lyrata_65" }, @data ],
+            data_dir    => $data_dir,
+            pl_dir      => $pl_dir,
+            kentbin_dir => $kentbin_dir
+        },
+        File::Spec->catfile( $store_dir, "auto_ath19_amp.sh" )
+    ) or die Template->error;
 }
 
 {    # on windows
@@ -271,58 +297,112 @@ EOF
     ) or die Template->error;
 }
 
-#{    # multi
-#    my $tt         = Template->new;
-#    my $strains_of = {
-#        S288CvsYJM789refSpar => [qw{ Spar YJM789 }],
-#        S288CvsThree         => [qw{ Spar RM11 YJM789 }],
-#        S288CvsSix           => [qw{ Spar RM11 YJM789 DBVPG6765 SK1 Y55 }],
-#        S288CvsGE10M18       => [
-#            qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 T7 AWRI796
-#                Lalvin_QA23 Vin13 VL3 FostersO FostersB Kyokai_no__7 DBVPG6765
-#                SK1 Y55 W303
-#                }
-#        ],
-#        S288CvsALL32 => [
-#            qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 CBS_7960 CLIB215
-#                CLIB324 FL100 Y10 YJM269 CLIB382 PW5 T7 T73 UC5 AWRI796
-#                Lalvin_QA23 Vin13 VL3 FostersO FostersB EC9_8 Kyokai_no__7
-#                AWRI1631 M22 YPS163 DBVPG6765 SK1 Y55 W303
-#                }
-#        ],
-#    };
-#
-#    my @data;
-#    for my $dbname ( sort keys %{$strains_of} ) {
-#        my @strains = @{ $strains_of->{$dbname} };
-#        my $dbs     = join ',', map {"S288Cvs$_"} @strains;
-#        my $queries = join ',',
-#            map { $_ . "query" } ( 1 .. scalar @strains - 1 );
-#        push @data,
-#            {
-#            goal_db  => $dbname,
-#            outgroup => '0query',
-#            target   => '0target',
-#            dbs      => $dbs,
-#            queries  => $queries,
-#            };
-#    }
-#
-#    my $text = <<'EOF';
-##!/bin/bash
-#cd [% data_dir %]
-#
-#[% FOREACH item IN data -%]
-## [% item.goal_db %]
-#perl [% pl_dir %]/alignDB/extra/join_dbs.pl --dbs [% item.dbs %] --goal_db [% item.goal_db %] --outgroup [% item.outgroup %] --target [% item.target %] --queries [% item.queries %] --no_insert=1 --trimmed_fasta=1 --length 1000
-#
-#perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% item.goal_db %] -e yeast_58 -f [% data_dir %]/[% item.goal_db %]  -lt 1000 -st 100000 --parallel 4 --run all
-#
-#[% END -%]
-#EOF
-#
-#    $tt->process( \$text,
-#        { data => \@data, data_dir => $data_dir, pl_dir => $pl_dir, },
-#        "auto_joins.sh" )
-#        or die Template->error;
-#}
+{    # multiz
+    my $data_dir
+        = File::Spec->catdir( $ENV{HOME}, "data/alignment/arabidopsis19" );
+    my $pl_dir = File::Spec->catdir( $ENV{HOME}, "Scripts" );
+
+    my $tt         = Template->new;
+    my $strains_of = {
+        AthvsV   => [qw{ lyrata_65 Bur_0 Zu_0 No_0 Ler_0  }],
+        AthvsXIX => [
+            qw{ lyrata_65 Bur_0 Can_0 Ct_1 Edi_0 Hi_0 Kn_0 Ler_0 Mt_0 No_0 Oy_0 Po_0
+                Rsch_4 Sf_2 Tsu_0 Wil_2 Ws_0 Wu_0 Zu_0 }
+        ],
+    };
+
+    my @data;
+    for my $key ( sort keys %{$strains_of} ) {
+        my @strains = @{ $strains_of->{$key} };
+        push @data,
+            {
+            out_dir => $key,
+            strains => \@strains,
+            };
+    }
+
+    my $text = <<'EOF';
+#!/bin/bash
+    
+#----------------------------#
+# mz
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+bsub -n 8 -J [% item.out_dir %]-mz perl [% pl_dir %]/blastz/mz.pl \
+    [% FOREACH st IN item.strains -%]
+    -d [% data_dir %]/Athvs[% st FILTER ucfirst %] \
+    [% END -%]
+    --tree [% data_dir %]/19way.nwk \
+    --out [% data_dir %]/[% item.out_dir %] \
+    -syn -p 8
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data     => \@data,
+            data_dir => $data_dir,
+            pl_dir   => $pl_dir,
+        },
+        File::Spec->catfile( $store_dir, "auto_ath19_mz.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+#----------------------------#
+# maf2fasta
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+perl [% pl_dir %]/alignDB/util/maf2fasta.pl \
+    --has_outgroup --id 3702 -p 8 --block \
+    -i [% data_dir %]/[% item.out_dir %] \
+    -o [% data_dir %]/[% item.out_dir %]_fasta
+
+[% END -%]
+
+#----------------------------#
+# mafft
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+bsub -n 8 -J [% item.out_dir %]-mafft perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
+    --msa mafft --block -p 8 \
+    -i [% data_dir %]/[% item.out_dir %]_fasta \
+    -o [% data_dir %]/[% item.out_dir %]_mafft
+
+[% END -%]
+
+#----------------------------#
+# muscle-quick
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+bsub -n 8 -J [% item.out_dir %]-muscle perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
+    --msa muscle --quick --block -p 8 \
+    -i [% data_dir %]/[% item.out_dir %]_fasta \
+    -o [% data_dir %]/[% item.out_dir %]_muscle
+
+[% END -%]
+
+#----------------------------#
+# clean
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+cd [% data_dir %]
+rm -fr [% item.out_dir %]_fasta
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data     => \@data,
+            data_dir => $data_dir,
+            pl_dir   => $pl_dir,
+        },
+        File::Spec->catfile( $store_dir, "auto_ath_maf_fasta.sh" )
+    ) or die Template->error;
+}
