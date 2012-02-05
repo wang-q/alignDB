@@ -429,7 +429,7 @@ EOF
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.out_dir %]
-bsub -n 8 -J [% item.out_dir %]-mz perl [% pl_dir %]/blastz/mz.pl \
+bsub -q mpi_2 -n 8 -J [% item.out_dir %]-mz perl [% pl_dir %]/blastz/mz.pl \
     [% FOREACH st IN item.strains -%]
     -d [% data_dir %]/Humanvs[% st FILTER ucfirst %] \
     [% END -%]
@@ -467,7 +467,7 @@ perl [% pl_dir %]/alignDB/util/maf2fasta.pl \
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.out_dir %]
-bsub -n 8 -J [% item.out_dir %]-mafft perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
+bsub -q mpi_2 -n 8 -J [% item.out_dir %]-mft perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
     --msa mafft --block -p 8 \
     -i [% data_dir %]/[% item.out_dir %]_fasta \
     -o [% data_dir %]/[% item.out_dir %]_mafft
@@ -479,7 +479,7 @@ bsub -n 8 -J [% item.out_dir %]-mafft perl [% pl_dir %]/alignDB/util/refine_fast
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.out_dir %]
-bsub -n 8 -J [% item.out_dir %]-muscle perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
+bsub -q mpi_2 -n 8 -J [% item.out_dir %]-msl perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
     --msa muscle --quick --block -p 8 \
     -i [% data_dir %]/[% item.out_dir %]_fasta \
     -o [% data_dir %]/[% item.out_dir %]_muscle

@@ -297,6 +297,29 @@ EOF
         },
         File::Spec->catfile( $store_dir, "auto_mouse17_clean.sh" )
     ) or die Template->error;
+
+    $text = <<'EOF';
+#!/bin/bash
+    
+#----------------------------#
+# amp
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
+perl [% pl_dir %]/blastz/amp.pl -dt [% data_dir %]/Mouse9 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Mousevs[% item.name FILTER ucfirst %] -p 8
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data        => \@data,
+            data_dir    => $data_dir,
+            pl_dir      => $pl_dir,
+            kentbin_dir => $kentbin_dir
+        },
+        File::Spec->catfile( $store_dir, "auto_mouse17_amp.sh" )
+    ) or die Template->error;
 }
 
 {    # on linux
@@ -398,5 +421,140 @@ EOF
         \$text,
         { data => \@group, data_dir => $data_dir, pl_dir => $pl_dir, },
         File::Spec->catfile( $store_dir, "auto_mouse17_multi.sh" )
+    ) or die Template->error;
+}
+
+{    # multiz
+    my $data_dir = File::Spec->catdir( $ENV{HOME}, "data/alignment/mouse17" );
+    my $pl_dir   = File::Spec->catdir( $ENV{HOME}, "Scripts" );
+
+    my $tt         = Template->new;
+    my $strains_of = {
+
+        # small sample
+        MousevsV => [qw{ 129P2 A_J AKR_J C3H_HeJ NOD }],
+
+        # coverage > 25x
+        MousevsVIIIGE25xS =>
+            [qw{ 129P2 A_J AKR_J C3H_HeJ CBA_J LP_J NOD Spretus_Ei }],
+        MousevsVIIIGE25xP =>
+            [qw{ 129P2 A_J AKR_J C3H_HeJ CBA_J LP_J NOD PWK_Ph }],
+        MousevsVIIIGE25xC =>
+            [qw{ 129P2 A_J AKR_J C3H_HeJ CBA_J LP_J NOD CAST_Ei }],
+        MousevsVIIIGE25xW =>
+            [qw{ 129P2 A_J AKR_J C3H_HeJ CBA_J LP_J NOD WSB_Ei }],
+
+        # add all sub-species strains
+        MousevsXIGE25xWCPS => [
+            qw{ 129P2 A_J AKR_J C3H_HeJ CBA_J LP_J NOD WSB_Ei PWK_Ph CAST_Ei
+                Spretus_Ei }
+        ],
+
+        # use this
+        MousevsXII => [
+            qw{ 129P2 A_J AKR_J BALBc_J C3H_HeJ CBA_J DBA_2J LP_J NOD NZO WSB_Ei
+                CAST_Ei }
+        ],
+
+        # all
+        MousevsXVI => [
+            qw{ 129P2 129S1_SvImJ 129S5 A_J AKR_J BALBc_J C3H_HeJ CBA_J DBA_2J
+                LP_J NOD NZO WSB_Ei PWK_Ph CAST_Ei Spretus_Ei }
+        ],
+    };
+
+    my @data;
+    for my $key ( sort keys %{$strains_of} ) {
+        my @strains = @{ $strains_of->{$key} };
+        push @data,
+            {
+            out_dir => $key,
+            strains => \@strains,
+            };
+    }
+
+    my $text = <<'EOF';
+#!/bin/bash
+    
+#----------------------------#
+# mz
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+bsub -q mpi_2 -n 8 -J [% item.out_dir %]-mz perl [% pl_dir %]/blastz/mz.pl \
+    [% FOREACH st IN item.strains -%]
+    -d [% data_dir %]/Mousevs[% st FILTER ucfirst %] \
+    [% END -%]
+    --tree [% data_dir %]/17way.nwk \
+    --out [% data_dir %]/[% item.out_dir %] \
+    -syn -p 8
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data     => \@data,
+            data_dir => $data_dir,
+            pl_dir   => $pl_dir,
+        },
+        File::Spec->catfile( $store_dir, "auto_mouse17_mz.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+#----------------------------#
+# maf2fasta
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+perl [% pl_dir %]/alignDB/util/maf2fasta.pl \
+    --has_outgroup --id 9606 -p 8 --block \
+    -i [% data_dir %]/[% item.out_dir %] \
+    -o [% data_dir %]/[% item.out_dir %]_fasta
+
+[% END -%]
+
+#----------------------------#
+# mafft
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+bsub -q mpi_2 -n 8 -J [% item.out_dir %]-mft perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
+    --msa mafft --block -p 8 \
+    -i [% data_dir %]/[% item.out_dir %]_fasta \
+    -o [% data_dir %]/[% item.out_dir %]_mafft
+
+[% END -%]
+
+#----------------------------#
+# muscle-quick
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+bsub -q mpi_2 -n 8 -J [% item.out_dir %]-msl perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
+    --msa muscle --quick --block -p 8 \
+    -i [% data_dir %]/[% item.out_dir %]_fasta \
+    -o [% data_dir %]/[% item.out_dir %]_muscle
+
+[% END -%]
+
+#----------------------------#
+# clean
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+cd [% data_dir %]
+rm -fr [% item.out_dir %]_fasta
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data     => \@data,
+            data_dir => $data_dir,
+            pl_dir   => $pl_dir,
+        },
+        File::Spec->catfile( $store_dir, "auto_mouse17_maf_fasta.sh" )
     ) or die Template->error;
 }
