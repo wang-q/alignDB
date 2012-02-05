@@ -23,39 +23,39 @@ $pl_dir ||= "/home/wangq/Scripts";
         },
         {   taxon    => 538975,
             name     => 'Sigma1278b',
-            coverage => '45x 3730/solexa',
+            coverage => '45x sanger/solexa',
         },
         { taxon => 643680, name => 'EC1118', coverage => '24x unknown', },
 
         # wustl 11 yeast strains
         {   taxon    => 929587,
             name     => 'CBS_7960',
-            coverage => '7.3x 454; 9.69x 3730',
+            coverage => '7.3x 454; 9.69x sanger',
         },
         {   taxon    => 464025,
             name     => 'CLIB215',
-            coverage => '6.8x 454; 10.09 3730',
+            coverage => '6.8x 454; 10.09 sanger',
         },
         {   taxon    => 929629,
             name     => 'CLIB324',
-            coverage => '3.2x 454; 3.94x 3730',
+            coverage => '3.2x 454; 3.94x sanger',
         },
         { taxon => 947035, name => 'CLIB382', coverage => '5.96x 454', },
         {   taxon    => 947036,
             name     => 'FL100',
-            coverage => '3.2x 454; 3.2x 3730',
+            coverage => '3.2x 454; 3.2x sanger',
         },
         { taxon => 947039, name => 'PW5', coverage => '16.10x 454', },
-        { taxon => 929585, name => 'T7',  coverage => '25.4x 454/3730', },
+        { taxon => 929585, name => 'T7',  coverage => '25.4x 454/sanger', },
         { taxon => 471859, name => 'T73', coverage => '13.9x 454', },
         { taxon => 947040, name => 'UC5', coverage => '15.7x 454', },
         {   taxon    => 462210,
             name     => 'Y10',
-            coverage => '2.8x 454; 3.81x 3730',
+            coverage => '2.8x 454; 3.81x sanger',
         },
         {   taxon    => 929586,
             name     => 'YJM269',
-            coverage => '7.1x 454; 9.59x 3730',
+            coverage => '7.1x 454; 9.59x sanger',
         },
 
         # wine
@@ -69,12 +69,12 @@ $pl_dir ||= "/home/wangq/Scripts";
         { taxon => 1095001, name => 'EC9_8', coverage => '30x 454', },
         {   taxon    => 721032,
             name     => 'Kyokai_no__7',
-            coverage => '9.1x 3730xl',
+            coverage => '9.1x sanger',
         },
 
         { taxon => 545124, name => 'AWRI1631', coverage => '7x 454', },
-        { taxon => 538975, name => 'M22',      coverage => '2.6x 3730', },
-        { taxon => 538976, name => 'YPS163',   coverage => '2.8x 3730', },
+        { taxon => 538975, name => 'M22',      coverage => '2.6x sanger', },
+        { taxon => 538976, name => 'YPS163',   coverage => '2.8x sanger', },
 
     );
 
@@ -89,7 +89,7 @@ cd [% data_dir %]
 # [% item.name %] [% item.coverage %]
 gunzip -c [% item.name %]/*.gz > [% item.name %]/[% item.name %].fasta
 perl -p -i -e '/>/ and s/\>gi\|(\d+).*/\>gi_$1/' [% item.name %]/[% item.name %].fasta
-RepeatMasker [% item.name %]/*.fasta -species fungi -xsmall -s --parallel 4
+RepeatMasker [% item.name %]/*.fasta -species fungi -xsmall --parallel 4
 mv [% item.name %]/[% item.name %].fasta.masked [% item.name %]/[% item.name %].fa
 perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/S288C_58 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/S288Cvs[% item.name %]_58 -s set11 -p 4
 [% END -%]
@@ -112,10 +112,19 @@ EOF
 {    # sgrp
     my $tt   = Template->new;
     my @data = (
-        { taxon => 900003, name => 'DBVPG6765', coverage => '3.5x', },
-        { taxon => 580239, name => 'SK1',       coverage => '3.8x', },
-        { taxon => 580240, name => 'W303',      coverage => '3.7x', },
-        { taxon => 900001, name => 'Y55',       coverage => '4.1x', },
+        { taxon => 900003, name => 'DBVPG6765', coverage => '3x sanger', },
+        {   taxon    => 580239,
+            name     => 'SK1',
+            coverage => '3.27x sanger; 15.61x solexa',
+        },
+        {   taxon    => 580240,
+            name     => 'W303',
+            coverage => '2.33x sanger; 3.01x solexa',
+        },
+        {   taxon    => 900001,
+            name     => 'Y55',
+            coverage => '3.42x sanger; 8.94x solexa',
+        },
     );
 
     my $text = <<'EOF';
@@ -127,7 +136,7 @@ cd [% data_dir %]
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
-RepeatMasker [% item.name %]/*.fasta -species fungi -xsmall -s --parallel 4
+RepeatMasker [% item.name %]/*.fasta -species fungi -xsmall --parallel 4
 mv [% item.name %]/[% item.name %].fasta.masked [% item.name %]/[% item.name %].fa
 perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/S288C_58 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/S288Cvs[% item.name %]_58 -s set11 -p 4
 [% END -%]
