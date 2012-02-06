@@ -21,6 +21,7 @@ my $store_dir = shift
         { taxon => 285006, name => 'RM11',   coverage => '10x', },
         { taxon => 307796, name => 'YJM789', coverage => '10x', },
 
+        # high coverage
         {   taxon    => 574961,
             name     => 'JAY291',
             coverage => '12x 454; 58x solexa s; 95x solexa p',
@@ -143,7 +144,7 @@ tar -czvf lav.tar.gz   [*.lav   --remove-files
 tar -czvf psl.tar.gz   [*.psl   --remove-files
 tar -czvf chain.tar.gz [*.chain --remove-files
 gzip *.chain
-gzip net/*
+gzip net/*.net
 gzip axtNet/*.axt
 
 [% END -%]
@@ -186,7 +187,7 @@ EOF
         },
         File::Spec->catfile( $store_dir, "auto_yeast65_amp.sh" )
     ) or die Template->error;
-    
+
     $text = <<'EOF';
 cd [% data_dir %]
 
@@ -195,7 +196,9 @@ cd [% data_dir %]
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %]
+find [% data_dir %]/S288Cvs[% item.name %]/axtNet -name "*.axt.gz" | xargs gzip -d
 perl [% pl_dir %]/alignDB/extra/two_way_batch.pl -d S288Cvs[% item.name %] -t="4932,S288C" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]/S288Cvs[% item.name %] -at 1000 -st 1000000 --parallel 4 --run 1-3,21,40
+gzip [% data_dir %]/S288Cvs[% item.name %]/axtNet/*.axt
 
 [% END -%]
 
@@ -206,22 +209,21 @@ EOF
             data_dir => $data_dir,
             pl_dir   => $pl_dir,
         },
-        File::Spec->catfile( $store_dir, "auto_primates_stat.sh" )
+        File::Spec->catfile( $store_dir, "auto_yeast65_stat.sh" )
     ) or die Template->error;
 }
 
 {    # multi
     my $data_dir = File::Spec->catdir( $ENV{HOME}, "data/alignment/yeast65" );
     my $pl_dir   = File::Spec->catdir( $ENV{HOME}, "Scripts" );
-    
+
     my $tt         = Template->new;
     my $strains_of = {
         S288CvsALL32 => [
             qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 CBS_7960 CLIB215
-                CLIB324 FL100 Y10 YJM269 CLIB382 PW5 T7 T73 UC5 AWRI796
-                Lalvin_QA23 Vin13 VL3 FostersO FostersB EC9_8 Kyokai_no__7
-                AWRI1631 M22 YPS163 DBVPG6765 SK1 Y55 W303
-                }
+                CLIB324 CLIB382 FL100 PW5 T7 T73 UC5 Y10 YJM269 AWRI796 FostersO
+                FostersB Lalvin_QA23 Vin13 VL3 EC9_8 Kyokai_no__7 AWRI1631 M22
+                YPS163 DBVPG6765 SK1 W303 Y55 }
         ],
     };
 
@@ -247,17 +249,30 @@ cd [% data_dir %]
 
 [% FOREACH item IN data -%]
 # [% item.goal_db %]
-perl [% pl_dir %]/alignDB/extra/join_dbs.pl --dbs [% item.dbs %] --goal_db [% item.goal_db %] --outgroup [% item.outgroup %] --target [% item.target %] --queries [% item.queries %] --no_insert=1 --trimmed_fasta=1 --length 1000
+perl [% pl_dir %]/alignDB/extra/join_dbs.pl --crude_only \
+    --dbs [% item.dbs %] \
+    --goal_db [% item.goal_db %] --outgroup [% item.outgroup %] \
+    --target [% item.target %] \
+    --queries [% item.queries %] \
+    --no_insert=1 --trimmed_fasta=1 --length 1000
 
-perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% item.goal_db %] -e yeast_65 -f [% data_dir %]/[% item.goal_db %]  -lt 1000 -st 10000 --parallel 4 --run 1-3,21,40
+perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
+    --msa muscle --quick -p 4 \
+    -i [% data_dir %]/[% item.goal_db %].crude \
+    -o [% data_dir %]/[% item.goal_db %]_muscle
+
+perl [% pl_dir %]/tool/catfasta2phyml.pl -f [% data_dir %]/[% item.goal_db %]_muscle/*.fas > [% data_dir %]/all.fasta
+
+perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% item.goal_db %] -e yeast_65 -f [% data_dir %]/[% item.goal_db %]  -lt 1000 -st 1000000 --parallel 4 --run 1-3,21,40
 
 [% END -%]
 EOF
 
-    $tt->process( \$text,
+    $tt->process(
+        \$text,
         { data => \@data, data_dir => $data_dir, pl_dir => $pl_dir, },
-        "auto_yeast65_joins.sh" )
-        or die Template->error;
+        File::Spec->catfile( $store_dir, "auto_yeast65_joins.sh" )
+    ) or die Template->error;
 }
 
 {    # multiz
@@ -266,20 +281,18 @@ EOF
 
     my $tt         = Template->new;
     my $strains_of = {
-        S288CvsYJM78Spar => [qw{ Spar YJM789 }],
-        S288CvsIII         => [qw{ Spar RM11 YJM789 }],
-        S288CvsXVIIIGE10M      => [
-            qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 T7 AWRI796
-                Lalvin_QA23 Vin13 VL3 FostersO FostersB Kyokai_no__7 DBVPG6765
-                SK1 Y55 W303
-                }
+        S288CvsYJM78Spar  => [qw{ Spar YJM789 }],
+        S288CvsIII        => [qw{ Spar RM11 YJM789 }],
+        S288CvsXVIIIGE10m => [
+            qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 T7 AWRI796 FostersO
+                FostersB Lalvin_QA23 Vin13 VL3 Kyokai_no__7 DBVPG6765 SK1 W303
+                Y55 }
         ],
         S288CvsXXXII => [
             qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 CBS_7960 CLIB215
-                CLIB324 FL100 Y10 YJM269 CLIB382 PW5 T7 T73 UC5 AWRI796
-                Lalvin_QA23 Vin13 VL3 FostersO FostersB EC9_8 Kyokai_no__7
-                AWRI1631 M22 YPS163 DBVPG6765 SK1 Y55 W303
-                }
+                CLIB324 CLIB382 FL100 PW5 T7 T73 UC5 Y10 YJM269 AWRI796 FostersO
+                FostersB Lalvin_QA23 Vin13 VL3 EC9_8 Kyokai_no__7 AWRI1631 M22
+                YPS163 DBVPG6765 SK1 W303 Y55 }
         ],
     };
 
