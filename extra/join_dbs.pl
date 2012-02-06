@@ -42,10 +42,10 @@ my $password = $Config->{database}{password};
 
 # Database info
 # Normal order: TvsR, TvsQ1, TvsQ2
-my $dbs      = "S288CvsSpar,S288CvsRM11,S288CvsYJM789";
-my $outgroup = "0query";
-my $target   = "0target";
-my $queries  = "1query,2query";
+my $dbs;
+my $outgroup;
+my $target;
+my $queries;
 my $goal_db;
 
 # ref parameter
@@ -82,7 +82,7 @@ GetOptions(
     'target=s'          => \$target,
     'queries=s'         => \$queries,
     'length=i'          => \$length_threshold,
-    'crude_only=s'      => \$crude_only,
+    'crude_only'        => \$crude_only,
     'raw_fasta=s'       => \$raw_fasta,
     'trimmed_fasta=s'   => \$trimmed_fasta,
     'reduce_end=i'      => \$reduce_end,
@@ -122,10 +122,11 @@ if ( !$no_insert and $init_db and $goal_db ) {
 #----------------------------------------------------------#
 # Init objects
 #----------------------------------------------------------#
-my @all_dbs = split /,/, $dbs;
-my @queries = split /,/, $queries;
+my @all_dbs = split ",", $dbs;
+my @queries = split ",", $queries;
 my @all_names = ( $outgroup, $target, @queries );
 if ( scalar @all_dbs != scalar @queries + 1 ) {
+    printf "DB %d\tQueries %d\n", scalar @all_dbs, scalar @queries;
     die "DB number doesn't match with species number\n";
 }
 elsif ( !$target ) {
