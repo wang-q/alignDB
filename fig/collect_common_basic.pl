@@ -56,18 +56,20 @@ texts:
     pos: F1
   - text: "GC-content"
     pos: G1
-  - text: "File"
+  - text: "avg-align"
     pos: H1
+  - text: "File"
+    pos: I1
 [% FOREACH item IN data -%]
   - text: [% item.name %]
     pos: A[% item.idx %]
   - text: [% item.file %]
-    pos: H[% item.idx %]
+    pos: I[% item.idx %]
 [% END -%]
 borders:
-  - range: A1:H1
+  - range: A1:I1
     top: 1
-  - range: A1:H1
+  - range: A1:I1
     bottom: 1
 ranges:
 [% FOREACH item IN data -%]
@@ -85,4 +87,7 @@ ranges:
         paste: F[% item.idx %]
       - copy: B7
         paste: G[% item.idx %]
+    summary:
+      - copy: B2
+        paste: H[% item.idx %]
 [% END -%]
