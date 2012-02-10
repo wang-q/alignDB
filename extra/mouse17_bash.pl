@@ -11,16 +11,16 @@ use String::Compare;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 my $store_dir = shift
-    || File::Spec->catdir( $ENV{HOME}, "data/alignment/mouse17" );
+    || File::Spec->catdir( $ENV{HOME}, "data/alignment/mouse65" );
 
 {    # on linux
-    my $data_dir = File::Spec->catdir( $ENV{HOME}, "data/alignment/mouse17" );
+    my $data_dir = File::Spec->catdir( $ENV{HOME}, "data/alignment/mouse65" );
     my $pl_dir   = File::Spec->catdir( $ENV{HOME}, "Scripts" );
     my $kentbin_dir = File::Spec->catdir( $ENV{HOME}, "bin/x86_64" );
 
     # nature 2011
-    my $seq_dir = File::Spec->catdir( $ENV{HOME}, "data/sanger/mouse_reseq" );
-
+    my $seq_dir = File::Spec->catdir( $ENV{HOME}, "data/sanger/23012012" );
+    
     my $tt = Template->new;
 
     my @data = (
@@ -43,24 +43,21 @@ my $store_dir = shift
         { taxon => 900317, name => "WSB_Ei",      coverage => 18.26, },
     );
 
-    my @files = File::Find::Rule->file->name('*.gz')->in($seq_dir);
+    my @subdirs = File::Find::Rule->directory->in( $seq_dir );
 
     for my $item ( sort @data ) {
 
         # match the most similar name
-        my ($file) = map { $_->[0] }
+        my ($subdir) = map { $_->[0] }
             sort { $b->[1] <=> $a->[1] }
-            map { [ $_, compare( lc basename($_), lc $item->{name} ) ] } @files;
-        $item->{file} = $file;
+            map { [ $_, compare( lc basename($_), lc $item->{name} ) ] } @subdirs;
+        $item->{seq} = $subdir;
 
         # prepare working dir
         my $dir = File::Spec->catdir( $data_dir, $item->{name} );
         mkdir $dir if !-e $dir;
         $item->{dir} = $dir;
     }
-
-    my $basecount = File::Spec->catfile( $data_dir, "basecount.txt" );
-    remove( \1, $basecount ) if -e $basecount;
 
     # taxon.csv
     my $text = <<'EOF';
@@ -96,14 +93,27 @@ cd [% data_dir %]
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
 echo [% item.name %]
-gzip -d -c [% item.file %] > [% data_dir %]/[% item.name %].fasta
-[% kentbin_dir %]/faFilter -minSize=10000 [% data_dir %]/[% item.name %].fasta [% data_dir %]/[% item.name %].10k.fasta
-rm [% data_dir %]/[% item.name %].fasta
 
-[% kentbin_dir %]/faSplit about [% item.file %] 100000000 [% item.dir %]/
-rm [% data_dir %]/[% item.name %].10k.fasta
+cd [% item.dir %]
+zcat [% item.seq %]/*.gz > toplevel.fa
+[% kentbin_dir %]/faCount toplevel.fa | perl -aln -e 'next if $F[0] eq 'total'; print $F[0] if $F[1] > 100000; print $F[0] if $F[1] > 10000  and $F[6]/$F[1] < 0.05' | uniq > listFile
+[% kentbin_dir %]/faSomeRecords toplevel.fa listFile toplevel.filtered.fa
+[% kentbin_dir %]/faSplit byname toplevel.filtered.fa .
+rm toplevel.fa toplevel.filtered.fa listFile
 
-find [% item.dir %] -name "*.fa" | sed "s/\.fa$//" | xargs -i echo mv {}.fa {}.fasta | sh
+cat sca* > chrUn.fasta
+rm sca*
+
+perl -p -i -e '/>/ and s/\>/\>chr/' *.fa
+~/perl5/bin/rename 's/^/chr/' *.fa
+~/perl5/bin/rename 's/fa$/fasta/' *.fa
+
+if [ -f chrUn.fasta ];
+then
+    [% kentbin_dir %]/faSplit about [% item.dir %]/chrUn.fasta 100000000 [% item.dir %]/;
+    rm [% item.dir %]/chrUn.fasta;    
+    ~/perl5/bin/rename 's/fa$/fasta/' [0-9][0-9].fa;
+fi;
 
 [% END -%]
 
@@ -124,20 +134,28 @@ EOF
 cd [% data_dir %]
 
 #----------------------------#
-# repeatmasker
+# repeatmasker on all fasta
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
-RepeatMasker [% item.dir %]/*.fasta -species mouse -xsmall -s --parallel 4
+# for i in [% item.dir %]/*.fasta; do bsub -n 8 -J [% item.name %]_`basename $i .fasta` RepeatMasker $i -species mouse -xsmall -s --parallel 8; done;
+bsub -n 8 -J [% item.name %]-rm RepeatMasker [% item.dir %]/*.fasta -species mouse -xsmall --parallel 8
 
 [% END -%]
 
+#----------------------------#
+# find failed rm jobs
+#----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
-find [% item.dir %] -name "*.fasta.masked" | sed "s/\.fasta\.masked$//" | xargs -i echo mv {}.fasta.masked {}.fa | sh
-# find [% item.dir %] | grep -v fa$ | xargs rm -fr
+find ~/data/alignment/mouse65/129P2/ -name "*fasta" \
+    | perl -e \
+    'while(<>) {chomp; s/\.fasta$//; next if -e qq{$_.fasta.masked}; next if -e qq{$_.fa}; print qq{ bsub -n 8 -J [% item.name %]_$i RepeatMasker $str.fasta -species mouse -xsmall --parallel 8 \n};}' >> catchup.txt
 
 [% END -%]
+
+# find [% data_dir %] -name "*.fasta.masked" | sed "s/\.fasta\.masked$//" | xargs -i echo mv {}.fasta.masked {}.fa | sh
+# find [% item.dir %] | grep -v fa$ | xargs rm -fr
 
 EOF
 
@@ -156,50 +174,11 @@ EOF
 cd [% data_dir %]
 
 #----------------------------#
-# repeatmasker on all fasta
-#----------------------------#
-[% FOREACH item IN data -%]
-# [% item.name %] [% item.coverage %]
-# for i in [% item.dir %]/*.fasta; do bsub -n 8 -J [% item.name %]_`basename $i .fasta` RepeatMasker $i -species mouse -xsmall -s --parallel 8; done;
-bsub -n 8 -J [% item.name %] RepeatMasker [% item.dir %]/*.fasta -species mouse -xsmall -s --parallel 8
-
-[% END -%]
-
-#----------------------------#
-# find failed rm jobs
-#----------------------------#
-[% FOREACH item IN data -%]
-# [% item.name %] [% item.coverage %]
-perl -e 'for $i (0..30) { $i = sprintf qq{%02d}, $i; $str = qq{[% item.dir %]/$i}; next if ! -e qq{$str.fasta}; next if -e qq{$str.fasta.masked}; next if -e qq{$str.fa}; print qq{ bsub -n 8 -J [% item.name %]_$i RepeatMasker $str.fasta -species mouse -xsmall -s --parallel 8 \n};}' >> catchup.txt
-
-[% END -%]
-
-# find [% data_dir %] -name "*.fasta.masked" | sed "s/\.fasta\.masked$//" | xargs -i echo mv {}.fasta.masked {}.fa | sh
-# find [% item.dir %] | grep -v fa$ | xargs rm -fr
-
-EOF
-
-    $tt->process(
-        \$text,
-        {   data        => \@data,
-            data_dir    => $data_dir,
-            pl_dir      => $pl_dir,
-            kentbin_dir => $kentbin_dir
-        },
-        File::Spec->catfile( $store_dir, "auto_mouse17_rm_bsub.sh" )
-    ) or die Template->error;
-
-    $text = <<'EOF';
-#!/bin/bash
-cd [% data_dir %]
-
-#----------------------------#
 # blastz
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
-perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/Mouse9 -dq [% data_dir %]/[% item.name %] \
-    -dl [% data_dir %]/Mousevs[% item.name %] -s set01 -p 4 --noaxt -pb lastz --lastz
+bsub -n 8 -J [% item.name %]-bz perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/mouse -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Mousevs[% item.name %] -s set01 -p 8 --noaxt -pb lastz --lastz
 
 [% END -%]
 
@@ -208,8 +187,7 @@ perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/Mouse9 -dq [% data_dir %]/[% i
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
-perl [% pl_dir %]/blastz/lpcna.pl -dt [% data_dir %]/Mouse9 -dq [% data_dir %]/[% item.name %] \
-    -dl [% data_dir %]/Mousevs[% item.name %]
+perl [% pl_dir %]/blastz/lpcna.pl -dt [% data_dir %]/mouse -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Mousevs[% item.name %] -p 8
 
 [% END -%]
 
@@ -222,40 +200,6 @@ EOF
             kentbin_dir => $kentbin_dir
         },
         File::Spec->catfile( $store_dir, "auto_mouse17_bz.sh" )
-    ) or die Template->error;
-
-    $text = <<'EOF';
-#!/bin/bash
-cd [% data_dir %]
-
-#----------------------------#
-# blastz
-#----------------------------#
-[% FOREACH item IN data -%]
-# [% item.name %] [% item.coverage %]
-# for i in [% data_dir %]/Mouse9/*.fa; do echo 'for j in [% data_dir %]/[% item.name %]/*.fa; do bsub lastz '$i' $j  E=30 O=400 Y=3400 L=2200 K=3000 Q=[% pl_dir %]/blastz/matrix/similar --ambiguous=iupac --output=[% data_dir %]/Mousevs[% item.name %]/`basename '$i' .fa`-`basename $j .fa`.lav; done'; done
-bsub -n 8 -J [% item.name %] perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/Mouse9 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Mousevs[% item.name %] -s set01 -p 8 --noaxt -pb lastz --lastz
-
-[% END -%]
-
-#----------------------------#
-# lpcna
-#----------------------------#
-[% FOREACH item IN data -%]
-# [% item.name %] [% item.coverage %]
-bsub -n 8 -J [% item.name %] perl [% pl_dir %]/blastz/lpcna.pl -dt [% data_dir %]/Mouse9 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Mousevs[% item.name %] -p 8
-
-[% END -%]
-
-EOF
-    $tt->process(
-        \$text,
-        {   data        => \@data,
-            data_dir    => $data_dir,
-            pl_dir      => $pl_dir,
-            kentbin_dir => $kentbin_dir
-        },
-        File::Spec->catfile( $store_dir, "auto_mouse17_bz_bsub.sh" )
     ) or die Template->error;
 
     $text = <<'EOF';
@@ -306,7 +250,7 @@ EOF
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
-perl [% pl_dir %]/blastz/amp.pl -dt [% data_dir %]/Mouse9 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Mousevs[% item.name FILTER ucfirst %] -p 8
+perl [% pl_dir %]/blastz/amp.pl -dt [% data_dir %]/mouse -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Mousevs[% item.name %] -p 8
 
 [% END -%]
 
@@ -323,7 +267,7 @@ EOF
 }
 
 {    # on linux
-    my $data_dir = File::Spec->catdir( $ENV{HOME}, "data/alignment/mouse17" );
+    my $data_dir = File::Spec->catdir( $ENV{HOME}, "data/alignment/mouse65" );
     my $pl_dir   = File::Spec->catdir( $ENV{HOME}, "Scripts" );
 
     my $tt = Template->new;
@@ -356,7 +300,7 @@ REM # stat
 REM #----------------------------#
 [% FOREACH item IN data -%]
 REM # [% item.name %] [% item.coverage %]
-perl [% pl_dir %]\alignDB\extra\two_way_batch.pl -d Mousevs[% item.name %] -t="10090,Mouse" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]\Mousevs[% item.name %] -at 10000 -st 10000000 --parallel 4 --run 1-3,21,40
+perl [% pl_dir %]\alignDB\extra\two_way_batch.pl -d Mousevs[% item.name %] -t="10090,Mouse" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]\Mousevs[% item.name %] -at 1000 -st 10000000 --parallel 4 --run 1-3,21,40
 
 [% END -%]
 
@@ -371,19 +315,8 @@ EOF
     ) or die Template->error;
 
     my $strains_of = {
-        MousevsNine => [
-            qw{ Spretus_Ei_1k 129P2 129S1_SvImJ A_J AKR_J C3H_HeJ CBA_J LP_J NOD }
-        ],
-        MousevsEleven => [
-            qw{ Spretus_Ei_1k 129P2 129S1_SvImJ A_J AKR_J C3H_HeJ CBA_J LP_J NOD
-                CAST_Ei PWK_Ph }
-        ],
-        MousevsThirteen => [
-            qw{ Spretus_Ei_1k 129P2 129S1_SvImJ 129S5 A_J AKR_J BALBc_J C3H_HeJ
-                CBA_J DBA_2J LP_J NOD NZO }
-        ],
         MousevsSixteen => [
-            qw{ Spretus_Ei_1k 129P2 129S1_SvImJ 129S5 A_J AKR_J BALBc_J C3H_HeJ
+            qw{ Spretus_Ei 129P2 129S1_SvImJ 129S5 A_J AKR_J BALBc_J C3H_HeJ
                 CBA_J DBA_2J LP_J NOD NZO CAST_Ei PWK_Ph WSB_Ei }
         ],
     };
@@ -425,7 +358,7 @@ EOF
 }
 
 {    # multiz
-    my $data_dir = File::Spec->catdir( $ENV{HOME}, "data/alignment/mouse17" );
+    my $data_dir = File::Spec->catdir( $ENV{HOME}, "data/alignment/mouse65" );
     my $pl_dir   = File::Spec->catdir( $ENV{HOME}, "Scripts" );
 
     my $tt         = Template->new;
@@ -508,7 +441,7 @@ EOF
 [% FOREACH item IN data -%]
 # [% item.out_dir %]
 perl [% pl_dir %]/alignDB/util/maf2fasta.pl \
-    --has_outgroup --id 9606 -p 8 --block \
+    --has_outgroup --id 10090 -p 8 --block \
     -i [% data_dir %]/[% item.out_dir %] \
     -o [% data_dir %]/[% item.out_dir %]_fasta
 
