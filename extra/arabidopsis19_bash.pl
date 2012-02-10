@@ -177,7 +177,13 @@ gzip net/*
 gzip axtNet/*.axt
 
 [% END -%]
-    
+
+#----------------------------#
+# clean pairwise maf
+#----------------------------#
+find [% data_dir %] -name "mafSynNet" | xargs rm -fr
+find [% data_dir %] -name "mafNet" | xargs rm -fr
+
 #----------------------------#
 # only keeps chr.2bit files
 #----------------------------#
@@ -203,7 +209,7 @@ EOF
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
-perl [% pl_dir %]/blastz/amp.pl -dt [% data_dir %]/ath_65 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Athvs[% item.name FILTER ucfirst %] -p 8
+perl [% pl_dir %]/blastz/amp.pl -syn -dt [% data_dir %]/ath_65 -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Athvs[% item.name FILTER ucfirst %] -p 8
 
 [% END -%]
 

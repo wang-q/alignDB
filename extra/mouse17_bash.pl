@@ -20,7 +20,7 @@ my $store_dir = shift
 
     # nature 2011
     my $seq_dir = File::Spec->catdir( $ENV{HOME}, "data/sanger/23012012" );
-    
+
     my $tt = Template->new;
 
     my @data = (
@@ -43,14 +43,15 @@ my $store_dir = shift
         { taxon => 900317, name => "WSB_Ei",      coverage => 18.26, },
     );
 
-    my @subdirs = File::Find::Rule->directory->in( $seq_dir );
+    my @subdirs = File::Find::Rule->directory->in($seq_dir);
 
     for my $item ( sort @data ) {
 
         # match the most similar name
         my ($subdir) = map { $_->[0] }
             sort { $b->[1] <=> $a->[1] }
-            map { [ $_, compare( lc basename($_), lc $item->{name} ) ] } @subdirs;
+            map { [ $_, compare( lc basename($_), lc $item->{name} ) ] }
+            @subdirs;
         $item->{seq} = $subdir;
 
         # prepare working dir
@@ -148,14 +149,15 @@ bsub -n 8 -J [% item.name %]-rm RepeatMasker [% item.dir %]/*.fasta -species mou
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
-find ~/data/alignment/mouse65/129P2/ -name "*fasta" \
+find ~/data/alignment/mouse65/[% item.name %] -name "*fasta" \
     | perl -e \
-    'while(<>) {chomp; s/\.fasta$//; next if -e qq{$_.fasta.masked}; next if -e qq{$_.fa}; print qq{ bsub -n 8 -J [% item.name %]_$i RepeatMasker $str.fasta -species mouse -xsmall --parallel 8 \n};}' >> catchup.txt
+    'while(<>) {chomp; s/\.fasta$//; next if -e qq{$_.fasta.masked}; next if -e qq{$_.fa}; print qq{ bsub -n 8 -J [% item.name %]_ RepeatMasker $_.fasta -species mouse -xsmall --parallel 8 \n};}' >> catchup.txt
 
 [% END -%]
 
 # find [% data_dir %] -name "*.fasta.masked" | sed "s/\.fasta\.masked$//" | xargs -i echo mv {}.fasta.masked {}.fa | sh
-# find [% item.dir %] | grep -v fa$ | xargs rm -fr
+# find [% data_dir %] -type f | grep -v fa$ | xargs rm
+# find [% data_dir %] -name "*.fasta*" | xargs rm
 
 EOF
 
@@ -178,7 +180,7 @@ cd [% data_dir %]
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
-bsub -n 8 -J [% item.name %]-bz perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/mouse -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Mousevs[% item.name %] -s set01 -p 8 --noaxt -pb lastz --lastz
+bsub -q mpi_2 -n 8 -J [% item.name %]-bz perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/mouse -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Mousevs[% item.name %] -s set01 -p 6 --noaxt -pb lastz --lastz
 
 [% END -%]
 
@@ -222,14 +224,16 @@ gzip axtNet/*.axt
 [% END -%]
 
 #----------------------------#
+# clean pairwise maf
+#----------------------------#
+find [% data_dir %] -name "mafSynNet" | xargs rm -fr
+find [% data_dir %] -name "mafNet" | xargs rm -fr
+
+#----------------------------#
 # only keeps chr.2bit files
 #----------------------------#
 # find [% data_dir %] -name "*.fa" | xargs rm
-# find [% data_dir %] -name "*.fasta" | xargs rm
-# find [% data_dir %] -name "*.fasta.cat" | xargs rm
-# find [% data_dir %] -name "*.fasta.out" | xargs rm
-# find [% data_dir %] -name "*.fasta.ref" | xargs rm
-# find [% data_dir %] -name "*.fasta.tbl" | xargs rm
+# find [% data_dir %] -name "*.fasta*" | xargs rm
 
 EOF
     $tt->process(
@@ -250,7 +254,7 @@ EOF
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
-perl [% pl_dir %]/blastz/amp.pl -dt [% data_dir %]/mouse -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Mousevs[% item.name %] -p 8
+perl [% pl_dir %]/blastz/amp.pl -syn -dt [% data_dir %]/mouse -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Mousevs[% item.name %] -p 8
 
 [% END -%]
 

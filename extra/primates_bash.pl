@@ -237,7 +237,7 @@ perl -e 'for $i (0..30) { $i = sprintf qq{%02d}, $i; $str = qq{[% item.dir %]/$i
 [% END -%]
 
 # find [% data_dir %] -name "*.fasta.masked" | sed "s/\.fasta\.masked$//" | xargs -i echo mv {}.fasta.masked {}.fa | sh
-# find [% item.dir %] | grep -v fa$ | xargs rm -fr
+# find [% data_dir %] -type f | grep -v fa$ | xargs rm -fr
 
 EOF
 
@@ -309,6 +309,12 @@ gzip axtNet/*.axt
 
 [% END -%]
 [% END -%]
+
+#----------------------------#
+# clean pairwise maf
+#----------------------------#
+find [% data_dir %] -name "mafSynNet" | xargs rm -fr
+find [% data_dir %] -name "mafNet" | xargs rm -fr
     
 #----------------------------#
 # only keeps chr.2bit files
@@ -336,7 +342,7 @@ EOF
 [% FOREACH item IN data -%]
 [% IF item.name != 'human' -%]
 # [% item.name %] [% item.coverage %]
-perl [% pl_dir %]/blastz/amp.pl -dt [% data_dir %]/human -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Humanvs[% item.name FILTER ucfirst %] -p 8
+perl [% pl_dir %]/blastz/amp.pl -syn -dt [% data_dir %]/human -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/Humanvs[% item.name FILTER ucfirst %] -p 8
 
 [% END -%]
 [% END -%]

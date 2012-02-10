@@ -148,11 +148,18 @@ gzip net/*.net
 gzip axtNet/*.axt
 
 [% END -%]
-    
+
+#----------------------------#
+# clean pairwise maf
+#----------------------------#
+find [% data_dir %] -name "mafSynNet" | xargs rm -fr
+find [% data_dir %] -name "mafNet" | xargs rm -fr
+
 #----------------------------#
 # only keeps chr.2bit files
 #----------------------------#
 # find [% data_dir %] -name "*.fa" | xargs rm
+# find [% data_dir %] -name "*.fasta*" | xargs rm
 
 EOF
     $tt->process(
@@ -173,7 +180,7 @@ EOF
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
-perl [% pl_dir %]/blastz/amp.pl -dt [% data_dir %]/S288C -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/S288Cvs[% item.name %] -p 4
+perl [% pl_dir %]/blastz/amp.pl -syn -dt [% data_dir %]/S288C -dq [% data_dir %]/[% item.name %] -dl [% data_dir %]/S288Cvs[% item.name %] -p 4
 
 [% END -%]
 
@@ -222,6 +229,14 @@ EOF
         S288CvsALL32 => [
             qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 CBS_7960 CLIB215
                 CLIB324 CLIB382 FL100 PW5 T7 T73 UC5 Y10 YJM269 AWRI796 FostersO
+                FostersB Lalvin_QA23 Vin13 VL3 EC9_8 Kyokai_no__7 AWRI1631 M22
+                YPS163 DBVPG6765 SK1 W303 Y55 }
+        ],
+
+        # exclude CLIB382
+        S288CvsALL31 => [
+            qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 CBS_7960 CLIB215
+                CLIB324 FL100 PW5 T7 T73 UC5 Y10 YJM269 AWRI796 FostersO
                 FostersB Lalvin_QA23 Vin13 VL3 EC9_8 Kyokai_no__7 AWRI1631 M22
                 YPS163 DBVPG6765 SK1 W303 Y55 }
         ],
@@ -281,16 +296,32 @@ EOF
 
     my $tt         = Template->new;
     my $strains_of = {
-        S288CvsYJM78Spar  => [qw{ Spar YJM789 }],
-        S288CvsIII        => [qw{ Spar RM11 YJM789 }],
+        S288CvsYJM78Spar => [qw{ Spar YJM789 }],
+        S288CvsIII       => [qw{ Spar RM11 YJM789 }],
+
+        # 10k sum-align > Spar
         S288CvsXVIIIGE10m => [
             qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 T7 AWRI796 FostersO
                 FostersB Lalvin_QA23 Vin13 VL3 Kyokai_no__7 DBVPG6765 SK1 W303
                 Y55 }
         ],
-        S288CvsXXXII => [
+
+        # 1k avg-align > Spar
+        S288CvsXVIIIGE8k => [
+            qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 PW5 T7 UC5 YJM269
+                AWRI796 FostersO FostersB Lalvin_QA23 Vin13 VL3 EC9_8
+                Kyokai_no__7 }
+        ],
+        S288CvsXXIIGE8k => [
+            qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 PW5 T7 UC5 YJM269
+                AWRI796 FostersO FostersB Lalvin_QA23 Vin13 VL3 EC9_8
+                Kyokai_no__7 DBVPG6765 SK1 W303 Y55 }
+        ],
+
+        # CLIB382 lacks 4 chr
+        S288CvsXXXI => [
             qw{ Spar RM11 YJM789 JAY291 Sigma1278b EC1118 CBS_7960 CLIB215
-                CLIB324 CLIB382 FL100 PW5 T7 T73 UC5 Y10 YJM269 AWRI796 FostersO
+                CLIB324 FL100 PW5 T7 T73 UC5 Y10 YJM269 AWRI796 FostersO
                 FostersB Lalvin_QA23 Vin13 VL3 EC9_8 Kyokai_no__7 AWRI1631 M22
                 YPS163 DBVPG6765 SK1 W303 Y55 }
         ],
@@ -341,7 +372,7 @@ EOF
 [% FOREACH item IN data -%]
 # [% item.out_dir %]
 perl [% pl_dir %]/alignDB/util/maf2fasta.pl \
-    --has_outgroup --id 9606 -p 4 --block \
+    --has_outgroup --id 4932 -p 4 --block \
     -i [% data_dir %]/[% item.out_dir %] \
     -o [% data_dir %]/[% item.out_dir %]_fasta
 
