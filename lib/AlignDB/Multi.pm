@@ -12,18 +12,14 @@ use AlignDB::Util qw(:all);
 
 extends qw(AlignDB);
 
-sub add_align {
-    my $self        = shift;
-    my $ref_info    = shift;
-    my $target_info = shift;
-    my @query_info  = @_;
-
-}
-
 sub parse_fasta_file {
-    my $self       = shift;
-    my $fasta_file = shift;
+    my $self   = shift;
+    my $infile = shift;
+    my $opt    = shift;
 
+    my $threshold = $opt->{threshold};
+
+    # id3702_chr1_10023790_10038033.fas
     my $fasta_qr = qr{
         id(\d+)         # target taxon id
         [\_\-]          # spacer
@@ -34,12 +30,115 @@ sub parse_fasta_file {
         (\d+)           # target chr end
         \.fa            # suffix
     }xi;
-    $fasta_file =~ $fasta_qr;
+    $infile =~ $fasta_qr;
 
-    my $target_taxon_id  = $1;
-    my $target_chr_name  = $2;
-    my $target_chr_start = $3;
-    my $target_chr_end   = $4;
+    my $target_info = {
+        taxon_id  => $1,
+        chr_name  => $2,
+        chr_start => $3,
+        chr_end   => $4,
+    };
+
+    # read in fasta file
+    open my $in_fh, '<', $infile or die $!;
+    my $content = do { local $/; <$in_fh> };
+    close $in_fh;
+
+    my @names = ( $content =~ />(\w+)\r?\n/g );
+    my @seqs  = ( $content =~ />\w+\r?\n([\-\w]+)\r?\n/g );
+
+    next if length $seqs[0] < $threshold;
+    $self->add_align( $target_info, \@names, \@seqs );
+
+    return;
+}
+
+sub parse_block_fasta_file {
+    my $self   = shift;
+    my $infile = shift;
+    my $opt    = shift;
+
+    my $threshold = $opt->{threshold};
+    my $id        = $opt->{id};
+
+    open my $in_fh, "<", $infile;
+    my $content = '';
+    while ( my $line = <$in_fh> ) {
+        if ( $line =~ /^\s+$/ and $content =~ /\S/ ) {
+            my @lines = grep {/\S/} split /\n/, $content;
+            $content = '';
+            die "headers not equal to seqs\n" if @lines % 2;
+            die "Two few lines in block\n" if @lines < 4;
+
+            my ( @seqs, @names );
+            while (@lines) {
+                my $name = shift @lines;
+                $name =~ s/^\>//;
+                chomp $name;
+                my $seq = shift @lines;
+                chomp $seq;
+                push @names, $name;
+                push @seqs,  $seq;
+            }
+
+            my @short_names;
+            for my $name (@names) {
+                my ($short) = split /\./, $name;
+                push @short_names, $short;
+            }
+
+            # S288C.chrI(1):27070-29557|species=S288C
+            my $target_line = $names[1];
+            my $head_qr     = qr{
+                ([\w_]+)        # target name
+                [\.]            # spacer
+                ((?:chr)?\w+)   # target chr name
+                \((.)\)         # strand
+                [\:]            # spacer
+                (\d+)           # target chr start
+                [\_\-]          # spacer
+                (\d+)           # target chr end
+            }xi;
+            $target_line =~ $head_qr;
+
+            my $target_info = {
+                name       => $1,
+                chr_name   => $2,
+                chr_strand => $3,
+                chr_start  => $4,
+                chr_end    => $5,
+            };
+            if ($id) {
+                $target_info->{taxon_id} = $id;
+            }
+
+            next if length $seqs[0] < $threshold;
+            $self->add_align( $target_info, \@names, \@seqs );
+        }
+        else {
+            $content .= $line;
+        }
+    }
+    close $in_fh;
+
+    return;
+}
+
+sub add_align {
+    my $self        = shift;
+    my $target_info = shift;
+    my $names       = shift;
+    my $seq_refs    = shift;
+
+    my $target_taxon_id  = $target_info->{taxon_id};
+    my $target_chr_name  = $target_info->{chr_name};
+    my $target_chr_start = $target_info->{chr_start};
+    my $target_chr_end   = $target_info->{chr_end};
+
+    unless ($target_taxon_id) {
+        warn "Target taxon id not set\n";
+        return;
+    }
 
     my $target_chr_id
         = $self->get_chr_id_hash($target_taxon_id)->{$target_chr_name};
@@ -78,26 +177,21 @@ sub parse_fasta_file {
     my ( $align_indels, $align_target_gc, $align_average_gc,
         $align_comparable_runlist, $align_indel_runlist );
 
-    # read in fasta file
-    open my $fasta_fh, '<', $fasta_file or die $!;
-    my $fasta_content = do { local $/; <$fasta_fh> };
-    close $fasta_fh;
+    my @names     = @{$names};
+    my @seqs      = @{$seq_refs};
+    my $seq_count = scalar @{$names};
 
-    my @fasta_heads = ( $fasta_content =~ />(\w+)\r?\n/g );
-    my @fasta_lines = ( $fasta_content =~ />\w+\r?\n([\-\w]+)\r?\n/g );
-    my $seq_count   = scalar @fasta_heads;
-
-    my $align_length = length $fasta_lines[0];
-    for (@fasta_lines) {
+    my $align_length = length $seqs[0];
+    for (@seqs) {
         if ( ( length $_ ) ne $align_length ) {
-            croak "sequences should have the same length!\n";
+            croak "Sequences should have the same length!\n";
         }
     }
 
-    $align_target_gc  = calc_gc_ratio( $fasta_lines[1] );
-    $align_average_gc = calc_gc_ratio( @fasta_lines[ 1 .. $#fasta_lines ] );
+    $align_target_gc  = calc_gc_ratio( $seqs[1] );
+    $align_average_gc = calc_gc_ratio( @seqs[ 1 .. $#seqs ] );
 
-    my $align_stat = multi_seq_stat(@fasta_lines);
+    my $align_stat = multi_seq_stat(@seqs);
     $align_insert_sql->execute(
         $align_stat->[0], $align_stat->[1], $align_stat->[2],
         $align_stat->[3], $align_stat->[4], $align_stat->[5],
@@ -114,13 +208,13 @@ sub parse_fasta_file {
         for my $i ( 0 .. $seq_count - 1 ) {
             my $seq_info = {};
             $seq_info->{align_id} = $align_id;
-            $seq_info->{name}     = $fasta_heads[$i];
-            $seq_info->{seq}      = $fasta_lines[$i];
+            $seq_info->{name}     = $names[$i];
+            $seq_info->{seq}      = $seqs[$i];
             $seq_info->{length}   = $align_length;
-            $seq_info->{gc}       = calc_gc_ratio( $fasta_lines[$i] );
+            $seq_info->{gc}       = calc_gc_ratio( $seqs[$i] );
 
             my $seq_set   = AlignDB::IntSpan->new("1-$align_length");
-            my $indel_set = find_indel_set( $fasta_lines[$i] );
+            my $indel_set = find_indel_set( $seqs[$i] );
             $seq_set = $seq_set->diff($indel_set);
             $seq_info->{runlist} = $seq_set->runlist;
 
@@ -173,12 +267,12 @@ sub parse_fasta_file {
 
     # find indel
     my $indel_set = AlignDB::IntSpan->new;
-    my $reference = shift @fasta_lines;
-    for my $cur_line (@fasta_lines) {
+    my $reference = shift @seqs;
+    for my $cur_line (@seqs) {
         my $cur_indel_set = find_indel_set($cur_line);
         $indel_set->merge($cur_indel_set);
     }
-    unshift @fasta_lines, $reference;
+    unshift @seqs, $reference;
 
     my $align_set = AlignDB::IntSpan->new("1-$align_length");
 
@@ -217,7 +311,7 @@ sub parse_fasta_file {
             my $indel_length = $indel_end - $indel_start + 1;
 
             my @indel_seqs;
-            for my $cur_line (@fasta_lines) {
+            for my $cur_line (@seqs) {
                 push @indel_seqs,
                     ( substr $cur_line, $indel_start - 1, $indel_length );
             }
@@ -275,8 +369,7 @@ sub parse_fasta_file {
                 }
             }
             if ( $indel_occured eq ( 'o' x ( length $indel_occured ) ) ) {
-                my $drop_set
-                    = AlignDB::IntSpan->new("$indel_start-$indel_end");
+                my $drop_set = AlignDB::IntSpan->new("$indel_start-$indel_end");
                 $indel_set = $indel_set->diff($drop_set);
                 next;
             }
@@ -360,7 +453,7 @@ sub parse_fasta_file {
                 my $isw_type     = $isw->{type};
                 my @isw_seq;
 
-                for my $cur_line (@fasta_lines) {
+                for my $cur_line (@seqs) {
                     push @isw_seq,
                         ( substr $cur_line, $isw_start - 1, $isw_length );
                 }
@@ -400,15 +493,14 @@ sub parse_fasta_file {
                     next if any { $_ !~ /[agct]/i } @bases;
                     my $class = scalar uniq(@bases);
                     if ( $class > 1 ) {
-                        my $snp_position = $snp_pos + $isw_start;
-                        my $snp_ref_base = substr $isw_ref_seq, $snp_pos, 1;
+                        my $snp_position    = $snp_pos + $isw_start;
+                        my $snp_ref_base    = substr $isw_ref_seq, $snp_pos, 1;
                         my $snp_target_base = substr $isw_seq[0], $snp_pos, 1;
-                        my $snp_other_base = join '', @bases;
+                        my $snp_other_base  = join '', @bases;
 
                         $snp_insert_sql->execute(
-                            $isw_id,       $align_id,
-                            $snp_position, $snp_target_base,
-                            $snp_ref_base, $snp_other_base
+                            $isw_id,          $align_id,     $snp_position,
+                            $snp_target_base, $snp_ref_base, $snp_other_base
                         );
                     }
                 }
@@ -614,8 +706,7 @@ sub update_indel {
                 my $end   = $indel_info->{ $indel_id - 1 }->{end};
                 croak "$indel_id,$end,$start\n";
             }
-            my $right_extand
-                = $latter_start - $indel_info->{$indel_id}->{end};
+            my $right_extand = $latter_start - $indel_info->{$indel_id}->{end};
 
             $indel_info->{$indel_id}{left_extand}  = $left_extand;
             $indel_info->{$indel_id}{right_extand} = $right_extand;
@@ -644,8 +735,7 @@ sub update_indel {
                 my $left_flank = " ";    # avoid warning from $flank
                 if ( $fland_length <= $left_extand ) {
                     $left_flank
-                        = substr( $target_seq,
-                        $indel_start - $fland_length - 1,
+                        = substr( $target_seq, $indel_start - $fland_length - 1,
                         $fland_length );
                 }
 
@@ -671,8 +761,7 @@ sub update_indel {
                 my $left_flank;
                 if ( $indel_length <= $left_extand ) {
                     $left_flank
-                        = substr( $target_seq,
-                        $indel_start - $indel_length - 1,
+                        = substr( $target_seq, $indel_start - $indel_length - 1,
                         $indel_length );
                 }
 
@@ -738,11 +827,9 @@ sub update_D_values {
 ISW: for my $isw_id (@isw_ids) {
         my $length;
         my $window_length;
-        my ( $d_indel, $d_noindel, $d_bii, $d_bnn, $d_complex ) = (0) x 5;
-        my ( $d_indel2, $d_noindel2, $d_bii2, $d_bnn2, $d_complex2 )
-            = (0) x 5;
-        my ( $d_indel3, $d_noindel3, $d_bii3, $d_bnn3, $d_complex3 )
-            = (0) x 5;
+        my ( $d_indel,  $d_noindel,  $d_bii,  $d_bnn,  $d_complex )  = (0) x 5;
+        my ( $d_indel2, $d_noindel2, $d_bii2, $d_bnn2, $d_complex2 ) = (0) x 5;
+        my ( $d_indel3, $d_noindel3, $d_bii3, $d_bnn3, $d_complex3 ) = (0) x 5;
 
         my $group_i = AlignDB::IntSpan->new;
         my $group_n = AlignDB::IntSpan->new;
@@ -828,14 +915,14 @@ ISW: for my $isw_id (@isw_ids) {
 
             if ( @sequences2 > 0 and length $sequences2[0] > 0 ) {
                 ( $d_indel2, $d_noindel2, $d_bii2, $d_bnn2, $d_complex2 )
-                    = _two_group_D( $group_i, $group_n, $ref_seq2,
-                    \@sequences2, $window_length );
+                    = _two_group_D( $group_i, $group_n, $ref_seq2, \@sequences2,
+                    $window_length );
             }
 
             if ( @sequences3 > 0 and length $sequences3[0] > 0 ) {
                 ( $d_indel3, $d_noindel3, $d_bii3, $d_bnn3, $d_complex3 )
-                    = _two_group_D( $group_i, $group_n, $ref_seq3,
-                    \@sequences3, $window_length );
+                    = _two_group_D( $group_i, $group_n, $ref_seq3, \@sequences3,
+                    $window_length );
             }
         }
         $update_sql->execute(

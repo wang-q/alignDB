@@ -35,9 +35,13 @@ my $ensembl_db = $Config->{database}{ensembl};
 
 my $gff_file = '';
 
-# axt
-my $fasta_dir        = '/home/wangq/Date/Alignment/yeast6/';
+# fa
+my $dir_fa           = '/home/wangq/Date/Alignment/yeast6/';
 my $length_thredhold = $Config->{ref}{length_threshold};
+
+# input is galaxy style blocked fasta
+my $block;
+my $target_id;    # taxon id of target
 
 # running tasks
 my $run = "all";
@@ -59,9 +63,11 @@ GetOptions(
     'db=s'                  => \$db_name,
     'username=s'            => \$username,
     'password=s'            => \$password,
-    'f|fasta_dir=s'         => \$fasta_dir,
+    'f|fasta_dir=s'         => \$dir_fa,
     'e|ensembl=s'           => \$ensembl_db,
     'gff_file=s'            => \$gff_file,
+    'id=i'                  => \$target_id,
+    'block'                 => \$block,
     'parallel=i'            => \$parallel,
     'lt|length_thredhold=i' => \$length_thredhold,
     'st|sum_threshold=i'    => \$sum_threshold,
@@ -111,10 +117,12 @@ my $dispatch = {
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
-        . " -d=$db_name"
-        . " --fasta_dir=$fasta_dir"
+        . " --db=$db_name"
+        . " --dir=$dir_fa"
         . " --length=$length_thredhold"
-        . " --parallel=$parallel",
+        . " --parallel=$parallel"
+        . ( $block     ? " --block"         : "" )
+        . ( $target_id ? " --id $target_id" : "" ),
     2  => undef,
     3  => undef,
     10 => "perl $FindBin::Bin/../multi/insert_gc_multi.pl"
@@ -236,3 +244,8 @@ perl multi_way_batch.pl -d S288CvsThree_10k -e yeast_58 -f F:/S288CvsThree_10k -
 perl multi_way_batch.pl -d S288CvsTen_10k -e yeast_58 -f F:/S288CvsTen_10k -lt 10000 -st 100000 --parallel=6 --run all
 
 perl multi_way_batch.pl -d S288CvsSix_10k -r stat
+
+perl multi_way_batch.pl -d AthvsFive -f d:\data\alignment\arabidopsis\AthvsFive\ -lt 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+perl ~/Scripts/alignDB/extra/multi_way_batch.pl -d AthvsV_mafft --block --id 3702 -f ~/data/alignment/arabidopsis19/AthvsV_mafft -lt 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+

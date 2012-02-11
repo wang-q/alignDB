@@ -32,37 +32,43 @@ my $stopwatch = AlignDB::Stopwatch->new(
 );
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 # program parameters
-my $fasta_dir        = '';
+my $dir_fa           = '';
 my $length_thredhold = 5000;
 
+# input is galaxy style blocked fasta
+my $block;
+my $target_id;    # taxon id of target
+
 # run in parallel mode
-my $parallel = $Config->{generate}->{parallel};
+my $parallel = $Config->{generate}{parallel};
 
 # number of alignments process in one child process
-my $batch_number = $Config->{feature}->{batch};
+my $batch_number = $Config->{feature}{batch};
 
 my $help = 0;
 my $man  = 0;
 
 GetOptions(
-    'help|?'      => \$help,
-    'man'         => \$man,
-    'server=s'    => \$server,
-    'port=i'      => \$port,
-    'db=s'        => \$db,
-    'username=s'  => \$username,
-    'password=s'  => \$password,
-    'length=i'    => \$length_thredhold,
-    'fasta_dir=s' => \$fasta_dir,
-    'parallel=i'  => \$parallel,
-    'batch=i'     => \$batch_number,
+    'help|?'     => \$help,
+    'man'        => \$man,
+    'server=s'   => \$server,
+    'port=i'     => \$port,
+    'db=s'       => \$db,
+    'username=s' => \$username,
+    'password=s' => \$password,
+    'length=i'   => \$length_thredhold,
+    'dir=s'      => \$dir_fa,
+    'id=i'       => \$target_id,
+    'block'      => \$block,
+    'parallel=i' => \$parallel,
+    'batch=i'    => \$batch_number,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -75,28 +81,34 @@ system "perl $FindBin::Bin/../init/init_alignDB.pl"
     . " -d=$db -i=$FindBin::Bin/../minit.sql";
 
 #----------------------------------------------------------#
-# Search for all files and push their paths to @fasta_files
+# Search for all files and push their paths to @files
 #----------------------------------------------------------#
-my @fasta_files = File::Find::Rule->file->name( '*.fa', '*.fas', '*.fasta' )
-    ->in($fasta_dir);
-@fasta_files = sort @fasta_files;
+my @files
+    = File::Find::Rule->file->name( '*.fa', '*.fas', '*.fasta' )->in($dir_fa);
+@files = sort @files;
 
-printf "\n----Total .FAS Files: %4s----\n\n", scalar @fasta_files;
+printf "\n----Total .FAS Files: %4s----\n\n", scalar @files;
 
 my @jobs;
-{
-    while ( scalar @fasta_files ) {
-        my @batching = splice @fasta_files, 0, $batch_number;
+if ( !$block ) {
+    while ( scalar @files ) {
+        my @batching = splice @files, 0, $batch_number;
         push @jobs, [@batching];
     }
+}
+else {
+    @jobs = map { [$_] } @files;
 }
 
 #----------------------------------------------------------#
 # worker
 #----------------------------------------------------------#
 my $worker = sub {
-    my $job     = shift;
+    my $job = shift;
+    my $opt = shift;
+
     my @infiles = @$job;
+    my $block   = $opt->{block};
 
     my $obj = AlignDB::Multi->new(
         mysql  => "$db:$server",
@@ -106,7 +118,12 @@ my $worker = sub {
 
     for my $infile (@infiles) {
         print "process " . basename($infile) . "\n";
-        $obj->parse_fasta_file($infile);
+        if ( !$block ) {
+            $obj->parse_fasta_file( $infile, $opt );
+        }
+        else {
+            $obj->parse_block_fasta_file( $infile, $opt );
+        }
     }
 };
 
@@ -117,6 +134,11 @@ my $run = AlignDB::Run->new(
     parallel => $parallel,
     jobs     => \@jobs,
     code     => $worker,
+    opt      => {
+        block     => $block,
+        id        => $target_id,
+        threshold => $length_thredhold,
+    },
 );
 $run->run;
 
@@ -156,31 +178,17 @@ __END__
 =head1 SYNOPSIS
 
     fasta_malignDB.pl [options]
-        Options:
-            --help              brief help message
-            --man               full documentation
-            --server            MySQL server IP/Domain name
-            --port              MySQL server port
-            --db                database name
-            --username          username
-            --password          password
-            --fasta_dir         .fas files' directory
-            --length            threshold of alignment length
-            --parallel          run in parallel mode
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
+      Options:
+        --help              brief help message
+        --man               full documentation
+        --server            MySQL server IP/Domain name
+        --port              MySQL server port
+        --db                database name
+        --username          username
+        --password          password
+        --dir               .fas files' directory
+        --length            threshold of alignment length
+        --parallel          run in parallel mode
 
 =head1 DESCRIPTION
 

@@ -12,19 +12,19 @@ use AlignDB::IntSpan;
 use AlignDB::Window;
 use AlignDB::Util qw(:all);
 
-has 'mysql'  => ( is => 'ro', isa => 'Str' );    # e.g. 'alignDB:202.119.43.5'
-has 'server' => ( is => 'ro', isa => 'Str' );    # e.g. '202.119.43.5'
-has 'db'     => ( is => 'ro', isa => 'Str' );    # e.g. 'alignDB'
-has 'user'   => ( is => 'ro', isa => 'Str' );    # database username
-has 'passwd' => ( is => 'ro', isa => 'Str' );    # database password
-has 'dbh'    => ( is => 'ro', isa => 'Object' ); # store database handle here
-has 'dG_calc'      => ( is => 'ro', isa => 'Object' ); # dG calculator
-has 'window_maker' => ( is => 'ro', isa => 'Object' ); # sliding windows maker
+has 'mysql'   => ( is => 'ro', isa => 'Str' );     # e.g. 'alignDB:202.119.43.5'
+has 'server'  => ( is => 'ro', isa => 'Str' );     # e.g. '202.119.43.5'
+has 'db'      => ( is => 'ro', isa => 'Str' );     # e.g. 'alignDB'
+has 'user'    => ( is => 'ro', isa => 'Str' );     # database username
+has 'passwd'  => ( is => 'ro', isa => 'Str' );     # database password
+has 'dbh'     => ( is => 'ro', isa => 'Object' );  # store database handle here
+has 'dG_calc' => ( is => 'ro', isa => 'Object' );  # dG calculator
+has 'window_maker' => ( is => 'ro', isa => 'Object' );   # sliding windows maker
 has 'insert_dG' => ( is => 'ro', isa => 'Bool', default => 0 );
 has 'insert_ssw' => ( is => 'ro', isa => 'Bool', default => 0 );
 has 'threshold'  => ( is => 'ro', isa => 'Int',  default => 10_000 );
 
-has 'caching_id' => ( is => 'ro', isa => 'Int' );      # caching seqs
+has 'caching_id' => ( is => 'ro', isa => 'Int' );        # caching seqs
 has 'caching_seqs' =>
     ( is => 'ro', isa => 'ArrayRef[Str]', default => sub { [] } );
 has 'caching_refs' => ( is => 'ro', isa => 'Ref' );
@@ -238,8 +238,7 @@ sub _insert_isw {
 
         my $window_maker = $self->window_maker;
 
-        my @isws
-            = $window_maker->interval_window( $align_set, $interval_start,
+        my @isws = $window_maker->interval_window( $align_set, $interval_start,
             $interval_end );
 
         for my $isw (@isws) {
@@ -703,8 +702,7 @@ sub add_align {
     #----------------------------#
     # INSERT INTO align
     #----------------------------#
-    my $align_id
-        = $self->_insert_align( $tvsq_id, \$target_seq, \$query_seq );
+    my $align_id = $self->_insert_align( $tvsq_id, \$target_seq, \$query_seq );
     printf "Prosess align %s in %s %s - %s\n", $align_id,
         $target_info->{chr_name}, $target_info->{chr_start},
         $target_info->{chr_end};
@@ -913,10 +911,10 @@ sub add_align {
 #            : All generating operations are performed here.
 # See Also   : n/a
 sub parse_axt_file {
-    my $self = shift;
-    my $opt  = shift;
+    my $self     = shift;
+    my $axt_file = shift;
+    my $opt      = shift;
 
-    my $axt_file        = $opt->{axt_file};
     my $target_taxon_id = $opt->{target_taxon_id};
     my $target_name     = $opt->{target_name};
     my $query_taxon_id  = $opt->{query_taxon_id};
@@ -1403,8 +1401,7 @@ sub create_column {
             $dbh->do(qq{ALTER TABLE $table DROP COLUMN $column});
         }
 
-        $dbh->do(
-            qq{ALTER TABLE $table ADD COLUMN $column $column_definition});
+        $dbh->do(qq{ALTER TABLE $table ADD COLUMN $column $column_definition});
     }
 
     return;

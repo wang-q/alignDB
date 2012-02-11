@@ -109,8 +109,8 @@ my $worker = sub {
     $query_name  = $query_taxon_id  unless $query_name;
 
     $obj->parse_axt_file(
-        {   axt_file        => $infile,
-            target_taxon_id => $target_taxon_id,
+        $infile,
+        {   target_taxon_id => $target_taxon_id,
             target_name     => $target_name,
             query_taxon_id  => $query_taxon_id,
             query_name      => $query_name,
@@ -133,7 +133,7 @@ my $run = AlignDB::Run->new(
 );
 $run->run;
 
-$stopwatch->end_message( "All files have been processed." );
+$stopwatch->end_message("All files have been processed.");
 
 # store program running meta info to database
 # this AlignDB object is just for storing meta info

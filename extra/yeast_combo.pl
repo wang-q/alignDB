@@ -59,7 +59,7 @@ my %order_of = zip @names, @orders;
 
 my $cmd_1 = qq{
     perl $FindBin::Bin/../multi/fasta_malignDB.pl \\
-    --fasta_dir=[% dir %] \\
+    --dir=[% dir %] \\
     --db=[% db %] \\
     --parallel=4
 };

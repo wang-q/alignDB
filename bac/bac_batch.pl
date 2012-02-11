@@ -68,7 +68,7 @@ my $tt = Template->new;
 
 my $dispatch = {
     1 =>
-        qq{ perl $FindBin::Bin/../multi/fasta_malignDB.pl --fasta_dir=[% dir %] --db=[% db %] --parallel=4 },
+        qq{ perl $FindBin::Bin/../multi/fasta_malignDB.pl --dir=[% dir %] --db=[% db %] --parallel=4 },
     2 => qq{ perl $FindBin::Bin/../multi/insert_gc_multi.pl --db=[% db %] },
     3 =>
         qq{ perl $FindBin::Bin/../multi/update_multi_gff.pl --db=[% db %] --gff_file=[% gff %] },
