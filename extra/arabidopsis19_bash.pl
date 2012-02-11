@@ -216,7 +216,7 @@ perl [% pl_dir %]/blastz/amp.pl -syn -dt [% data_dir %]/ath_65 -dq [% data_dir %
 EOF
     $tt->process(
         \$text,
-        {   data => [ { name => "lyrata_65" }, @data ],
+        {   data        => [ { name => "lyrata_65" }, @data ],
             data_dir    => $data_dir,
             pl_dir      => $pl_dir,
             kentbin_dir => $kentbin_dir
@@ -299,7 +299,7 @@ EOF
             data_dir => $data_dir,
             pl_dir   => $pl_dir,
         },
-        File::Spec->catfile( $store_dir, "auto_ath19_multi.bat" )
+        File::Spec->catfile( $store_dir, "auto_ath19_joins.bat" )
     ) or die Template->error;
 }
 
@@ -410,5 +410,32 @@ EOF
             pl_dir   => $pl_dir,
         },
         File::Spec->catfile( $store_dir, "auto_ath19_maf_fasta.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+#!/bin/bash
+    
+#----------------------------#
+# multi_way_batch
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+# mafft
+perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl \
+    -d [% item.out_dir %] -e ath_65 \
+    --block --id 3702 \
+    -f [% data_dir %]/[% item.out_dir %]_mafft  \
+    -lt 1000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data     => \@data,
+            data_dir => $data_dir,
+            pl_dir   => $pl_dir,
+        },
+        File::Spec->catfile( $store_dir, "auto_ath19_multi.sh" )
     ) or die Template->error;
 }

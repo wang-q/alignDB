@@ -357,7 +357,7 @@ EOF
     $tt->process(
         \$text,
         { data => \@group, data_dir => $data_dir, pl_dir => $pl_dir, },
-        File::Spec->catfile( $store_dir, "auto_mouse17_multi.sh" )
+        File::Spec->catfile( $store_dir, "auto_mouse17_joins.sh" )
     ) or die Template->error;
 }
 
@@ -493,5 +493,32 @@ EOF
             pl_dir   => $pl_dir,
         },
         File::Spec->catfile( $store_dir, "auto_mouse17_maf_fasta.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+#!/bin/bash
+    
+#----------------------------#
+# multi_way_batch
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+# mafft
+perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl \
+    -d [% item.out_dir %] -e mouse_65 \
+    --block --id 10090 \
+    -f [% data_dir %]/[% item.out_dir %]_mafft  \
+    -lt 1000 -st 10000000 --parallel 4 --run 1-3,21,40
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data     => \@data,
+            data_dir => $data_dir,
+            pl_dir   => $pl_dir,
+        },
+        File::Spec->catfile( $store_dir, "auto_mouse17_multi.sh" )
     ) or die Template->error;
 }

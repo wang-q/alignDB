@@ -272,13 +272,13 @@ perl [% pl_dir %]/alignDB/extra/join_dbs.pl --crude_only \
     --no_insert=1 --trimmed_fasta=1 --length 1000
 
 perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
-    --msa muscle --quick -p 4 \
+    --msa mafft -p 4 \
     -i [% data_dir %]/[% item.goal_db %].crude \
-    -o [% data_dir %]/[% item.goal_db %]_muscle
+    -o [% data_dir %]/[% item.goal_db %]_mafft
 
-perl [% pl_dir %]/tool/catfasta2phyml.pl -f [% data_dir %]/[% item.goal_db %]_muscle/*.fas > [% data_dir %]/all.fasta
+perl [% pl_dir %]/tool/catfasta2phyml.pl -f [% data_dir %]/[% item.goal_db %]_mafft/*.fas > [% data_dir %]/all.fasta
 
-perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% item.goal_db %] -e yeast_65 -f [% data_dir %]/[% item.goal_db %]  -lt 1000 -st 1000000 --parallel 4 --run 1-3,21,40
+perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% item.goal_db %] -e yeast_65 -f [% data_dir %]/[% item.goal_db %]_mafft  -lt 1000 -st 1000000 --parallel 4 --run 1-3,21,40
 
 [% END -%]
 EOF
@@ -421,4 +421,32 @@ EOF
         },
         File::Spec->catfile( $store_dir, "auto_yeast65_maf_fasta.sh" )
     ) or die Template->error;
+
+    $text = <<'EOF';
+#!/bin/bash
+    
+#----------------------------#
+# multi_way_batch
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.out_dir %]
+# mafft
+perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl \
+    -d [% item.out_dir %] -e yeast_65 \
+    --block --id 4932 \
+    -f [% data_dir %]/[% item.out_dir %]_mafft  \
+    -lt 1000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data     => \@data,
+            data_dir => $data_dir,
+            pl_dir   => $pl_dir,
+        },
+        File::Spec->catfile( $store_dir, "auto_yeast65_multi.sh" )
+    ) or die Template->error;
+
 }
