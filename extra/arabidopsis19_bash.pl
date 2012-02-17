@@ -150,8 +150,6 @@ find [% data_dir %]/[% item.name %] -name "*fasta" \
 [% END -%]
 
 # find [% data_dir %] -name "*.fasta.masked" | sed "s/\.fasta\.masked$//" | xargs -i echo mv {}.fasta.masked {}.fa | sh
-# find [% data_dir %] -type f | grep -v fa$ | xargs rm
-# find [% data_dir %] -name "*.fasta*" | xargs rm
 
 EOF
 
@@ -227,6 +225,28 @@ EOF
             kentbin_dir => $kentbin_dir
         },
         File::Spec->catfile( $store_dir, "auto_ath19_amp.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+cd [% data_dir %]
+
+#----------------------------#
+# stat
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
+perl [% pl_dir %]/alignDB/extra/two_way_batch.pl -d Athvs[% item.name %] -t="3702,Ath" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]/Athvs[% item.name %] -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
+
+[% END -%]
+
+EOF
+    $tt->process(
+        \$text,
+        {   data => [ { name => "lyrata_65", taxon => 59689 }, @data ],
+            data_dir => $data_dir,
+            pl_dir   => $pl_dir,
+        },
+        File::Spec->catfile( $store_dir, "auto_ath19_stat.sh" )
     ) or die Template->error;
 
     $text = <<'EOF';
@@ -316,28 +336,6 @@ EOF
     );
 
     my $text = <<'EOF';
-cd /d [% data_dir %]
-
-REM #----------------------------#
-REM # stat
-REM #----------------------------#
-[% FOREACH item IN data -%]
-REM # [% item.name %] [% item.coverage %]
-perl [% pl_dir %]\alignDB\extra\two_way_batch.pl -d Athvs[% item.name %] -t="3702,Ath" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]\Athvs[% item.name %] -at 10000 -st 1000000 --parallel 4 --run 1-3,21,40
-
-[% END -%]
-
-EOF
-    $tt->process(
-        \$text,
-        {   data     => \@data,
-            data_dir => $data_dir,
-            pl_dir   => $pl_dir,
-        },
-        File::Spec->catfile( $store_dir, "auto_ath19_stat.bat" )
-    ) or die Template->error;
-
-    $text = <<'EOF';
 cd /d [% data_dir %]
 
 REM #----------------------------#

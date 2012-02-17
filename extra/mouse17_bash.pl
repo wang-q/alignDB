@@ -155,8 +155,6 @@ find ~/data/alignment/mouse65/[% item.name %] -name "*fasta" \
 [% END -%]
 
 # find [% data_dir %] -name "*.fasta.masked" | sed "s/\.fasta\.masked$//" | xargs -i echo mv {}.fasta.masked {}.fa | sh
-# find [% data_dir %] -type f | grep -v fa$ | xargs rm
-# find [% data_dir %] -name "*.fasta*" | xargs rm
 
 EOF
 

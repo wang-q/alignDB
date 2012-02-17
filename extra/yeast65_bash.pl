@@ -435,7 +435,7 @@ perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl \
     -d [% item.out_dir %] -e yeast_65 \
     --block --id 4932 \
     -f [% data_dir %]/[% item.out_dir %]_mafft  \
-    -lt 1000 -st 1000000 --parallel 4 --run 1-3,21,40
+    -lt 5000 -st 1000000 --parallel 4 --run 1-3,21,40
 
 [% END -%]
 
