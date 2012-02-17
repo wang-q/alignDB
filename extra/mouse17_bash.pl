@@ -139,7 +139,6 @@ cd [% data_dir %]
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
-# for i in [% item.dir %]/*.fasta; do bsub -n 8 -J [% item.name %]_`basename $i .fasta` RepeatMasker $i -species mouse -xsmall -s --parallel 8; done;
 bsub -n 8 -J [% item.name %]-rm RepeatMasker [% item.dir %]/*.fasta -species mouse -xsmall --parallel 8
 
 [% END -%]
@@ -206,48 +205,6 @@ EOF
 
     $text = <<'EOF';
 #!/bin/bash
-
-#----------------------------#
-# tar-gzip
-#----------------------------#
-[% FOREACH item IN data -%]
-# [% item.name %] [% item.coverage %]
-cd [% data_dir %]/Mousevs[% item.name %]/
-
-tar -czvf lav.tar.gz   [*.lav   --remove-files
-tar -czvf psl.tar.gz   [*.psl   --remove-files
-tar -czvf chain.tar.gz [*.chain --remove-files
-gzip *.chain
-gzip net/*
-gzip axtNet/*.axt
-
-[% END -%]
-
-#----------------------------#
-# clean pairwise maf
-#----------------------------#
-find [% data_dir %] -name "mafSynNet" | xargs rm -fr
-find [% data_dir %] -name "mafNet" | xargs rm -fr
-
-#----------------------------#
-# only keeps chr.2bit files
-#----------------------------#
-# find [% data_dir %] -name "*.fa" | xargs rm
-# find [% data_dir %] -name "*.fasta*" | xargs rm
-
-EOF
-    $tt->process(
-        \$text,
-        {   data        => \@data,
-            data_dir    => $data_dir,
-            pl_dir      => $pl_dir,
-            kentbin_dir => $kentbin_dir
-        },
-        File::Spec->catfile( $store_dir, "auto_mouse17_clean.sh" )
-    ) or die Template->error;
-
-    $text = <<'EOF';
-#!/bin/bash
     
 #----------------------------#
 # amp
@@ -267,6 +224,64 @@ EOF
             kentbin_dir => $kentbin_dir
         },
         File::Spec->catfile( $store_dir, "auto_mouse17_amp.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+#!/bin/bash
+    
+#----------------------------#
+# tar-gzip
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
+cd [% data_dir %]/Athvs[% item.name %]/
+
+tar -czvf lav.tar.gz   [*.lav   --remove-files
+tar -czvf psl.tar.gz   [*.psl   --remove-files
+tar -czvf chain.tar.gz [*.chain --remove-files
+gzip *.chain
+gzip net/*
+gzip axtNet/*.axt
+
+[% END -%]
+
+#----------------------------#
+# clean RepeatMasker outputs
+#----------------------------#
+# find [% data_dir %] -name "*.fasta*" | xargs rm
+
+#----------------------------#
+# only keeps chr.2bit files
+#----------------------------#
+# find [% data_dir %] -name "*.fa" | xargs rm
+
+#----------------------------#
+# clean pairwise maf
+#----------------------------#
+find [% data_dir %] -name "mafSynNet" | xargs rm -fr
+find [% data_dir %] -name "mafNet" | xargs rm -fr
+
+#----------------------------#
+# gzip maf, fas
+#----------------------------#
+find [% data_dir %] -name ".maf" | xargs gzip
+find [% data_dir %] -name ".maf.fas" | xargs gzip
+
+#----------------------------#
+# clean maf-fasta
+#----------------------------#
+# rm -fr [% data_dir %]/*_fasta
+
+
+EOF
+    $tt->process(
+        \$text,
+        {   data        => \@data,
+            data_dir    => $data_dir,
+            pl_dir      => $pl_dir,
+            kentbin_dir => $kentbin_dir
+        },
+        File::Spec->catfile( $store_dir, "auto_mouse17_clean.sh" )
     ) or die Template->error;
 }
 
@@ -368,9 +383,6 @@ EOF
     my $tt         = Template->new;
     my $strains_of = {
 
-        # small sample
-        MousevsV => [qw{ 129P2 A_J AKR_J C3H_HeJ NOD }],
-
         # coverage > 25x
         MousevsVIIIGE25xS =>
             [qw{ 129P2 A_J AKR_J C3H_HeJ CBA_J LP_J NOD Spretus_Ei }],
@@ -381,16 +393,14 @@ EOF
         MousevsVIIIGE25xW =>
             [qw{ 129P2 A_J AKR_J C3H_HeJ CBA_J LP_J NOD WSB_Ei }],
 
-        # add all sub-species strains
-        MousevsXIGE25xWCPS => [
-            qw{ 129P2 A_J AKR_J C3H_HeJ CBA_J LP_J NOD WSB_Ei PWK_Ph CAST_Ei
-                Spretus_Ei }
-        ],
-
         # use this
-        MousevsXII => [
+        MousevsXIIC => [
             qw{ 129P2 A_J AKR_J BALBc_J C3H_HeJ CBA_J DBA_2J LP_J NOD NZO WSB_Ei
                 CAST_Ei }
+        ],
+        MousevsXIIS => [
+            qw{ 129P2 A_J AKR_J BALBc_J C3H_HeJ CBA_J DBA_2J LP_J NOD NZO WSB_Ei
+                Spretus_Ei }
         ],
 
         # all
@@ -459,31 +469,21 @@ perl [% pl_dir %]/alignDB/util/maf2fasta.pl \
 bsub -q mpi_2 -n 8 -J [% item.out_dir %]-mft perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
     --msa mafft --block -p 8 \
     -i [% data_dir %]/[% item.out_dir %]_fasta \
-    -o [% data_dir %]/[% item.out_dir %]_mafft
+    -o [% data_dir %]/[% item.out_dir %]_mft
 
 [% END -%]
 
 #----------------------------#
-# muscle-quick
+# muscle
 #----------------------------#
-[% FOREACH item IN data -%]
-# [% item.out_dir %]
-bsub -q mpi_2 -n 8 -J [% item.out_dir %]-msl perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
-    --msa muscle --quick --block -p 8 \
-    -i [% data_dir %]/[% item.out_dir %]_fasta \
-    -o [% data_dir %]/[% item.out_dir %]_muscle
-
-[% END -%]
-
-#----------------------------#
-# clean
-#----------------------------#
-[% FOREACH item IN data -%]
-# [% item.out_dir %]
-cd [% data_dir %]
-rm -fr [% item.out_dir %]_fasta
-
-[% END -%]
+#[% FOREACH item IN data -%]
+## [% item.out_dir %]
+#bsub -q mpi_2 -n 8 -J [% item.out_dir %]-msl perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
+#    --msa muscle --block -p 8 \
+#    -i [% data_dir %]/[% item.out_dir %]_fasta \
+#    -o [% data_dir %]/[% item.out_dir %]_msl
+#
+#[% END -%]
 
 EOF
     $tt->process(
@@ -507,8 +507,8 @@ EOF
 perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl \
     -d [% item.out_dir %] -e mouse_65 \
     --block --id 10090 \
-    -f [% data_dir %]/[% item.out_dir %]_mafft  \
-    -lt 1000 -st 10000000 --parallel 4 --run 1-3,21,40
+    -f [% data_dir %]/[% item.out_dir %]_mft  \
+    -lt 5000 -st 10000000 --parallel 4 --run 1-3,21,40
 
 [% END -%]
 
