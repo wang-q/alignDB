@@ -98,24 +98,18 @@ cd [% data_dir %]
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.origin %]
-echo [% item.name %] >> [% data_dir %]/basecount.txt
-[% kentbin_dir %]/faCount [% item.file %] >> [% data_dir %]/basecount.txt
-echo >> [% data_dir %]/basecount.txt
-
+echo [% item.name %]
 [% kentbin_dir %]/faSplit byname [% item.file %] [% item.dir %]/
 
-find [% item.dir %] -name "*.fa" | sed "s/\.fa$//" | xargs -i echo mv {}.fa {}.fasta | sh
+# uncovered regions are masked by lowercase
+perl -p -i -e '/>/ and next; s/[a-z]/n/g' [% item.dir %]/*.fa
 
-[% END -%]
+echo [% item.name %] >> [% data_dir %]/basecount.txt
+[% kentbin_dir %]/faCount [% item.dir %]/*.fa >> [% data_dir %]/basecount.txt
+echo >> [% data_dir %]/basecount.txt
 
-#----------------------------#
-# repeatmasker
-#----------------------------#
-[% FOREACH item IN data -%]
-# [% item.name %] [% item.origin %]
-RepeatMasker [% item.dir %]/*.fasta -species arabidopsis -xsmall --parallel 4
-
-find [% item.dir %] -name "*.fasta.masked" | sed "s/\.fasta\.masked$//" | xargs -i echo mv {}.fasta.masked {}.fa | sh
+~/perl5/bin/rename 's/fa$/fasta/' [% item.dir %]/*.fa
+# find [% item.dir %] -name "*.fa" | sed "s/\.fa$//" | xargs -i echo mv {}.fa {}.fasta | sh
 
 [% END -%]
 
@@ -136,15 +130,68 @@ EOF
 cd [% data_dir %]
 
 #----------------------------#
+# repeatmasker on all fasta
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
+bsub -q mpi_2 -n 8 -J [% item.name %]-rm RepeatMasker [% item.dir %]/*.fasta -species arabidopsis -xsmall --parallel 8
+
+[% END -%]
+
+#----------------------------#
+# find failed rm jobs
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
+find [% data_dir %]/[% item.name %] -name "*fasta" \
+    | perl -e \
+    'while(<>) {chomp; s/\.fasta$//; next if -e qq{$_.fasta.masked}; next if -e qq{$_.fa}; print qq{ bsub -n 8 -J [% item.name %]_ RepeatMasker $_.fasta -species arabidopsis -xsmall --parallel 8 \n};}' >> catchup.txt
+
+[% END -%]
+
+# find [% data_dir %] -name "*.fasta.masked" | sed "s/\.fasta\.masked$//" | xargs -i echo mv {}.fasta.masked {}.fa | sh
+# find [% data_dir %] -type f | grep -v fa$ | xargs rm
+# find [% data_dir %] -name "*.fasta*" | xargs rm
+
+EOF
+
+    $tt->process(
+        \$text,
+        {   data        => \@data,
+            data_dir    => $data_dir,
+            pl_dir      => $pl_dir,
+            kentbin_dir => $kentbin_dir
+        },
+        File::Spec->catfile( $store_dir, "auto_ath19_rm.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+#!/bin/bash
+cd [% data_dir %]
+
+#----------------------------#
 # blastz
 #----------------------------#
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.origin %]
-perl [% pl_dir %]/blastz/bz.pl -dt [% data_dir %]/ath_65 -dq [% data_dir %]/[% item.name %] \
-    -dl [% data_dir %]/Athvs[% item.name %] -s set01 -p 4 --noaxt -pb lastz --lastz --paired
+bsub -q mpi_2 -n 8 -J [% item.name %]-bz perl [% pl_dir %]/blastz/bz.pl \
+    -dt [% data_dir %]/ath_65 \
+    -dq [% data_dir %]/[% item.name %] \
+    -dl [% data_dir %]/Athvs[% item.name %] \
+    -s set01 -p 8 --noaxt -pb lastz --lastz 
 
-perl [% pl_dir %]/blastz/lpcna.pl -dt [% data_dir %]/ath_65 -dq [% data_dir %]/[% item.name %] \
-    -dl [% data_dir %]/Athvs[% item.name %] -p 4
+[% END -%]
+
+#----------------------------#
+# lpcna
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.origin %]
+perl [% pl_dir %]/blastz/lpcna.pl \
+    -dt [% data_dir %]/ath_65 \
+    -dq [% data_dir %]/[% item.name %] \
+    -dl [% data_dir %]/Athvs[% item.name %] \
+    -p 8
 
 [% END -%]
 
@@ -157,48 +204,6 @@ EOF
             kentbin_dir => $kentbin_dir
         },
         File::Spec->catfile( $store_dir, "auto_ath19_bz.sh" )
-    ) or die Template->error;
-
-    $text = <<'EOF';
-#!/bin/bash
-    
-#----------------------------#
-# tar-gzip
-#----------------------------#
-[% FOREACH item IN data -%]
-# [% item.name %] [% item.coverage %]
-cd [% data_dir %]/Athvs[% item.name %]/
-
-tar -czvf lav.tar.gz   [*.lav   --remove-files
-tar -czvf psl.tar.gz   [*.psl   --remove-files
-tar -czvf chain.tar.gz [*.chain --remove-files
-gzip *.chain
-gzip net/*
-gzip axtNet/*.axt
-
-[% END -%]
-
-#----------------------------#
-# clean pairwise maf
-#----------------------------#
-find [% data_dir %] -name "mafSynNet" | xargs rm -fr
-find [% data_dir %] -name "mafNet" | xargs rm -fr
-
-#----------------------------#
-# only keeps chr.2bit files
-#----------------------------#
-# find [% data_dir %] -name "*.fa" | xargs rm
-# find [% data_dir %] -name "*.fasta*" | xargs rm
-
-EOF
-    $tt->process(
-        \$text,
-        {   data        => \@data,
-            data_dir    => $data_dir,
-            pl_dir      => $pl_dir,
-            kentbin_dir => $kentbin_dir
-        },
-        File::Spec->catfile( $store_dir, "auto_ath19_clean.sh" )
     ) or die Template->error;
 
     $text = <<'EOF';
@@ -222,6 +227,64 @@ EOF
             kentbin_dir => $kentbin_dir
         },
         File::Spec->catfile( $store_dir, "auto_ath19_amp.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+#!/bin/bash
+    
+#----------------------------#
+# tar-gzip
+#----------------------------#
+[% FOREACH item IN data -%]
+# [% item.name %] [% item.coverage %]
+cd [% data_dir %]/Athvs[% item.name %]/
+
+tar -czvf lav.tar.gz   [*.lav   --remove-files
+tar -czvf psl.tar.gz   [*.psl   --remove-files
+tar -czvf chain.tar.gz [*.chain --remove-files
+gzip *.chain
+gzip net/*
+gzip axtNet/*.axt
+
+[% END -%]
+
+#----------------------------#
+# clean RepeatMasker outputs
+#----------------------------#
+# find [% data_dir %] -name "*.fasta*" | xargs rm
+
+#----------------------------#
+# only keeps chr.2bit files
+#----------------------------#
+# find [% data_dir %] -name "*.fa" | xargs rm
+
+#----------------------------#
+# clean pairwise maf
+#----------------------------#
+find [% data_dir %] -name "mafSynNet" | xargs rm -fr
+find [% data_dir %] -name "mafNet" | xargs rm -fr
+
+#----------------------------#
+# gzip maf, fas
+#----------------------------#
+find [% data_dir %] -name ".maf" | xargs gzip
+find [% data_dir %] -name ".maf.fas" | xargs gzip
+
+#----------------------------#
+# clean maf-fasta
+#----------------------------#
+# rm -fr [% data_dir %]/*_fasta
+
+
+EOF
+    $tt->process(
+        \$text,
+        {   data        => \@data,
+            data_dir    => $data_dir,
+            pl_dir      => $pl_dir,
+            kentbin_dir => $kentbin_dir
+        },
+        File::Spec->catfile( $store_dir, "auto_ath19_clean.sh" )
     ) or die Template->error;
 }
 
@@ -376,31 +439,21 @@ perl [% pl_dir %]/alignDB/util/maf2fasta.pl \
 bsub -q mpi_2 -n 8 -J [% item.out_dir %]-mft perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
     --msa mafft --block -p 8 \
     -i [% data_dir %]/[% item.out_dir %]_fasta \
-    -o [% data_dir %]/[% item.out_dir %]_mafft
+    -o [% data_dir %]/[% item.out_dir %]_mft
 
 [% END -%]
 
 #----------------------------#
-# muscle-quick
+# muscle
 #----------------------------#
-[% FOREACH item IN data -%]
-# [% item.out_dir %]
-bsub -q mpi_2 -n 8 -J [% item.out_dir %]-msl perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
-    --msa muscle --quick --block -p 8 \
-    -i [% data_dir %]/[% item.out_dir %]_fasta \
-    -o [% data_dir %]/[% item.out_dir %]_muscle
-
-[% END -%]
-
-#----------------------------#
-# clean
-#----------------------------#
-[% FOREACH item IN data -%]
-# [% item.out_dir %]
-cd [% data_dir %]
-rm -fr [% item.out_dir %]_fasta
-
-[% END -%]
+#[% FOREACH item IN data -%]
+## [% item.out_dir %]
+#bsub -q mpi_2 -n 8 -J [% item.out_dir %]-msl perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
+#    --msa muscle --block -p 8 \
+#    -i [% data_dir %]/[% item.out_dir %]_fasta \
+#    -o [% data_dir %]/[% item.out_dir %]_msl
+#
+#[% END -%]
 
 EOF
     $tt->process(
@@ -424,8 +477,8 @@ EOF
 perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl \
     -d [% item.out_dir %] -e ath_65 \
     --block --id 3702 \
-    -f [% data_dir %]/[% item.out_dir %]_mafft  \
-    -lt 1000 -st 1000000 --parallel 4 --run 1-3,21,40
+    -f [% data_dir %]/[% item.out_dir %]_mft  \
+    -lt 5000 -st 1000000 --parallel 4 --run 1-3,21,40
 
 [% END -%]
 
