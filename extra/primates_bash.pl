@@ -475,21 +475,21 @@ perl [% pl_dir %]/alignDB/util/maf2fasta.pl \
 bsub -q mpi_2 -n 8 -J [% item.out_dir %]-mft perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
     --msa mafft --block -p 8 \
     -i [% data_dir %]/[% item.out_dir %]_fasta \
-    -o [% data_dir %]/[% item.out_dir %]_mafft
+    -o [% data_dir %]/[% item.out_dir %]_mft
 
 [% END -%]
 
 #----------------------------#
 # muscle-quick
 #----------------------------#
-[% FOREACH item IN data -%]
-# [% item.out_dir %]
-bsub -q mpi_2 -n 8 -J [% item.out_dir %]-msl perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
-    --msa muscle --quick --block -p 8 \
-    -i [% data_dir %]/[% item.out_dir %]_fasta \
-    -o [% data_dir %]/[% item.out_dir %]_muscle
-
-[% END -%]
+#[% FOREACH item IN data -%]
+## [% item.out_dir %]
+#bsub -q mpi_2 -n 8 -J [% item.out_dir %]-msl perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
+#    --msa muscle --quick --block -p 8 \
+#    -i [% data_dir %]/[% item.out_dir %]_fasta \
+#    -o [% data_dir %]/[% item.out_dir %]_mslq
+#
+#[% END -%]
 
 #----------------------------#
 # clean
@@ -523,8 +523,8 @@ EOF
 perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl \
     -d [% item.out_dir %] -e human_65 \
     --block --id 9606 \
-    -f [% data_dir %]/[% item.out_dir %]_mafft  \
-    -lt 1000 -st 10000000 --parallel 4 --run 1-3,21,40
+    -f [% data_dir %]/[% item.out_dir %]_mft  \
+    -lt 5000 -st 10000000 --parallel 8 --run 1-3,21,40
 
 [% END -%]
 

@@ -229,7 +229,7 @@ cd [% data_dir %]
 [% FOREACH item IN data -%]
 # [% item.name %] [% item.coverage %]
 find [% data_dir %]/Dmelvs[% item.name %]/axtNet -name "*.axt.gz" | xargs gzip -d
-perl [% pl_dir %]/alignDB/extra/two_way_batch.pl -d Dmelvs[% item.name %] -t="7227,Dmel" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]/Dmelvs[% item.name %] -at 1000 -st 10000000 --parallel 6 --run 1-3,21,40
+perl [% pl_dir %]/alignDB/extra/two_way_batch.pl -d Dmelvs[% item.name %] -t="7227,Dmel" -q "[% item.taxon %],[% item.name %]" -a [% data_dir %]/Dmelvs[% item.name %] -at 10000 -st 10000000 --parallel 6 --run 1-3,21,40
 gzip [% data_dir %]/Dmelvs[% item.name %]/axtNet/*.axt
 
 [% END -%]
@@ -344,12 +344,14 @@ perl [% pl_dir %]/alignDB/extra/join_dbs.pl --crude_only \
     --goal_db [% item.goal_db %] --outgroup [% item.outgroup %] \
     --target [% item.target %] \
     --queries [% item.queries %] \
-    --no_insert=1 --trimmed_fasta=1 --length 1000
+    --no_insert=1 --trimmed_fasta=1 --length 10000
 
 perl [% pl_dir %]/alignDB/util/refine_fasta.pl \
     --msa mafft -p 4 \
     -i [% data_dir %]/[% item.goal_db %].crude \
     -o [% data_dir %]/[% item.goal_db %]_mft
+
+perl [% pl_dir %]/tool/catfasta2phyml.pl -f [% data_dir %]/[% item.goal_db %]_mft/*.fas > [% data_dir %]/all.fasta
 
 perl [% pl_dir %]/alignDB/extra/multi_way_batch.pl -d [% item.goal_db %] -e fly_65 -f [% data_dir %]/[% item.goal_db %]_mft  -lt 1000 -st 10000000 --parallel 8 --run all
 
@@ -400,7 +402,7 @@ bsub -q mpi_2 -n 8 -J [% item.out_dir %]-mz perl [% pl_dir %]/blastz/mz.pl \
     [% FOREACH st IN item.strains -%]
     -d [% data_dir %]/Dmelvs[% st FILTER ucfirst %] \
     [% END -%]
-    --tree [% data_dir %]/17way.nwk \
+    --tree [% data_dir %]/22way.nwk \
     --out [% data_dir %]/[% item.out_dir %] \
     -syn -p 8
 
