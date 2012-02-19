@@ -23,6 +23,8 @@ $Win32::OLE::Warn = 3;    # die on errors...
 # running options
 my $dir = '.';
 
+my $suffix = "*.xlsx";
+
 my $man  = 0;
 my $help = 0;
 
@@ -30,6 +32,7 @@ GetOptions(
     'help|?'    => \$help,
     'man'       => \$man,
     'd|dir=s' => \$dir,
+    's|suffix=s' => \$suffix,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -45,7 +48,7 @@ unless ( $excel = Win32::OLE->new("Excel.Application") ) {
 }
 $excel->{DisplayAlerts} = 0;
 
-my @xlsx_files = File::Find::Rule->file->name('*.xlsx')->in($dir);
+my @xlsx_files = File::Find::Rule->file->name($suffix)->in($dir);
 
 for my $xlsx (@xlsx_files) {
     $xlsx = File::Spec->rel2abs($xlsx);
@@ -62,3 +65,25 @@ for my $xlsx (@xlsx_files) {
 
 $excel->Quit;
 __END__
+
+=head1 NAME
+
+    xlsx2xls.pl - convert xlsx to xls
+
+=head1 SYNOPSIS
+    perl xlsx2xls.pl -d stat -s *.chart.xlsx
+
+    xlsx2xls.pl [options]
+      Options:
+        --help              brief help message
+        --man               full documentation
+        -d, --dir           dir containing xlsx files
+        -s, --suffix        suffix, default is *.xlsx
+
+=head1 DESCRIPTION
+
+B<This program> will read the given input file(s) and do someting
+useful with the contents thereof.
+
+=cut
+
