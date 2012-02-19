@@ -287,8 +287,8 @@ find [% data_dir %] -name "mafNet" | xargs rm -fr
 #----------------------------#
 # gzip maf, fas
 #----------------------------#
-find [% data_dir %] -name ".maf" | xargs gzip
-find [% data_dir %] -name ".maf.fas" | xargs gzip
+find [% data_dir %] -name "*.maf" | xargs gzip
+find [% data_dir %] -name "*.maf.fas" | xargs gzip
 
 #----------------------------#
 # clean maf-fasta
