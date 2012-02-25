@@ -16,6 +16,13 @@ $ bash auto_ath19_file.sh
 $ RepeatMasker /home/wangq/data/alignment/arabidopsis19/lyrata_65/chrUn.fa -species arabidopsis -xsmall -s --parallel 4
 
 #----------------------------#
+# 2bit
+#----------------------------#
+~/bin/x86_64/twoBitToFa ~/data/alignment/arabidopsis19/ath_65/chr.2bit ~/data/alignment/arabidopsis19/ath_65/chr.fa
+~/bin/x86_64/faSplit byname ~/data/alignment/arabidopsis19/ath_65/chr.fa ~/data/alignment/arabidopsis19/ath_65/
+rm ~/data/alignment/arabidopsis19/ath_65/chr.2bit ~/data/alignment/arabidopsis19/ath_65/chr.sizes ~/data/alignment/arabidopsis19/ath_65/chr.fa
+
+#----------------------------#
 # blastz set11
 #----------------------------#
 1. blastz, lav2axt.pl

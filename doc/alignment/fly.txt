@@ -1,4 +1,39 @@
 
+#----------------------------#
+# dgrp
+#----------------------------#
+mkdir ~/data/alignment/dgrp
+mkdir ~/data/alignment/dgrp/Dmel_65
+cp -r ~/data/alignment/fly/Dsim_65 ~/data/alignment/dgrp/
+
+cd ~/data/ensemblgenomes12_65/metazoa/fasta/drosophila_melanogaster/dna/
+find -name "*dna.toplevel*" | xargs gzip -d -c > ~/data/alignment/fly/Dmel_65/toplevel.fa
+
+# Dmel
+cd ~/data/alignment/fly/Dmel_65
+~/bin/x86_64/faCount toplevel.fa | perl -aln -e 'next if $F[0] eq 'total'; print $F[0] if $F[1] > 100000; print $F[0] if $F[1] > 10000  and $F[6]/$F[1] < 0.05' | uniq > listFile
+~/bin/x86_64/faSomeRecords toplevel.fa listFile toplevel.filtered.fa
+~/bin/x86_64/faSplit byname toplevel.filtered.fa .
+rm toplevel.fa toplevel.filtered.fa listFile
+
+find -type f -size -500k | xargs rm
+rm *Het.fa
+rm 4.fa U.fa Uextra.fa
+
+~/perl5/bin/rename 's/^/chr/' *.fa
+perl -p -i -e '/>/ and s/\>/\>chr/' *.fa
+~/perl5/bin/rename 's/fa$/fasta/' *.fa
+
+# RM
+bsub -n 8 -J Dmel-RM RepeatMasker ~/data/alignment/fly/Dmel_65/*.fasta -species Flies -xsmall --parallel 8
+
+~/perl5/bin/rename 's/fasta.masked$/fa/' ~/data/alignment/fly/Dmel_65/*.masked
+find ~/data/alignment/fly/Dmel_65/ -type f | grep -v fa$ | xargs rm 
+
+# DmelvsDsim
+bsub -n 8 -J DmelvsDsim perl ~/Scripts/blastz/bz.pl -dt ~/data/alignment/dgrp/Dmel_65 -dq ~/data/alignment/dgrp/Dsim_65 -dl ~/data/alignment/dgrp/DmelvsDsim_65 -s set01 -p 6 --noaxt -pb lastz --lastz
+
+perl ~/Scripts/blastz/lpcna.pl -dt ~/data/alignment/dgrp/Dmel_65 -dq ~/data/alignment/dgrp/Dsim_65 -dl ~/data/alignment/dgrp/DmelvsDsim_65 -p 8
 
 #----------------------------#
 # unzip, filter and split
@@ -68,10 +103,11 @@ rm toplevel.fa toplevel.filtered.fa listFile
 #----------------------------#
 # repeatmasker on all fasta
 #----------------------------#
-bsub -n 8 -J Dsim-RM RepeatMasker ~/data/alignment/fly/Dsim_65/*.fasta -species Flies -xsmall -s --parallel 8
-bsub -n 8 -J Dsech-RM RepeatMasker ~/data/alignment/fly/Dsech_65/*.fasta -species Flies -xsmall -s --parallel 8
-bsub -n 8 -J Dyak-RM RepeatMasker ~/data/alignment/fly/Dyak_65/*.fasta -species Flies -xsmall -s --parallel 8
-bsub -n 8 -J Dere-RM RepeatMasker ~/data/alignment/fly/Dere_65/*.fasta -species Flies -xsmall -s --parallel 8
+
+bsub -n 8 -J Dsim-RM RepeatMasker ~/data/alignment/fly/Dsim_65/*.fasta -species Flies -xsmall --parallel 8
+bsub -n 8 -J Dsech-RM RepeatMasker ~/data/alignment/fly/Dsech_65/*.fasta -species Flies -xsmall --parallel 8
+bsub -n 8 -J Dyak-RM RepeatMasker ~/data/alignment/fly/Dyak_65/*.fasta -species Flies -xsmall --parallel 8
+bsub -n 8 -J Dere-RM RepeatMasker ~/data/alignment/fly/Dere_65/*.fasta -species Flies -xsmall --parallel 8
 
 ~/perl5/bin/rename 's/fasta.masked$/fa/' ~/data/alignment/fly/Dsim_65/*.masked
 find ~/data/alignment/fly/Dsim_65/ -type f | grep -v fa$ | xargs rm 
@@ -88,6 +124,7 @@ find ~/data/alignment/fly/Dere_65/ -type f | grep -v fa$ | xargs rm
 #----------------------------#
 # blastz
 #----------------------------#
+
 # DsimvsDsech
 mv ~/data/alignment/fly/Dsim_65/chrUn.fa ~/data/alignment/fly/Dsim_65/chrUn.fa.unused
 bsub -n 8 -J DsimvsDsech perl ~/Scripts/blastz/bz.pl -dt ~/data/alignment/fly/Dsim_65 -dq ~/data/alignment/fly/Dsech_65 -dl ~/data/alignment/fly/DsimvsDsech_65 -s set01 -p 8 --noaxt -pb lastz --lastz

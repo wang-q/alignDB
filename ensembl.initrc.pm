@@ -18,10 +18,10 @@ my $port = 3306;
         -port    => $port,
         -species => 'Homo sapiens',
         -group   => 'core',
-        -dbname  => 'human_54',
+        -dbname  => 'human_65',
     );
 
-    @aliases = ( 'Homo_sapiens', 'H_sapiens', 'human', 'human_54');
+    @aliases = ( 'Homo_sapiens', 'H_sapiens', 'human', 'human_65' );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
         -species => 'Homo sapiens',
@@ -40,8 +40,11 @@ my $port = 3306;
         -dbname  => 'yeast_65',
     );
 
-    @aliases
-        = ( 'Saccharomyces_cerevisiae', 'S_cerevisiae', 'yeast', 'S288C', 'yeast_65');
+    @aliases = (
+        'Saccharomyces_cerevisiae', 'S_cerevisiae',
+        'yeast',                    'S288C',
+        'yeast_65'
+    );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
         -species => 'Saccharomyces cerevisiae',
@@ -60,7 +63,7 @@ my $port = 3306;
         -dbname  => 'mouse_65',
     );
 
-    @aliases = ( 'M_musculus', 'Mus_musculus', 'mouse', 'mouse_65');
+    @aliases = ( 'M_musculus', 'Mus_musculus', 'mouse', 'mouse_65' );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
         -species => 'Mus musculus',
@@ -79,8 +82,8 @@ my $port = 3306;
         -dbname  => 'ath_65',
     );
 
-    @aliases
-        = ( 'A_thaliana', 'Arabidopsis_thaliana', 'arabidppsis', 'ath', 'ath_65');
+    @aliases = ( 'A_thaliana', 'Arabidopsis_thaliana', 'arabidppsis', 'ath',
+        'ath_65' );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
         -species => 'Arabidopsis thaliana',
@@ -99,8 +102,7 @@ my $port = 3306;
         -dbname  => 'nip_65',
     );
 
-    @aliases
-        = ( 'O_sativa', 'Oryza_sativa', 'rice', 'nip', 'nip_65');
+    @aliases = ( 'O_sativa', 'Oryza_sativa', 'rice', 'nip', 'nip_65' );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
         -species => 'Oryza sativa',
@@ -119,8 +121,11 @@ my $port = 3306;
         -dbname  => 'fly_65',
     );
 
-    @aliases
-        = ( 'D_melanogaster', 'Drosophila_melanogaster', 'Dmel', 'fly', 'fly_65');
+    @aliases = (
+        'D_melanogaster', 'Drosophila_melanogaster',
+        'Dmel',           'Dmel_65',
+        'fly',            'fly_65'
+    );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
         -species => 'Drosophila melanogaster',
@@ -140,7 +145,7 @@ my $port = 3306;
     );
 
     @aliases
-        = ( 'D_simulans', 'Drosophila_simulans', 'Dsim',  'dsim_65');
+        = ( 'D_simulans', 'Drosophila_simulans', 'Dsim', 'Dsim_65', 'dsim_65' );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
         -species => 'Drosophila simulans',
@@ -160,7 +165,7 @@ my $port = 3306;
     );
 
     @aliases
-        = ( 'D_yakuba', 'Drosophila_yakuba', 'Dyak',  'dyak_65');
+        = ( 'D_yakuba', 'Drosophila_yakuba', 'Dyak', 'Dyak_65', 'dyak_65' );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
         -species => 'Drosophila yakuba',
