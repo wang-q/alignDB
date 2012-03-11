@@ -44,8 +44,8 @@ my $dispatch = LoadFile($file_yaml);
 my $charts   = $dispatch->{charts};
 my $texts    = $dispatch->{texts};
 my $ranges   = $dispatch->{ranges};
-my $x_unit   = $dispatch->{unit}{x} || 80;
-my $y_unit   = $dispatch->{unit}{y} || 50;
+my $x_unit   = $dispatch->{unit}{x} || 60;
+my $y_unit   = $dispatch->{unit}{y} || 45;
 
 # Excel files should be located in the same dir as the yaml file.
 # cdr file will be named after yaml file.
@@ -92,7 +92,7 @@ for my $filename ( sort keys %{$charts} ) {
 
     # open xls file
     my $efile = file( $base_dir, $filename )->stringify;
-    if (! -e $efile) {
+    if ( !-e $efile ) {
         warn "File not exists: $efile\n";
         next;
     }
@@ -113,8 +113,9 @@ for my $filename ( sort keys %{$charts} ) {
             $layer->PasteSpecial("Enhanced Metafile");
 
             # move the shape
+            # leave some spaces
             my $selection = $cda->{ActiveSelection};
-            $selection->SetSize( $x_unit, $y_unit );
+            $selection->SetSize( $x_unit * 0.95, $y_unit * 0.95 );
             $selection->SetPosition( $x * $x_unit, -$y * $y_unit );
         }
     }
@@ -129,7 +130,7 @@ for my $filename ( sort keys %{$ranges} ) {
 
     # open xls file
     my $efile = file( $base_dir, $filename )->stringify;
-    if (! -e $efile) {
+    if ( !-e $efile ) {
         warn "File not exists: $efile\n";
         next;
     }
@@ -210,5 +211,7 @@ $excel->Quit;
 $cda->Quit;
 
 __END__
+
+=head1 SYNOPSIS
 
 perl corel_fig.pl -i Fig.S1.yaml
