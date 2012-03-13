@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/15/2011 2:34:01 AM                         */
+/* Created on:     3/13/2012 2:37:51 PM                         */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -11,17 +11,18 @@ create table align
    align_id                       int                            not null AUTO_INCREMENT,
    tvsq_id                        int,
    align_length                   int,
-   comparable_bases               int,
-   identities                     int,
-   differences                    int,
-   gaps                           int,
-   ns                             int,
+   align_comparables              int,
+   align_identities               int,
+   align_differences              int,
+   align_gaps                     int,
+   align_ns                       int,
    align_error                    int,
-   pi                             double,
+   align_pi                       double,
+   align_indels                   int,
    align_target_gc                double,
    align_average_gc               double,
-   comparable_runlist             text,
-   indel_runlist                  text,
+   align_comparable_runlist       text,
+   align_indel_runlist            text,
    align_coding                   double,
    align_repeats                  double,
    align_te                       double,

@@ -1546,7 +1546,7 @@ DESTINATION 0 Arial Unicode MS,8,N</a:FontList>
 <o:RelationshipSymbol Id="o44">
 <a:CreationDate>1294050804</a:CreationDate>
 <a:ModificationDate>1313931627</a:ModificationDate>
-<a:Rect>((64688,8321), (70762,27562))</a:Rect>
+<a:Rect>((66914,8321), (68537,27562))</a:Rect>
 <a:ListOfPoints>((67725,8321),(67725,27562))</a:ListOfPoints>
 <a:CornerStyle>1</a:CornerStyle>
 <a:ArrowStyle>4371</a:ArrowStyle>
@@ -1788,7 +1788,7 @@ DESTINATION 0 Arial Unicode MS,8,N</a:FontList>
 <a:CenterTextOffset>(0, 29)</a:CenterTextOffset>
 <a:SourceTextOffset>(7, 1)</a:SourceTextOffset>
 <a:DestinationTextOffset>(-7, -1)</a:DestinationTextOffset>
-<a:Rect>((66400,-30688), (71650,-17044))</a:Rect>
+<a:Rect>((68214,-30688), (69837,-17044))</a:Rect>
 <a:ListOfPoints>((69025,-17044),(69025,-30688))</a:ListOfPoints>
 <a:CornerStyle>1</a:CornerStyle>
 <a:ArrowStyle>4371</a:ArrowStyle>
@@ -8026,7 +8026,7 @@ LABL 0 Arial Unicode MS,8,N</a:FontList>
 <a:Creator>wangq</a:Creator>
 <a:ModificationDate>1294061407</a:ModificationDate>
 <a:Modifier>wangq</a:Modifier>
-<a:TargetModelURL>file:///E|/wq/Scripts/alignDB/schema/malignDB.pdm</a:TargetModelURL>
+<a:TargetModelURL>file:///D|/wq/Scripts/alignDB/schema/malignDB.pdm</a:TargetModelURL>
 <a:TargetModelID>C68169D4-0BB0-4D85-9BD3-89C266C39143</a:TargetModelID>
 <a:TargetModelClassID>CDE44E21-9669-11D1-9914-006097355D9B</a:TargetModelClassID>
 <c:SessionShortcuts>
