@@ -118,10 +118,10 @@ sub _insert_align {
         q{
         INSERT INTO align (
             align_id, tvsq_id, align_length,
-            comparable_bases, identities, differences,
-            gaps, ns, align_error,
-            pi, align_target_gc, align_average_gc,
-            comparable_runlist, indel_runlist
+            align_comparables, align_identities, align_differences,
+            align_gaps, align_ns, align_error,
+            align_pi, align_target_gc, align_average_gc,
+            align_comparable_runlist, align_indel_runlist
         )
         VALUES (
             NULL, ?, ?,
@@ -863,8 +863,8 @@ sub add_align {
         my $align_update = $dbh->prepare(
             q{
             UPDATE align
-            SET comparable_runlist = ?,
-                indel_runlist = ?
+            SET align_comparable_runlist = ?,
+                align_indel_runlist = ?
             WHERE align_id = ?
             }
         );
@@ -1101,7 +1101,7 @@ sub get_sets {
 
     my $sth = $dbh->prepare(
         q{
-        SELECT align_length, comparable_runlist, indel_runlist
+        SELECT align_length, align_comparable_runlist, align_indel_runlist
         FROM align 
         WHERE align_id = ?
         }

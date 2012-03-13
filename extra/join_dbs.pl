@@ -215,7 +215,7 @@ if ($discard_distant) {
     my $db_name = $all_dbs[$1];
 
     my $per_idn_query = qq{
-        SELECT  a.identities / a.align_length
+        SELECT  a.align_identities / a.align_length
         FROM align a
     };
 
@@ -907,7 +907,7 @@ __END__
         --goal_db           goal database name
         --outgroup          outgroup identity (0query)
         --target            target identity (0target)
-        --queries           query identities list (1query,2query)
+        --queries           query list (1query,2query)
         --length            threshold of alignment length
         --realign           correct pesudo-alignment error
         --raw_fasta         save raw fasta files

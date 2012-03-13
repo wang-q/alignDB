@@ -142,7 +142,7 @@ my $worker = sub {
     # alignments' info
     my $align_seq_query = q{
         SELECT a.align_length,
-               a.comparable_runlist
+               a.align_comparable_runlist
         FROM align a
         WHERE a.align_id = ?
     };

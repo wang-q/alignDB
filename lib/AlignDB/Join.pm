@@ -75,7 +75,7 @@ sub _calc_discard {
     my $db_name     = $all_dbs[$db_name_idx];
 
     my $per_idn_query = qq{
-        SELECT  a.identities / a.align_length
+        SELECT  a.align_identities / a.align_length
         FROM align a
     };
 
