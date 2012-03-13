@@ -3262,8 +3262,8 @@ my $d_d_ref = sub {
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
             header    => [
-                qw{item AVG_pi comparable_bases identities
-                    differences gaps Ns align_error
+                qw{item AVG_pi align_comparables align_identities
+                    align_differences align_gaps align_ns align_error
                     }
             ],
         );

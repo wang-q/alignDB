@@ -164,7 +164,7 @@ my $basic = sub {
     {    # write contents
         my $query_name = 'Indels per 100 bp';
         my $sql_query  = q{
-            SELECT  SUM(i.indel) / SUM(a.comparable_bases) * 100.0
+            SELECT  SUM(i.indel) / SUM(a.align_comparables) * 100.0
             FROM    align a,
                     (SELECT a.align_id,
                             COUNT(i.indel_id) indel
@@ -187,7 +187,7 @@ my $basic = sub {
         my $sql_query  = q{
             SELECT -0.75 * log2( 1 - ( 4.0 / 3.0 ) * original.Pi )
             FROM (
-                SELECT SUM(a.differences) * 1.0 / SUM(a.comparable_bases) Pi
+                SELECT SUM(a.align_differences) * 1.0 / SUM(a.align_comparables) Pi
                 FROM align a
                 ) original
         };
@@ -1670,10 +1670,10 @@ my $snp_indel_ratio = sub {
             # create temporary table
             CREATE TABLE pi_group (p_id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (p_id))
                 ENGINE=MyISAM
-                SELECT a.pi `pi`,
-                       a.differences `snp`,
+                SELECT a.align_pi `pi`,
+                       a.align_differences `snp`,
                        i.indel_number `indel`,
-                       a.gaps `gaps`,
+                       a.align_gaps `gaps`,
                        a.align_length `align_length`
                 FROM (SELECT align_id, COUNT(indel_id) indel_number
                       FROM indel i

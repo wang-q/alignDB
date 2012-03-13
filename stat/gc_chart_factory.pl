@@ -87,73 +87,82 @@ $excel_obj->jc_correction if $jc_correction;
         x_column     => 1,
         y_column     => 2,
         first_row    => 2,
-        last_row     => 31,
-        x_max_scale  => 30,
+        last_row     => 22,
+        x_max_scale  => 20,
         x_title      => "Distance to GC trough (d')",
-        y_title      => "Indel per 100 bp",
+        y_title      => "Nucleotide diversity",
         Height       => 200,
-        Width        => 320,
-        Top          => 12.75,
-        Left         => 200,
+        Width        => 260,
+        Top          => 14.25,
+        Left         => 400,
     );
     $excel_obj->draw_y( $sheet_name, \%option );
 
-    #----------------------------#
-    # worksheet -- distance_pi
-    #----------------------------#
-    $sheet_name = 'distance_pi';
-    $option{y_title} = "Nucleotide diversity";
+    # chart 2
+    $option{chart_serial}++;
+    $option{y_column} = 4;
+    $option{y_title}  = "Indel per 100 bp";
+    $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
     # worksheet -- combined_density
     #----------------------------#
-    $sheet_name      = 'combined_density';
-    $option{x_title} = "Half wave length";
-    $option{y_title} = "Indel per 100 bp",
+    $sheet_name           = 'combined_density';
+    $option{chart_serial} = 1;
+    $option{y_column}     = 2;
+    $option{x_title}      = "Half wave length";
+    $option{y_title}      = "Nucleotide diversity";
+    $option{Top}          = 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
 
-        $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- density_pi
-    #----------------------------#
-    $sheet_name = 'density_pi';
-    $option{y_title} = "Nucleotide diversity";
+    # chart 2
+    $option{chart_serial}++;
+    $option{y_column} = 4;
+    $option{y_title}  = "Indel per 100 bp";
+    $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
     # worksheet -- combined_amplitude
     #----------------------------#
-    $sheet_name = 'combined_amplitude';
-    $option{x_title} = "Double amplitude";
-    $option{y_title} = "Indel per 100 bp", $option{x_scale_unit} = 5;
-    $option{x_max_scale} = undef;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- amplitude_pi
-    #----------------------------#
-    $sheet_name           = 'amplitude_pi';
+    $sheet_name           = 'combined_amplitude';
+    $option{chart_serial} = 1;
+    $option{y_column}     = 2;
+    $option{x_title}      = "Double amplitude";
     $option{y_title}      = "Nucleotide diversity";
+    $option{Top}          = 14.25;
     $option{x_scale_unit} = 5;
     $option{x_max_scale}  = undef;
-    $option{y_scale_unit} = 0.001;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 2
+    $option{chart_serial}++;
+    $option{y_column} = 4;
+    $option{y_title}  = "Indel per 100 bp";
+    $option{Top} += $option{Height} + 14.25;
+    $option{x_scale_unit} = 5;
+    $option{x_max_scale}  = undef;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
     # worksheet -- combined_a2d
     #----------------------------#
-    $sheet_name = 'combined_a2d';
-    $option{x_title} = "Double amplitude/Half wave length";
-    $option{y_title} = "Indel per 100 bp", $option{x_scale_unit} = 5;
-    $option{x_max_scale} = undef;
+    $sheet_name           = 'combined_a2d';
+    $option{chart_serial} = 1;
+    $option{y_column}     = 2;
+    $option{x_title}      = "Double amplitude/Half wave length";
+    $option{y_title}      = "Nucleotide diversity";
+    $option{Top}          = 14.25;
+    $option{x_scale_unit} = 5;
+    $option{x_max_scale}  = undef;
     $excel_obj->draw_y( $sheet_name, \%option );
 
-    #----------------------------#
-    # worksheet -- a2d_pi
-    #----------------------------#
-    $sheet_name           = 'a2d_pi';
-    $option{y_title}      = "Nucleotide diversity";
+    # chart 2
+    $option{chart_serial}++;
+    $option{y_column} = 4;
+    $option{y_title}  = "Indel per 100 bp";
+    $option{Top} += $option{Height} + 14.25;
     $option{x_scale_unit} = 5;
     $option{x_max_scale}  = undef;
     $excel_obj->draw_y( $sheet_name, \%option );
@@ -170,9 +179,9 @@ $excel_obj->jc_correction if $jc_correction;
         chart_serial   => 1,
         x_title        => "Distance to GC trough (d')",
         y_title        => "Indel per 100 bp",
-        Height         => 283.7,
-        Width          => 453.9,
-        Top            => 12.75 * 38,
+        Height         => 300,
+        Width          => 390,
+        Top            => 14.25 * 38,
         Left           => 360,
         group_name     => \@group_name,
         section_top    => 2,
@@ -201,9 +210,9 @@ $excel_obj->jc_correction if $jc_correction;
         chart_serial   => 1,
         x_title        => "Distance to GC trough (d')",
         y_title        => "Indel per 100 bp",
-        Height         => 200,
-        Width          => 320,
-        Top            => 12.75 * 17,
+        Height         => 300,
+        Width          => 390,
+        Top            => 14.25 * 17,
         Left           => 360,
         group_name     => \@group_name,
         section_top    => 2,
@@ -227,9 +236,9 @@ $excel_obj->jc_correction if $jc_correction;
         chart_serial   => 1,
         x_title        => "Distance to GC trough (d')",
         y_title        => "Indel per 100 bp",
-        Height         => 200,
-        Width          => 320,
-        Top            => 12.75 * 17,
+        Height         => 300,
+        Width          => 390,
+        Top            => 14.25 * 17,
         Left           => 360,
         group_name     => \@group_name,
         section_top    => 2,
@@ -264,35 +273,36 @@ $excel_obj->jc_correction if $jc_correction;
             x_title      => "GC proportion",
             y_title      => "Nucleotide diversity",
             Height       => 200,
-            Width        => 320,
-            Top          => 12.75,
-            Left         => 600,
+            Width        => 260,
+            Top          => 14.25,
+            Left         => 650,
             without_line => 1,
             marker_size  => 5,
-
-            #add_trend    => 1,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 2
         $option{chart_serial}++;
         $option{y_column} = 4;
         $option{y_title}  = "Indel per 100 bp";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 3
         $option{chart_serial}++;
         $option{y_column} = 5;
         $option{y_title}  = "GC proportion CV";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 4
         $option{chart_serial}++;
         $option{y_column} = 6;
         $option{y_title}  = "Coding proportion";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
     }
 
@@ -308,33 +318,36 @@ $excel_obj->jc_correction if $jc_correction;
             x_title      => "Segment std",
             y_title      => "Nucleotide diversity",
             Height       => 200,
-            Width        => 320,
-            Top          => 12.75,
-            Left         => 600,
+            Width        => 260,
+            Top          => 14.25,
+            Left         => 650,
             without_line => 1,
             marker_size  => 5,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 2
         $option{chart_serial}++;
         $option{y_column} = 4;
         $option{y_title}  = "Indel per 100 bp";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 3
         $option{chart_serial}++;
         $option{y_column} = 5;
         $option{y_title}  = "GC proportion";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 4
         $option{chart_serial}++;
         $option{y_column} = 6;
         $option{y_title}  = "Coding proportion";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
     }
 
@@ -350,40 +363,43 @@ $excel_obj->jc_correction if $jc_correction;
             x_title      => "Segment CV",
             y_title      => "Nucleotide diversity",
             Height       => 200,
-            Width        => 320,
-            Top          => 12.75,
-            Left         => 600,
+            Width        => 260,
+            Top          => 14.25,
+            Left         => 650,
             without_line => 1,
             marker_size  => 5,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 2
         $option{chart_serial}++;
         $option{y_column} = 4;
         $option{y_title}  = "Indel per 100 bp";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 3
         $option{chart_serial}++;
         $option{y_column} = 5;
         $option{y_title}  = "GC proportion";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 4
         $option{chart_serial}++;
         $option{y_column} = 6;
         $option{y_title}  = "Coding proportion";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
 
-        # chart 4
+        # chart 5
         $option{chart_serial}++;
         $option{y_column} = 10;
         $option{y_title}  = "GC Range";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
     }
 
@@ -399,34 +415,37 @@ $excel_obj->jc_correction if $jc_correction;
             x_title      => "Segment mdcw",
             y_title      => "Nucleotide diversity",
             Height       => 200,
-            Width        => 320,
-            Top          => 12.75,
-            Left         => 600,
+            Width        => 260,
+            Top          => 14.25,
+            Left         => 650,
             without_line => 1,
             marker_size  => 5,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 2
         $option{chart_serial}++;
         $option{y_column} = 4;
         $option{y_title}  = "Indel per 100 bp";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 3
         $option{chart_serial}++;
         $option{y_column} = 5;
         $option{y_title}  = "GC proportion";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
+        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
         # chart 4
         $option{chart_serial}++;
         $option{y_column} = 6;
         $option{y_title}  = "Coding proportion";
-        $option{Top} += $option{Height} + 12.75;
-        $excel_obj->draw_xy( $sheet_name, \%option );
+        $option{Top} += $option{Height} + 14.25;
+        $excel_obj->draw_xy( $sheet_name, \%option )
     }
 
     #----------------------------#
@@ -441,8 +460,8 @@ $excel_obj->jc_correction if $jc_correction;
             x_title      => "Segment coding",
             y_title      => "Nucleotide diversity",
             Height       => 200,
-            Width        => 320,
-            Top          => 12.75,
+            Width        => 260,
+            Top          => 14.25,
             Left         => 600,
             without_line => 1,
             marker_size  => 5,
@@ -453,21 +472,21 @@ $excel_obj->jc_correction if $jc_correction;
         $option{chart_serial}++;
         $option{y_column} = 4;
         $option{y_title}  = "Indel per 100 bp";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
 
         # chart 3
         $option{chart_serial}++;
         $option{y_column} = 5;
         $option{y_title}  = "GC proportion";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
 
         # chart 4
         $option{chart_serial}++;
         $option{y_column} = 6;
         $option{y_title}  = "GC proportion CV";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
     }
 
@@ -484,8 +503,8 @@ $excel_obj->jc_correction if $jc_correction;
                 x_title      => "GC proportion",
                 y_title      => "Nucleotide diversity",
                 Height       => 200,
-                Width        => 320,
-                Top          => 12.75,
+                Width        => 260,
+                Top          => 14.25,
                 Left         => 600,
                 without_line => 1,
                 marker_size  => 5,
@@ -496,21 +515,21 @@ $excel_obj->jc_correction if $jc_correction;
             $option{chart_serial}++;
             $option{y_column} = 4;
             $option{y_title}  = "Indel per 100 bp";
-            $option{Top} += $option{Height} + 12.75;
+            $option{Top} += $option{Height} + 14.25;
             $excel_obj->draw_xy( $sheet_name, \%option );
 
             # chart 3
             $option{chart_serial}++;
             $option{y_column} = 5;
             $option{y_title}  = "GC proportion CV";
-            $option{Top} += $option{Height} + 12.75;
+            $option{Top} += $option{Height} + 14.25;
             $excel_obj->draw_xy( $sheet_name, \%option );
 
             # chart 4
             $option{chart_serial}++;
             $option{y_column} = 6;
             $option{y_title}  = "Coding proportion";
-            $option{Top} += $option{Height} + 12.75;
+            $option{Top} += $option{Height} + 14.25;
             $excel_obj->draw_xy( $sheet_name, \%option );
         }
     }
@@ -528,8 +547,8 @@ $excel_obj->jc_correction if $jc_correction;
                 x_title      => "Segment CV",
                 y_title      => "Nucleotide diversity",
                 Height       => 200,
-                Width        => 320,
-                Top          => 12.75,
+                Width        => 260,
+                Top          => 14.25,
                 Left         => 600,
                 without_line => 1,
                 marker_size  => 5,
@@ -540,21 +559,21 @@ $excel_obj->jc_correction if $jc_correction;
             $option{chart_serial}++;
             $option{y_column} = 4;
             $option{y_title}  = "Indel per 100 bp";
-            $option{Top} += $option{Height} + 12.75;
+            $option{Top} += $option{Height} + 14.25;
             $excel_obj->draw_xy( $sheet_name, \%option );
 
             # chart 3
             $option{chart_serial}++;
             $option{y_column} = 5;
             $option{y_title}  = "GC proportion";
-            $option{Top} += $option{Height} + 12.75;
+            $option{Top} += $option{Height} + 14.25;
             $excel_obj->draw_xy( $sheet_name, \%option );
 
             # chart 4
             $option{chart_serial}++;
             $option{y_column} = 6;
             $option{y_title}  = "Coding proportion";
-            $option{Top} += $option{Height} + 12.75;
+            $option{Top} += $option{Height} + 14.25;
             $excel_obj->draw_xy( $sheet_name, \%option );
         }
     }

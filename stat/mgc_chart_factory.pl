@@ -23,6 +23,8 @@ my $jc_correction   = $Config->{stat}->{jc_correction};
 my $time_stamp      = $Config->{stat}->{time_stamp};
 my $add_index_sheet = $Config->{stat}->{add_index_sheet};
 
+my $add_trend = 0;
+
 my $infile  = '';
 my $outfile = '';
 
@@ -37,6 +39,7 @@ GetOptions(
     'jc=s'              => \$jc_correction,
     'time_stamp=s'      => \$time_stamp,
     'add_index_sheet=s' => \$add_index_sheet,
+    'add_trend=s' => \$add_trend,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -79,12 +82,12 @@ $excel_obj->jc_correction if $jc_correction;
             x_title      => "GC proportion",
             y_title      => "Nucleotide diversity",
             Height       => 200,
-            Width        => 320,
-            Top          => 12.75,
+            Width        => 260,
+            Top          => 14.25,
             Left         => 650,
             without_line => 1,
             marker_size  => 5,
-            add_trend    => 1,
+            add_trend    => $add_trend,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
@@ -93,7 +96,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{chart_serial}++;
         $option{y_column} = 4;
         $option{y_title}  = "Indel per 100bp";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
@@ -101,7 +104,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{chart_serial}++;
         $option{y_column} = 5;
         $option{y_title}  = "GC proportion CV";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
     }
@@ -118,12 +121,12 @@ $excel_obj->jc_correction if $jc_correction;
             x_title      => "Segment std",
             y_title      => "Nucleotide diversity",
             Height       => 200,
-            Width        => 320,
-            Top          => 12.75,
+            Width        => 260,
+            Top          => 14.25,
             Left         => 650,
             without_line => 1,
             marker_size  => 5,
-            add_trend    => 1,
+            add_trend    => $add_trend,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
@@ -132,7 +135,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{chart_serial}++;
         $option{y_column} = 4;
         $option{y_title}  = "Indel per 100bp";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
@@ -140,7 +143,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{chart_serial}++;
         $option{y_column} = 5;
         $option{y_title}  = "GC proportion";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
     }
@@ -157,12 +160,12 @@ $excel_obj->jc_correction if $jc_correction;
             x_title      => "Segment CV",
             y_title      => "Nucleotide diversity",
             Height       => 200,
-            Width        => 320,
-            Top          => 12.75,
+            Width        => 260,
+            Top          => 14.25,
             Left         => 650,
             without_line => 1,
             marker_size  => 5,
-            add_trend    => 1,
+            add_trend    => $add_trend,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
@@ -171,7 +174,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{chart_serial}++;
         $option{y_column} = 4;
         $option{y_title}  = "Indel per 100bp";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
@@ -179,7 +182,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{chart_serial}++;
         $option{y_column} = 5;
         $option{y_title}  = "GC proportion";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
     }
@@ -196,12 +199,12 @@ $excel_obj->jc_correction if $jc_correction;
             x_title      => "Segment mdcw",
             y_title      => "Nucleotide diversity",
             Height       => 200,
-            Width        => 320,
-            Top          => 12.75,
+            Width        => 260,
+            Top          => 14.25,
             Left         => 650,
             without_line => 1,
             marker_size  => 5,
-            add_trend    => 1,
+            add_trend    => $add_trend,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
@@ -210,7 +213,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{chart_serial}++;
         $option{y_column} = 4;
         $option{y_title}  = "Indel per 100bp";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
 
@@ -218,7 +221,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{chart_serial}++;
         $option{y_column} = 5;
         $option{y_title}  = "GC proportion";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
     }
@@ -247,12 +250,11 @@ __END__
 =head1 SYNOPSIS
 
     mgc_chart_factory.pl [options]
-     Options:
-       --help            brief help message
-       --man             full documentation
-       --infile          input file name (full path)
-       --outfile         output file name
-       
+      Options:
+        --help              brief help message
+        --man               full documentation
+        --infile            input file name (full path)
+        --outfile           output file name
 
 =head1 OPTIONS
 

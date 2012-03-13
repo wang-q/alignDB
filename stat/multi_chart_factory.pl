@@ -77,8 +77,8 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             x_title       => "Distance to indels (d1)",
             y_title       => "Nucleotide diversity",
             Height        => 200,
-            Width         => 320,
-            Top           => 12.75,
+            Width         => 260,
+            Top           => 14.25,
             Left          => 650,
         );
         $excel_obj->draw_y( $sheet_name, \%option );
@@ -88,7 +88,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         $option{y_column}      = 8;
         $option{y_last_column} = 8;
         $option{y_title}       = "Di/Dn";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_y( $sheet_name, \%option );
     }
 }
@@ -105,13 +105,13 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             x_column     => 1,
             y_column     => 2,
             first_row    => 3,
-            last_row     => 33,
-            x_max_scale  => 30,
+            last_row     => 23,
+            x_max_scale  => 20,
             x_title      => "Distance to indels (d1)",
             y_title      => "Nucleotide diversity",
             Height       => 200,
-            Width        => 320,
-            Top          => 12.75,
+            Width        => 260,
+            Top          => 14.25,
             Left         => 650,
         );
         $excel_obj->draw_y( $sheet_name, \%option );
@@ -120,15 +120,24 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         $option{chart_serial}++;
         $option{y_column} = 4;
         $option{y_title}  = "GC proportion";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_y( $sheet_name, \%option );
 
         # chart 3
         $option{chart_serial}++;
         $option{y_column} = 6;
         $option{y_title}  = "CV";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_y( $sheet_name, \%option );
+
+        # chart 4
+        $option{chart_serial}++;
+        $option{y_column} = 4;
+        $option{y_title}  = "GC proportion";
+        $option{y2_column} = 6;
+        $option{y2_title}  = "CV";
+        $option{Top} += $option{Height} + 14.25;
+        $excel_obj->draw_2y( $sheet_name, \%option );
     }
 }
 
@@ -150,8 +159,8 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             x_title      => "Distance to indels (d1)",
             y_title      => "Nucleotide diversity",
             Height       => 200,
-            Width        => 320,
-            Top          => 12.75,
+            Width        => 260,
+            Top          => 14.25,
             Left         => 650,
         );
         $excel_obj->draw_y( $sheet_name, \%option );
@@ -160,14 +169,14 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         $option{chart_serial}++;
         $option{y_column} = 4;
         $option{y_title}  = "GC proportion";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_y( $sheet_name, \%option );
 
         # chart 3
         $option{chart_serial}++;
         $option{y_column} = 6;
         $option{y_title}  = "CV";
-        $option{Top} += $option{Height} + 12.75;
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_y( $sheet_name, \%option );
     }
 }
@@ -183,7 +192,7 @@ $excel_obj->add_index_sheet if $add_index_sheet;
 
 print "$outfile has been generated.\n";
 
-$stopwatch->end_message();
+$stopwatch->end_message;
 exit;
 
 __END__

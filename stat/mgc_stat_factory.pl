@@ -88,6 +88,35 @@ my $write_obj = AlignDB::WriteExcel->new(
     outfile => $outfile,
 );
 
+# auto detect threshold
+if ( $sum_threshold == 0 ) {
+    my $dbh = $write_obj->dbh;
+
+    my $sql_query = q{
+        select sum(align_length)
+        from align
+    };
+    my $sth = $dbh->prepare($sql_query);
+    $sth->execute;
+    my ($total_length) = $sth->fetchrow_array;
+
+    if ( $total_length <= 1_000_000 ) {
+        $sum_threshold = int( $total_length / 10 );
+    }
+    elsif ( $total_length <= 10_000_000 ) {
+        $sum_threshold = int( $total_length / 10 );
+    }
+    elsif ( $total_length <= 100_000_000 ) {
+        $sum_threshold = int( $total_length / 20 );
+    }
+    elsif ( $total_length <= 1_000_000_000 ) {
+        $sum_threshold = int( $total_length / 50 );
+    }
+    else {
+        $sum_threshold = int( $total_length / 100 );
+    }
+}
+
 #----------------------------------------------------------#
 # worksheet -- summary
 #----------------------------------------------------------#
