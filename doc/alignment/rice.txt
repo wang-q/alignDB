@@ -31,5 +31,5 @@ bsub -n 8 -J Nipvs9311_bz perl /gpfssan1/home/wangq/Scripts/blastz/bz.pl -dt /gp
 
 bsub -n 8 -J Nipvs9311_lpcna perl /gpfssan1/home/wangq/Scripts/blastz/lpcna.pl -dt /gpfssan1/home/wangq/data/alignment/rice/nip_65 -dq /gpfssan1/home/wangq/data/alignment/rice/9311_65 -dl /gpfssan1/home/wangq/data/alignment/rice/Nipvs9311_65 -p 8
 
-perl two_way_batch.pl -d Nipvs9311 -e nip_65 -t="39947,Nip" -q "39946,9311" -a /home/wangq/data/alignment/rice/Nipvs9311_65 -at 10000 -st 10000000 --parallel 4 --run all
+perl two_way_batch.pl -d Nipvs9311 -e nip_65 -t="39947,Nip" -q "39946,9311" -a /home/wangq/data/alignment/rice/Nipvs9311_65 -at 10000 -st 1000000 --parallel 4 --run all
 
