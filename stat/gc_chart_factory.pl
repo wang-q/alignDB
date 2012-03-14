@@ -5,7 +5,7 @@ use warnings;
 use Getopt::Long;
 use Pod::Usage;
 use Config::Tiny;
-use YAML::Syck qw(Dump Load DumpFile LoadFile);
+use YAML qw(Dump Load DumpFile LoadFile);
 
 use AlignDB::Excel;
 use AlignDB::Stopwatch;
@@ -22,6 +22,8 @@ $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 my $jc_correction   = $Config->{stat}->{jc_correction};
 my $time_stamp      = $Config->{stat}->{time_stamp};
 my $add_index_sheet = $Config->{stat}->{add_index_sheet};
+
+my $add_trend = 0;
 
 my $infile  = '';
 my $outfile = '';
@@ -40,6 +42,7 @@ GetOptions(
     'time_stamp=s'      => \$time_stamp,
     'add_index_sheet=s' => \$add_index_sheet,
     'replace=s'         => \%replace,
+	'add_trend=s' => \$add_trend,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -94,7 +97,7 @@ $excel_obj->jc_correction if $jc_correction;
         Height       => 200,
         Width        => 260,
         Top          => 14.25,
-        Left         => 400,
+        Left         => 550,
     );
     $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -102,6 +105,13 @@ $excel_obj->jc_correction if $jc_correction;
     $option{chart_serial}++;
     $option{y_column} = 4;
     $option{y_title}  = "Indel per 100 bp";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 3
+    $option{chart_serial}++;
+    $option{y_column} = 6;
+    $option{y_title}  = "GC proportion CV";
     $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -120,6 +130,13 @@ $excel_obj->jc_correction if $jc_correction;
     $option{chart_serial}++;
     $option{y_column} = 4;
     $option{y_title}  = "Indel per 100 bp";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 3
+    $option{chart_serial}++;
+    $option{y_column} = 6;
+    $option{y_title}  = "GC proportion CV";
     $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -145,6 +162,13 @@ $excel_obj->jc_correction if $jc_correction;
     $option{x_max_scale}  = undef;
     $excel_obj->draw_y( $sheet_name, \%option );
 
+    # chart 3
+    $option{chart_serial}++;
+    $option{y_column} = 6;
+    $option{y_title}  = "GC proportion CV";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
     #----------------------------#
     # worksheet -- combined_a2d
     #----------------------------#
@@ -165,6 +189,13 @@ $excel_obj->jc_correction if $jc_correction;
     $option{Top} += $option{Height} + 14.25;
     $option{x_scale_unit} = 5;
     $option{x_max_scale}  = undef;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 3
+    $option{chart_serial}++;
+    $option{y_column} = 6;
+    $option{y_title}  = "GC proportion CV";
+    $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
 }
 
@@ -278,6 +309,7 @@ $excel_obj->jc_correction if $jc_correction;
             Left         => 650,
             without_line => 1,
             marker_size  => 5,
+            add_trend    => $add_trend,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
@@ -285,7 +317,7 @@ $excel_obj->jc_correction if $jc_correction;
         # chart 2
         $option{chart_serial}++;
         $option{y_column} = 4;
-        $option{y_title}  = "Indel per 100 bp";
+        $option{y_title}  = "Indel per 100bp";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
@@ -323,6 +355,7 @@ $excel_obj->jc_correction if $jc_correction;
             Left         => 650,
             without_line => 1,
             marker_size  => 5,
+            add_trend    => $add_trend,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
@@ -330,7 +363,7 @@ $excel_obj->jc_correction if $jc_correction;
         # chart 2
         $option{chart_serial}++;
         $option{y_column} = 4;
-        $option{y_title}  = "Indel per 100 bp";
+        $option{y_title}  = "Indel per 100bp";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
@@ -368,6 +401,7 @@ $excel_obj->jc_correction if $jc_correction;
             Left         => 650,
             without_line => 1,
             marker_size  => 5,
+            add_trend    => $add_trend,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
@@ -375,7 +409,7 @@ $excel_obj->jc_correction if $jc_correction;
         # chart 2
         $option{chart_serial}++;
         $option{y_column} = 4;
-        $option{y_title}  = "Indel per 100 bp";
+        $option{y_title}  = "Indel per 100bp";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
@@ -420,6 +454,7 @@ $excel_obj->jc_correction if $jc_correction;
             Left         => 650,
             without_line => 1,
             marker_size  => 5,
+            add_trend    => $add_trend,
         );
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
@@ -427,7 +462,7 @@ $excel_obj->jc_correction if $jc_correction;
         # chart 2
         $option{chart_serial}++;
         $option{y_column} = 4;
-        $option{y_title}  = "Indel per 100 bp";
+        $option{y_title}  = "Indel per 100bp";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;

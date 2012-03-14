@@ -16,6 +16,7 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 use AlignDB::WriteExcel;
+use AlignDB::Stopwatch;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -24,15 +25,15 @@ my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 # stat parameter
-my $run           = $Config->{stat}->{run};
-my $sum_threshold = $Config->{stat}->{sum_threshold};
+my $run           = $Config->{stat}{run};
+my $sum_threshold = $Config->{stat}{sum_threshold};
 my $outfile;
 
 # use 100 .. 900 segment levels
@@ -103,8 +104,8 @@ if ( $sum_threshold == 0 ) {
     my $dbh = $write_obj->dbh;
 
     my $sql_query = q{
-        select sum(align_length)
-        from align
+        SELECT SUM(align_length)
+        FROM align
     };
     my $sth = $dbh->prepare($sql_query);
     $sth->execute;
@@ -215,24 +216,14 @@ my $summary = sub {
                    AVG(a.align_comparables) AVG_length, 
                    SUM(a.align_comparables) SUM_length,
                    SUM(i.indel) indel,
-                   SUM(i.indel) / SUM(a.align_comparables) * 100 `INDEL/100bp`,
-                   SUM(i2.indel) `ns_indel`,
-                   SUM(i2.indel) / SUM(a.align_comparables) * 100 `ns_INDEL/100bp`
+                   SUM(i.indel) / SUM(a.align_comparables) * 100 `INDEL/100bp`
             FROM    align a,
                     (SELECT a.align_id,
                             COUNT(i.indel_id) indel
                     FROM align a, indel i
                     WHERE a.align_id = i.align_id
-                    GROUP BY a.align_id) i,
-                    (SELECT a.align_id,
-                            COUNT(i.indel_id) indel
-                    FROM align a, indel i, indel_extra e
-                    WHERE a.align_id = i.align_id
-                    AND i.indel_id = e.indel_id
-                    AND e.indel_feature3 = 0
-                    GROUP BY a.align_id) i2
+                    GROUP BY a.align_id) i
             WHERE a.align_id = i.align_id
-            AND a.align_id = i2.align_id
         };
         my %option = (
             query_name => $query_name,
@@ -274,7 +265,7 @@ my $combined_distance = sub {
 
         {    # write header
             my @headers
-                = qw{ AVG_distance AVG_pi STD_pi AVG_indel STD_indel COUNT };
+                = qw{ AVG_distance AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -292,6 +283,8 @@ my $combined_distance = sub {
                         STD(w.window_pi) STD_pi,
                         AVG(w.window_indel / w.window_length * 100) AVG_indel,
                         STD(w.window_indel / w.window_length * 100) STD_indel,
+                        AVG(g.gsw_cv) AVG_cv,
+                        STD(g.gsw_cv) STD_cv,
                         COUNT(w.window_id) COUNT
                 FROM gsw g, window w
                 WHERE g.window_id = w.window_id
@@ -340,7 +333,7 @@ my $combined_density = sub {
 
         {    # write header
             my @headers
-                = qw{ AVG_density AVG_pi STD_pi AVG_indel STD_indel COUNT };
+                = qw{ AVG_distance AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -358,6 +351,8 @@ my $combined_density = sub {
                         STD(w.window_pi) STD_pi,
                         AVG(w.window_indel / w.window_length * 100) AVG_indel,
                         STD(w.window_indel / w.window_length * 100) STD_indel,
+                        AVG(g.gsw_cv) AVG_cv,
+                        STD(g.gsw_cv) STD_cv,
                         COUNT(w.window_indel) COUNT
                 FROM gsw g, window w
                 WHERE g.window_id = w.window_id
@@ -406,7 +401,7 @@ my $combined_amplitude = sub {
 
         {    # write header
             my @headers
-                = qw{ AVG_amplitude AVG_pi STD_pi AVG_indel STD_indel COUNT };
+                = qw{ AVG_distance AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -424,6 +419,8 @@ my $combined_amplitude = sub {
                         STD(w.window_pi) STD_pi,
                         AVG(w.window_indel / w.window_length * 100) AVG_indel,
                         STD(w.window_indel / w.window_length * 100) STD_indel,
+                        AVG(g.gsw_cv) AVG_cv,
+                        STD(g.gsw_cv) STD_cv,
                         COUNT(w.window_indel) COUNT
                 FROM gsw g, window w
                 WHERE g.window_id = w.window_id
@@ -472,7 +469,8 @@ my $combined_a2d = sub {
         my ( $sheet_row, $sheet_col );
 
         {    # write header
-            my @headers = qw{ AVG_a2d AVG_pi STD_pi AVG_indel STD_indel COUNT };
+            my @headers
+                = qw{ AVG_distance AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -490,6 +488,8 @@ my $combined_a2d = sub {
                         STD(w.window_pi) STD_pi,
                         AVG(w.window_indel / w.window_length * 100) AVG_indel,
                         STD(w.window_indel / w.window_length * 100) STD_indel,
+                        AVG(g.gsw_cv) AVG_cv,
+                        STD(g.gsw_cv) STD_cv,
                         COUNT(w.window_indel) COUNT
                 FROM gsw g, window w
                 WHERE g.window_id = w.window_id
