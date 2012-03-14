@@ -959,10 +959,10 @@ sub parse_axt_file {
 
         #print "$align_serial\n";
 
-        if ( $first_chr =~ /scaff|contig|super|bac|ran|gi_/i ) {
+        if ( $first_chr =~ /scaff|contig|super|bac|ran|gi_|EQ/i ) {
             $first_chr = 'chrUn';
         }
-        if ( $second_chr =~ /scaff|contig|super|bac|ran|gi_/i ) {
+        if ( $second_chr =~ /scaff|contig|super|bac|ran|gi_|EQ/i ) {
             $second_chr = 'chrUn';
         }
 
