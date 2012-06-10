@@ -89,7 +89,8 @@ my @align_ids;
     $obj->create_column( "codingsw", "codingsw_cv", "DOUBLE" );
     $obj->create_column( "ofgsw",    "ofgsw_cv",    "DOUBLE" );
     $obj->create_column( "isw",      "isw_cv",      "DOUBLE" );
-    print "Table exonsw, codingsw, ofgsw and isw altered\n";
+    $obj->create_column( "gsw",      "gsw_cv",      "DOUBLE" );
+    print "Table exonsw, codingsw, ofgsw, isw and gsw altered\n";
 
     @align_ids = @{ $obj->get_align_ids };
 }
@@ -204,6 +205,23 @@ my $worker = sub {
         }
     );
 
+    my $gsw_sth = $dbh->prepare(
+        q{
+        SELECT s.gsw_id, w.window_runlist
+        FROM gsw s, window w
+        where s.window_id = w.window_id
+        and w.align_id = ?
+        }
+    );
+
+    my $gsw_update_sth = $dbh->prepare(
+        q{
+        UPDATE gsw
+        SET gsw_cv = ?
+        WHERE gsw_id = ?
+        }
+    );
+
     for my $align_id (@align_ids) {
         my $target_info    = $obj->get_target_info($align_id);
         my $target_runlist = $target_info->{seq_runlist};
@@ -267,6 +285,21 @@ my $worker = sub {
             my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
                 = $obj->segment_gc_stat( $seqs_ref, $resize_set );
             $isw_update_sth->execute( $gc_cv, $isw_id );
+        }
+
+        $gsw_sth->execute($align_id);
+        while ( my @row = $gsw_sth->fetchrow_array ) {
+            my ( $gsw_id, $window_runlist ) = @row;
+            my $window_set = AlignDB::IntSpan->new($window_runlist);
+            my $resize_set = center_resize( $window_set, $target_set,
+                $stat_segment_size );
+
+            next unless $resize_set;
+
+            my $seqs_ref = $obj->get_seqs($align_id);
+            my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
+                = $obj->segment_gc_stat( $seqs_ref, $resize_set );
+            $gsw_update_sth->execute( $gc_cv, $gsw_id );
         }
     }
 };

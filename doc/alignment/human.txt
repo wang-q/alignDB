@@ -61,7 +61,7 @@ find . -name "*fa" | xargs rm
 
 if [ -f chrUn.fasta ]; then bsub -n 8 -J chimp-RM RepeatMasker ~/data/alignment/human/chimp_65/chrUn.fasta -species Primates -xsmall -s --parallel 8; fi;
 
-if [ -f chrUn.fasta.masked]; then ~/perl5/bin/rename 's/fasta.masked$/fa/' *.fasta.masked; fi;
+if [ -f chrUn.fasta.masked ]; then ~/perl5/bin/rename 's/fasta.masked$/fa/' *.fasta.masked; fi;
 find ~/data/alignment/human/chimp_65/ -type f -name "*fasta*" | xargs rm 
 
 # rhesus
