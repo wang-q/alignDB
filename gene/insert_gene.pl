@@ -704,6 +704,9 @@ __END__
         --username          username
         --password          password
         --ensembl           ensembl database name
+        --parallel          run in parallel mode
+        --batch             number of alignments process in one child process
+        --multi             two-way or multi-way
 
 =head1 OPTIONS
 

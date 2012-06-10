@@ -14,6 +14,7 @@ use AlignDB::Stopwatch;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
+use AlignDB::Multi;
 use AlignDB::GC;
 
 #----------------------------------------------------------#
@@ -49,13 +50,15 @@ my $insert_gc      = $Config->{gc}{insert_gc};
 my $insert_segment = $Config->{gc}{insert_segment};
 
 # run in parallel mode
-my $parallel = $Config->{feature}{parallel};
+my $parallel = $Config->{generate}{parallel};
 
 # number of alignments process in one child process
 my $batch_number = $Config->{feature}{batch};
 
 # use 100 .. 900 segment levels
 my $alt_level;
+
+my $multi;
 
 my $man  = 0;
 my $help = 0;
@@ -73,6 +76,7 @@ GetOptions(
     'alt_level=i'      => \$alt_level,
     'parallel=i'       => \$parallel,
     'batch=i'          => \$batch_number,
+    'multi'             => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -116,11 +120,21 @@ my $worker = sub {
     my $job       = shift;
     my @align_ids = @$job;
 
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
+    my $obj;
+    if ( !$multi ) {
+        $obj = AlignDB->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+    }
+    else {
+        $obj = AlignDB::Multi->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+    }
     AlignDB::GC->meta->apply($obj);
     my %opt = (
         wave_window_size => $wave_window_size,
@@ -139,21 +153,30 @@ my $worker = sub {
     # Database handler
     my $dbh = $obj->dbh;
 
-    # alignments' info
+    # alignments' chromosomal location, target_seq and query_seq
     my $align_seq_query = q{
-        SELECT a.align_length,
+        SELECT c.chr_name,
+               s.chr_start,
+               s.chr_end,
+               a.align_length,
                a.align_comparable_runlist
-        FROM align a
-        WHERE a.align_id = ?
+        FROM align a, target t, sequence s, chromosome c
+        WHERE a.align_id = s.align_id
+        AND t.seq_id = s.seq_id
+        AND s.chr_id = c.chr_id
+        AND a.align_id = ?
     };
     my $align_seq_sth = $dbh->prepare($align_seq_query);
 
+    # for each alignment
     for my $align_id (@align_ids) {
         $align_seq_sth->execute($align_id);
-        my ( $align_length, $comparable_runlist )
+        my ( $chr_name, $chr_start, $chr_end, $align_length,
+            $comparable_runlist )
             = $align_seq_sth->fetchrow_array;
 
-        $obj->process_message($align_id);
+        print "prosess align $align_id ",
+            "in $chr_name $chr_start - $chr_end\n";
 
         # comparable runlist
         my $comparable_set = AlignDB::IntSpan->new($comparable_runlist);
@@ -214,7 +237,8 @@ __END__
         --insert_segment    insert segment or not
         --parallel          run in parallel mode
         --batch             number of alignments process in one child process
-      
+        --multi             two-way or multi-way
+
 =head1 OPTIONS
 
 =over 8
