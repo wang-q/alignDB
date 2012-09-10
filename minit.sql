@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/15/2011 1:37:20 AM                         */
+/* Created on:     7/29/2012 5:51:14 AM                         */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -438,6 +438,8 @@ create table query
    seq_id                         int,
    query_strand                   char(1),
    query_position                 int,
+   query_tag                      char(64),
+   query_type                     char(64),
    primary key (query_id)
 )
 ENGINE = MyISAM;
