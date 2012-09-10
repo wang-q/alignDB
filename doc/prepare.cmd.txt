@@ -10,6 +10,7 @@ Rename with Total Commander as chr01.fasta
 >chrI or >chr01
 $ perl -p -i '/>/ and s/EG://' chrUn.fasta
 $ perl -nl -e '/>/ and s/EG://; print' chrUn.fasta > chrUn_new.fasta
+$ perl -nl -e '/>/ and s/>(\w+).*$/>chr$1/; print' toplevel.fasta > new.fasta
 
 #----------------------------------------------------------#
 # 3. RepeatMasker
