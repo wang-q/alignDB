@@ -50,9 +50,8 @@ sub update_target_info {
     my $align_sth = $dbh->prepare($align_query);
     $align_sth->execute($align_id);
 
-    my ($align_length,   $target_chr_start,
-        $target_chr_end, $target_runlist,
-    ) = $align_sth->fetchrow_array;
+    my ( $align_length, $target_chr_start, $target_chr_end, $target_runlist, )
+        = $align_sth->fetchrow_array;
 
     my $target_set = AlignDB::IntSpan->new($target_runlist);
 
@@ -157,6 +156,8 @@ sub at_align {
 
 # Give an align position, return a target chr position
 # start at '1'
+# if the position in target is located in a gap, then return the left base's
+# position. (Just like GATK's indel left align)
 sub at_target_chr {
     my $self      = shift;
     my $align_id  = shift;
@@ -186,7 +187,26 @@ sub at_target_chr {
         return;
     }
 
-    my $target_pos     = $target_set->index($align_pos);
+    my $target_pos;
+    if ( $target_set->member($align_pos) ) {
+        $target_pos = $target_set->index($align_pos);
+    }
+    else {
+        my @sets = $target_set->sets;
+        for my $i ( 0 .. $#sets ) {
+            if ( $sets[$i]->max < $align_pos ) {
+                next;
+            }
+            elsif ( $i > 0 ) {
+                $target_pos = $sets[ $i - 1 ]->max;
+                last;
+            }
+            else {
+
+                # still wrong, we will get messages
+            }
+        }
+    }
     my $target_chr_pos = $target_chr_start + $target_pos - 1;
 
     return $target_chr_pos;
@@ -403,10 +423,10 @@ sub positioning_align_chr_id {
 }
 
 sub positioning_align_chr_name {
-    my $self   = shift;
+    my $self     = shift;
     my $chr_name = shift;
-    my $start  = shift;
-    my $end    = shift || $start;
+    my $start    = shift;
+    my $end      = shift || $start;
 
     my $dbh = $self->dbh;
 
