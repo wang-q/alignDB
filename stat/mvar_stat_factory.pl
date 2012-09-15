@@ -12,6 +12,7 @@ use lib "$FindBin::Bin/../lib";
 use AlignDB::WriteExcel;
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(:all);
+use AlignDB::Position;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -85,6 +86,35 @@ my $write_obj = AlignDB::WriteExcel->new(
     passwd  => $password,
     outfile => $outfile,
 );
+
+my $dbh = $write_obj->dbh;
+my $pos_obj = AlignDB::Position->new( dbh => $dbh );
+
+#----------------------------#
+# count freq
+#----------------------------#
+my $all_freq;
+{
+
+    my $sql_query = q{
+            SELECT DISTINCT COUNT(q.query_id) + 1
+            FROM  query q, sequence s
+            WHERE q.seq_id = s.seq_id
+            GROUP BY s.align_id
+        };
+    my $sth = $dbh->prepare($sql_query);
+
+    my @counts;
+    $sth->execute;
+    while ( my ($count) = $sth->fetchrow_array ) {
+        push @counts, $count;
+    }
+    if ( scalar @counts > 1 ) {
+        die "Database corrupts, freqs are not consistent\n";
+    }
+
+    $all_freq = $counts[0];
+}
 
 #----------------------------------------------------------#
 # worksheet -- indel_basic
@@ -403,25 +433,38 @@ my $indel_list = sub {
 
     {    # write contents
         my $sql_query = q{
-            SELECT  i.indel_id, ta.taxon_id, c.chr_name,
+            SELECT  i.align_id, i.indel_id, ta.taxon_id, c.chr_name,
                     i.indel_start, i.indel_end, i.indel_length, i.indel_seq,
                     i.indel_gc, i.indel_freq, i.indel_occured, i.indel_type,
                     i.indel_slippage, i.indel_coding, i.indel_repeats
-            FROM    indel i, align a, sequence s,
+            FROM    indel i, align a, sequence se,
                     target t, chromosome c, taxon ta
             WHERE   a.align_id = i.align_id AND
-                    a.align_id = s.align_id AND
-                    s.seq_id = t.seq_id AND
-                    s.chr_id = c.chr_id AND
+                    a.align_id = se.align_id AND
+                    se.seq_id = t.seq_id AND
+                    se.chr_id = c.chr_id AND
                     c.taxon_id = ta.taxon_id
-            ORDER BY c.chr_name, i.indel_start
+            ORDER BY c.chr_name, se.chr_start
         };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        my $sth = $dbh->prepare($sql_query);
+        $sth->execute();
+
+        while ( my @row = $sth->fetchrow_array ) {
+            my $align_id = shift @row;
+            for my $i ( 3, 4 ) {
+                my $align_pos = $row[$i];
+                my $chr_pos = $pos_obj->at_target_chr( $align_id, $align_pos );
+                splice @row, $i, 1, $chr_pos;
+            }
+
+            ($sheet_row) = $write_obj->write_row_direct(
+                $sheet,
+                {   row       => \@row,
+                    sheet_row => $sheet_row,
+                    sheet_col => $sheet_col,
+                }
+            );
+        }
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -451,7 +494,7 @@ my $snp_list = sub {
 
     {    # write contents
         my $sql_query = q{
-            SELECT  s.snp_id, ta.taxon_id, c.chr_name,
+            SELECT  s.align_id, s.snp_id, ta.taxon_id, c.chr_name,
                     s.snp_pos, i.isw_distance,
                     s.mutant_to, s.snp_freq, s.snp_occured,
                     s.snp_coding, s.snp_repeats, s.snp_cpg
@@ -463,14 +506,123 @@ my $snp_list = sub {
                     se.seq_id = t.seq_id AND
                     se.chr_id = c.chr_id AND
                     c.taxon_id = ta.taxon_id
-            ORDER BY c.chr_name, s.snp_pos
+            ORDER BY c.chr_name, se.chr_start
         };
+        my $sth = $dbh->prepare($sql_query);
+        $sth->execute();
+
+        while ( my @row = $sth->fetchrow_array ) {
+            my $align_id = shift @row;
+            for my $i (3) {
+                my $align_pos = $row[$i];
+                my $chr_pos = $pos_obj->at_target_chr( $align_id, $align_pos );
+                splice @row, $i, 1, $chr_pos;
+            }
+
+            ($sheet_row) = $write_obj->write_row_direct(
+                $sheet,
+                {   row       => \@row,
+                    sheet_row => $sheet_row,
+                    sheet_col => $sheet_col,
+                }
+            );
+        }
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
+# worksheet -- strain_list
+#----------------------------------------------------------#
+my $strain_list = sub {
+    my $sheet_name = 'strain_list';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers = qw{strain indel snp };
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
         my %option = (
-            sql_query => $sql_query,
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
+            header    => \@headers,
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    my ( @indel_count, @snp_count );
+    {    # count indels
+        my $sql_query = q{
+            SELECT  i.indel_id, i.indel_occured
+            FROM    indel i
+            WHERE   i.indel_occured <> 'unknown'
+        };
+        my $sth = $dbh->prepare($sql_query);
+        $sth->execute();
+
+        while ( my ( $id, $string ) = $sth->fetchrow_array ) {
+            my @chars = split //, $string;
+            if ( $all_freq != scalar @chars ) {
+                warn "indel_id [$id] occured string errors\n";
+            }
+
+            for my $i ( 0 .. $#chars ) {
+                if ( $chars[$i] eq 'o' ) {
+                    $indel_count[$i]++;
+                }
+                elsif ( $chars[$i] eq 'x' ) {
+
+                    # OK, do nothing
+                }
+                else {
+                    warn "indel_id [$id] occured string errors\n";
+                }
+            }
+        }
+    }
+
+    {    # count snps
+        my $sql_query = q{
+            SELECT  s.snp_id, s.snp_occured
+            FROM    snp s
+            WHERE   s.snp_occured <> 'unknown'
+        };
+        my $sth = $dbh->prepare($sql_query);
+        $sth->execute();
+
+        while ( my ( $id, $string ) = $sth->fetchrow_array ) {
+            my @chars = split //, $string;
+            if ( $all_freq != scalar @chars ) {
+                warn "snp_id [$id] occured string errors\n";
+            }
+
+            for my $i ( 0 .. $#chars ) {
+                if ( $chars[$i] eq 'o' ) {
+                    $snp_count[$i]++;
+                }
+                elsif ( $chars[$i] eq 'x' ) {
+
+                    # OK, do nothing
+                }
+                else {
+                    warn "indel_id [$id] occured string errors\n";
+                }
+            }
+        }
+    }
+
+    {    # write contents
+        for my $i ( 1 .. $all_freq ) {
+            ($sheet_row) = $write_obj->write_row_direct(
+                $sheet,
+                {   row => [ $i, $indel_count[ $i - 1 ], $snp_count[ $i - 1 ] ],
+                    sheet_row => $sheet_row,
+                    sheet_col => $sheet_col,
+                }
+            );
+        }
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -481,6 +633,7 @@ foreach my $n (@tasks) {
     if ( $n == 2 ) { &$snp_basic;   next; }
     if ( $n == 3 ) { &$indel_list;  next; }
     if ( $n == 4 ) { &$snp_list;    next; }
+    if ( $n == 5 ) { &$strain_list; next; }
 }
 
 $stopwatch->end_message;
