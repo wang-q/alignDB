@@ -541,7 +541,7 @@ my $strain_list = sub {
     my ( $sheet_row, $sheet_col );
 
     {    # write header
-        my @headers = qw{strain indel snp };
+        my @headers = qw{strain ins del snp };
         ( $sheet_row, $sheet_col ) = ( 0, 0 );
         my %option = (
             sheet_row => $sheet_row,
@@ -552,32 +552,40 @@ my $strain_list = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    my ( @indel_count, @snp_count );
+    my $count_of = {
+        I => [],
+        D => [],
+        S => [],
+    };
     {    # count indels
         my $sql_query = q{
             SELECT  i.indel_id, i.indel_occured
             FROM    indel i
             WHERE   i.indel_occured <> 'unknown'
+            AND     i.indel_type = ?
         };
-        my $sth = $dbh->prepare($sql_query);
-        $sth->execute();
 
-        while ( my ( $id, $string ) = $sth->fetchrow_array ) {
-            my @chars = split //, $string;
-            if ( $all_freq != scalar @chars ) {
-                warn "indel_id [$id] occured string errors\n";
-            }
+        for my $type ( 'I', 'D' ) {
+            my $sth = $dbh->prepare($sql_query);
+            $sth->execute($type);
 
-            for my $i ( 0 .. $#chars ) {
-                if ( $chars[$i] eq 'o' ) {
-                    $indel_count[$i]++;
-                }
-                elsif ( $chars[$i] eq 'x' ) {
-
-                    # OK, do nothing
-                }
-                else {
+            while ( my ( $id, $string ) = $sth->fetchrow_array ) {
+                my @chars = split //, $string;
+                if ( $all_freq != scalar @chars ) {
                     warn "indel_id [$id] occured string errors\n";
+                }
+
+                for my $i ( 0 .. $#chars ) {
+                    if ( $chars[$i] eq 'o' ) {
+                        $count_of->{$type}[$i]++;
+                    }
+                    elsif ( $chars[$i] eq 'x' ) {
+
+                        # OK, do nothing
+                    }
+                    else {
+                        warn "indel_id [$id] occured string errors\n";
+                    }
                 }
             }
         }
@@ -600,7 +608,7 @@ my $strain_list = sub {
 
             for my $i ( 0 .. $#chars ) {
                 if ( $chars[$i] eq 'o' ) {
-                    $snp_count[$i]++;
+                    $count_of->{S}[$i]++;
                 }
                 elsif ( $chars[$i] eq 'x' ) {
 
@@ -617,7 +625,12 @@ my $strain_list = sub {
         for my $i ( 1 .. $all_freq ) {
             ($sheet_row) = $write_obj->write_row_direct(
                 $sheet,
-                {   row => [ $i, $indel_count[ $i - 1 ], $snp_count[ $i - 1 ] ],
+                {   row => [
+                        $i,
+                        $count_of->{I}[ $i - 1 ],
+                        $count_of->{D}[ $i - 1 ],
+                        $count_of->{S}[ $i - 1 ],
+                    ],
                     sheet_row => $sheet_row,
                     sheet_col => $sheet_col,
                 }
