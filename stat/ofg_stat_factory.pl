@@ -48,7 +48,7 @@ GetOptions(
 pod2usage(1) if $help;
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
-$outfile = "$db.tdna.xlsx" unless $outfile;
+$outfile = "$db.ofg.xlsx" unless $outfile;
 
 # prepare to run tasks in @tasks
 my @tasks;
@@ -182,9 +182,9 @@ my $summary_gene = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- tdna_all
+# worksheet -- ofg_all
 #----------------------------------------------------------#
-my $tdna_all = sub {
+my $ofg_all = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
@@ -192,7 +192,7 @@ my $tdna_all = sub {
         return;
     }
 
-    my $sheet_name = "tdna_all";
+    my $sheet_name = "ofg_all";
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
@@ -245,9 +245,9 @@ my $tdna_all = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- tdna_coding
+# worksheet -- ofg_coding
 #----------------------------------------------------------#
-my $tdna_coding = sub {
+my $ofg_coding = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
@@ -259,7 +259,7 @@ my $tdna_coding = sub {
 
     my $write_sheet = sub {
         my ( $order, $value ) = @_;
-        my $sheet_name = "tdna_$order";
+        my $sheet_name = "ofg_$order";
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
@@ -322,9 +322,9 @@ my $tdna_coding = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- tdna_coding_pure
+# worksheet -- ofg_coding_pure
 #----------------------------------------------------------#
-my $tdna_coding_pure = sub {
+my $ofg_coding_pure = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
@@ -336,7 +336,7 @@ my $tdna_coding_pure = sub {
 
     my $write_sheet = sub {
         my ( $order, $value ) = @_;
-        my $sheet_name = "tdna_$order". "_pure";
+        my $sheet_name = "ofg_$order". "_pure";
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
@@ -402,9 +402,9 @@ my $tdna_coding_pure = sub {
 
 foreach my $n (@tasks) {
     if ( $n == 1 ) { &$summary_gene; next; }
-    if ( $n == 2 ) { &$tdna_all;     next; }
-    if ( $n == 3 ) { &$tdna_coding;     next; }
-    if ( $n == 4 ) { &$tdna_coding_pure;     next; }
+    if ( $n == 2 ) { &$ofg_all;     next; }
+    if ( $n == 3 ) { &$ofg_coding;     next; }
+    if ( $n == 4 ) { &$ofg_coding_pure;     next; }
 }
 
 $stopwatch->end_message;
@@ -414,11 +414,11 @@ __END__
 
 =head1 NAME
 
-    tdna_stat_factory.pl - Generate statistical Excel files from alignDB
+    ofg_stat_factory.pl - Generate statistical Excel files from alignDB
 
 =head1 SYNOPSIS
 
-    tdna_stat_factory.pl [options]
+    ofg_stat_factory.pl [options]
      Options:
        --help            brief help message
        --man             full documentation

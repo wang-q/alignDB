@@ -75,12 +75,12 @@ $excel_obj->jc_correction if $jc_correction;
     # worksheet -- gene_ess, exon_ess, exon_gc
     #----------------------------#
     my @sheets = qw{
-        tdna_all tdna_coding tdna_noncoding tdna_coding_pure tdna_noncoding_pure
+        ofg_all ofg_coding ofg_noncoding ofg_coding_pure ofg_noncoding_pure
     };
 
     foreach (@sheets) {
         my $sheet_name = $_;
-        my $x_title = "Distance to tdna";
+        my $x_title = "Distance to ofg";
         my %option = (
             chart_serial => 1,
             x_column     => 1,
