@@ -390,7 +390,7 @@ my $summary_indel = sub {
         # all indels
         $column_stat->(
             'all',            'indel i',
-            'i.indel_length', q{WHERE i.indel_slippage = 0}
+            'i.indel_length', 
         );
 
         foreach my $level (@freq_levels) {
@@ -400,8 +400,7 @@ my $summary_indel = sub {
                 'all_' . $name, 'indel i',
                 'i.indel_length',
                 qq{WHERE i.indel_freq >= $lower
-                    AND i.indel_freq <= $upper
-                    AND i.indel_slippage = 0}
+                    AND i.indel_freq <= $upper}
             );
         }
 
@@ -412,8 +411,7 @@ my $summary_indel = sub {
             'ins',
             'indel i',
             'i.indel_length',
-            q{WHERE i.indel_slippage = 0
-                AND i.indel_type = 'I'}
+            q{WHERE i.indel_type = 'I'}
         );
 
         foreach my $level (@freq_levels) {
@@ -424,7 +422,6 @@ my $summary_indel = sub {
                 'i.indel_length',
                 qq{WHERE i.indel_freq >= $lower
                     AND i.indel_freq <= $upper
-                    AND i.indel_slippage = 0
                     AND i.indel_type = 'I'}
             );
         }
@@ -436,8 +433,7 @@ my $summary_indel = sub {
             'del',
             'indel i',
             'i.indel_length',
-            q{WHERE i.indel_slippage = 0
-                AND i.indel_type = 'D'}
+            q{WHERE i.indel_type = 'D'}
         );
 
         foreach my $level (@freq_levels) {
@@ -448,7 +444,6 @@ my $summary_indel = sub {
                 'i.indel_length',
                 qq{WHERE i.indel_freq >= $lower
                     AND i.indel_freq <= $upper
-                    AND i.indel_slippage = 0
                     AND i.indel_type = 'D'}
             );
         }
