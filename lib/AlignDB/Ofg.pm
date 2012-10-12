@@ -31,6 +31,19 @@ has 'max_in_distance' => (
     default => 30,
 );
 
+# edge
+# ------+------------------------------------+--------
+#    2 1 -1 -2     -89 -90  -90 -89     -2 -1 1 2
+#
+# edge-only
+# ------+-----------------------+--------
+#    2 1 -1 -2             -2 -1 1 2
+#
+# center
+# ------+-----------------+--------
+#  7 6 5 4 3 2 1 0 1 2 3 4 5 6 7 8
+has 'style' => ( is => 'rw', isa => 'Str', default => 'edge' );
+
 has 'window_maker' => ( is => 'ro', isa => 'object' );
 has 'pos_finder'   => ( is => 'ro', isa => 'object' );
 
@@ -154,7 +167,7 @@ sub insert_ofg {
         #----------------------------#
         # INSERT INTO ofgsw
         #----------------------------#
-        $self->insert_ofgsw($align_id);
+        $self->insert_ofgsw( $align_id, $self->style );
     }
 
     return;
@@ -163,6 +176,7 @@ sub insert_ofg {
 sub insert_ofgsw {
     my $self     = shift;
     my $align_id = shift;
+    my $style    = shift;
 
     my $dbh          = $self->dbh;
     my $window_maker = $self->window_maker;
@@ -225,48 +239,74 @@ sub insert_ofgsw {
         my ($ofg_runlist) = $fetch_ofg_info->fetchrow_array;
         my $ofg_set = AlignDB::IntSpan->new($ofg_runlist);
 
-        # outside rsw
-        my @out_rsw
-            = $window_maker->outside_window( $target_set, $ofg_set->min,
-            $ofg_set->max );
+        if ( $style =~ /^edge/ ) {
 
-        foreach my $outside_rsw (@out_rsw) {
-            my ($cur_window_id)
-                = $self->insert_window( $align_id, $outside_rsw->{set},
-                $internal_indel_flag );
+            # outside rsw
+            my @out_rsw
+                = $window_maker->outside_window( $target_set, $ofg_set->min,
+                $ofg_set->max );
 
-            $ofgsw_insert->execute( $cur_window_id, $ofg_id,
-                $outside_rsw->{type}, $outside_rsw->{distance},
-            );
+            for my $outside_rsw (@out_rsw) {
+                my ($cur_window_id)
+                    = $self->insert_window( $align_id, $outside_rsw->{set},
+                    $internal_indel_flag );
+
+                $ofgsw_insert->execute( $cur_window_id, $ofg_id,
+                    $outside_rsw->{type}, $outside_rsw->{distance},
+                );
+            }
+
+            # inside rsw
+            my @in_rsw
+                = $window_maker->inside_window( $target_set, $ofg_set->min,
+                $ofg_set->max );
+
+            for my $inside_rsw (@in_rsw) {
+                my ($cur_window_id)
+                    = $self->insert_window( $align_id, $inside_rsw->{set},
+                    $internal_indel_flag );
+
+                $ofgsw_insert->execute( $cur_window_id, $ofg_id,
+                    $inside_rsw->{type}, $inside_rsw->{distance},
+                );
+            }
+
+            if ( $style ne 'edge-only' ) {
+
+                # inside rsw 2
+                # rsw2 start from -90, so there will be no conflicts with rsw
+                my @in_rsw2
+                    = $window_maker->inside_window2( $target_set, $ofg_set->min,
+                    $ofg_set->max );
+
+                for my $inside_rsw (@in_rsw2) {
+                    my ($cur_window_id)
+                        = $self->insert_window( $align_id, $inside_rsw->{set},
+                        $internal_indel_flag );
+
+                    $ofgsw_insert->execute( $cur_window_id, $ofg_id,
+                        $inside_rsw->{type}, $inside_rsw->{distance},
+                    );
+                }
+            }
         }
+        elsif ( $style eq 'center' ) {
+            
+            # center rsw
+            my @center_rsw
+                = $window_maker->center_window( $target_set, $ofg_set->min,
+                $ofg_set->max );
 
-        # inside rsw
-        my @in_rsw = $window_maker->inside_window( $target_set, $ofg_set->min,
-            $ofg_set->max );
+            for my $rsw (@center_rsw) {
+                my ($cur_window_id)
+                    = $self->insert_window( $align_id, $rsw->{set},
+                    $internal_indel_flag );
 
-        foreach my $inside_rsw (@in_rsw) {
-            my ($cur_window_id)
-                = $self->insert_window( $align_id, $inside_rsw->{set},
-                $internal_indel_flag );
-
-            $ofgsw_insert->execute( $cur_window_id, $ofg_id,
-                $inside_rsw->{type}, $inside_rsw->{distance},
-            );
-        }
-
-        # inside rsw 2
-        my @in_rsw2
-            = $window_maker->inside_window2( $target_set, $ofg_set->min,
-            $ofg_set->max );
-
-        foreach my $inside_rsw (@in_rsw2) {
-            my ($cur_window_id)
-                = $self->insert_window( $align_id, $inside_rsw->{set},
-                $internal_indel_flag );
-
-            $ofgsw_insert->execute( $cur_window_id, $ofg_id,
-                $inside_rsw->{type}, $inside_rsw->{distance},
-            );
+                $ofgsw_insert->execute( $cur_window_id, $ofg_id,
+                    $rsw->{type}, $rsw->{distance},
+                );
+            }
+            
         }
     }
 
