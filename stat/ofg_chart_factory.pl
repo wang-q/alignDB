@@ -7,6 +7,9 @@ use Pod::Usage;
 use Config::Tiny;
 use YAML::Syck qw(Dump Load DumpFile LoadFile);
 
+use Set::Scalar;
+use List::MoreUtils qw( first_index);
+
 use AlignDB::Excel;
 use AlignDB::Stopwatch;
 
@@ -69,64 +72,136 @@ $excel_obj->jc_correction if $jc_correction;
 #----------------------------------------------------------#
 # draw charts section
 #----------------------------------------------------------#
+my @sheet_names = @{ $excel_obj->sheet_names };
 {
 
     #----------------------------#
     # worksheet -- gene_ess, exon_ess, exon_gc
     #----------------------------#
-    my @sheets = qw{
-        ofg_all ofg_coding ofg_noncoding ofg_coding_pure ofg_noncoding_pure
-    };
+    my @sheets = grep {/^ofg/} @sheet_names;
 
     foreach (@sheets) {
         my $sheet_name = $_;
-        my $x_title = "Distance to ofg";
+
+        my $x_column = 1;
+        my $values   = $excel_obj->get_column( $sheet_name, $x_column );
+        my $set      = Set::Scalar->new( @{$values} );
+
         my %option = (
             chart_serial => 1,
-            x_column     => 1,
-            y_column     => 2,
-            first_row    => 2,
-            last_row     => 17,
-            x_min_scale  => 0,
-            x_max_scale  => 10,
-            x_title      => $x_title,
-            y_title      => "Nucleotide diversity",
-            cross        => 0,
+            x_column     => $x_column,
             Height       => 200,
-            Width        => 320,
+            Width        => 260,
             Top          => 12.75,
-            Left         => 500,
+            Left         => 800,
         );
 
+        if ( $set->has(-10) ) {
+            my $idx = first_index { $_ == -10 } @{$values};
+            $option{first_row}   = $idx + 2;
+            $option{last_row}    = $idx + 32;
+            $option{x_min_scale} = -10;
+            $option{x_max_scale} = 20;
+            $option{cross}       = 0;
+        }
+        elsif ( $set->has(0) ) {
+            my $idx = first_index { $_ == 0 } @{$values};
+            $option{first_row}   = $idx + 2;
+            $option{last_row}    = $idx + 32;
+            $option{x_min_scale} = 0;
+            $option{x_max_scale} = 10;
+            $option{cross}       = 0;
+        }
+        elsif ( $set->has(1) ) {
+            my $idx = first_index { $_ == 1 } @{$values};
+            $option{first_row}   = $idx + 2;
+            $option{last_row}    = $idx + 32;
+            $option{x_min_scale} = 0;
+            $option{x_max_scale} = 10;
+        }
+        else {
+            print "X column errors\n";
+            next;
+        }
+
+        $option{y_column} = 2;
+        $option{x_title}  = "Distance to ofg";
+        $option{y_title}  = "Nucleotide diversity";
         $excel_obj->draw_y( $sheet_name, \%option );
 
         # chart 2
         $option{chart_serial}++;
-        $option{y_column} = 3;
+        $option{y_column} = 4;
         $option{y_title}  = "Indel per 100 bp";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
 
         # chart 3
         $option{chart_serial}++;
-        $option{y_column} = 4;
+        $option{y_column} = 6;
         $option{y_title}  = "GC proportion";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
 
         # chart 4
         $option{chart_serial}++;
-        $option{y_column} = 5;
+        $option{y_column} = 8;
         $option{y_title}  = "CV";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
 
-        # chart 4
+        # chart 5
         $option{chart_serial}++;
-        $option{y_column} = 6;
+        $option{y_column} = 10;
         $option{y_title}  = "Repeats proportion";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
+
+        if ( $set->has(-90) ) {
+            my $idx = first_index { $_ == -90 } @{$values};
+            $option{first_row}   = $idx + 2;
+            $option{last_row}    = $idx + 22;
+            $option{x_min_scale} = -90;
+            $option{x_max_scale} = -70;
+            $option{cross}       = -90;
+
+            # chart 6
+            $option{chart_serial}++;
+            $option{y_column} = 2;
+            $option{x_title}  = "Distance to ofg";
+            $option{y_title}  = "Nucleotide diversity";
+            $option{Top}      = 12.75;
+            $option{Left}     = 1100;
+            $excel_obj->draw_y( $sheet_name, \%option );
+
+            # chart 7
+            $option{chart_serial}++;
+            $option{y_column} = 4;
+            $option{y_title}  = "Indel per 100 bp";
+            $option{Top} += $option{Height} + 12.75;
+            $excel_obj->draw_y( $sheet_name, \%option );
+
+            # chart 8
+            $option{chart_serial}++;
+            $option{y_column} = 6;
+            $option{y_title}  = "GC proportion";
+            $option{Top} += $option{Height} + 12.75;
+            $excel_obj->draw_y( $sheet_name, \%option );
+
+            # chart 9
+            $option{chart_serial}++;
+            $option{y_column} = 8;
+            $option{y_title}  = "CV";
+            $option{Top} += $option{Height} + 12.75;
+            $excel_obj->draw_y( $sheet_name, \%option );
+
+            # chart 10
+            $option{chart_serial}++;
+            $option{y_column} = 10;
+            $option{y_title}  = "Repeats proportion";
+            $option{Top} += $option{Height} + 12.75;
+            $excel_obj->draw_y( $sheet_name, \%option );
+        }
     }
 }
 
