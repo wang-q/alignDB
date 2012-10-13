@@ -1,4 +1,6 @@
-Tue Nov 24 13:45:28 2009
+#----------------------------------------------------------#
+# Tue Nov 24 13:45:28 2009
+#----------------------------------------------------------#
 
 SLOC	Directory	SLOC-by-Language (Sorted)
 14445   stat            perl=14445
@@ -18,12 +20,8 @@ SLOC	Directory	SLOC-by-Language (Sorted)
 0       doc             (none)
 0       top_dir         (none)
 
-
 Totals grouped by language (dominant language first):
 perl:         41989 (100.00%)
-
-
-
 
 Total Physical Source Lines of Code (SLOC)                = 41,989
 Development Effort Estimate, Person-Years (Person-Months) = 10.12 (121.48)
@@ -33,10 +31,41 @@ Schedule Estimate, Years (Months)                         = 1.29 (15.49)
 Estimated Average Number of Developers (Effort/Schedule)  = 7.84
 Total Estimated Cost to Develop                           = $ 1,367,521
  (average salary = $56,286/year, overhead = 2.40).
-SLOCCount, Copyright (C) 2001-2004 David A. Wheeler
-SLOCCount is Open Source Software/Free Software, licensed under the GNU GPL.
-SLOCCount comes with ABSOLUTELY NO WARRANTY, and you are welcome to
-redistribute it under certain conditions as specified by the GNU GPL license;
-see the documentation for details.
-Please credit this data as "generated using David A. Wheeler's 'SLOCCount'."
 
+#----------------------------------------------------------#
+# Sat Oct 13 20:54:47 2012
+#----------------------------------------------------------#
+
+SLOC    Directory       SLOC-by-Language (Sorted)
+15051   stat            perl=15051
+10628   lib             perl=10628
+5500    extra           perl=5500
+4436    pop             perl=4436
+4179    util            perl=4030,python=138,sh=11
+3628    gui             perl=3628
+1752    init            perl=1752
+1558    multi           perl=1558
+1415    gene            perl=1415
+1282    bac             perl=1282
+1100    ofg             perl=1100
+968     fig             perl=968
+763     axt             perl=763
+260     try             perl=260
+197     for_circos      perl=197
+165     top_dir         perl=165
+59      doc             sh=59
+14      schema          perl=14
+
+Totals grouped by language (dominant language first):
+perl:         52747 (99.61%)
+python:         138 (0.26%)
+sh:              70 (0.13%)
+
+Total Physical Source Lines of Code (SLOC)                = 52,955
+Development Effort Estimate, Person-Years (Person-Months) = 12.92 (154.99)
+ (Basic COCOMO model, Person-Months = 2.4 * (KSLOC**1.05))
+Schedule Estimate, Years (Months)                         = 1.42 (16.99)
+ (Basic COCOMO model, Months = 2.5 * (person-months**0.38))
+Estimated Average Number of Developers (Effort/Schedule)  = 9.12
+Total Estimated Cost to Develop                           = $ 1,744,793
+ (average salary = $56,286/year, overhead = 2.40).
