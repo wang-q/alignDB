@@ -78,7 +78,7 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my $write_excel_obj = AlignDB::WriteExcel->new(
+my $write_obj = AlignDB::WriteExcel->new(
     mysql   => "$db:$server",
     user    => $username,
     passwd  => $password,
@@ -96,19 +96,17 @@ my $summary_gene = sub {
 
     {    # write header
         my $query_name = 'Item';
-        my $sql_query  = q{
-            SELECT 'Type', 'COUNT', 'AVG_length', 'SUM_length', 'AVG_pi',
-                   'indel', 'INDEL/100bp', 'ns_indel', 'ns_INDEL/100bp'
-        };
+        my @headers
+            = qw{Type COUNT AVG_length SUM_length AVG_pi indel INDEL/100bp};
         ( $sheet_row, $sheet_col ) = ( 0, 1 );
         my %option = (
             query_name => $query_name,
-            sql_query  => $sql_query,
             sheet_row  => $sheet_row,
             sheet_col  => $sheet_col,
+            header     => \@headers,
         );
         ( $sheet, $sheet_row )
-            = $write_excel_obj->write_header_sql( $sheet_name, \%option );
+            = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     {    # write contents
@@ -125,8 +123,7 @@ my $summary_gene = sub {
             sheet_row  => $sheet_row,
             sheet_col  => $sheet_col,
         );
-        ($sheet_row)
-            = $write_excel_obj->write_content_direct( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
     # add a blank row
@@ -156,8 +153,7 @@ my $summary_gene = sub {
             sheet_row  => $sheet_row,
             sheet_col  => $sheet_col,
         );
-        ($sheet_row)
-            = $write_excel_obj->write_content_direct( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
     # add a blank row
@@ -189,8 +185,7 @@ my $summary_gene = sub {
             sheet_row  => $sheet_row,
             sheet_col  => $sheet_col,
         );
-        ($sheet_row)
-            = $write_excel_obj->write_content_direct( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
     # add a blank row
@@ -222,8 +217,7 @@ my $summary_gene = sub {
             sheet_row  => $sheet_row,
             sheet_col  => $sheet_col,
         );
-        ($sheet_row)
-            = $write_excel_obj->write_content_direct( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
     # add a blank row
@@ -239,7 +233,7 @@ my $gce_all = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_excel_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
+    unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
         return;
     }
 
@@ -248,36 +242,38 @@ my $gce_all = sub {
     my ( $sheet_row, $sheet_col );
 
     {    # write header
-        my $sql_query = q{
-            SELECT  'distance',
-                    'AVG_pi',
-                    'AVG_Indel/100bp',
-                    'AVG_gc',
-                    'COUNT'
-        };
+        my @headers = qw{distance AVG_pi STD_pi AVG_indel STD_indel AVG_gc
+            STD_gc AVG_cv STD_cv AVG_repeats STD_repeats COUNT};
         ( $sheet_row, $sheet_col ) = ( 0, 0 );
         my %option = (
-            sql_query => $sql_query,
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
+            header    => \@headers,
         );
         ( $sheet, $sheet_row )
-            = $write_excel_obj->write_header_sql( $sheet_name, \%option );
+            = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     {    # query
         my $sql_query = q{
             SELECT s.ofgsw_distance `distance`,
-                   AVG (w.window_pi) `avg_pi`,
-                   AVG (w.window_indel / w.window_length * 100) `avg_indel/100bp`,
-                   AVG (w.window_target_gc) `avg_gc`,
+                   AVG(w.window_pi) `avg_pi`,
+                   STD(w.window_pi) `avg_pi`,
+                   AVG(w.window_indel / w.window_length * 100) `avg_indel`,
+                   STD(w.window_indel / w.window_length * 100) `avg_indel`,
+                   AVG(w.window_target_gc) `avg_gc`,
+                   STD(w.window_target_gc) `avg_gc`,
+                   AVG(s.ofgsw_cv) `avg_cv`,
+                   STD(s.ofgsw_cv) `avg_cv`,
+                   AVG(w.window_repeats) `avg_repeats`,
+                   STD(w.window_repeats) `avg_repeats`,
                    COUNT(*) count
               FROM ofg o,
                    ofgsw s,
                    window w
              WHERE o.ofg_id = s.ofg_id AND
                    s.window_id = w.window_id AND
-                   o.ofg_tag = 'all'
+                   o.ofg_tag = 'gce'
             GROUP BY s.ofgsw_distance
         };
         my %option = (
@@ -286,8 +282,7 @@ my $gce_all = sub {
             sheet_col => $sheet_col,
         );
 
-        ($sheet_row)
-            = $write_excel_obj->write_content_direct( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
     $sheet->set_zoom(75);
@@ -296,82 +291,83 @@ my $gce_all = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- gce_coldspot
+# worksheet -- gce_type
 #----------------------------------------------------------#
-my $gce_type = sub {
-
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
-    unless ( $write_excel_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
-        return;
-    }
-
-    my @gce_types = qw{C CC M X total CO NCO};
-
-    my $write_sheet = sub {
-        my ($gce_tag) = @_;
-        my $sheet_name = "gce" . "_" . $gce_tag;
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my $sql_query = q{
-                SELECT  'distance',
-                        'AVG_pi',
-                        'AVG_Indel/100bp',
-                        'AVG_gc',
-                        'COUNT'
-            };
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-            );
-            ( $sheet, $sheet_row )
-                = $write_excel_obj->write_header_sql( $sheet_name, \%option );
-        }
-
-        {    # query
-            my $sql_query = q{
-                SELECT s.ofgsw_distance `distance`,
-                       AVG (w.window_pi) `avg_pi`,
-                       AVG (w.window_indel / w.window_length * 100) `avg_indel/100bp`,
-                       AVG (w.window_target_gc) `avg_gc`,
-                       COUNT(*) count
-                FROM ofg g,
-                     ofgsw s,
-                     window w
-                WHERE g.ofg_id = s.ofg_id AND
-                      s.window_id = w.window_id AND
-                      g.ofg_type = ?
-                GROUP BY s.ofgsw_distance
-            };
-            my %option = (
-                sql_query  => $sql_query,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [$gce_tag],
-            );
-
-            ($sheet_row)
-                = $write_excel_obj->write_content_direct( $sheet, \%option );
-        }
-
-        $sheet->set_zoom(75);
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    };
-
-    foreach (@gce_types) {
-        &$write_sheet($_);
-    }
-};
+#my $gce_type = sub {
+#
+#    # if the target column of the target table does not contain
+#    #   any values, skip this stat
+#    unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
+#        return;
+#    }
+#
+#    my @gce_types = qw{C CC M X total CO NCO};
+#
+#    my $write_sheet = sub {
+#        my ($gce_tag) = @_;
+#        my $sheet_name = "gce" . "_" . $gce_tag;
+#        my $sheet;
+#        my ( $sheet_row, $sheet_col );
+#
+#        {    # write header
+#            my $sql_query = q{
+#                SELECT  'distance',
+#                        'AVG_pi',
+#                        'AVG_Indel/100bp',
+#                        'AVG_gc',
+#                        'COUNT'
+#            };
+#            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+#            my %option = (
+#                sql_query => $sql_query,
+#                sheet_row => $sheet_row,
+#                sheet_col => $sheet_col,
+#            );
+#            ( $sheet, $sheet_row )
+#                = $write_obj->write_header_sql( $sheet_name, \%option );
+#        }
+#
+#        {    # query
+#            my $sql_query = q{
+#                SELECT s.ofgsw_distance `distance`,
+#                       AVG (w.window_pi) `avg_pi`,
+#                       AVG (w.window_indel / w.window_length * 100) `avg_indel/100bp`,
+#                       AVG (w.window_target_gc) `avg_gc`,
+#                       COUNT(*) count
+#                FROM ofg g,
+#                     ofgsw s,
+#                     window w
+#                WHERE g.ofg_id = s.ofg_id AND
+#                      s.window_id = w.window_id AND
+#                      g.ofg_type = ?
+#                GROUP BY s.ofgsw_distance
+#            };
+#            my %option = (
+#                sql_query  => $sql_query,
+#                sheet_row  => $sheet_row,
+#                sheet_col  => $sheet_col,
+#                bind_value => [$gce_tag],
+#            );
+#
+#            ($sheet_row)
+#                = $write_obj->write_content_direct( $sheet, \%option );
+#        }
+#
+#        $sheet->set_zoom(75);
+#
+#        print "Sheet \"$sheet_name\" has been generated.\n";
+#    };
+#
+#    foreach (@gce_types) {
+#        &$write_sheet($_);
+#    }
+#};
 
 foreach my $n (@tasks) {
     if ( $n == 1 ) { &$summary_gene; next; }
     if ( $n == 2 ) { &$gce_all;      next; }
-    if ( $n == 3 ) { &$gce_type;     next; }
+
+    #if ( $n == 3 ) { &$gce_type;     next; }
 }
 
 $stopwatch->end_message;
