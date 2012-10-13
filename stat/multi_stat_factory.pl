@@ -259,6 +259,53 @@ my $basic = sub {
 };
 
 #----------------------------------------------------------#
+# worksheet -- process
+#----------------------------------------------------------#
+my $process = sub {
+    my $sheet_name = 'process';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers = qw{Order Operation Duration Cmd_line};
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  meta_value
+            FROM    meta m
+            WHERE   meta_key IN ("a_operation","d_duration", "e_cmd_line")
+        };
+        my $dbh = $write_obj->dbh;
+
+        my $array_ref = $dbh->selectcol_arrayref($sql_query);
+
+        my $order = 1;
+        while ( scalar @{$array_ref} ) {
+            my @row = splice @{$array_ref}, 0, 3;
+            ($sheet_row) = $write_obj->write_row_direct(
+                $sheet,
+                {   row       => [ $order, @row ],
+                    sheet_row => $sheet_row,
+                    sheet_col => $sheet_col,
+                }
+            );
+            $order++;
+        }
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
 # worksheet -- summary
 #----------------------------------------------------------#
 my $summary = sub {
@@ -317,8 +364,7 @@ my $summary = sub {
         $column_stat->( 'indel_left_extand',  'indel', 'left_extand' );
         $column_stat->( 'indel_right_extand', 'indel', 'right_extand' );
         $column_stat->(
-            'indel_windows', 'isw',
-            'isw_length',    'WHERE isw_distance <= 0'
+            'indel_windows', 'isw', 'isw_length', 'WHERE isw_distance <= 0'
         );
         $column_stat->(
             'indel_free_windows', 'isw',
@@ -388,10 +434,7 @@ my $summary_indel = sub {
         my @freq_levels = ( @freqs, [ 'unknown', -1, -1 ] );
 
         # all indels
-        $column_stat->(
-            'all',            'indel i',
-            'i.indel_length', 
-        );
+        $column_stat->( 'all', 'indel i', 'i.indel_length', );
 
         foreach my $level (@freq_levels) {
             my ( $name, $lower, $upper ) = @$level;
@@ -408,10 +451,7 @@ my $summary_indel = sub {
 
         # insertions
         $column_stat->(
-            'ins',
-            'indel i',
-            'i.indel_length',
-            q{WHERE i.indel_type = 'I'}
+            'ins', 'indel i', 'i.indel_length', q{WHERE i.indel_type = 'I'}
         );
 
         foreach my $level (@freq_levels) {
@@ -430,10 +470,7 @@ my $summary_indel = sub {
 
         # deletions
         $column_stat->(
-            'del',
-            'indel i',
-            'i.indel_length',
-            q{WHERE i.indel_type = 'D'}
+            'del', 'indel i', 'i.indel_length', q{WHERE i.indel_type = 'D'}
         );
 
         foreach my $level (@freq_levels) {
@@ -593,8 +630,7 @@ my $distance_length = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $level->[1], $level->[2] ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -643,8 +679,7 @@ my $frequency_distance = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $level->[1], $level->[2] ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -692,8 +727,7 @@ my $frequency_distance2 = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $level->[1], $level->[2] ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -741,8 +775,7 @@ my $frequency_distance3 = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $level->[1], $level->[2] ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -788,8 +821,7 @@ my $distance_insdel = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $level->[1] ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -840,8 +872,7 @@ my $distance_insdel_freq = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $type->[1], $freq->[1], $freq->[2], ]
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -882,8 +913,7 @@ my $indel_length = sub {
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
         );
-        ($sheet_row)
-            = $write_obj->write_content_highlight( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_highlight( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1240,8 +1270,7 @@ my $di_dn_ttest = sub {
                 my @range      = @$_;
                 my $in_list    = '(' . join( ',', @range ) . ')';
                 my $sql_query2 = $sql_query . $in_list;
-                $sql_query2
-                    .= " \nLIMIT 10000";    # prevent to exceed excel limit
+                $sql_query2 .= " \nLIMIT 10000"; # prevent to exceed excel limit
 
                 my %option = (
                     sql_query  => $sql_query2,
@@ -1307,8 +1336,7 @@ my $di_dn_ttest = sub {
                 append_column => \@p_values,
                 bind_value    => [ $level->[1] ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_group( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1367,8 +1395,7 @@ my $frequency_pigccv = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $level->[1], $level->[2] ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1380,7 +1407,7 @@ my $frequency_pigccv = sub {
 };
 
 foreach my $n (@tasks) {
-    if ( $n == 1 ) { &$basic; &$summary; &$summary_indel; next; }
+    if ( $n == 1 ) { &$basic; &$process; &$summary; &$summary_indel; next; }
     if ( $n == 2 ) { &$distance; &$distance_length; next; }
     if ( $n == 3 )  { &$frequency_distance;   next; }
     if ( $n == 4 )  { &$distance2;            next; }

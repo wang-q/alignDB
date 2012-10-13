@@ -220,6 +220,53 @@ my $basic = sub {
 };
 
 #----------------------------------------------------------#
+# worksheet -- process
+#----------------------------------------------------------#
+my $process = sub {
+    my $sheet_name = 'process';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers = qw{Order Operation Duration Cmd_line};
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  meta_value
+            FROM    meta m
+            WHERE   meta_key IN ("a_operation","d_duration", "e_cmd_line")
+        };
+        my $dbh = $write_obj->dbh;
+
+        my $array_ref = $dbh->selectcol_arrayref($sql_query);
+
+        my $order = 1;
+        while ( scalar @{$array_ref} ) {
+            my @row = splice @{$array_ref}, 0, 3;
+            ($sheet_row) = $write_obj->write_row_direct(
+                $sheet,
+                {   row       => [ $order, @row ],
+                    sheet_row => $sheet_row,
+                    sheet_col => $sheet_col,
+                }
+            );
+            $order++;
+        }
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
 # worksheet -- summary
 #----------------------------------------------------------#
 my $summary = sub {
@@ -278,8 +325,7 @@ my $summary = sub {
         $column_stat->( 'indel_left_extand',  'indel', 'left_extand' );
         $column_stat->( 'indel_right_extand', 'indel', 'right_extand' );
         $column_stat->(
-            'indel_windows', 'isw',
-            'isw_length',    'WHERE isw_distance <= 0'
+            'indel_windows', 'isw', 'isw_length', 'WHERE isw_distance <= 0'
         );
         $column_stat->(
             'indel_free_windows', 'isw',
@@ -605,8 +651,7 @@ my $group_distance = sub {
             group     => \@group_distance,
             group_col => 'isw_distance',
         );
-        ($sheet_row)
-            = $write_obj->write_content_group_obj( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_group_obj( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -676,8 +721,7 @@ my $group_density = sub {
             group     => \@group_density,
             group_col => 'isw_density',
         );
-        ($sheet_row)
-            = $write_obj->write_content_group_obj( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_group_obj( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -695,9 +739,8 @@ my $distance_coding = sub {
     my ( $isw_f1_1, $isw_f1_2 ) = ( 1, 1 );
     my @combined;
     {
-        my $thaw_sql
-            = $sql_file->retrieve('common-distance_coding_combine-2');
-        my $threshold  = 1000;
+        my $thaw_sql  = $sql_file->retrieve('common-distance_coding_combine-2');
+        my $threshold = 1000;
         my $standalone = [ -1, 0 ];
         my %option     = (
             sql_query  => $thaw_sql->as_sql,
@@ -774,9 +817,8 @@ my $distance_non_coding = sub {
     my ( $isw_f1_1, $isw_f1_2 ) = ( 0, 0 );
     my @combined;
     {
-        my $thaw_sql
-            = $sql_file->retrieve('common-distance_coding_combine-2');
-        my $threshold  = 1000;
+        my $thaw_sql  = $sql_file->retrieve('common-distance_coding_combine-2');
+        my $threshold = 1000;
         my $standalone = [ -1, 0 ];
         my %option     = (
             sql_query  => $thaw_sql->as_sql,
@@ -853,8 +895,7 @@ my $density_coding = sub {
     my ( $isw_f1_1, $isw_f1_2 ) = ( 1, 1 );
     my @combined;
     {
-        my $thaw_sql
-            = $sql_file->retrieve('common-distance_coding_combine-2');
+        my $thaw_sql = $sql_file->retrieve('common-distance_coding_combine-2');
         $thaw_sql->replace( { distance => 'density' } );
         my $threshold  = 1000;
         my $standalone = [ -1, 0 ];
@@ -933,8 +974,7 @@ my $density_non_coding = sub {
     my ( $isw_f1_1, $isw_f1_2 ) = ( 0, 0 );
     my @combined;
     {
-        my $thaw_sql
-            = $sql_file->retrieve('common-distance_coding_combine-2');
+        my $thaw_sql = $sql_file->retrieve('common-distance_coding_combine-2');
         $thaw_sql->replace( { distance => 'density' } );
         my $threshold  = 1000;
         my $standalone = [ -1, 0 ];
@@ -1243,25 +1283,20 @@ my $indel_extand_group = sub {
     }
 
     my @indel_group
-        = ( [ 0, 0 ], [ 1, 2 ], [ 3, 4 ], [ 5, 9 ], [ 10, 19 ], [ 20, 999 ],
-        );
+        = ( [ 0, 0 ], [ 1, 2 ], [ 3, 4 ], [ 5, 9 ], [ 10, 19 ], [ 20, 999 ], );
 
     {    # write contents
         my $thaw_sql_R = $sql_file->retrieve('common-indel_size_r-0');
         $thaw_sql_R->add_where(
-            'FLOOR(indel.right_extand / 100)' => { op => '>=', value => '0' }
-        );
+            'FLOOR(indel.right_extand / 100)' => { op => '>=', value => '0' } );
         $thaw_sql_R->add_where(
-            'FLOOR(indel.right_extand / 100)' => { op => '<=', value => '0' }
-        );
+            'FLOOR(indel.right_extand / 100)' => { op => '<=', value => '0' } );
 
         my $thaw_sql_L = $sql_file->retrieve('common-indel_size_l-0');
         $thaw_sql_L->add_where(
-            'FLOOR(indel.left_extand / 100)' => { op => '>=', value => '0' }
-        );
+            'FLOOR(indel.left_extand / 100)' => { op => '>=', value => '0' } );
         $thaw_sql_L->add_where(
-            'FLOOR(indel.left_extand / 100)' => { op => '<=', value => '0' }
-        );
+            'FLOOR(indel.left_extand / 100)' => { op => '<=', value => '0' } );
 
         my %option = (
             sql_query_1 => $thaw_sql_R->as_sql,
@@ -1786,8 +1821,7 @@ my $indel_length = sub {
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
         );
-        ($sheet_row)
-            = $write_obj->write_content_highlight( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_highlight( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1823,8 +1857,7 @@ my $indel_length_100 = sub {
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
         );
-        ($sheet_row)
-            = $write_obj->write_content_highlight( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_highlight( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -2185,36 +2218,31 @@ my $distance_slip = sub {
                     $slip_levels->[1], $slip_levels->[2],
                 ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         {    # L & R windows
-            my $thaw_sql_lr
-                = $sql_file->retrieve('common-distance_slip_lr-2');
-            my %option = (
+            my $thaw_sql_lr = $sql_file->retrieve('common-distance_slip_lr-2');
+            my %option      = (
                 sql_query  => $thaw_sql_lr->as_sql,
                 sheet_row  => $sheet_row,
                 sheet_col  => $sheet_col,
                 bind_value => [ $slip_levels->[1], $slip_levels->[2], ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         {    # write footer
             $sheet_row += 2;
-            my $thaw_sql
-                = $sql_file->retrieve('common-distance_slip_total-2');
-            my %option = (
+            my $thaw_sql = $sql_file->retrieve('common-distance_slip_total-2');
+            my %option   = (
                 sql_query      => $thaw_sql->as_sql,
                 sheet_row      => $sheet_row,
                 sheet_col      => $sheet_col,
                 content_format => 'TOTAL',
                 bind_value     => [ $slip_levels->[1], $slip_levels->[2], ]
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -2274,13 +2302,11 @@ my $distance_gc_slip = sub {
                     $slip_levels->[1], $slip_levels->[2],
                 ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         {    # L & R windows
-            my $thaw_sql_lr
-                = $sql_file->retrieve('common-distance_slip_lr-2');
+            my $thaw_sql_lr = $sql_file->retrieve('common-distance_slip_lr-2');
             $thaw_sql_lr->replace(
                 {   AVG_pi       => 'AVG_gc',
                     STD_pi       => 'STD_gc',
@@ -2293,14 +2319,12 @@ my $distance_gc_slip = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $slip_levels->[1], $slip_levels->[2], ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         {    # write footer
             $sheet_row += 2;
-            my $thaw_sql
-                = $sql_file->retrieve('common-distance_slip_total-2');
+            my $thaw_sql = $sql_file->retrieve('common-distance_slip_total-2');
             $thaw_sql->replace(
                 {   AVG_pi       => 'AVG_gc',
                     STD_pi       => 'STD_gc',
@@ -2314,8 +2338,7 @@ my $distance_gc_slip = sub {
                 content_format => 'TOTAL',
                 bind_value     => [ $slip_levels->[1], $slip_levels->[2], ]
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -2366,10 +2389,8 @@ my $align_coding = sub {
         my ( $sheet_row, $sheet_col );
 
         {    # write header
-            my @headers = (
-                qw{distance AVG_pi COUNT STD_pi},
-                $low_border, $high_border
-            );
+            my @headers = ( qw{distance AVG_pi COUNT STD_pi}, $low_border,
+                $high_border );
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -2392,8 +2413,7 @@ my $align_coding = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $low_border, $high_border ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -2444,10 +2464,8 @@ my $align_repeat = sub {
         my ( $sheet_row, $sheet_col );
 
         {    # write header
-            my @headers = (
-                qw{distance AVG_pi COUNT STD_pi},
-                $low_border, $high_border
-            );
+            my @headers = ( qw{distance AVG_pi COUNT STD_pi}, $low_border,
+                $high_border );
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -2470,8 +2488,7 @@ my $align_repeat = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $low_border, $high_border ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -2526,10 +2543,8 @@ my $align_te = sub {
         my ( $sheet_row, $sheet_col );
 
         {    # write header
-            my @headers = (
-                qw{distance AVG_pi COUNT STD_pi},
-                $low_border, $high_border
-            );
+            my @headers = ( qw{distance AVG_pi COUNT STD_pi}, $low_border,
+                $high_border );
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -2552,8 +2567,7 @@ my $align_te = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $low_border, $high_border ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -2608,10 +2622,8 @@ my $align_paralog = sub {
         my ( $sheet_row, $sheet_col );
 
         {    # write header
-            my @headers = (
-                qw{distance AVG_pi COUNT STD_pi},
-                $low_border, $high_border
-            );
+            my @headers = ( qw{distance AVG_pi COUNT STD_pi}, $low_border,
+                $high_border );
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -2634,8 +2646,7 @@ my $align_paralog = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $low_border, $high_border ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -2647,16 +2658,16 @@ my $align_paralog = sub {
 };
 
 foreach my $n (@tasks) {
-    if ( $n == 1 ) { &$basic;    &$summary;           next; }
+    if ( $n == 1 ) { &$basic; &$process; &$summary; next; }
     if ( $n == 2 ) { &$distance; &$combined_distance; next; }
-    if ( $n == 3 )  { &$group_distance;     next; }
-    if ( $n == 4 )  { &$distance_coding;    &$distance_non_coding; next; }
-    if ( $n == 5 )  { &$density;            &$combined_density; next; }
-    if ( $n == 6 )  { &$group_density;      next; }
-    if ( $n == 7 )  { &$density_coding;     &$density_non_coding; next; }
-    if ( $n == 8 )  { &$dd_group;           next; }
-    if ( $n == 9 )  { &$indel_size_group;   &$indel_size_asymmetry; next; }
-    if ( $n == 10 ) { &$indel_extand_group; &$indel_extand_asymmetry; next; }
+    if ( $n == 3 )  { &$group_distance;       next; }
+    if ( $n == 4 )  { &$distance_coding;      &$distance_non_coding; next; }
+    if ( $n == 5 )  { &$density;              &$combined_density; next; }
+    if ( $n == 6 )  { &$group_density;        next; }
+    if ( $n == 7 )  { &$density_coding;       &$density_non_coding; next; }
+    if ( $n == 8 )  { &$dd_group;             next; }
+    if ( $n == 9 )  { &$indel_size_group;     &$indel_size_asymmetry; next; }
+    if ( $n == 10 ) { &$indel_extand_group;   &$indel_extand_asymmetry; next; }
     if ( $n == 11 ) { &$indel_position_group; next; }
     if ( $n == 12 ) { &$indel_coding_group;   &$indel_repeat_group; next; }
     if ( $n == 13 ) { &$indel_slip_group;     &$indel_gc_group; next; }
