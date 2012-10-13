@@ -1,6 +1,7 @@
 package AlignDB::Ofg;
 use Moose;
 use Carp;
+use Moose::Util::TypeConstraints;
 
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 use YAML qw(Dump Load DumpFile LoadFile);
@@ -35,14 +36,19 @@ has 'max_in_distance' => (
 # ------+------------------------------------+--------
 #    2 1 -1 -2     -89 -90  -90 -89     -2 -1 1 2
 #
-# edge-only
+# edge_only
 # ------+-----------------------+--------
 #    2 1 -1 -2             -2 -1 1 2
 #
 # center
 # ------+-----------------+--------
 #  7 6 5 4 3 2 1 0 1 2 3 4 5 6 7 8
-has 'style' => ( is => 'rw', isa => 'Str', default => 'edge' );
+#
+# center_intact
+# ------+-----------------+--------
+#  3 2 1        0          1 2 3 4
+enum 'Styles', [qw(edge edge_only center center_intact)];
+has 'style' => ( is => 'rw', isa => 'Styles', default => 'edge' );
 
 has 'window_maker' => ( is => 'ro', isa => 'object' );
 has 'pos_finder'   => ( is => 'ro', isa => 'object' );
@@ -271,7 +277,7 @@ sub insert_ofgsw {
                 );
             }
 
-            if ( $style ne 'edge-only' ) {
+            if ( $style ne 'edge_only' ) {
 
                 # inside rsw 2
                 # rsw2 start from -90, so there will be no conflicts with rsw
@@ -291,8 +297,6 @@ sub insert_ofgsw {
             }
         }
         elsif ( $style eq 'center' ) {
-            
-            # center rsw
             my @center_rsw
                 = $window_maker->center_window( $target_set, $ofg_set->min,
                 $ofg_set->max );
@@ -302,11 +306,22 @@ sub insert_ofgsw {
                     = $self->insert_window( $align_id, $rsw->{set},
                     $internal_indel_flag );
 
-                $ofgsw_insert->execute( $cur_window_id, $ofg_id,
-                    $rsw->{type}, $rsw->{distance},
-                );
+                $ofgsw_insert->execute( $cur_window_id, $ofg_id, $rsw->{type},
+                    $rsw->{distance}, );
             }
-            
+        }
+        elsif ( $style eq 'center_intact' ) {
+            my @center_rsw = $window_maker->center_intact_window( $target_set,
+                $ofg_set->min, $ofg_set->max );
+
+            for my $rsw (@center_rsw) {
+                my ($cur_window_id)
+                    = $self->insert_window( $align_id, $rsw->{set},
+                    $internal_indel_flag );
+
+                $ofgsw_insert->execute( $cur_window_id, $ofg_id, $rsw->{type},
+                    $rsw->{distance}, );
+            }
         }
     }
 
