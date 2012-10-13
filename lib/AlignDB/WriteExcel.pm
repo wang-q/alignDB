@@ -154,35 +154,6 @@ sub write_header_sql {
     return ( $sheet, $sheet_row );
 }
 
-sub write_footer_sql {
-    my ( $self, $sheet, $option ) = @_;
-
-    # init
-    my $dbh  = $self->dbh;
-    my $fmt  = $self->format;
-    my @cols = @{ $self->columns };
-
-    # init table cursor
-    my $sheet_row = $option->{sheet_row};
-    my $sheet_col = $option->{sheet_col};
-
-    # query name
-    my $query_name = $option->{query_name};
-
-    # init DBI query
-    my $sql_query = $option->{sql_query};
-    my $sth       = $dbh->prepare($sql_query);
-    $sth->execute();
-
-    #UNFINISHED
-    #
-    #
-    #
-    #PLACE HOLDER
-
-    return ($sheet_row);
-}
-
 sub write_row_direct {
     my ( $self, $sheet, $option ) = @_;
 
