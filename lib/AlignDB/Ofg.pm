@@ -1,5 +1,5 @@
 package AlignDB::Ofg;
-use Moose;
+use Moose::Role;
 use Carp;
 use Moose::Util::TypeConstraints;
 
@@ -8,15 +8,18 @@ use YAML qw(Dump Load DumpFile LoadFile);
 
 use AlignDB::IntSpan;
 use AlignDB::Window;
-
-use FindBin;
-use lib "$FindBin::Bin/..";
-extends qw(AlignDB);
-use AlignDB::Position;
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(:all);
 
-use version; our $VERSION = qv('0.1.0');
+requires 'dbh';
+requires 'get_target_info';
+requires 'get_seqs';
+requires 'process_message';
+requires 'insert_window';
+
+use FindBin;
+use lib "$FindBin::Bin/..";
+use AlignDB::Position;
 
 # max outside window distance
 has 'max_out_distance' => (
@@ -50,35 +53,6 @@ has 'max_in_distance' => (
 enum 'Styles', [qw(edge edge_only center center_intact)];
 has 'style' => ( is => 'rw', isa => 'Styles', default => 'edge' );
 
-has 'window_maker' => ( is => 'ro', isa => 'object' );
-has 'pos_finder'   => ( is => 'ro', isa => 'object' );
-
-sub BUILD {
-    my $self = shift;
-
-    my $window_maker = AlignDB::Window->new(
-        max_out_distance => $self->max_out_distance,
-        max_in_distance  => $self->max_in_distance,
-    );
-
-    my $dbh = $self->dbh;
-    my $pos_finder = AlignDB::Position->new( dbh => $dbh );
-
-    $self->{window_maker} = $window_maker;
-    $self->{pos_finder}   = $pos_finder;
-
-    return;
-}
-
-sub empty_ofg_tables {
-    my $self = shift;
-
-    $self->empty_table( 'ofg',   'with_window' );
-    $self->empty_table( 'ofgsw', 'with_window' );
-
-    return;
-}
-
 sub insert_ofg {
     my $self        = shift;
     my $align_ids   = shift;
@@ -86,7 +60,11 @@ sub insert_ofg {
     my $chr_ofg_set = shift;
 
     my $dbh        = $self->dbh;
-    my $pos_finder = $self->pos_finder;
+    my $pos_finder = AlignDB::Position->new( dbh => $dbh );
+    my $window_maker = AlignDB::Window->new(
+        max_out_distance => $self->max_out_distance,
+        max_in_distance  => $self->max_in_distance,
+    );
 
     # insert into ofg
     my $ofg_insert_sth = $dbh->prepare(
@@ -185,7 +163,11 @@ sub insert_ofgsw {
     my $style    = shift;
 
     my $dbh          = $self->dbh;
-    my $window_maker = $self->window_maker;
+    my $pos_finder = AlignDB::Position->new( dbh => $dbh );
+    my $window_maker = AlignDB::Window->new(
+        max_out_distance => $self->max_out_distance,
+        max_in_distance  => $self->max_in_distance,
+    );
 
     my $target_info    = $self->get_target_info($align_id);
     my $chr_name       = $target_info->{chr_name};
