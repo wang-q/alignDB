@@ -1,7 +1,9 @@
 package AlignDB::Multi;
 use Moose;
 use Carp;
+use autodie;
 
+use PerlIO::via::gzip;
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 use List::MoreUtils qw(any uniq);
 use Statistics::Lite qw(mean);
@@ -18,6 +20,7 @@ sub parse_fasta_file {
     my $opt    = shift;
 
     my $threshold = $opt->{threshold};
+    my $gzip      = $opt->{gzip};
 
     # id3702_chr1_10023790_10038033.fas
     my $fasta_qr = qr{
@@ -40,7 +43,13 @@ sub parse_fasta_file {
     };
 
     # read in fasta file
-    open my $in_fh, '<', $infile or die $!;
+    my $in_fh;
+    if ( !$gzip ) {
+        open $in_fh, '<', $infile;
+    }
+    else {
+        open $in_fh, '<:via(gzip)', $infile;
+    }
     my $content = do { local $/; <$in_fh> };
     close $in_fh;
 
@@ -60,8 +69,15 @@ sub parse_block_fasta_file {
 
     my $threshold = $opt->{threshold};
     my $id        = $opt->{id};
+    my $gzip      = $opt->{gzip};
 
-    open my $in_fh, "<", $infile;
+    my $in_fh;
+    if ( !$gzip ) {
+        open $in_fh, '<', $infile;
+    }
+    else {
+        open $in_fh, '<:via(gzip)', $infile;
+    }
     my $content = '';
     while ( my $line = <$in_fh> ) {
         if ( $line =~ /^\s+$/ and $content =~ /\S/ ) {

@@ -56,6 +56,8 @@ my $insert_dG = $Config->{generate}{insert_dG};    # dG
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
 
+my $gzip = 0;                                      # open .axt.gz
+
 my $man  = 0;
 my $help = 0;
 
@@ -73,6 +75,7 @@ GetOptions(
     'length=i'    => \$axt_threshold,
     'insert_dG=s' => \$insert_dG,
     'parallel=i'  => \$parallel,
+    'gzip=i'      => \$gzip,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -81,8 +84,16 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 # Search for all files and push their paths to @axt_files
 #----------------------------------------------------------#
-my @axt_files = sort File::Find::Rule->file->name('*.axt')->in($axt_dir);
-printf "\n----Total .AXT Files: %4s----\n\n", scalar @axt_files;
+my @files;
+if ( !$gzip ) {
+    @files = sort File::Find::Rule->file->name('*.axt')->in($axt_dir);
+    printf "\n----Total .axt Files: %4s----\n\n", scalar @files;
+}
+if ( scalar @files == 0 or $gzip ) {
+    @files = sort File::Find::Rule->file->name('*.axt.gz')->in($axt_dir);
+    printf "\n----Total .axt.gz Files: %4s----\n\n", scalar @files;
+    $gzip++;
+}
 
 #----------------------------------------------------------#
 # worker
@@ -115,6 +126,7 @@ my $worker = sub {
             query_taxon_id  => $query_taxon_id,
             query_name      => $query_name,
             threshold       => $axt_threshold,
+            gzip            => $gzip,
         }
     );
 
@@ -128,7 +140,7 @@ my $worker = sub {
 #----------------------------------------------------------#
 my $run = AlignDB::Run->new(
     parallel => $parallel,
-    jobs     => \@axt_files,
+    jobs     => \@files,
     code     => $worker,
 );
 $run->run;

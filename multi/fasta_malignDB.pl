@@ -52,6 +52,8 @@ my $parallel = $Config->{generate}{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{feature}{batch};
 
+my $gzip = 0;     # open .fas.gz
+
 my $help = 0;
 my $man  = 0;
 
@@ -69,6 +71,7 @@ GetOptions(
     'block'      => \$block,
     'parallel=i' => \$parallel,
     'batch=i'    => \$batch_number,
+    'gzip=i'     => \$gzip,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -83,11 +86,18 @@ system "perl $FindBin::Bin/../init/init_alignDB.pl"
 #----------------------------------------------------------#
 # Search for all files and push their paths to @files
 #----------------------------------------------------------#
-my @files
-    = File::Find::Rule->file->name( '*.fa', '*.fas', '*.fasta' )->in($dir_fa);
-@files = sort @files;
-
-printf "\n----Total .FAS Files: %4s----\n\n", scalar @files;
+my @files;
+if ( !$gzip ) {
+    @files = sort File::Find::Rule->file->name( '*.fa', '*.fas', '*.fasta' )
+        ->in($dir_fa);
+    printf "\n----Total .fas Files: %4s----\n\n", scalar @files;
+}
+if ( scalar @files == 0 or $gzip ) {
+    @files = sort File::Find::Rule->file->name( '*.fa.gz', '*.fas.gz',
+        '*.fasta.gz' )->in($dir_fa);
+    printf "\n----Total .fas.gz Files: %4s----\n\n", scalar @files;
+    $gzip++;
+}
 
 my @jobs;
 if ( !$block ) {
@@ -138,6 +148,7 @@ my $run = AlignDB::Run->new(
         block     => $block,
         id        => $target_id,
         threshold => $length_thredhold,
+        gzip      => $gzip,
     },
 );
 $run->run;

@@ -1,8 +1,10 @@
 package AlignDB;
 use Moose;
 use Carp;
+use autodie;
 use DBI;
 
+use PerlIO::via::gzip;
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 use List::MoreUtils qw(any);
 use YAML qw(Dump Load DumpFile LoadFile);
@@ -921,12 +923,18 @@ sub parse_axt_file {
     my $query_name      = $opt->{query_name};
     my $threshold       = $opt->{threshold};
     my $not_db          = $opt->{not_db};
+    my $gzip            = $opt->{gzip};
 
     # minimal length
     $threshold ||= $self->threshold;
 
-    open my $axt_fh, '<', $axt_file
-        or confess "Cannot open align file $axt_file";
+    my $axt_fh;
+    if ( !$gzip ) {
+        open $axt_fh, '<', $axt_file;
+    }
+    else {
+        open $axt_fh, '<:via(gzip)', $axt_file;
+    }
 
     my $target_chr_id = $self->get_chr_id_hash($target_taxon_id);
     my $query_chr_id  = $self->get_chr_id_hash($query_taxon_id);
