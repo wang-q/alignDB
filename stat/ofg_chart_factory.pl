@@ -109,7 +109,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             $option{first_row}   = $idx + 2;
             $option{last_row}    = $idx + 32;
             $option{x_min_scale} = 0;
-            $option{x_max_scale} = 10;
+            $option{x_max_scale} = 20;
             $option{cross}       = 0;
         }
         elsif ( $set->has(1) ) {
