@@ -50,8 +50,8 @@ sub insert_segment {
     );
 
     if ( $self->alt_level ) {
-        @segment_levels
-            = reverse map { [ $_, $_ * 100, $_ * 100 ] } ( 1 .. 9 );
+        @segment_levels = reverse map { [ $_, $_ * 100, $_ * 100 ] }
+            ( 2 .. 10, 20, 30, 40, 50 );
     }
 
     for (@segment_levels) {
@@ -329,28 +329,24 @@ REDO: while (1) {
             my ( $left_gc,   $right_gc )   = ( 0,   0 );
 
             if ( $i - 1 >= 0 ) {
-                $left_gc = $windows->[ $extreme[ $i - 1 ] ]->{sw_gc};
-                $left_wave
-                    = $windows->[ $extreme[ $i - 1 ] ]->{high_low_flag};
+                $left_gc   = $windows->[ $extreme[ $i - 1 ] ]->{sw_gc};
+                $left_wave = $windows->[ $extreme[ $i - 1 ] ]->{high_low_flag};
             }
             if ( $i + 1 < scalar @extreme ) {
-                $right_gc = $windows->[ $extreme[ $i + 1 ] ]->{sw_gc};
-                $right_wave
-                    = $windows->[ $extreme[ $i + 1 ] ]->{high_low_flag};
+                $right_gc   = $windows->[ $extreme[ $i + 1 ] ]->{sw_gc};
+                $right_wave = $windows->[ $extreme[ $i + 1 ] ]->{high_low_flag};
             }
 
             if ( $wave eq 'T' ) {
                 if ( $wave eq $left_wave ) {
                     if ( $gc <= $left_gc ) {
-                        $windows->[ $extreme[ $i - 1 ] ]->{high_low_flag}
-                            = 'N';
+                        $windows->[ $extreme[ $i - 1 ] ]->{high_low_flag} = 'N';
                         next REDO;
                     }
                 }
                 if ( $wave eq $right_wave ) {
                     if ( $gc < $right_gc ) {
-                        $windows->[ $extreme[ $i + 1 ] ]->{high_low_flag}
-                            = 'N';
+                        $windows->[ $extreme[ $i + 1 ] ]->{high_low_flag} = 'N';
                         next REDO;
                     }
                 }
@@ -358,15 +354,13 @@ REDO: while (1) {
             elsif ( $wave eq 'C' ) {
                 if ( $wave eq $left_wave ) {
                     if ( $gc >= $left_gc ) {
-                        $windows->[ $extreme[ $i - 1 ] ]->{high_low_flag}
-                            = 'N';
+                        $windows->[ $extreme[ $i - 1 ] ]->{high_low_flag} = 'N';
                         next REDO;
                     }
                 }
                 if ( $wave eq $right_wave ) {
                     if ( $gc > $right_gc ) {
-                        $windows->[ $extreme[ $i + 1 ] ]->{high_low_flag}
-                            = 'N';
+                        $windows->[ $extreme[ $i + 1 ] ]->{high_low_flag} = 'N';
                         next REDO;
                     }
                 }
@@ -676,12 +670,11 @@ sub insert_gsw {
 
         # find middle points of extremes
         # the interval is between two middle points
-        my $half_length       = int( $ex_set->cardinality / 2 );
-        my $prev_middle_right = $prev_ex_set->at( $half_length + 1 );
-        my $ex_middle_left    = $ex_set->at($half_length);
-        my $interval_start_idx
-            = $comparable_set->index($prev_middle_right) + 1;
-        my $interval_end_idx = $comparable_set->index($ex_middle_left) - 1;
+        my $half_length        = int( $ex_set->cardinality / 2 );
+        my $prev_middle_right  = $prev_ex_set->at( $half_length + 1 );
+        my $ex_middle_left     = $ex_set->at($half_length);
+        my $interval_start_idx = $comparable_set->index($prev_middle_right) + 1;
+        my $interval_end_idx   = $comparable_set->index($ex_middle_left) - 1;
 
         next if $interval_start_idx > $interval_end_idx;
 
@@ -690,8 +683,7 @@ sub insert_gsw {
         # determining $gsw_density here, which is different from isw_density
         # and start at "0", because the first windows is within the trough
         # windows.
-        my $gsw_density
-            = int( ( $interval_length - $gsw0_size ) / $gsw_size );
+        my $gsw_density = int( ( $interval_length - $gsw0_size ) / $gsw_size );
         my $gsw_amplitude = int( $ex_left_amplitude / 0.01 );
 
         {    # More windows will be submitted in the following section
