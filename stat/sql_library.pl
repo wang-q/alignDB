@@ -139,10 +139,8 @@ sub ns { return AlignDB::SQL->new; }
             condition => 'isw.isw_id = isw_extra.isw_id',
         }
     );
-    $sql->add_where(
-        'isw_extra.isw_feature1' => { op => '>=', value => '1' } );
-    $sql->add_where(
-        'isw_extra.isw_feature1' => { op => '<=', value => '1' } );
+    $sql->add_where( 'isw_extra.isw_feature1' => { op => '>=', value => '1' } );
+    $sql->add_where( 'isw_extra.isw_feature1' => { op => '<=', value => '1' } );
     $sql->group( { column => 'isw.isw_distance' } );
 
     $sql_file->set( 'common-distance_coding_combine-2', $sql );
@@ -170,10 +168,8 @@ sub ns { return AlignDB::SQL->new; }
             condition => 'isw.isw_id = isw_extra.isw_id',
         }
     );
-    $sql->add_where(
-        'isw_extra.isw_feature1' => { op => '>=', value => '1' } );
-    $sql->add_where(
-        'isw_extra.isw_feature1' => { op => '<=', value => '1' } );
+    $sql->add_where( 'isw_extra.isw_feature1' => { op => '>=', value => '1' } );
+    $sql->add_where( 'isw_extra.isw_feature1' => { op => '<=', value => '1' } );
 
     $sql_file->set( 'common-distance_coding-2', $sql );
     print $sql->as_sql if $verbose;
@@ -481,10 +477,6 @@ sub ns { return AlignDB::SQL->new; }
         ]
     );
 
-    #$sql->add_where(
-    #    'align_extra.align_feature1' => { op => '>=', value => '1' } );
-    #$sql->add_where(
-    #    'align_extra.align_feature1' => { op => '<=', value => '1' } );
     $sql->group( { column => 'isw.isw_distance' } );
 
     $sql_file->set( 'common-align-0', $sql );
@@ -606,12 +598,10 @@ sub ns { return AlignDB::SQL->new; }
             condition => 'isw.isw_id = isw_extra.isw_id',
         }
     );
-    $sql->add_where( 'isw.isw_distance' => \'>= 0' );
-    $sql->add_where( 'isw.isw_d_indel'  => \'IS NOT NULL' );
-    $sql->add_where(
-        'isw_extra.isw_feature1' => { op => '>=', value => '1' } );
-    $sql->add_where(
-        'isw_extra.isw_feature1' => { op => '<=', value => '1' } );
+    $sql->add_where( 'isw.isw_distance'       => \'>= 0' );
+    $sql->add_where( 'isw.isw_d_indel'        => \'IS NOT NULL' );
+    $sql->add_where( 'isw_extra.isw_feature1' => { op => '>=', value => '1' } );
+    $sql->add_where( 'isw_extra.isw_feature1' => { op => '<=', value => '1' } );
 
     $sql_file->set( 'three-distance_coding-2', $sql );
     print $sql->as_sql if $verbose;
@@ -636,13 +626,13 @@ sub ns { return AlignDB::SQL->new; }
 #GROUP BY isw_distance
 {
     my $sql = ns();
-    $sql->add_select( 'isw_distance',       'distance' );
-    $sql->add_select( 'AVG(isw_pi)',        'AVG_D' );
-    $sql->add_select( 'AVG(isw_d_indel)',   'AVG_Di' );
-    $sql->add_select( 'AVG(isw_d_noindel)', 'AVG_Dni' );
-    $sql->add_select( 'AVG(isw_d_bii)/2',   '`AVG_Dbii/2`' );
-    $sql->add_select( 'AVG(isw_d_bnn)/2',   '`AVG_Dbnn/2`' );
-    $sql->add_select( 'AVG(isw_d_complex)', 'AVG_Dc' );
+    $sql->add_select( 'isw_distance',                          'distance' );
+    $sql->add_select( 'AVG(isw_pi)',                           'AVG_D' );
+    $sql->add_select( 'AVG(isw_d_indel)',                      'AVG_Di' );
+    $sql->add_select( 'AVG(isw_d_noindel)',                    'AVG_Dni' );
+    $sql->add_select( 'AVG(isw_d_bii)/2',                      '`AVG_Dbii/2`' );
+    $sql->add_select( 'AVG(isw_d_bnn)/2',                      '`AVG_Dbnn/2`' );
+    $sql->add_select( 'AVG(isw_d_complex)',                    'AVG_Dc' );
     $sql->add_select( 'AVG(isw_d_indel) / AVG(isw_d_noindel)', '`Di/Dn`' );
     $sql->add_select( 'COUNT(*)',                              'COUNT' );
 
@@ -670,9 +660,8 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_select( 'AVG(isw_d_bii2)/2',   '`AVG_Dbii2/2`' );
     $sql->add_select( 'AVG(isw_d_bnn2)/2',   '`AVG_Dbnn2/2`' );
     $sql->add_select( 'AVG(isw_d_complex2)', 'AVG_Dc2' );
-    $sql->add_select( 'AVG(isw_d_indel2) / AVG(isw_d_noindel2)',
-        '`Di2/Dn2`' );
-    $sql->add_select( 'COUNT(*)', 'COUNT' );
+    $sql->add_select( 'AVG(isw_d_indel2) / AVG(isw_d_noindel2)', '`Di2/Dn2`' );
+    $sql->add_select( 'COUNT(*)',                                'COUNT' );
 
     $sql->add_join(
         isw => {
@@ -698,9 +687,8 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_select( 'AVG(isw_d_bii3)/2',   '`AVG_Dbii3/2`' );
     $sql->add_select( 'AVG(isw_d_bnn3)/2',   '`AVG_Dbnn3/2`' );
     $sql->add_select( 'AVG(isw_d_complex3)', 'AVG_Dc3' );
-    $sql->add_select( 'AVG(isw_d_indel3) / AVG(isw_d_noindel3)',
-        '`Di3/Dn3`' );
-    $sql->add_select( 'COUNT(*)', 'COUNT' );
+    $sql->add_select( 'AVG(isw_d_indel3) / AVG(isw_d_noindel3)', '`Di3/Dn3`' );
+    $sql->add_select( 'COUNT(*)',                                'COUNT' );
 
     $sql->add_join(
         isw => {
