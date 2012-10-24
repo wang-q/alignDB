@@ -56,7 +56,7 @@ my $insert_dG = $Config->{generate}{insert_dG};    # dG
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
 
-my $gzip = 0;                                      # open .axt.gz
+my $gzip;                                          # open .axt.gz
 
 my $man  = 0;
 my $help = 0;
@@ -75,7 +75,7 @@ GetOptions(
     'length=i'    => \$axt_threshold,
     'insert_dG=s' => \$insert_dG,
     'parallel=i'  => \$parallel,
-    'gzip=i'      => \$gzip,
+    'gzip'        => \$gzip,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;

@@ -52,7 +52,7 @@ my $parallel = $Config->{generate}{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{feature}{batch};
 
-my $gzip = 0;     # open .fas.gz
+my $gzip;         # open .fas.gz
 
 my $help = 0;
 my $man  = 0;
@@ -71,7 +71,7 @@ GetOptions(
     'block'      => \$block,
     'parallel=i' => \$parallel,
     'batch=i'    => \$batch_number,
-    'gzip=i'     => \$gzip,
+    'gzip'       => \$gzip,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
