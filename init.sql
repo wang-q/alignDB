@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     3/13/2012 2:37:51 PM                         */
+/* Created on:     10/25/2012 11:40:24 AM                       */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -73,7 +73,7 @@ create table codingsw
    exon_id                        int,
    prev_exon_id                   int,
    window_id                      int,
-   codingsw_type                  char(1),
+   codingsw_type                  char(8),
    codingsw_distance              int,
    primary key (codingsw_id)
 )
@@ -145,7 +145,7 @@ create table exonsw
    window_id                      int,
    exon_id                        int,
    prev_exon_id                   int,
-   exonsw_type                    char(1),
+   exonsw_type                    char(8),
    exonsw_distance                int,
    exonsw_density                 int,
    primary key (exonsw_id)
@@ -177,7 +177,7 @@ create table extreme
    extreme_id                     int                            not null AUTO_INCREMENT,
    prev_extreme_id                int                            not null,
    window_id                      int,
-   extreme_type                   char(1),
+   extreme_type                   char(8),
    extreme_left_amplitude         double,
    extreme_right_amplitude        double,
    extreme_left_wave_length       double,
@@ -236,7 +236,7 @@ create table genesw
    genesw_id                      int                            not null AUTO_INCREMENT,
    window_id                      int,
    gene_id                        int,
-   genesw_type                    char(1),
+   genesw_type                    char(8),
    genesw_distance                int,
    primary key (genesw_id)
 )
@@ -267,7 +267,7 @@ create table gsw
    extreme_id                     int,
    prev_extreme_id                int,
    window_id                      int,
-   gsw_type                       char(1),
+   gsw_type                       char(8),
    gsw_distance                   int,
    gsw_density                    int,
    gsw_amplitude                  int,
@@ -304,13 +304,13 @@ create table indel
    indel_end                      int,
    indel_length                   int,
    indel_seq                      longtext,
-   indel_insert                   char(1),
+   indel_insert                   char(8),
    left_extand                    int,
    right_extand                   int,
    indel_gc                       double,
    indel_dG                       double,
-   indel_occured                  char(1),
-   indel_type                     char(1),
+   indel_occured                  char(8),
+   indel_type                     char(8),
    primary key (indel_id, prev_indel_id)
 )
 ENGINE = MyISAM;
@@ -358,7 +358,7 @@ create table isw
    isw_start                      int,
    isw_end                        int,
    isw_length                     int,
-   isw_type                       char(1),
+   isw_type                       char(8),
    isw_distance                   int,
    isw_density                    int,
    isw_pi                         double,
@@ -445,7 +445,7 @@ create table ofgsw
    ofgsw_id                       int                            not null AUTO_INCREMENT,
    ofg_id                         int,
    window_id                      int,
-   ofgsw_type                     char(1),
+   ofgsw_type                     char(8),
    ofgsw_distance                 int,
    primary key (ofgsw_id)
 )
@@ -516,7 +516,7 @@ create table segment
 (
    segment_id                     int                            not null AUTO_INCREMENT,
    window_id                      int,
-   segment_type                   char(1),
+   segment_type                   char(8),
    segment_gc_mean                double,
    segment_gc_std                 double,
    segment_gc_cv                  double,
@@ -580,7 +580,7 @@ create table snp
    target_base                    char(1),
    query_base                     char(1),
    ref_base                       char(1),
-   snp_occured                    char(1),
+   snp_occured                    char(8),
    snp_coding                     double,
    snp_repeats                    double,
    snp_cpg                        double,
@@ -633,7 +633,7 @@ create table ssw
    ssw_id                         int                            not null AUTO_INCREMENT,
    snp_id                         int,
    window_id                      int,
-   ssw_type                       char(1),
+   ssw_type                       char(8),
    ssw_distance                   int,
    ssw_d_snp                      double,
    ssw_d_nosnp                    double,
