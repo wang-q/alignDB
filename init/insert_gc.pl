@@ -56,7 +56,7 @@ my $parallel = $Config->{generate}{parallel};
 my $batch_number = $Config->{feature}{batch};
 
 # use alternative segment levels 200 .. 900, 1000 .. 5000
-my $alt_level;
+my $alt_level = 0;
 
 my $multi;
 
@@ -73,10 +73,10 @@ GetOptions(
     'password=s'       => \$password,
     'insert_gc=s'      => \$insert_gc,
     'insert_segment=s' => \$insert_segment,
-    'alt_level=i'      => \$alt_level,
+    'alt_level'        => \$alt_level,
     'parallel=i'       => \$parallel,
     'batch=i'          => \$batch_number,
-    'multi'             => \$multi,
+    'multi'            => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;

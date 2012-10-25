@@ -53,7 +53,7 @@ GetOptions(
     'output=s'    => \$outfile,
     'run=s'       => \$run,
     'threshold=i' => \$sum_threshold,
-    'alt_level=i' => \$alt_level,
+    'alt_level'   => \$alt_level,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -802,7 +802,7 @@ my $segment_gc_indel = sub {
 
     my @segment_levels = ( 'A', 0 .. 3 );
     if ($alt_level) {
-        @segment_levels = ( 1 .. 9 );
+        @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
 
     my $write_sheet = sub {
@@ -916,7 +916,7 @@ my $segment_std_indel = sub {
 
     my @segment_levels = ( 'A', 0 .. 3 );
     if ($alt_level) {
-        @segment_levels = ( 1 .. 9 );
+        @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
 
     my $write_sheet = sub {
@@ -1030,7 +1030,7 @@ my $segment_cv_indel = sub {
 
     my @segment_levels = ( 'A', 0 .. 3 );
     if ($alt_level) {
-        @segment_levels = ( 1 .. 9 );
+        @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
 
     my $write_sheet = sub {
@@ -1145,7 +1145,7 @@ my $segment_mdcw_indel = sub {
 
     my @segment_levels = ( 'A', 0 .. 3 );
     if ($alt_level) {
-        @segment_levels = ( 1 .. 9 );
+        @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
 
     my $write_sheet = sub {
@@ -1259,7 +1259,7 @@ my $segment_coding_indel = sub {
 
     my @segment_levels = ( 'A', 0 .. 3 );
     if ($alt_level) {
-        @segment_levels = ( 1 .. 9 );
+        @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
 
     my $write_sheet = sub {

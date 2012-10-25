@@ -42,7 +42,7 @@ GetOptions(
     'time_stamp=s'      => \$time_stamp,
     'add_index_sheet=s' => \$add_index_sheet,
     'replace=s'         => \%replace,
-	'add_trend=s' => \$add_trend,
+    'add_trend=s'       => \$add_trend,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -295,7 +295,7 @@ $excel_obj->jc_correction if $jc_correction;
     #----------------------------#
     # worksheet -- segment_gc_indel_x
     #----------------------------#
-    foreach ( 'A', 0 .. 9 ) {
+    foreach ( 'A', 0 .. 9, 10, 20, 30, 40, 50 ) {
         my $sheet_name = 'segment_gc_indel_' . $_;
         my %option     = (
             chart_serial => 1,
@@ -341,7 +341,7 @@ $excel_obj->jc_correction if $jc_correction;
     #----------------------------#
     # worksheet -- segment_std_indel_x
     #----------------------------#
-    foreach ( 'A', 0 .. 9 ) {
+    foreach ( 'A', 0 .. 9, 10, 20, 30, 40, 50 ) {
         my $sheet_name = 'segment_std_indel_' . $_;
         my %option     = (
             chart_serial => 1,
@@ -387,7 +387,7 @@ $excel_obj->jc_correction if $jc_correction;
     #----------------------------#
     # worksheet -- segment_cv_indel_x
     #----------------------------#
-    foreach ( 'A', 0 .. 9 ) {
+    foreach ( 'A', 0 .. 9, 10, 20, 30, 40, 50 ) {
         my $sheet_name = 'segment_cv_indel_' . $_;
         my %option     = (
             chart_serial => 1,
@@ -440,7 +440,7 @@ $excel_obj->jc_correction if $jc_correction;
     #----------------------------#
     # worksheet -- segment_mdcw_indel_x
     #----------------------------#
-    foreach ( 'A', 0 .. 9 ) {
+    foreach ( 'A', 0 .. 9, 10, 20, 30, 40, 50 ) {
         my $sheet_name = 'segment_mdcw_indel_' . $_;
         my %option     = (
             chart_serial => 1,
@@ -480,13 +480,13 @@ $excel_obj->jc_correction if $jc_correction;
         $option{y_column} = 6;
         $option{y_title}  = "Coding proportion";
         $option{Top} += $option{Height} + 14.25;
-        $excel_obj->draw_xy( $sheet_name, \%option )
+        $excel_obj->draw_xy( $sheet_name, \%option );
     }
 
     #----------------------------#
     # worksheet -- segment_coding_indel_x
     #----------------------------#
-    foreach ( 'A', 0 .. 9 ) {
+    foreach ( 'A', 0 .. 9, 10, 20, 30, 40, 50 ) {
         my $sheet_name = 'segment_coding_indel_' . $_;
         my %option     = (
             chart_serial => 1,
