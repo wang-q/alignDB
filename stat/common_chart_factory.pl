@@ -117,7 +117,7 @@ $excel_obj->jc_correction if $jc_correction;
         # chart 3
         $option{chart_serial}++;
         $option{y_column} = 6;
-        $option{y_title}  = "CV";
+        $option{y_title}  = "Window CV";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -126,7 +126,7 @@ $excel_obj->jc_correction if $jc_correction;
         $option{y_column} = 4;
         $option{y_title}  = "GC proportion";
         $option{y2_column} = 6;
-        $option{y2_title}  = "CV";
+        $option{y2_title}  = "Window CV";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_2y( $sheet_name, \%option );
     }

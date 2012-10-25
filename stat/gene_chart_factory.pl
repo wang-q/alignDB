@@ -137,7 +137,7 @@ $excel_obj->jc_correction if $jc_correction;
         # chart 4
         $option{chart_serial}++;
         $option{y_column} = 5;
-        $option{y_title}  = "CV";
+        $option{y_title}  = "Window CV";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
 

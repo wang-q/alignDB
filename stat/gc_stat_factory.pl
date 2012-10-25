@@ -36,7 +36,7 @@ my $run           = $Config->{stat}{run};
 my $sum_threshold = $Config->{stat}{sum_threshold};
 my $outfile;
 
-# use 100 .. 900 segment levels
+# use 200 .. 900, 1k, 2k, 3k, 4k, 5k segment levels
 my $alt_level;
 
 my $man  = 0;

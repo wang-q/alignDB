@@ -146,7 +146,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         # chart 4
         $option{chart_serial}++;
         $option{y_column} = 8;
-        $option{y_title}  = "CV";
+        $option{y_title}  = "Window CV";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -191,7 +191,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             # chart 9
             $option{chart_serial}++;
             $option{y_column} = 8;
-            $option{y_title}  = "CV";
+            $option{y_title}  = "Window CV";
             $option{Top} += $option{Height} + 12.75;
             $excel_obj->draw_y( $sheet_name, \%option );
 
