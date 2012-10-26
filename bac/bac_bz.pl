@@ -302,26 +302,28 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
 }
 
 {
-    my $cmd_file = File::Spec->catfile( $working_dir, "cmd.bat" );
+    my $cmd_file = File::Spec->catfile( $working_dir, "cmd.sh" );
     open my $fh, '>', $cmd_file;
 
-    print {$fh} "REM bac_bz.pl\n";
-    print {$fh} "REM perl ", $stopwatch->cmd_line, "\n\n";
+    print {$fh} "#!/bin/bash\n";
 
-    print {$fh} "cd /d $working_dir\n\n";
+    print {$fh} "# bac_bz.pl\n";
+    print {$fh} "# perl ", $stopwatch->cmd_line, "\n\n";
 
-    print {$fh} "REM seq_pair_batch.pl\n";
+    print {$fh} "cd $working_dir\n\n";
+
+    print {$fh} "# seq_pair_batch.pl\n";
     print {$fh} "perl $FindBin::Bin/../extra/seq_pair_batch.pl"
-        . " -d 1 -p 4"
+        . " -d 1 -p 8"
         . " -f $seq_pair_file"
         . " -at 1000"
-        . " -st 100000" . "\n\n";
+        . " -st 0" . "\n\n";
 
-    print {$fh} "REM basicstat\n";
-    print {$fh} "perl $FindBin::Bin/../fig/collect_common_basic.pl"
+    print {$fh} "# basicstat\n";
+    print {$fh} "# perl $FindBin::Bin/../fig/collect_common_basic.pl"
         . " $working_dir\n\n";
 
-    print {$fh} "REM join_dbs.pl\n";
+    print {$fh} "# join_dbs.pl\n";
     print {$fh} "perl $FindBin::Bin/../extra/join_dbs.pl"
         . " --no_insert 1 --trimmed_fasta 1"
         . " --length 1000"
@@ -333,7 +335,7 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
         . " --dbs "
         . ( join ",", map { $target_id . "vs" . $_ } @query_ids ) . "\n\n";
 
-    print {$fh} "REM drop temp databases\n";
+    print {$fh} "# drop temp databases\n";
     my $sql_cmd = "mysql -h$server -P$port -u$username -p$password ";
     for (@query_ids) {
         my $tempdb = $target_id . "vs" . $_;
@@ -341,13 +343,14 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
     }
     print {$fh} "\n";
 
-    print {$fh} "REM multi-way batch\n";
+    print {$fh} "# multi-way batch\n";
     print {$fh} "perl $FindBin::Bin/../extra/multi_way_batch.pl"
         . " -d $name_str"
         . " -f $working_dir/$name_str"
-        . " -gff_file "
+        . " --gff_file "
         . join( ",", @new_gff_files )
-        . " -lt 1000 -st 100000 --parallel=4 --run 1-3,10,21,30-32,40,41,43\n\n";
+        . " -lt 1000 -st 0 --parallel 8 --batch 5"
+        . " --run 1-3,10,21,30-32,40,41,43\n\n";
 
     print {$fh} "cd ..\n\n";
 
