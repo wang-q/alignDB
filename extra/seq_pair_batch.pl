@@ -12,9 +12,10 @@ use File::Slurp;
 use File::Spec;
 use Template;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
+use AlignDB::Run;
 use AlignDB::Stopwatch;
+
+use FindBin;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -31,6 +32,9 @@ my $stopwatch = AlignDB::Stopwatch->new(
 
 # run in parallel mode
 my $parallel = 1;
+
+# number of alignments process in one child process
+my $batch_number = 5;
 
 my $axt_threshold = $Config->{generate}{axt_threshold};
 my $sum_threshold = $Config->{stat}{sum_threshold};
@@ -49,6 +53,7 @@ GetOptions(
     'man'                => \$man,
     'b|bz=s'             => \$bz,
     'p|parallel=i'       => \$parallel,
+    'batch=i'            => \$batch_number,
     'at|axt_threshold=i' => \$axt_threshold,
     'st|sum_threshold=i' => \$sum_threshold,
     'f|pair_file=s'      => \$pair_file,
@@ -63,39 +68,17 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 my ( $volume, $directories, undef ) = File::Spec->splitpath($pair_file);
 my $working_dir = File::Spec->catpath( $volume, $directories );
-my $report = File::Spec->catfile( $working_dir, "pair_db.txt" );
-open my $fh, '>', $report;
-
-my $tt = Template->new;
-
-my $dispatch = {
-    0 => "perl $bz"
-        . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
-        . " -s set01 --parallel [% parallel %] -pb lastz --lastz",
-    1 => "perl $FindBin::Bin/../init/init_alignDB.pl" . " --db [% db %] ",
-    2 => "perl $FindBin::Bin/../init/gen_alignDB.pl"
-        . " --db [% db %]"
-        . " -a [% ldir %] [% tq %]"
-        . " --length [% at %]"
-        . " --parallel [% parallel %]",
-    21 => "perl $FindBin::Bin/../init/update_sw_cv.pl"
-        . " --db [% db %]"
-        . " --parallel [% parallel %]",
-    40 => "perl $FindBin::Bin/../stat/common_stat_factory.pl"
-        . " --db [% db %]"
-        . " -o [% common_file %]"
-        . " -threshold [% st %]",
-};
-
-#----------------------------#
-# Run
-#----------------------------#
 
 my @lines = read_file($pair_file);
-for (@lines) {
-    chomp;
-    my ( $tfile, $qfile ) = split /,/, $_;
-    $tfile or next;
+
+#----------------------------#
+# worker
+#----------------------------#
+my $worker = sub {
+    my $line = shift;
+    chomp $line;
+    my ( $tfile, $qfile ) = split /,/, $line;
+    $tfile or return;
 
     my $t_base = basename($tfile);
     $t_base =~ s/\..+?$//;
@@ -103,7 +86,6 @@ for (@lines) {
     $q_base =~ s/\..+?$//;
     my $db = "${t_base}vs${q_base}";
     my $ldir = File::Spec->catdir( $working_dir, $db );
-    print {$fh} "$db\n";
 
     my $tq;
     if ($dir_as_taxon) {
@@ -111,6 +93,28 @@ for (@lines) {
     }
 
     my $common_file = File::Spec->catfile( $working_dir, "$db.common.xlsx" );
+
+    my $tt = Template->new;
+
+    my $dispatch = {
+        0 => "perl $bz"
+            . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
+            . " -s set01 --parallel [% parallel %] -pb lastz --lastz",
+        1 => "perl $FindBin::Bin/../init/init_alignDB.pl" . " --db [% db %] ",
+        2 => "perl $FindBin::Bin/../init/gen_alignDB.pl"
+            . " --db [% db %]"
+            . " -a [% ldir %] [% tq %]"
+            . " --length   [% at %]"
+            . " --parallel [% parallel %]",
+        21 => "perl $FindBin::Bin/../init/update_sw_cv.pl"
+            . " --db [% db %]"
+            . " --parallel [% parallel %]"
+            . " --batch    [% batch %]",
+        40 => "perl $FindBin::Bin/../stat/common_stat_factory.pl"
+            . " --db [% db %]"
+            . " -o [% common_file %]"
+            . " --threshold [% st %]",
+    };
 
     # use the dispatch template to generate $cmd
     for my $step ( 0 .. 2, 21, 40 ) {
@@ -124,6 +128,7 @@ for (@lines) {
                 db          => $db,
                 tq          => $tq,
                 parallel    => $parallel,
+                batch       => $batch_number,
                 common_file => $common_file,
                 at          => $axt_threshold,
                 st          => $sum_threshold,
@@ -136,11 +141,20 @@ for (@lines) {
         system $cmd;
         $stopwatch->block_message("Finish Step $step");
     }
-}
-close $fh;
-print "\n";
+    print "\n";
+};
 
-$stopwatch->end_message;
+#----------------------------------------------------------#
+# start
+#----------------------------------------------------------#
+my $run = AlignDB::Run->new(
+    parallel => $parallel,
+    jobs     => \@lines,
+    code     => $worker,
+);
+$run->run;
+
+$stopwatch->end_message("All files have been processed.");
 exit;
 
 __END__
