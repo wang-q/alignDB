@@ -12,8 +12,5 @@ forfiles /m *.gene.xlsx -c "cmd /c perl d:/wq/Scripts/alignDB/stat/gene_chart_fa
 echo "multi"
 forfiles /m *.multi.xlsx -c "cmd /c perl d:/wq/Scripts/alignDB/stat/multi_chart_factory.pl -i @path"
 
-echo "mgc"
-forfiles /m *.mgc.xlsx -c "cmd /c perl d:/wq/Scripts/alignDB/stat/mgc_chart_factory.pl -i @path"
-
 echo "dnds"
 forfiles /m *.dnds.xlsx -c "cmd /c perl d:/wq/Scripts/alignDB/stat/dnds_chart_factory.pl -i @path"
