@@ -319,10 +319,6 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
         . " -at 1000"
         . " -st 0" . "\n\n";
 
-    print {$fh} "# basicstat\n";
-    print {$fh} "# perl $FindBin::Bin/../fig/collect_common_basic.pl"
-        . " $working_dir\n\n";
-
     print {$fh} "# join_dbs.pl\n";
     print {$fh} "perl $FindBin::Bin/../extra/join_dbs.pl"
         . " --no_insert 1 --trimmed_fasta 1"
@@ -351,6 +347,24 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
         . join( ",", @new_gff_files )
         . " -lt 1000 -st 0 --parallel 8 --batch 5"
         . " --run 1-3,10,21,30-32,40,41,43\n\n";
+
+    print {$fh} "cd ..\n\n";
+
+    close $fh;
+}
+
+{
+    my $cmd_file = File::Spec->catfile( $working_dir, "cmd.bat" );
+    open my $fh, '>', $cmd_file;
+
+    print {$fh} "REM bac_bz.pl\n";
+    print {$fh} "REM perl ", $stopwatch->cmd_line, "\n\n";
+
+    print {$fh} "cd /d $working_dir\n\n";
+
+    print {$fh} "REM basicstat\n";
+    print {$fh} "perl $FindBin::Bin/../fig/collect_common_basic.pl"
+        . " $working_dir\n\n";
 
     print {$fh} "cd ..\n\n";
 
