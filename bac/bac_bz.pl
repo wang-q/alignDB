@@ -59,6 +59,9 @@ my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 my $db       = $Config->{bac}{db};
 
+# run in parallel mode
+my $parallel = $Config->{generate}{parallel};
+
 my $man  = 0;
 my $help = 0;
 
@@ -78,6 +81,7 @@ GetOptions(
     'r|ref_id=i'      => \$ref_id,
     'e|exclude=s'     => \$exclude_ids,
     'n|name_str=s'    => \$name_str,
+    'parallel=i'      => \$parallel,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -314,7 +318,7 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
 
     print {$fh} "# seq_pair_batch.pl\n";
     print {$fh} "perl $FindBin::Bin/../extra/seq_pair_batch.pl"
-        . " -d 1 -p 8"
+        . " -d 1 --parallel $parallel"
         . " -f $seq_pair_file"
         . " -at 1000"
         . " -st 0" . "\n\n";
@@ -345,7 +349,7 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
         . " -f $working_dir/$name_str"
         . " --gff_file "
         . join( ",", @new_gff_files )
-        . " -lt 1000 -st 0 --parallel 8 --batch 5"
+        . " -lt 1000 -st 0 --parallel $parallel --batch 5"
         . " --run 1-3,10,21,30-32,40,41,43\n\n";
 
     print {$fh} "cd ..\n\n";
@@ -377,4 +381,4 @@ exit;
 __END__
 
 perl bac_bz.pl --base_dir d:\bacteria\bacteria_101015 --parent 562
-
+perl d:/wq/Scripts/tool/replace.pl -d d:/wq/Scripts/alignDB/bac -p "cmd.bat" -f /home/wangq -r d:/wq

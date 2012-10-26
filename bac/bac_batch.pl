@@ -8,6 +8,7 @@ use Config::Tiny;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use File::Find::Rule;
+use File::Spec;
 
 use FindBin;
 
@@ -56,11 +57,12 @@ else {
 my @files = sort File::Find::Rule->file->name($str)->in($working_dir);
 printf "\n----Total $str Files: %4s----\n\n", scalar @files;
 
-open my $fh, '>>', "$working_dir/bac_batch_report.txt";
+open my $fh, '>>', File::Spec->catfile( $working_dir, "bac_batch_report.txt" );
 for my $file (@files) {
     $stopwatch->block_message($file);
+    $file = File::Spec->rel2abs($file);
     if ( $^O eq 'MSWin32' ) {
-        system $file;
+        system "cmd /c $file";
     }
     else {
         system "sh $file";
