@@ -50,7 +50,7 @@ my $target_id;    # taxon id of target
 my $parallel = $Config->{generate}{parallel};
 
 # number of alignments process in one child process
-my $batch_number = $Config->{feature}{batch};
+my $batch_number = $Config->{generate}{batch};
 
 my $gzip;         # open .fas.gz
 

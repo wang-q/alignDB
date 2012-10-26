@@ -38,10 +38,10 @@ my $db         = $Config->{database}->{db};
 my $ensembl_db = $Config->{database}->{ensembl};
 
 # run in parallel mode
-my $parallel = $Config->{feature}->{parallel};
+my $parallel = $Config->{generate}{parallel};
 
 # number of alignments process in one child process
-my $batch_number = $Config->{feature}->{batch};
+my $batch_number = $Config->{generate}{batch};
 
 my $man  = 0;
 my $help = 0;

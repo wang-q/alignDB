@@ -49,6 +49,9 @@ my $run = "all";
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
 
+# number of alignments process in one child process
+my $batch_number = $Config->{generate}{batch};
+
 # stat parameter
 my $sum_threshold = $Config->{stat}{sum_threshold};
 
@@ -69,6 +72,7 @@ GetOptions(
     'id=i'                  => \$target_id,
     'block'                 => \$block,
     'parallel=i'            => \$parallel,
+    'batch=i'               => \$batch_number,
     'lt|length_thredhold=i' => \$length_thredhold,
     'st|sum_threshold=i'    => \$sum_threshold,
     'run=s'                 => \$run,
@@ -121,6 +125,7 @@ my $dispatch = {
         . " --dir=$dir_fa"
         . " --length=$length_thredhold"
         . " --parallel=$parallel"
+        . " --batch=$batch_number"
         . ( $block     ? " --block"         : "" )
         . ( $target_id ? " --id $target_id" : "" ),
     2  => undef,
@@ -132,6 +137,7 @@ my $dispatch = {
         . " --password=$password"
         . " -d=$db_name"
         . " --parallel=$parallel"
+        . " --batch=$batch_number"
         . " --multi",
     20 => "perl $FindBin::Bin/../gene/insert_gene.pl"
         . " -s=$server"
@@ -149,12 +155,15 @@ my $dispatch = {
         . " --password=$password"
         . " -d=$db_name"
         . " --parallel=$parallel"
+        . " --batch=$batch_number"
         . " --multi",
     30 => "perl $FindBin::Bin/../multi/update_multi.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
+        . " --parallel=$parallel"
+        . " --batch=$batch_number"
         . " -d=$db_name"
         . " -e=$ensembl_db",
     '30gff' => "perl $FindBin::Bin/../multi/update_multi_gff.pl"

@@ -71,7 +71,7 @@ my $tt = Template->new;
 my $dispatch = {
     0 => "perl $bz"
         . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
-        . " -s set02 --parallel [% parallel %]",
+        . " -s set01 --parallel [% parallel %] -pb lastz --lastz",
     1 => "perl $FindBin::Bin/../init/init_alignDB.pl" . " --db [% db %] ",
     2 => "perl $FindBin::Bin/../init/gen_alignDB.pl"
         . " --db [% db %]"
