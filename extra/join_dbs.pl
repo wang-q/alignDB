@@ -467,13 +467,6 @@ SEG: for (@segments) {
         }
 
         #----------------------------#
-        # trim header and footer indels
-        #----------------------------#
-        {
-            trim_hf( \%info_of, \@all_names );
-        }
-
-        #----------------------------#
         # trim outgroup only sequence
         #----------------------------#
         # if intersect is superset of union
@@ -482,6 +475,13 @@ SEG: for (@segments) {
         #   query  G----C
         {
             trim_outgroup( \%info_of, \@all_names );
+        }
+
+        #----------------------------#
+        # trim header and footer indels
+        #----------------------------#
+        {
+            trim_hf( \%info_of, \@all_names );
         }
 
         #----------------------------#
@@ -802,7 +802,7 @@ sub trim_hf {
             my $first_base = substr( $info_of{$_}->{seq}, 0, 1 );
             push @first_column, $first_base;
         }
-        if ( any { $_ eq '-' } @first_column ) {
+        if ( all { $_ eq '-' } @first_column ) {
             for (@$all_names) {
                 substr( $info_of{$_}->{seq}, 0, 1, '' );
             }
@@ -820,7 +820,7 @@ sub trim_hf {
             my $last_base = substr( $info_of{$_}->{seq}, -1, 1 );
             push @last_column, $last_base;
         }
-        if ( any { $_ eq '-' } @last_column ) {
+        if ( all { $_ eq '-' } @last_column ) {
             for (@$all_names) {
                 substr( $info_of{$_}->{seq}, -1, 1, '' );
             }
