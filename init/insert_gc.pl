@@ -267,4 +267,9 @@ perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl -d HumanvsCGOR \
 perl /home/wangq/Scripts/alignDB/init/insert_gc.pl -d=HumanvsCGOR --parallel 12 --multi
 
 perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d HumanvsCGOR -g HumanvsCGOR_alt_level
-perl /home/wangq/Scripts/alignDB/init/insert_gc.pl -d=HumanvsCGOR_alt_level --parallel 12 --multi --alt_level
+perl /home/wangq/Scripts/alignDB/init/insert_gc.pl -d HumanvsCGOR_alt_level --parallel 12 --multi --alt_level
+perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl -d HumanvsCGOR_alt_level \
+    -e human_65 --block --id 9606 -lt 5000 -st 0 --parallel 12 \
+    -f /home/wangq/data/alignment/primates/HumanvsCGOR_mft \
+    --run 21,30,40
+perl /home/wangq/Scripts/alignDB/stat/gc_stat_factory.pl -d HumanvsCGOR_alt_level --alt_level -t 0

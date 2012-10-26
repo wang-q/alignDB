@@ -19,9 +19,9 @@ my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # stat parameter
-my $jc_correction   = $Config->{stat}->{jc_correction};
-my $time_stamp      = $Config->{stat}->{time_stamp};
-my $add_index_sheet = $Config->{stat}->{add_index_sheet};
+my $jc_correction   = $Config->{stat}{jc_correction};
+my $time_stamp      = $Config->{stat}{time_stamp};
+my $add_index_sheet = $Config->{stat}{add_index_sheet};
 
 my $add_trend = 0;
 
@@ -111,7 +111,7 @@ $excel_obj->jc_correction if $jc_correction;
     # chart 3
     $option{chart_serial}++;
     $option{y_column} = 6;
-    $option{y_title}  = "GC proportion CV";
+    $option{y_title}  = "Window CV";
     $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -136,7 +136,7 @@ $excel_obj->jc_correction if $jc_correction;
     # chart 3
     $option{chart_serial}++;
     $option{y_column} = 6;
-    $option{y_title}  = "GC proportion CV";
+    $option{y_title}  = "Window CV";
     $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -165,7 +165,7 @@ $excel_obj->jc_correction if $jc_correction;
     # chart 3
     $option{chart_serial}++;
     $option{y_column} = 6;
-    $option{y_title}  = "GC proportion CV";
+    $option{y_title}  = "Window CV";
     $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -194,7 +194,7 @@ $excel_obj->jc_correction if $jc_correction;
     # chart 3
     $option{chart_serial}++;
     $option{y_column} = 6;
-    $option{y_title}  = "GC proportion CV";
+    $option{y_title}  = "Window CV";
     $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
 }
@@ -325,7 +325,7 @@ $excel_obj->jc_correction if $jc_correction;
         # chart 3
         $option{chart_serial}++;
         $option{y_column} = 5;
-        $option{y_title}  = "GC proportion CV";
+        $option{y_title}  = "Segment CV";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
         $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
@@ -520,7 +520,7 @@ $excel_obj->jc_correction if $jc_correction;
         # chart 4
         $option{chart_serial}++;
         $option{y_column} = 6;
-        $option{y_title}  = "GC proportion CV";
+        $option{y_title}  = "Segment CV";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_xy( $sheet_name, \%option );
     }
@@ -556,7 +556,7 @@ $excel_obj->jc_correction if $jc_correction;
             # chart 3
             $option{chart_serial}++;
             $option{y_column} = 5;
-            $option{y_title}  = "GC proportion CV";
+            $option{y_title}  = "Segment CV";
             $option{Top} += $option{Height} + 14.25;
             $excel_obj->draw_xy( $sheet_name, \%option );
 
