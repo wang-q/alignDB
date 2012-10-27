@@ -53,29 +53,31 @@ my $parallel = $Config->{generate}{parallel};
 my $batch_number = $Config->{generate}{batch};
 
 # stat parameter
-my $sum_threshold = $Config->{stat}{sum_threshold};
+my $sum_threshold     = $Config->{stat}{sum_threshold};
+my $combine_threshold = $Config->{stat}{combine_threshold};
 
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'                => \$help,
-    'man'                   => \$man,
-    'server=s'              => \$server,
-    'port=i'                => \$port,
-    'db=s'                  => \$db_name,
-    'username=s'            => \$username,
-    'password=s'            => \$password,
-    'f|fasta_dir=s'         => \$dir_fa,
-    'e|ensembl=s'           => \$ensembl_db,
-    'gff_file=s'            => \$gff_file,
-    'id=i'                  => \$target_id,
-    'block'                 => \$block,
-    'parallel=i'            => \$parallel,
-    'batch=i'               => \$batch_number,
-    'lt|length_thredhold=i' => \$length_thredhold,
-    'st|sum_threshold=i'    => \$sum_threshold,
-    'run=s'                 => \$run,
+    'help|?'                 => \$help,
+    'man'                    => \$man,
+    's|server=s'             => \$server,
+    'P|port=i'               => \$port,
+    'd|db=s'                 => \$db_name,
+    'u|username=s'           => \$username,
+    'p|password=s'           => \$password,
+    'f|fasta_dir=s'          => \$dir_fa,
+    'e|ensembl=s'            => \$ensembl_db,
+    'gff_file=s'             => \$gff_file,
+    'id=i'                   => \$target_id,
+    'block'                  => \$block,
+    'parallel=i'             => \$parallel,
+    'batch=i'                => \$batch_number,
+    'lt|length_thredhold=i'  => \$length_thredhold,
+    'st|sum_threshold=i'     => \$sum_threshold,
+    'ct|combine_threshold=i' => \$combine_threshold,
+    'r|run=s'                => \$run,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -190,7 +192,8 @@ my $dispatch = {
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
-        . " -o=$FindBin::Bin/../stat/$db_name.multi.xlsx",
+        . " -o=$FindBin::Bin/../stat/$db_name.multi.xlsx"
+        . " -ct=$combine_threshold",
     41 => "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"
@@ -198,7 +201,8 @@ my $dispatch = {
         . " --password=$password"
         . " -d=$db_name"
         . " -o=$FindBin::Bin/../stat/$db_name.gc.xlsx"
-        . " -t=$sum_threshold",
+        . " -st=$sum_threshold"
+        . " -ct=$combine_threshold",
     42 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"
