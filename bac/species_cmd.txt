@@ -212,7 +212,7 @@ perl bac_bz.pl -p 1280 -t 93062 -r 273036 -e 282458
 perl bac_bz.pl -p 1311 -t 208435 -r 211110
 
 # *** reject S. gallolyticus
-perl bac_bz.pl -p 1311,637909,990317 -t 208435 -n Streptococcus_agalactiae
+# perl bac_bz.pl -p 1311,637909,990317 -t 208435 -n Streptococcus_agalactiae
 
 #=========
 # 1336 Streptococcus equi
@@ -220,7 +220,7 @@ perl bac_bz.pl -p 1336 -t 552526 -r 553482
 
 # *** reject
 # 486410 Streptococcus dysgalactiae subsp. equisimilis GGS_124
-perl bac_bz.pl -p 1336,486410 -t 552526 -r 486410 -n Streptococcus_equi
+# perl bac_bz.pl -p 1336,486410 -t 552526 -r 486410 -n Streptococcus_equi
 
 #=========
 # Streptococcus pneumoniae
@@ -250,7 +250,7 @@ perl bac_bz.pl -p 1307 -t 391295 -r 1007064 -e 568813
 perl bac_bz.pl -p 1308 -t 264199 -r 322159
 
 # *** reject S. gallolyticus and S. mutans
-perl bac_bz.pl -p 1308,637909,990317,511691,210007 -t 264199 -n Streptococcus_thermophilus
+# perl bac_bz.pl -p 1308,637909,990317,511691,210007 -t 264199 -n Streptococcus_thermophilus
 
 #=========
 # genus 662 Vibrio
