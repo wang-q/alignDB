@@ -44,8 +44,8 @@ my $dispatch = LoadFile($file_yaml);
 my $charts   = $dispatch->{charts};
 my $texts    = $dispatch->{texts};
 my $ranges   = $dispatch->{ranges};
-my $x_unit   = $dispatch->{unit}{x} || 60;
-my $y_unit   = $dispatch->{unit}{y} || 45;
+my $x_unit   = $dispatch->{unit}{x} || 50;
+my $y_unit   = $dispatch->{unit}{y} || 37.5;
 
 # Excel files should be located in the same dir as the yaml file.
 # cdr file will be named after yaml file.
