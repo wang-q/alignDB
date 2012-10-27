@@ -22,31 +22,29 @@ my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{bac}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{bac}{db};
 
 # stat parameter
-my $run           = $Config->{stat}->{run};
-my $sum_threshold = $Config->{stat}->{sum_threshold};
-my $outfile       = "";
+my $run     = $Config->{stat}{run};
+my $outfile = "";
 
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'      => \$help,
-    'man'         => \$man,
-    'server=s'    => \$server,
-    'port=s'      => \$port,
-    'db=s'        => \$db,
-    'username=s'  => \$username,
-    'password=s'  => \$password,
-    'output=s'    => \$outfile,
-    'run=s'       => \$run,
-    'threshold=i' => \$sum_threshold,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=s'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'o|output=s'   => \$outfile,
+    'r|run=s'      => \$run,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -111,9 +109,9 @@ my $taxon_basic = sub {
                 = qw{Type_name AVG_GC STD_GC AVG_CV STD_CV AVG_STD STD_STD AVG_MDCW STD_MDCW COUNT};
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                header     => \@headers,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
             );
             ( $sheet, $sheet_row )
                 = $write_obj->write_header_direct( $sheet_name, \%option );
@@ -300,8 +298,7 @@ my $strain_stat = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $level->[1] ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         };
 
         print "Sheet \"$sheet_name\" has been generated.\n";

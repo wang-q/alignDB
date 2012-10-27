@@ -29,8 +29,9 @@ my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
 # stat parameter
-my $run     = $Config->{stat}{run};
-my $outfile = "";
+my $run               = $Config->{stat}{run};
+my $combine_threshold = $Config->{stat}{combine_threshold};
+my $outfile           = "";
 
 my $all_freq;
 
@@ -38,16 +39,17 @@ my $help = 0;
 my $man  = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=s'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'output=s'   => \$outfile,
-    'freq=s'     => \$all_freq,
-    'run=s'      => \$run,
+    'help|?'                 => \$help,
+    'man'                    => \$man,
+    's|server=s'             => \$server,
+    'P|port=s'               => \$port,
+    'd|db=s'                 => \$db,
+    'u|username=s'           => \$username,
+    'p|password=s'           => \$password,
+    'o|output=s'             => \$outfile,
+    'f|freq=s'               => \$all_freq,
+    'r|run=s'                => \$run,
+    'ct|combine_threshold=i' => \$combine_threshold,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -93,6 +95,29 @@ my $write_obj = AlignDB::WriteExcel->new(
 
 my $lib = "$FindBin::Bin/sql.lib";
 my $sql_file = AlignDB::SQL::Library->new( lib => $lib );
+
+# auto detect combine threshold
+if ( $combine_threshold == 0 ) {
+    my $dbh = $write_obj->dbh;
+
+    my $sql_query = q{
+        SELECT SUM(align_length)
+        FROM align
+    };
+    my $sth = $dbh->prepare($sql_query);
+    $sth->execute;
+    my ($total_length) = $sth->fetchrow_array;
+
+    if ( $total_length <= 1_000_000 ) {
+        $combine_threshold = 100;
+    }
+    elsif ( $total_length <= 10_000_000 ) {
+        $combine_threshold = 500;
+    }
+    else {
+        $combine_threshold = 1000;
+    }
+}
 
 #----------------------------#
 # count freq
@@ -1027,11 +1052,10 @@ my $combined_pigccv = sub {
     my @combined;
     {
         my $thaw_sql   = $sql_file->retrieve('common-distance_combine-0');
-        my $threshold  = 1000;
         my $standalone = [ -1, 0 ];
         my %option     = (
             sql_query  => $thaw_sql->as_sql,
-            threshold  => $threshold,
+            threshold  => $combine_threshold,
             standalone => $standalone,
         );
         @combined = @{ $write_obj->make_combine( \%option ) };
@@ -1096,11 +1120,10 @@ my $combined_pigccv = sub {
                 where i.isw_coding = 1
                 group by i.isw_distance
             };
-        my $threshold  = 1000;
         my $standalone = [ -1, 0 ];
-        my %option     = (
+        my %option = (
             sql_query  => $sql_query,
-            threshold  => $threshold,
+            threshold  => $combine_threshold,
             standalone => $standalone,
         );
         @combined = @{ $write_obj->make_combine( \%option ) };
@@ -1167,11 +1190,10 @@ my $combined_pigccv = sub {
                 where i.isw_coding = 0
                 group by i.isw_distance
             };
-        my $threshold  = 1000;
         my $standalone = [ -1, 0 ];
-        my %option     = (
+        my %option = (
             sql_query  => $sql_query,
-            threshold  => $threshold,
+            threshold  => $combine_threshold,
             standalone => $standalone,
         );
         @combined = @{ $write_obj->make_combine( \%option ) };

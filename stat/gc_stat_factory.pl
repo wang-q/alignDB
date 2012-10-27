@@ -32,8 +32,9 @@ my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
 # stat parameter
-my $run           = $Config->{stat}{run};
-my $sum_threshold = $Config->{stat}{sum_threshold};
+my $run               = $Config->{stat}{run};
+my $sum_threshold     = $Config->{stat}{sum_threshold};
+my $combine_threshold = $Config->{stat}{combine_threshold};
 my $outfile;
 
 # use 200 .. 900, 1k, 2k, 3k, 4k, 5k segment levels
@@ -43,17 +44,18 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'      => \$help,
-    'man'         => \$man,
-    'server=s'    => \$server,
-    'port=s'      => \$port,
-    'db=s'        => \$db,
-    'username=s'  => \$username,
-    'password=s'  => \$password,
-    'output=s'    => \$outfile,
-    'run=s'       => \$run,
-    'threshold=i' => \$sum_threshold,
-    'alt_level'   => \$alt_level,
+    'help|?'                 => \$help,
+    'man'                    => \$man,
+    's|server=s'             => \$server,
+    'P|port=s'               => \$port,
+    'd|db=s'                 => \$db,
+    'u|username=s'           => \$username,
+    'p|password=s'           => \$password,
+    'o|output=s'             => \$outfile,
+    'r|run=s'                => \$run,
+    't|st|threshold=i'       => \$sum_threshold,
+    'ct|combine_threshold=i' => \$combine_threshold,
+    'alt_level'              => \$alt_level,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -99,7 +101,7 @@ my $write_obj = AlignDB::WriteExcel->new(
 my $lib = "$FindBin::Bin/sql.lib";
 my $sql_file = AlignDB::SQL::Library->new( lib => $lib );
 
-# auto detect threshold
+# auto detect sum threshold
 if ( $sum_threshold == 0 ) {
     my $dbh = $write_obj->dbh;
 
@@ -125,6 +127,29 @@ if ( $sum_threshold == 0 ) {
     }
     else {
         $sum_threshold = int( $total_length / 100 );
+    }
+}
+
+# auto detect combine threshold
+if ( $combine_threshold == 0 ) {
+    my $dbh = $write_obj->dbh;
+
+    my $sql_query = q{
+        SELECT SUM(align_length)
+        FROM align
+    };
+    my $sth = $dbh->prepare($sql_query);
+    $sth->execute;
+    my ($total_length) = $sth->fetchrow_array;
+
+    if ( $total_length <= 1_000_000 ) {
+        $combine_threshold = 100;
+    }
+    elsif ( $total_length <= 10_000_000 ) {
+        $combine_threshold = 500;
+    }
+    else {
+        $combine_threshold = 1000;
     }
 }
 
@@ -246,11 +271,10 @@ my $combined_distance = sub {
         FROM gsw g
         GROUP BY gsw_distance
     };
-    my $threshold  = 1000;
     my $standalone = [ 0, 1 ];
-    my %option     = (
+    my %option = (
         sql_query  => $sql_query,
-        threshold  => $threshold,
+        threshold  => $combine_threshold,
         standalone => $standalone,
     );
     my @combined = @{ $write_obj->make_combine( \%option ) };
@@ -314,11 +338,10 @@ my $combined_density = sub {
         WHERE gsw_density != 0
         GROUP BY gsw_density
     };
-    my $threshold  = 1000;
     my $standalone = [ 0, 1 ];
-    my %option     = (
+    my %option = (
         sql_query  => $sql_query,
-        threshold  => $threshold,
+        threshold  => $combine_threshold,
         standalone => $standalone,
     );
     my @combined = @{ $write_obj->make_combine( \%option ) };
@@ -382,11 +405,10 @@ my $combined_amplitude = sub {
         WHERE gsw_amplitude >= 10
         GROUP BY gsw_amplitude
     };
-    my $threshold  = 1000;
     my $standalone = [ 0 .. 9 ];
     my %option     = (
         sql_query  => $sql_query,
-        threshold  => $threshold,
+        threshold  => $combine_threshold,
         standalone => $standalone,
     );
     my @combined = @{ $write_obj->make_combine( \%option ) };
@@ -451,11 +473,10 @@ my $combined_a2d = sub {
         AND FLOOR(gsw_amplitude / gsw_density) >= 0
         GROUP BY a2d
     };
-    my $threshold  = 1000;
     my $standalone = [ 0, 1 ];
-    my %option     = (
+    my %option = (
         sql_query  => $sql_query,
-        threshold  => $threshold,
+        threshold  => $combine_threshold,
         standalone => $standalone,
     );
     my @combined = @{ $write_obj->make_combine( \%option ) };
@@ -848,11 +869,10 @@ my $segment_gc_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $threshold  = $sum_threshold;
             my $merge_last = 1;
             my %option     = (
                 sql_query  => $sql_query,
-                threshold  => $threshold,
+                threshold  => $sum_threshold,
                 merge_last => $merge_last,
             );
             @combined_segment = @{ $write_obj->make_combine( \%option ) };
@@ -962,11 +982,10 @@ my $segment_std_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $threshold  = $sum_threshold;
             my $merge_last = 1;
             my %option     = (
                 sql_query  => $sql_query,
-                threshold  => $threshold,
+                threshold  => $sum_threshold,
                 merge_last => $merge_last,
             );
             @combined_segment = @{ $write_obj->make_combine( \%option ) };
@@ -1076,11 +1095,10 @@ my $segment_cv_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $threshold  = $sum_threshold;
             my $merge_last = 1;
             my %option     = (
                 sql_query  => $sql_query,
-                threshold  => $threshold,
+                threshold  => $sum_threshold,
                 merge_last => $merge_last,
             );
             @combined_segment = @{ $write_obj->make_combine( \%option ) };
@@ -1191,11 +1209,10 @@ my $segment_mdcw_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $threshold  = $sum_threshold;
             my $merge_last = 1;
             my %option     = (
                 sql_query  => $sql_query,
-                threshold  => $threshold,
+                threshold  => $sum_threshold,
                 merge_last => $merge_last,
             );
             @combined_segment = @{ $write_obj->make_combine( \%option ) };
@@ -1305,11 +1322,10 @@ my $segment_coding_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $threshold  = $sum_threshold;
             my $merge_last = 1;
             my %option     = (
                 sql_query  => $sql_query,
-                threshold  => $threshold,
+                threshold  => $sum_threshold,
                 merge_last => $merge_last,
             );
             @combined_segment = @{ $write_obj->make_combine( \%option ) };
@@ -1420,11 +1436,10 @@ my $segment_coding_indel = sub {
 #                SELECT e_id, length
 #                FROM extreme_group
 #            };
-#            my $threshold = $sum_threshold;
 #            my $merge_last = 1;
 #            my %option     = (
 #                sql_query  => $sql_query,
-#                threshold  => $threshold,
+#                threshold  => $sum_threshold,
 #                merge_last => $merge_last,
 #            );
 #            @combined_segment = @{ $write_obj->make_combine(\%option) };
@@ -1547,11 +1562,10 @@ my $segment_gc_indel_cr = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $threshold  = $sum_threshold;
             my $merge_last = 1;
             my %option     = (
                 sql_query  => $sql_query,
-                threshold  => $threshold,
+                threshold  => $sum_threshold,
                 merge_last => $merge_last,
             );
             @combined_segment = @{ $write_obj->make_combine( \%option ) };
@@ -1666,11 +1680,10 @@ my $segment_cv_indel_cr = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $threshold  = $sum_threshold;
             my $merge_last = 1;
             my %option     = (
                 sql_query  => $sql_query,
-                threshold  => $threshold,
+                threshold  => $sum_threshold,
                 merge_last => $merge_last,
             );
             @combined_segment = @{ $write_obj->make_combine( \%option ) };

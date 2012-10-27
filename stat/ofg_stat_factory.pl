@@ -34,15 +34,15 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=s'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'output=s'   => \$outfile,
-    'run=s'      => \$run,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=s'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'o|output=s'   => \$outfile,
+    'r|run=s'      => \$run,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;

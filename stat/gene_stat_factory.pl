@@ -35,15 +35,15 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=s'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'output=s'   => \$outfile,
-    'run=s'      => \$run,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=s'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'o|output=s'   => \$outfile,
+    'r|run=s'      => \$run,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -473,8 +473,7 @@ my $exon_D = sub {
                     [ $low_border, $high_border, $low_border, $high_border ],
             );
 
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -651,8 +650,7 @@ my $exon_gc = sub {
                     [ $low_border, $high_border, $low_border, $high_border ],
             );
 
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -739,8 +737,7 @@ my $exon_ess = sub {
                 bind_value => [ $exon_type->[1], $exon_type->[1] ],
             );
 
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been exonrated.\n";
@@ -775,12 +772,12 @@ my $coding_quan = sub {
     }
 
     my @exon_levels = (
-        [ 1,     $quartiles->[0], $quartiles->[1] ],
-        [ 2,     $quartiles->[1], $quartiles->[2] ],
-        [ 3,     $quartiles->[2], $quartiles->[3] ],
-        [ 4,     $quartiles->[3], $quartiles->[4] ],
+        [ 1, $quartiles->[0], $quartiles->[1] ],
+        [ 2, $quartiles->[1], $quartiles->[2] ],
+        [ 3, $quartiles->[2], $quartiles->[3] ],
+        [ 4, $quartiles->[3], $quartiles->[4] ],
     );
-    
+
     print Dump \@exon_levels;
 
     my $write_sheet = sub {
@@ -848,8 +845,7 @@ my $coding_quan = sub {
                     [ $low_border, $high_border, $low_border, $high_border ],
             );
 
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -866,7 +862,7 @@ foreach my $n (@tasks) {
     if ( $n == 3 ) { &$exon_D;       &$exon_D_null; next; }
     if ( $n == 4 ) { &$exon_gc;      next; }
     if ( $n == 5 ) { &$exon_ess;     next; }
-    if ( $n == 6 ) { &$coding_quan;     next; }
+    if ( $n == 6 ) { &$coding_quan;  next; }
 }
 
 $stopwatch->end_message;

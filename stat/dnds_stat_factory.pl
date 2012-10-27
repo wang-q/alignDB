@@ -20,29 +20,31 @@ my $Config = Config::Tiny->new();
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 # stat parameter
-my $run     = $Config->{stat}->{run};
-my $outfile = "";
+my $run               = $Config->{stat}{run};
+my $combine_threshold = $Config->{stat}{combine_threshold};
+my $outfile           = "";
 
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=s'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'output=s'   => \$outfile,
-    'run=s'      => \$run,
+    'help|?'                 => \$help,
+    'man'                    => \$man,
+    's|server=s'             => \$server,
+    'P|port=s'               => \$port,
+    'd|db=s'                 => \$db,
+    'u|username=s'           => \$username,
+    'p|password=s'           => \$password,
+    'o|output=s'             => \$outfile,
+    'r|run=s'                => \$run,
+    'ct|combine_threshold=i' => \$combine_threshold,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -99,11 +101,10 @@ my $combined_dnds = sub {
             FROM isw i
             GROUP BY isw_distance
         };
-        my $threshold  = 1000;
         my $standalone = [ -1, 0 ];
-        my %option     = (
+        my %option = (
             sql_query  => $sql_query,
-            threshold  => $threshold,
+            threshold  => $combine_threshold,
             standalone => $standalone,
         );
         @combined = @{ $write_obj->make_combine( \%option ) };
@@ -118,8 +119,7 @@ my $combined_dnds = sub {
         my ( $sheet_row, $sheet_col );
 
         {    # write header
-            my @headers
-                = qw{AVG_distance AVG_pi AVG_d_syn AVG_d_nsy AVG_d_stop
+            my @headers = qw{AVG_distance AVG_pi AVG_d_syn AVG_d_nsy AVG_d_stop
                 COUNT dn/ds};
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
@@ -165,7 +165,7 @@ my $frequency_dnds = sub {
     unless ( $write_obj->check_column( 'indel', 'indel_freq' ) ) {
         return;
     }
-    
+
     my @freq_levels = ( [ 1, 1, 1 ] );
 
     my $write_sheet = sub {
@@ -175,8 +175,7 @@ my $frequency_dnds = sub {
         my ( $sheet_row, $sheet_col );
 
         {    # write header
-            my @headers
-                = qw{AVG_distance AVG_pi AVG_d_syn AVG_d_nsy AVG_d_stop
+            my @headers = qw{AVG_distance AVG_pi AVG_d_syn AVG_d_nsy AVG_d_stop
                 COUNT dn/ds};
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
@@ -209,8 +208,7 @@ my $frequency_dnds = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $level->[1], $level->[2] ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";

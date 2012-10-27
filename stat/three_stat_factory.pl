@@ -24,31 +24,29 @@ my $Config = Config::Tiny->new();
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 # stat parameter
-my $run           = $Config->{stat}->{run};
-my $sum_threshold = $Config->{stat}->{sum_threshold};
-my $outfile       = "";
+my $run     = $Config->{stat}{run};
+my $outfile = "";
 
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'      => \$help,
-    'man'         => \$man,
-    'server=s'    => \$server,
-    'port=s'      => \$port,
-    'db=s'        => \$db,
-    'username=s'  => \$username,
-    'password=s'  => \$password,
-    'output=s'    => \$outfile,
-    'run=s'       => \$run,
-    'threshold=i' => \$sum_threshold,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=s'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'o|output=s'   => \$outfile,
+    'r|run=s'      => \$run,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -152,10 +150,8 @@ my $summary = sub {
         &$column_stat( 'indel_length',       'indel', 'indel_length' );
         &$column_stat( 'indel_left_extand',  'indel', 'left_extand' );
         &$column_stat( 'indel_right_extand', 'indel', 'right_extand' );
-        &$column_stat(
-            'indel_windows', 'isw',
-            'isw_length',    'WHERE isw_distance <= 0'
-        );
+        &$column_stat( 'indel_windows', 'isw', 'isw_length',
+            'WHERE isw_distance <= 0' );
         &$column_stat(
             'indel_free_windows', 'isw',
             'isw_length',         'WHERE isw_distance > 0'
@@ -385,7 +381,7 @@ my $distance_indel_bottom90 = sub {
         );
         $indel_sth->execute;
         my ($count) = $indel_sth->fetchrow_array;
-        my $count_offset = int($count * 0.9 );
+        my $count_offset = int( $count * 0.9 );
 
         my $sql_query = qq{
             # create temporary table
@@ -402,7 +398,7 @@ my $distance_indel_bottom90 = sub {
         my %option = ( sql_query => $sql_query, );
         $write_obj->excute_sql( \%option );
     }
-    
+
     #----------------------------#
     # distance_indel_bottom90
     #----------------------------#
@@ -444,8 +440,7 @@ my $distance_indel_bottom90 = sub {
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         {    # write footer
@@ -468,13 +463,12 @@ my $distance_indel_bottom90 = sub {
                 sheet_col      => $sheet_col,
                 content_format => 'TOTAL',
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
     }
-    
+
     # drop temporary table
     {
         my $sql_query = q{
@@ -553,8 +547,7 @@ my $distance_coding = sub {
     my ( $isw_f1_1, $isw_f1_2 ) = ( 1, 1 );
     my @combined;
     {
-        my $thaw_sql
-            = $sql_file->retrieve('common-distance_coding_combine-2');
+        my $thaw_sql = $sql_file->retrieve('common-distance_coding_combine-2');
         $thaw_sql->add_where( 'isw_distance' => \'>= 0' );
         $thaw_sql->add_where( 'isw_d_indel'  => \'IS NOT NULL' );
         my $threshold  = 1000;
@@ -619,8 +612,7 @@ my $distance_non_coding = sub {
     my ( $isw_f1_1, $isw_f1_2 ) = ( 0, 0 );
     my @combined;
     {
-        my $thaw_sql
-            = $sql_file->retrieve('common-distance_coding_combine-2');
+        my $thaw_sql = $sql_file->retrieve('common-distance_coding_combine-2');
         $thaw_sql->add_where( 'isw_distance' => \'>= 0' );
         $thaw_sql->add_where( 'isw_d_indel'  => \'IS NOT NULL' );
         my $threshold  = 1000;
@@ -1132,8 +1124,7 @@ my $snp_distance = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $snp_levels->[1], $snp_levels->[2] ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         # write footer
@@ -1161,8 +1152,7 @@ my $snp_distance = sub {
                 bind_value     => [ $snp_levels->[1], $snp_levels->[2] ],
                 content_format => 'TOTAL',
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1281,8 +1271,7 @@ my $snp_distance_non_slip = sub {
                     $snp_levels->[1], $snp_levels->[2]
                 ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         # write footer
@@ -1331,8 +1320,7 @@ my $snp_distance_non_slip = sub {
                 ],
                 content_format => 'TOTAL',
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1442,8 +1430,7 @@ my $snp_LR_distance = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [@$snp_levels],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
 
             $sheet_row++;    # add a blank line
             %option = (
@@ -1452,8 +1439,7 @@ my $snp_LR_distance = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [@$snp_levels],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1928,8 +1914,7 @@ my $indel_distance_slip = sub {
                     $slip_levels->[1], $slip_levels->[2]
                 ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         # write footer
@@ -1976,8 +1961,7 @@ my $indel_distance_slip = sub {
                     $slip_levels->[1], $slip_levels->[2]
                 ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -2165,11 +2149,9 @@ my $indel_type_gc_10 = sub {
     my ( $sheet_row, $sheet_col );
 
     # indel_type groups
-    my @indel_types = (
-        [ 'Insertion', ['I'] ],
-        [ 'Deletion',  ['D'] ],
-        [ 'Complex',   ['C'] ],
-    );
+    my @indel_types
+        = ( [ 'Insertion', ['I'] ], [ 'Deletion', ['D'] ], [ 'Complex', ['C'] ],
+        );
 
     # write header
     {
@@ -2225,11 +2207,9 @@ my $indel_type_gc_100 = sub {
     my ( $sheet_row, $sheet_col );
 
     # indel_type groups
-    my @indel_types = (
-        [ 'Insertion', ['I'] ],
-        [ 'Deletion',  ['D'] ],
-        [ 'Complex',   ['C'] ],
-    );
+    my @indel_types
+        = ( [ 'Insertion', ['I'] ], [ 'Deletion', ['D'] ], [ 'Complex', ['C'] ],
+        );
 
     # write header
     {
@@ -2314,8 +2294,7 @@ my $insertion_length = sub {
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
         );
-        ($sheet_row)
-            = $write_obj->write_content_highlight( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_highlight( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -2359,8 +2338,7 @@ my $deletion_length = sub {
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
         );
-        ($sheet_row)
-            = $write_obj->write_content_highlight( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_highlight( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -2404,8 +2382,7 @@ my $complex_length = sub {
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
         );
-        ($sheet_row)
-            = $write_obj->write_content_highlight( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_highlight( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -3431,10 +3408,8 @@ my $ds_dns = sub {
     my $interval_tq = {};
     foreach my $interval ( keys %$each_interval ) {
         foreach my $rd ( keys %{ $each_interval->{$interval} } ) {
-            $interval_tq->{$interval}{T}
-                += $each_interval->{$interval}{$rd}{T};
-            $interval_tq->{$interval}{Q}
-                += $each_interval->{$interval}{$rd}{Q};
+            $interval_tq->{$interval}{T} += $each_interval->{$interval}{$rd}{T};
+            $interval_tq->{$interval}{Q} += $each_interval->{$interval}{$rd}{Q};
         }
     }
 
@@ -3461,18 +3436,16 @@ my $ds_dns = sub {
                     $Ds  = $random < $t_frq ? 'T' : 'Q';
                     $Dns = $random < $t_frq ? 'Q' : 'T';
                 }
-                $rd_count->{$rd}{Ds} += $each_interval->{$interval}{$rd}{$Ds};
-                $rd_count->{$rd}{Dns}
-                    += $each_interval->{$interval}{$rd}{$Dns};
+                $rd_count->{$rd}{Ds}  += $each_interval->{$interval}{$rd}{$Ds};
+                $rd_count->{$rd}{Dns} += $each_interval->{$interval}{$rd}{$Dns};
                 $rd_count->{$rd}{count}++;
             }
         }
     }
 
     foreach my $rd ( sort { $a <=> $b } keys %{$rd_count} ) {
-        $rd_count->{$rd}{Ds} = $rd_count->{$rd}{Ds} / $rd_count->{$rd}{count};
-        $rd_count->{$rd}{Dns}
-            = $rd_count->{$rd}{Dns} / $rd_count->{$rd}{count};
+        $rd_count->{$rd}{Ds}  = $rd_count->{$rd}{Ds} / $rd_count->{$rd}{count};
+        $rd_count->{$rd}{Dns} = $rd_count->{$rd}{Dns} / $rd_count->{$rd}{count};
         $sheet->write( $sheet_row, 0 + $sheet_col, $rd, $fmt->{NORMAL} );
         $sheet->write(
             $sheet_row,
@@ -3573,7 +3546,7 @@ my $di_dn_ttest = sub {
             my @range      = @$_;
             my $in_list    = '(' . join( ',', @range ) . ')';
             my $sql_query2 = $sql_query . $in_list;
-            $sql_query2 .= " \nLIMIT 10000";   # prevent to exceed excel limit
+            $sql_query2 .= " \nLIMIT 10000";    # prevent to exceed excel limit
 
             my %option  = ( sql_query => $sql_query2, );
             my $ttest   = $write_obj->column_ttest( \%option );
@@ -3583,8 +3556,7 @@ my $di_dn_ttest = sub {
             push @p_values, [$p_value];
 
             {
-                my $ttest_sheet_name
-                    = "ttest_" . join( '-', @range[ 0, -1 ] );
+                my $ttest_sheet_name = "ttest_" . join( '-', @range[ 0, -1 ] );
                 my $stat_sheet;
 
                 my ( $stat_sheet_row, $stat_sheet_col ) = ( 0, 0 );
@@ -3730,8 +3702,7 @@ my $indel_distance_type = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $indel_type, $indel_type ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -3822,8 +3793,7 @@ my $indel_distance_tq = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $levels->[1], $levels->[2] ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         # write footer
@@ -3869,8 +3839,7 @@ my $indel_distance_tq = sub {
                 content_format => 'TOTAL',
                 bind_value     => [ $levels->[1], $levels->[2] ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";

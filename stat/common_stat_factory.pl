@@ -29,24 +29,26 @@ my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
 # stat parameter
-my $run           = $Config->{stat}{run};
-my $sum_threshold = $Config->{stat}{sum_threshold};
-my $outfile       = "";
+my $run               = $Config->{stat}{run};
+my $sum_threshold     = $Config->{stat}{sum_threshold};
+my $combine_threshold = $Config->{stat}{combine_threshold};
+my $outfile           = "";
 
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'      => \$help,
-    'man'         => \$man,
-    'server=s'    => \$server,
-    'port=s'      => \$port,
-    'db=s'        => \$db,
-    'username=s'  => \$username,
-    'password=s'  => \$password,
-    'output=s'    => \$outfile,
-    'run=s'       => \$run,
-    'threshold=i' => \$sum_threshold,
+    'help|?'                 => \$help,
+    'man'                    => \$man,
+    's|server=s'             => \$server,
+    'P|port=s'               => \$port,
+    'd|db=s'                 => \$db,
+    'u|username=s'           => \$username,
+    'p|password=s'           => \$password,
+    'o|output=s'             => \$outfile,
+    'r|run=s'                => \$run,
+    't|st|threshold=i'       => \$sum_threshold,
+    'ct|combine_threshold=i' => \$combine_threshold,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -62,7 +64,7 @@ if ( $run eq 'all' ) {
 }
 else {
     $run =~ s/\"\'//s;
-    my $set = AlignDB::IntSpan->new();
+    my $set = AlignDB::IntSpan->new;
     if ( AlignDB::IntSpan->valid($run) ) {
         $set   = $set->add($run);
         @tasks = $set->elements;
@@ -72,7 +74,7 @@ else {
         $set->add(@tasks);
     }
 
-    my $runlist = $set->runlist();
+    my $runlist = $set->runlist;
     $outfile =~ s/(\.xlsx)$/.$runlist$1/;
 }
 
@@ -80,7 +82,7 @@ else {
 # Init section
 #----------------------------------------------------------#
 my $stopwatch = AlignDB::Stopwatch->new;
-$stopwatch->start_message("Do stat for $db...");
+$stopwatch->start_message("Do common stat for $db...");
 
 my $write_obj = AlignDB::WriteExcel->new(
     mysql   => "$db:$server",
@@ -91,6 +93,58 @@ my $write_obj = AlignDB::WriteExcel->new(
 
 my $lib = "$FindBin::Bin/sql.lib";
 my $sql_file = AlignDB::SQL::Library->new( lib => $lib );
+
+# auto detect sum threshold
+if ( $sum_threshold == 0 ) {
+    my $dbh = $write_obj->dbh;
+
+    my $sql_query = q{
+        SELECT SUM(align_length)
+        FROM align
+    };
+    my $sth = $dbh->prepare($sql_query);
+    $sth->execute;
+    my ($total_length) = $sth->fetchrow_array;
+
+    if ( $total_length <= 1_000_000 ) {
+        $sum_threshold = int( $total_length / 10 );
+    }
+    elsif ( $total_length <= 10_000_000 ) {
+        $sum_threshold = int( $total_length / 10 );
+    }
+    elsif ( $total_length <= 100_000_000 ) {
+        $sum_threshold = int( $total_length / 20 );
+    }
+    elsif ( $total_length <= 1_000_000_000 ) {
+        $sum_threshold = int( $total_length / 50 );
+    }
+    else {
+        $sum_threshold = int( $total_length / 100 );
+    }
+}
+
+# auto detect combine threshold
+if ( $combine_threshold == 0 ) {
+    my $dbh = $write_obj->dbh;
+
+    my $sql_query = q{
+        SELECT SUM(align_length)
+        FROM align
+    };
+    my $sth = $dbh->prepare($sql_query);
+    $sth->execute;
+    my ($total_length) = $sth->fetchrow_array;
+
+    if ( $total_length <= 1_000_000 ) {
+        $combine_threshold = 100;
+    }
+    elsif ( $total_length <= 10_000_000 ) {
+        $combine_threshold = 500;
+    }
+    else {
+        $combine_threshold = 1000;
+    }
+}
 
 #----------------------------------------------------------#
 # worksheet -- basic
@@ -458,11 +512,10 @@ my $combined_distance = sub {
     my @combined;
     {
         my $thaw_sql   = $sql_file->retrieve('common-distance_combine-0');
-        my $threshold  = 1000;
         my $standalone = [ -1, 0 ];
         my %option     = (
             sql_query  => $thaw_sql->as_sql,
-            threshold  => $threshold,
+            threshold  => $combine_threshold,
             standalone => $standalone,
         );
         @combined = @{ $write_obj->make_combine( \%option ) };
@@ -524,11 +577,10 @@ my $combined_density = sub {
     {
         my $thaw_sql = $sql_file->retrieve('common-distance_combine-0');
         $thaw_sql->replace( { distance => 'density' } );
-        my $threshold  = 1000;
         my $standalone = [ -1, 0 ];
-        my %option     = (
+        my %option = (
             sql_query  => $thaw_sql->as_sql,
-            threshold  => $threshold,
+            threshold  => $combine_threshold,
             standalone => $standalone,
         );
         @combined = @{ $write_obj->make_combine( \%option ) };
@@ -739,12 +791,11 @@ my $distance_coding = sub {
     my ( $isw_f1_1, $isw_f1_2 ) = ( 1, 1 );
     my @combined;
     {
-        my $thaw_sql  = $sql_file->retrieve('common-distance_coding_combine-2');
-        my $threshold = 1000;
+        my $thaw_sql = $sql_file->retrieve('common-distance_coding_combine-2');
         my $standalone = [ -1, 0 ];
         my %option     = (
             sql_query  => $thaw_sql->as_sql,
-            threshold  => $threshold,
+            threshold  => $combine_threshold,
             standalone => $standalone,
             bind_value => [ $isw_f1_1, $isw_f1_2 ],
         );
@@ -817,12 +868,11 @@ my $distance_non_coding = sub {
     my ( $isw_f1_1, $isw_f1_2 ) = ( 0, 0 );
     my @combined;
     {
-        my $thaw_sql  = $sql_file->retrieve('common-distance_coding_combine-2');
-        my $threshold = 1000;
+        my $thaw_sql = $sql_file->retrieve('common-distance_coding_combine-2');
         my $standalone = [ -1, 0 ];
         my %option     = (
             sql_query  => $thaw_sql->as_sql,
-            threshold  => $threshold,
+            threshold  => $combine_threshold,
             standalone => $standalone,
             bind_value => [ $isw_f1_1, $isw_f1_2 ],
         );
@@ -897,11 +947,10 @@ my $density_coding = sub {
     {
         my $thaw_sql = $sql_file->retrieve('common-distance_coding_combine-2');
         $thaw_sql->replace( { distance => 'density' } );
-        my $threshold  = 1000;
         my $standalone = [ -1, 0 ];
-        my %option     = (
+        my %option = (
             sql_query  => $thaw_sql->as_sql,
-            threshold  => $threshold,
+            threshold  => $combine_threshold,
             standalone => $standalone,
             bind_value => [ $isw_f1_1, $isw_f1_2 ],
         );
@@ -976,11 +1025,10 @@ my $density_non_coding = sub {
     {
         my $thaw_sql = $sql_file->retrieve('common-distance_coding_combine-2');
         $thaw_sql->replace( { distance => 'density' } );
-        my $threshold  = 1000;
         my $standalone = [ -1, 0 ];
-        my %option     = (
+        my %option = (
             sql_query  => $thaw_sql->as_sql,
-            threshold  => $threshold,
+            threshold  => $combine_threshold,
             standalone => $standalone,
             bind_value => [ $isw_f1_1, $isw_f1_2 ],
         );
@@ -1729,11 +1777,10 @@ my $snp_indel_ratio = sub {
             SELECT p_id, align_length
             FROM pi_group
         };
-        my $threshold  = $sum_threshold;
         my $merge_last = 1;
         my %option     = (
             sql_query  => $sql_query,
-            threshold  => $threshold,
+            threshold  => $sum_threshold,
             merge_last => $merge_last,
         );
         my $group = $write_obj->make_combine( \%option );
