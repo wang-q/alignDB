@@ -370,6 +370,15 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
     print {$fh} "perl $FindBin::Bin/../fig/collect_common_basic.pl"
         . " $working_dir\n\n";
 
+    print {$fh} "REM multi chart\n";
+    print {$fh} "perl $FindBin::Bin/../stat/multi_chart_factory.pl"
+        . " -i $FindBin::Bin/../stat/$name_str.multi.xlsx\n\n";
+
+    print {$fh} "REM gc chart\n";
+    print {$fh} "perl $FindBin::Bin/../stat/gc_chart_factory.pl"
+        . " --add_trend 1"
+        . " -i $FindBin::Bin/../stat/$name_str.gc.xlsx\n\n";
+
     print {$fh} "cd ..\n\n";
 
     close $fh;
