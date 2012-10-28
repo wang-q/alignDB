@@ -339,34 +339,48 @@ my $coding_all = sub {
 
     {    # query
         my $sql_query = q{
-            SELECT s.codingsw_distance `distance`,
+            SELECT sw.codingsw_distance `distance`,
                    AVG (w.window_pi) `avg_pi`,
                    AVG (w.window_indel / w.window_length * 100)
                    `avg_indel/100bp`,
                    AVG (w.window_target_gc) `avg_gc`,
-                   AVG (s.codingsw_cv) `avg_cv`,
+                   AVG (sw.codingsw_cv) `avg_cv`,
                    AVG (w.window_repeats) `avg_repeats`,
                    count(*) count
-            FROM codingsw s,
-                 window w,
-                 (
-                  SELECT s.codingsw_id
-                  FROM codingsw s,
-                       window w
-                  WHERE s.window_id = w.window_id AND
-                        ASCII (s.codingsw_type) IN (ASCII ('L'), ASCII ('R'))
-                  UNION
-                  SELECT s.codingsw_id
-                  FROM codingsw s,
-                       exon e,
-                       window w
-                  WHERE s.exon_id = e.exon_id AND
-                        e.window_id = w.window_id AND
-                        ASCII (s.codingsw_type) IN (ASCII ('l'), ASCII ('r'))
-                 ) sw
-            WHERE s.window_id = w.window_id AND
-                  s.codingsw_id = sw.codingsw_id
-            GROUP BY s.codingsw_distance
+            FROM codingsw sw,
+                 window w
+            WHERE sw.window_id = w.window_id 
+              AND sw.codingsw_distance < 0
+              AND w.window_coding = 1
+            GROUP BY sw.codingsw_distance
+            ORDER BY sw.codingsw_distance ASC
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+        );
+
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    {    # query
+        my $sql_query = q{
+            SELECT sw.codingsw_distance `distance`,
+                   AVG (w.window_pi) `avg_pi`,
+                   AVG (w.window_indel / w.window_length * 100)
+                   `avg_indel/100bp`,
+                   AVG (w.window_target_gc) `avg_gc`,
+                   AVG (sw.codingsw_cv) `avg_cv`,
+                   AVG (w.window_repeats) `avg_repeats`,
+                   count(*) count
+            FROM codingsw sw,
+                 window w
+            WHERE sw.window_id = w.window_id
+              AND sw.codingsw_distance > 0
+              AND w.window_coding = 0
+            GROUP BY sw.codingsw_distance
+            ORDER BY sw.codingsw_distance ASC
         };
         my %option = (
             sql_query => $sql_query,
