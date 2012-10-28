@@ -47,16 +47,16 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'ensembl=s'  => \$ensembl_db,
-    'parallel=i' => \$parallel,
-    'batch=i'    => \$batch_number,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=i'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'ensembl=s'    => \$ensembl_db,
+    'parallel=i'   => \$parallel,
+    'batch=i'      => \$batch_number,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -83,6 +83,10 @@ my @jobs;
         my @batching = splice @align_ids, 0, $batch_number;
         push @jobs, [@batching];
     }
+
+    $obj->empty_table('indel_extra');
+    $obj->empty_table('isw_extra');
+    $obj->empty_table('snp_extra');
 }
 
 #----------------------------------------------------------#
@@ -116,7 +120,7 @@ my $worker = sub {
     #----------------------------#
     # SQL query and DBI sths
     #----------------------------#
-    # update align_update table in the new feature column
+    # update align table
     my $align_feature = q{
         UPDATE align
         SET align_coding = ?,
@@ -331,7 +335,8 @@ UPDATE: for my $align_id (@align_ids) {
 
                 my $snp_coding  = $cds_set->member($snp_chr_pos);
                 my $snp_repeats = $repeat_set->member($snp_chr_pos);
-                $snp_feature_sth->execute( $snp_coding, $snp_repeats, $snp_id, );
+                $snp_feature_sth->execute( $snp_coding, $snp_repeats, $snp_id,
+                );
             }
             $snp_feature_sth->finish;
             $snp_query_sth->finish;
@@ -348,8 +353,6 @@ UPDATE: for my $align_id (@align_ids) {
                 my $window_chr_set
                     = $window_set->map_set( sub { $chr_pos[$_] } );
 
-                #my ($window_coding, $window_repeats) =
-                #  $ensembl->locate_set_position($window_chr_set);
                 my $window_coding
                     = $ensembl->feature_portion( '_cds_set', $window_chr_set );
                 my $window_repeats = $ensembl->feature_portion( '_repeat_set',

@@ -47,16 +47,16 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'ensembl=s'  => \$ensembl_db,
-    'parallel=i' => \$parallel,
-    'batch=i'    => \$batch_number,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=i'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'ensembl=s'    => \$ensembl_db,
+    'parallel=i'   => \$parallel,
+    'batch=i'      => \$batch_number,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -134,13 +134,13 @@ my $worker = sub {
     # update align table
     my $align_feature = q{
         UPDATE align
-        SET align_coding  = ?,
+        SET align_coding = ?,
             align_repeats = ?,
-            align_te      = ?,
+            align_te = ?,
             align_coding_runlist = ?,
             align_repeats_runlist = ?,
             align_te_runlist = ?
-        WHERE align_id    = ?
+        WHERE align_id = ?
     };
     my $align_feature_sth = $dbh->prepare($align_feature);
 
@@ -384,9 +384,7 @@ UPDATE: for my $align_id (@align_ids) {
                 my $window_chr_set
                     = $window_set->map_set( sub { $chr_pos[$_] } );
 
-                #my ($window_coding, $window_repeats) =
-                #  $ensembl->locate_set_position($window_chr_set);
-                my $window_coding
+               my $window_coding
                     = $ensembl->feature_portion( '_cds_set', $window_chr_set );
                 my $window_repeats = $ensembl->feature_portion( '_repeat_set',
                     $window_chr_set );
