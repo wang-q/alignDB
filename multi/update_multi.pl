@@ -30,12 +30,12 @@ my $stopwatch = AlignDB::Stopwatch->new(
 );
 
 # Database init values
-my $server     = $Config->{database}->{server};
-my $port       = $Config->{database}->{port};
-my $username   = $Config->{database}->{username};
-my $password   = $Config->{database}->{password};
-my $db         = $Config->{database}->{db};
-my $ensembl_db = $Config->{database}->{ensembl};
+my $server     = $Config->{database}{server};
+my $port       = $Config->{database}{port};
+my $username   = $Config->{database}{username};
+my $password   = $Config->{database}{password};
+my $db         = $Config->{database}{db};
+my $ensembl_db = $Config->{database}{ensembl};
 
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
@@ -196,7 +196,23 @@ my $worker = sub {
     };
     my $snp_feature_sth = $dbh->prepare($snp_feature);
 
-    for my $align_id (@align_ids) {
+    # select all windows for this alignment
+    my $window_query = q{
+        SELECT window_id, window_runlist
+        FROM window
+        WHERE align_id = ?
+    };
+    my $window_query_sth = $dbh->prepare($window_query);
+
+    # update window table in the new feature column
+    my $window_update_query = q{
+        UPDATE window
+        SET window_coding = ?, window_repeats = ?
+        WHERE window_id = ?
+    };
+    my $window_update_sth = $dbh->prepare($window_update_query);
+
+UPDATE: for my $align_id (@align_ids) {
 
         #----------------------------#
         # for each alignment
@@ -207,7 +223,7 @@ my $worker = sub {
         print
             "prosess align $align_id ",
             "in $chr_name $chr_start - $chr_end\n";
-        next UPDATE if $chr_name =~ /rand|un|contig|hap|scaf/i;
+        next UPDATE if $chr_name =~ /rand|un|contig|hap|scaf|gi_/i;
 
         $chr_name =~ s/chr0?//i;
 
@@ -261,11 +277,9 @@ my $worker = sub {
             $cds_set    = $cds_set->map_set( sub    { $align_pos{$_} } );
             $repeat_set = $repeat_set->map_set( sub { $align_pos{$_} } );
             $te_set     = $te_set->map_set( sub     { $align_pos{$_} } );
-            $align_feature_sth->execute(
-                $align_coding, $align_repeats,
-                $align_te,  $cds_set->runlist, $repeat_set->runlist,
-                $te_set->runlist, $align_id,
-            );
+            $align_feature_sth->execute( $align_coding, $align_repeats,
+                $align_te, $cds_set->runlist, $repeat_set->runlist,
+                $te_set->runlist, $align_id, );
 
             $align_feature_sth->finish;
         }
@@ -303,10 +317,9 @@ my $worker = sub {
                     my $isw_chr_end   = $chr_pos[$isw_end];
 
                     my $isw_chr_runlist = "$isw_chr_start-$isw_chr_end";
-                    my $isw_feature1 = $ensembl->feature_portion( '_cds_set',
+                    my $isw_feature1    = $ensembl->feature_portion( '_cds_set',
                         $isw_chr_runlist );
-                    my $isw_feature2
-                        = $ensembl->feature_portion( '_repeat_set',
+                    my $isw_feature2 = $ensembl->feature_portion( '_repeat_set',
                         $isw_chr_runlist );
                     $isw_feature_sth->execute( $isw_feature1, $isw_feature2,
                         $isw_id, );
@@ -330,7 +343,7 @@ my $worker = sub {
                 my $snp_chr_pos = $chr_pos[$snp_pos];
 
                 # coding and repeats
-                my $snp_coding = $cds_set->member($snp_chr_pos);
+                my $snp_coding  = $cds_set->member($snp_chr_pos);
                 my $snp_repeats = $repeat_set->member($snp_chr_pos);
 
                 # cpg
@@ -352,12 +365,37 @@ my $worker = sub {
                     }
                 }
 
-                $snp_feature_sth->execute( $snp_coding, $snp_repeats,
-                    $snp_cpg, $snp_id, );
+                $snp_feature_sth->execute( $snp_coding, $snp_repeats, $snp_cpg,
+                    $snp_id, );
             }
 
             $snp_feature_sth->finish;
             $snp_query_sth->finish;
+        }
+
+        #----------------------------#
+        # process each windows
+        #----------------------------#
+        {
+            $window_query_sth->execute($align_id);
+            while ( my @row5 = $window_query_sth->fetchrow_array ) {
+                my ( $window_id, $window_runlist ) = @row5;
+                my $window_set = AlignDB::IntSpan->new($window_runlist);
+                my $window_chr_set
+                    = $window_set->map_set( sub { $chr_pos[$_] } );
+
+                #my ($window_coding, $window_repeats) =
+                #  $ensembl->locate_set_position($window_chr_set);
+                my $window_coding
+                    = $ensembl->feature_portion( '_cds_set', $window_chr_set );
+                my $window_repeats = $ensembl->feature_portion( '_repeat_set',
+                    $window_chr_set );
+                $window_update_sth->execute( $window_coding, $window_repeats,
+                    $window_id, );
+            }
+
+            $window_update_sth->finish;
+            $window_query_sth->finish;
         }
     }
 
