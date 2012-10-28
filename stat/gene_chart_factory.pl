@@ -113,9 +113,9 @@ $excel_obj->jc_correction if $jc_correction;
             y_title      => "Nucleotide diversity",
             cross        => -5,
             Height       => 200,
-            Width        => 320,
+            Width        => 260,
             Top          => 12.75,
-            Left         => 450,
+            Left         => 500,
         );
 
         $excel_obj->draw_y( $sheet_name, \%option );
