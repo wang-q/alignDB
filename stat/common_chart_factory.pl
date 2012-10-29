@@ -19,9 +19,7 @@ my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # stat parameter
-my $jc_correction   = $Config->{stat}{jc_correction};
-my $time_stamp      = $Config->{stat}{time_stamp};
-my $add_index_sheet = $Config->{stat}{add_index_sheet};
+my $jc_correction = $Config->{stat}{jc_correction};
 
 my $infile  = '';
 my $outfile = '';
@@ -32,14 +30,12 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'            => \$help,
-    'man'               => \$man,
-    'infile=s'          => \$infile,
-    'outfile=s'         => \$outfile,
-    'jc=s'              => \$jc_correction,
-    'time_stamp=s'      => \$time_stamp,
-    'add_index_sheet=s' => \$add_index_sheet,
-    'replace=s'         => \%replace,
+    'help|?'    => \$help,
+    'man'       => \$man,
+    'infile=s'  => \$infile,
+    'outfile=s' => \$outfile,
+    'jc=s'      => \$jc_correction,
+    'replace=s' => \%replace,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -123,8 +119,8 @@ $excel_obj->jc_correction if $jc_correction;
 
         # chart 4
         $option{chart_serial}++;
-        $option{y_column} = 4;
-        $option{y_title}  = "GC proportion";
+        $option{y_column}  = 4;
+        $option{y_title}   = "GC proportion";
         $option{y2_column} = 6;
         $option{y2_title}  = "Window CV";
         $option{Top} += $option{Height} + 14.25;
@@ -595,10 +591,10 @@ $excel_obj->jc_correction if $jc_correction;
 # POST Processing
 #----------------------------------------------------------#
 # add time stamp to "summary" sheet
-$excel_obj->time_stamp("basic") if $time_stamp;
+$excel_obj->time_stamp("basic");
 
 # add an index sheet
-$excel_obj->add_index_sheet if $add_index_sheet;
+$excel_obj->add_index_sheet;
 
 print "$outfile has been generated.\n";
 
@@ -614,15 +610,14 @@ __END__
 =head1 SYNOPSIS
 
     common_chart_factory.pl [options]
-     Options:
-       --help           brief help message
-       --man            full documentation
-       --infile         input file name (full path)
-       --outfile        output file name
-       --jc             Jukes & Cantor correction
-       --replace        replace text when charting
-                        --replace diversity=divergence
-       
+      Options:
+        --help              brief help message
+        --man               full documentation
+        --infile            input file name (full path)
+        --outfile           output file name
+        --jc                Jukes & Cantor correction
+        --replace           replace text when charting
+                            --replace diversity=divergence
 
 =head1 OPTIONS
 

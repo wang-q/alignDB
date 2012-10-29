@@ -13,22 +13,25 @@ use AlignDB::Stopwatch;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $infile          = '';
-my $outfile         = '';
-my $jc_correction   = 0;
-my $time_stamp      = 1;
-my $add_index_sheet = 1;
+my $Config = Config::Tiny->new;
+$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+
+my $infile        = '';
+my $outfile       = '';
+my $jc_correction = 0;
+
+my %replace;
 
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    'infile=s'     => \$infile,
-    'outfile=s'    => \$outfile,
-    'jc=s'         => \$jc_correction,
-    'time_stamp=s' => \$time_stamp,
+    'help|?'    => \$help,
+    'man'       => \$man,
+    'infile=s'  => \$infile,
+    'outfile=s' => \$outfile,
+    'jc=s'      => \$jc_correction,
+    'replace=s' => \%replace,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -37,14 +40,22 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 # Init section
 #----------------------------------------------------------#
-my $stopwatch = AlignDB::Stopwatch->new();
+my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Processing $infile...");
 
-my $excel_obj = AlignDB::Excel->new( infile => $infile, );
+my $excel_obj;
 if ($outfile) {
-    $excel_obj->outfile($outfile);
+    $excel_obj = AlignDB::Excel->new(
+        infile  => $infile,
+        outfile => $outfile,
+        replace => \%replace,
+    );
 }
 else {
+    $excel_obj = AlignDB::Excel->new(
+        infile  => $infile,
+        replace => \%replace,
+    );
     $outfile = $excel_obj->outfile;
 }
 
@@ -132,8 +143,8 @@ my @sheet_names = @{ $excel_obj->sheet_names };
 
         # chart 4
         $option{chart_serial}++;
-        $option{y_column} = 4;
-        $option{y_title}  = "GC proportion";
+        $option{y_column}  = 4;
+        $option{y_title}   = "GC proportion";
         $option{y2_column} = 6;
         $option{y2_title}  = "Window CV";
         $option{Top} += $option{Height} + 14.25;
@@ -178,6 +189,15 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         $option{y_title}  = "Window CV";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_y( $sheet_name, \%option );
+
+        # chart 4
+        $option{chart_serial}++;
+        $option{y_column}  = 4;
+        $option{y_title}   = "GC proportion";
+        $option{y2_column} = 6;
+        $option{y2_title}  = "Window CV";
+        $option{Top} += $option{Height} + 14.25;
+        $excel_obj->draw_2y( $sheet_name, \%option );
     }
 }
 
@@ -185,10 +205,10 @@ my @sheet_names = @{ $excel_obj->sheet_names };
 # POST Processing
 #----------------------------------------------------------#
 # add time stamp to "basic" sheet
-$excel_obj->time_stamp("basic") if $time_stamp;
+$excel_obj->time_stamp("basic");
 
 # add an index sheet
-$excel_obj->add_index_sheet if $add_index_sheet;
+$excel_obj->add_index_sheet;
 
 print "$outfile has been generated.\n";
 
@@ -204,12 +224,14 @@ __END__
 =head1 SYNOPSIS
 
     multi_chart_factory.pl [options]
-     Options:
-       --help            brief help message
-       --man             full documentation
-       --infile          input file name (full path)
-       --outfile         output file name
-       
+      Options:
+        --help              brief help message
+        --man               full documentation
+        --infile            input file name (full path)
+        --outfile           output file name
+        --jc                Jukes & Cantor correction
+        --replace           replace text when charting
+                            --replace diversity=divergence
 
 =head1 OPTIONS
 
