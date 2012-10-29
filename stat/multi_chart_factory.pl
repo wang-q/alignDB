@@ -4,6 +4,7 @@ use warnings;
 
 use Getopt::Long;
 use Pod::Usage;
+use Config::Tiny;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
