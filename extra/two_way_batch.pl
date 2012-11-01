@@ -33,6 +33,10 @@ my $password   = $Config->{database}{password};
 my $db_name    = $Config->{database}{db};
 my $ensembl_db = $Config->{database}{ensembl};
 
+# axt
+my $axt_dir       = $Config->{taxon}{axt_dir};
+my $axt_threshold = $Config->{generate}{axt_threshold};
+
 # target, query init values
 my $target_taxon_id = $Config->{taxon}{target_taxon_id};
 my $target_name     = $Config->{taxon}{target_name};
@@ -42,40 +46,40 @@ my $query_name      = $Config->{taxon}{query_name};
 my $target = $target_taxon_id . "," . $target_name;    # target sequence
 my $query  = $query_taxon_id . "," . $query_name;      # query sequence
 
-# axt
-my $axt_dir = $Config->{taxon}{axt_dir};
-
 # running tasks
 my $run = "common";
 
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
 
-# legnth threshold of align
-my $axt_threshold = $Config->{generate}{axt_threshold};
+# number of alignments process in one child process
+my $batch_number = $Config->{generate}{batch};
 
 # stat parameter
-my $sum_threshold = $Config->{stat}{sum_threshold};
+my $sum_threshold     = $Config->{stat}{sum_threshold};
+my $combine_threshold = $Config->{stat}{combine_threshold};
 
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'             => \$help,
-    'man'                => \$man,
-    'server=s'           => \$server,
-    'port=i'             => \$port,
-    'db=s'               => \$db_name,
-    'username=s'         => \$username,
-    'password=s'         => \$password,
-    'a|axt_dir=s'        => \$axt_dir,
-    't|target=s'         => \$target,
-    'q|query=s'          => \$query,
-    'e|ensembl=s'        => \$ensembl_db,
-    'parallel=i'         => \$parallel,
-    'at|axt_threshold=i' => \$axt_threshold,
-    'st|sum_threshold=i' => \$sum_threshold,
-    'run=s'              => \$run,
+    'help|?'                 => \$help,
+    'man'                    => \$man,
+    's|server=s'             => \$server,
+    'P|port=i'               => \$port,
+    'd|db=s'                 => \$db_name,
+    'u|username=s'           => \$username,
+    'p|password=s'           => \$password,
+    'a|axt_dir=s'            => \$axt_dir,
+    't|target=s'             => \$target,
+    'q|query=s'              => \$query,
+    'e|ensembl=s'            => \$ensembl_db,
+    'parallel=i'             => \$parallel,
+    'batch=i'                => \$batch_number,
+    'at|lt|axt_threshold=i'  => \$axt_threshold,
+    'st|sum_threshold=i'     => \$sum_threshold,
+    'ct|combine_threshold=i' => \$combine_threshold,
+    'r|run=s'                => \$run,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -145,7 +149,8 @@ my $dispatch = {
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
-        . " --parallel=$parallel",
+        . " --parallel=$parallel"
+        . " --batch=$batch_number",
     20 => "perl $FindBin::Bin/../gene/insert_gene.pl"
         . " -s=$server"
         . " --port=$port"
@@ -160,7 +165,8 @@ my $dispatch = {
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
-        . " --parallel=$parallel",
+        . " --parallel=$parallel"
+        . " --batch=$batch_number",
     30 => "perl $FindBin::Bin/../init/update_feature.pl"
         . " -s=$server"
         . " --port=$port"
@@ -168,7 +174,8 @@ my $dispatch = {
         . " --password=$password"
         . " -d=$db_name"
         . " -e=$ensembl_db"
-        . " --parallel=$parallel",
+        . " --parallel=$parallel"
+        . " --batch=$batch_number",
     31 => "perl $FindBin::Bin/../init/update_indel_slippage.pl"
         . " -s=$server"
         . " --port=$port"
@@ -194,7 +201,8 @@ my $dispatch = {
         . " --password=$password"
         . " -d=$db_name"
         . " -o=$FindBin::Bin/../stat/$db_name.common.xlsx"
-        . " -t=$sum_threshold",
+        . " -st=$sum_threshold"
+        . " -ct=$combine_threshold",
     41 => "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"
@@ -202,7 +210,8 @@ my $dispatch = {
         . " --password=$password"
         . " -d=$db_name"
         . " -o=$FindBin::Bin/../stat/$db_name.gc.xlsx"
-        . " -t=$sum_threshold",
+        . " -st=$sum_threshold"
+        . " -ct=$combine_threshold",
     42 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"

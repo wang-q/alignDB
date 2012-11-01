@@ -37,14 +37,14 @@ my $gff_file = '';
 
 # fa
 my $dir_fa           = '/home/wangq/Date/Alignment/yeast6/';
-my $length_thredhold = $Config->{ref}{length_threshold};
+my $length_threshold = $Config->{ref}{length_threshold};
 
 # input is galaxy style blocked fasta
 my $block;
 my $target_id;    # taxon id of target
 
 # running tasks
-my $run = "all";
+my $run = "common";
 
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
@@ -74,7 +74,7 @@ GetOptions(
     'block'                  => \$block,
     'parallel=i'             => \$parallel,
     'batch=i'                => \$batch_number,
-    'lt|length_thredhold=i'  => \$length_thredhold,
+    'lt|length_threshold=i'  => \$length_threshold,
     'st|sum_threshold=i'     => \$sum_threshold,
     'ct|combine_threshold=i' => \$combine_threshold,
     'r|run=s'                => \$run,
@@ -125,7 +125,7 @@ my $dispatch = {
         . " --password=$password"
         . " --db=$db_name"
         . " --dir=$dir_fa"
-        . " --length=$length_thredhold"
+        . " --length=$length_threshold"
         . " --parallel=$parallel"
         . " --batch=$batch_number"
         . ( $block     ? " --block"         : "" )
