@@ -26,6 +26,8 @@ my $add_index_sheet = $Config->{stat}{add_index_sheet};
 my $infile  = '';
 my $outfile = '';
 
+my %replace;
+
 my $man  = 0;
 my $help = 0;
 
@@ -37,6 +39,7 @@ GetOptions(
     'jc=s'              => \$jc_correction,
     'time_stamp=s'      => \$time_stamp,
     'add_index_sheet=s' => \$add_index_sheet,
+    'replace=s'         => \%replace,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -53,10 +56,14 @@ if ($outfile) {
     $excel_obj = AlignDB::Excel->new(
         infile  => $infile,
         outfile => $outfile,
+        replace => \%replace,
     );
 }
 else {
-    $excel_obj = AlignDB::Excel->new( infile => $infile, );
+    $excel_obj = AlignDB::Excel->new(
+        infile  => $infile,
+        replace => \%replace,
+    );
     $outfile = $excel_obj->outfile;
 }
 
@@ -98,9 +105,9 @@ $excel_obj->jc_correction if $jc_correction;
     foreach (@sheets) {
         my $sheet_name = $_;
         my $x_title
-            = /gene/ ? "Distance to gene"
-            : /exon/ ? "Distance to exon"
-            :          "Distance to coding";
+            = /gene/ ? "Distance to gene borders"
+            : /exon/ ? "Distance to exon borders"
+            :          "Distance to coding borders";
         my %option = (
             chart_serial => 1,
             x_column     => 1,

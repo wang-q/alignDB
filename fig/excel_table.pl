@@ -164,4 +164,6 @@ $excel->Quit;
 
 __END__
 
-perl corel_fig.pl -i Fig.S1.yaml
+=head1 SYNOPSIS
+
+perl excel_table.pl -i Fig.S1.yaml

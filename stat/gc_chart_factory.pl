@@ -92,7 +92,7 @@ $excel_obj->jc_correction if $jc_correction;
         first_row    => 2,
         last_row     => 22,
         x_max_scale  => 20,
-        x_title      => "Distance to GC trough (d')",
+        x_title      => "Distance to GC trough",
         y_title      => "Nucleotide diversity",
         Height       => 200,
         Width        => 260,
@@ -121,7 +121,7 @@ $excel_obj->jc_correction if $jc_correction;
     $sheet_name           = 'combined_density';
     $option{chart_serial} = 1;
     $option{y_column}     = 2;
-    $option{x_title}      = "Half wave length";
+    $option{x_title}      = "Wave length";
     $option{y_title}      = "Nucleotide diversity";
     $option{Top}          = 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
@@ -146,11 +146,11 @@ $excel_obj->jc_correction if $jc_correction;
     $sheet_name           = 'combined_amplitude';
     $option{chart_serial} = 1;
     $option{y_column}     = 2;
-    $option{x_title}      = "Double amplitude";
+    $option{x_title}      = "Amplitude";
     $option{y_title}      = "Nucleotide diversity";
     $option{Top}          = 14.25;
     $option{x_scale_unit} = 5;
-    $option{x_max_scale}  = undef;
+    $option{x_max_scale}  = 30;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     # chart 2
@@ -158,8 +158,6 @@ $excel_obj->jc_correction if $jc_correction;
     $option{y_column} = 4;
     $option{y_title}  = "Indel per 100 bp";
     $option{Top} += $option{Height} + 14.25;
-    $option{x_scale_unit} = 5;
-    $option{x_max_scale}  = undef;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     # chart 3
@@ -175,11 +173,11 @@ $excel_obj->jc_correction if $jc_correction;
     $sheet_name           = 'combined_a2d';
     $option{chart_serial} = 1;
     $option{y_column}     = 2;
-    $option{x_title}      = "Double amplitude/Half wave length";
+    $option{x_title}      = "Amplitude/Wave length";
     $option{y_title}      = "Nucleotide diversity";
     $option{Top}          = 14.25;
     $option{x_scale_unit} = 5;
-    $option{x_max_scale}  = undef;
+    $option{x_max_scale}  = 20;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     # chart 2
@@ -187,8 +185,6 @@ $excel_obj->jc_correction if $jc_correction;
     $option{y_column} = 4;
     $option{y_title}  = "Indel per 100 bp";
     $option{Top} += $option{Height} + 14.25;
-    $option{x_scale_unit} = 5;
-    $option{x_max_scale}  = undef;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     # chart 3
@@ -239,7 +235,7 @@ $excel_obj->jc_correction if $jc_correction;
     );
     my %option = (
         chart_serial   => 1,
-        x_title        => "Distance to GC trough (d')",
+        x_title        => "Distance to GC trough",
         y_title        => "Indel per 100 bp",
         Height         => 300,
         Width          => 390,
@@ -265,7 +261,7 @@ $excel_obj->jc_correction if $jc_correction;
     my @group_name = ( "10--14", "15--19", "20--100", );
     my %option     = (
         chart_serial   => 1,
-        x_title        => "Distance to GC trough (d')",
+        x_title        => "Distance to GC trough",
         y_title        => "Indel per 100 bp",
         Height         => 300,
         Width          => 390,
