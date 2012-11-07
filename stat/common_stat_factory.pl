@@ -169,27 +169,22 @@ my $basic = sub {
     }
 
     {    # write contents
+        my $query_name = 'No. of strains';
+        my %option     = (
+            query_name => $query_name,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            row        => [2],
+        );
+        ($sheet_row) = $write_obj->write_row_direct( $sheet, \%option );
+    }
+
+    {    # write contents
         my $query_name = 'Target length (Mb)';
         my $sql_query  = q{
             SELECT  SUM(s.seq_length) / 1000000.00
             FROM    sequence s, target t
             WHERE   s.seq_id = t.seq_id
-        };
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    {    # write contents
-        my $query_name = 'Query length (Mb)';
-        my $sql_query  = q{
-            SELECT  SUM(s.seq_length) / 1000000.00
-            FROM    sequence s, query q
-            WHERE   s.seq_id = q.seq_id
         };
         my %option = (
             query_name => $query_name,
@@ -226,6 +221,21 @@ my $basic = sub {
                     WHERE a.align_id = i.align_id
                     GROUP BY a.align_id) i
             WHERE   a.align_id = i.align_id
+        };
+        my %option = (
+            query_name => $query_name,
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    {    # write contents
+        my $query_name = 'SNVs per 100 bp';
+        my $sql_query  = q{
+            SELECT  SUM(a.align_differences) / SUM(a.align_comparables) * 100.0
+            FROM    align a
         };
         my %option = (
             query_name => $query_name,

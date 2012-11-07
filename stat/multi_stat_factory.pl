@@ -175,7 +175,6 @@ my $basic = sub {
 
     {    # write contents
         my $query_name = 'No. of strains';
-        my @headers    = ($all_freq);
         my %option     = (
             query_name => $query_name,
             sheet_row  => $sheet_row,
