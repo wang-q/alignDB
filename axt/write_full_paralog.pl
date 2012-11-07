@@ -36,12 +36,12 @@ $|++;
 GetOptions(
     'help|?'       => \$help,
     'man|m'        => \$man,
-    'server=s'     => \$server,
-    'port=i'       => \$port,
-    'db|d=s'       => \$db,
-    'username=s'   => \$username,
-    'password=s'   => \$password,
-    'datalib|da=s' => \$datalib,
+    's|server=s'   => \$server,
+    'P|port=i'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'da|datalib=s' => \$datalib,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -107,8 +107,7 @@ my $axt_serial = 0;
 # for each align
 while ( my @row = $align_sth->fetchrow_array ) {
     my ( $align_id, $align_paralog ) = @row;
-    print "\nProcessing align_id $align_id,",
-        " align_paralog $align_paralog\n";
+    print "\nProcessing align_id $align_id,", " align_paralog $align_paralog\n";
 
     $seq_sth->execute($align_id);
 
@@ -145,9 +144,7 @@ while ( my @row = $align_sth->fetchrow_array ) {
         print " " x 2, "Write FASTA file\n";
 
         my $query_header
-            = "align_id_$align_id|"
-            . $query_obj->start . "-"
-            . $query_obj->end;
+            = "align_id_$align_id|" . $query_obj->start . "-" . $query_obj->end;
         my $hit_header
             = "$longest_hit_name|" . $hit_obj->start . "-" . $hit_obj->end;
 

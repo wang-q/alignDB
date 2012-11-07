@@ -47,11 +47,11 @@ my $help = 0;
 GetOptions(
     'help|?'       => \$help,
     'man'          => \$man,
-    'server=s'     => \$server,
-    'port=i'       => \$port,
-    'db=s'         => \$db,
-    'username=s'   => \$username,
-    'password=s'   => \$password,
+    's|server=s'   => \$server,
+    'P|port=i'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
     'y|yaml_dir=s' => \$yaml_dir,
     'want_equal'   => \$want_equal,
     'parallel=i'   => \$parallel,
@@ -73,7 +73,7 @@ my @yaml_files
     = File::Find::Rule->file->name( '*.yaml', '*.yml' )->in($yaml_dir);
 printf "\n----Total YAML Files: %4s----\n\n", scalar @yaml_files;
 
-for my $yaml_file (sort @yaml_files) {
+for my $yaml_file ( sort @yaml_files ) {
     print "Loading $yaml_file\n";
     my $base;
     ( undef, undef, $base ) = File::Spec->splitpath($yaml_file);
@@ -91,10 +91,9 @@ for my $yaml_file (sort @yaml_files) {
         my $slice_set_of = LoadFile($yaml_file);
 
         my $worker = sub {
-            my $chr_name = shift;
-            my $slice_set
-                = AlignDB::IntSpan->new( $slice_set_of->{$chr_name} );
-            my $outfile = File::Spec->catfile( $base, "$chr_name.axt" );
+            my $chr_name  = shift;
+            my $slice_set = AlignDB::IntSpan->new( $slice_set_of->{$chr_name} );
+            my $outfile   = File::Spec->catfile( $base, "$chr_name.axt" );
             mkdir $base if !-d $base;
             write_slice( $chr_name, $slice_set, $outfile );
         };
@@ -132,7 +131,7 @@ sub write_slice {
     print "Output file is $outfile\n";
 
     # alignment
-    my @align_ids = @{$obj->get_align_ids_of_chr_name($chr_name)};
+    my @align_ids = @{ $obj->get_align_ids_of_chr_name($chr_name) };
 
     my %align_serial;
 
@@ -194,8 +193,7 @@ sub write_slice {
             # align coordinates to target & query chromosome coordinates
             my $target_seg_start
                 = $pos_obj->at_target_chr( $align_id, $seg_start );
-            my $target_seg_end
-                = $pos_obj->at_target_chr( $align_id, $seg_end );
+            my $target_seg_end = $pos_obj->at_target_chr( $align_id, $seg_end );
             my $query_seg_start
                 = $pos_obj->at_query_chr( $align_id, $seg_start );
             my $query_seg_end = $pos_obj->at_query_chr( $align_id, $seg_end );

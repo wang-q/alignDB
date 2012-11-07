@@ -35,16 +35,16 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'target=s'   => \$target_chr_id_runlist,
-    'query=s'    => \$query_chr_id_runlist,
-    'flag=s'    => \$chr_flag,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=i'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'target=s'     => \$target_chr_id_runlist,
+    'query=s'      => \$query_chr_id_runlist,
+    'flag=s'       => \$chr_flag,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -100,13 +100,13 @@ my $align_sth = $dbh->prepare($align_query);
 my @chr_pairs;
 for my $tchr_id ( $target_chr_id_set->elements ) {
     for my $qchr_id ( $query_chr_id_set->elements ) {
-        if (defined $chr_flag and $chr_flag == 1) {# in same chr
-            if ($tchr_id == $qchr_id) {
+        if ( defined $chr_flag and $chr_flag == 1 ) {    # in same chr
+            if ( $tchr_id == $qchr_id ) {
                 push @chr_pairs, [ $tchr_id, $qchr_id ];
             }
         }
-        elsif (defined $chr_flag and $chr_flag == 2) {# between two chrs
-            if ($tchr_id != $qchr_id) {
+        elsif ( defined $chr_flag and $chr_flag == 2 ) {    # between two chrs
+            if ( $tchr_id != $qchr_id ) {
                 push @chr_pairs, [ $tchr_id, $qchr_id ];
             }
         }
@@ -136,6 +136,7 @@ for my $chr_pair (@chr_pairs) {
         my ( $align_id, $align_length ) = @row2;
 
         print "Processing align_id $align_id\n";
+
         # target
         my $target_info      = $obj->get_target_info($align_id);
         my $target_chr_name  = $target_info->{chr_name};
@@ -152,7 +153,7 @@ for my $chr_pair (@chr_pairs) {
         my ( $target_seq, $query_seq ) = @{ $obj->get_seqs($align_id) };
 
         my $score
-            = ( $target_chr_end - $target_chr_start + 1 ) * 100;  # sham score
+            = ( $target_chr_end - $target_chr_start + 1 ) * 100;    # sham score
 
         # append axt file
         {
@@ -160,8 +161,7 @@ for my $chr_pair (@chr_pairs) {
                 mkdir $db, 0777
                     or die "Cannot create \"$db\" directory: $!";
             }
-            my $outfile
-                = "$db/$target_chr_name" . "vs$query_chr_name" . ".axt";
+            my $outfile = "$db/$target_chr_name" . "vs$query_chr_name" . ".axt";
 
             # append axt file
             open my $outfh, '>>', $outfile;

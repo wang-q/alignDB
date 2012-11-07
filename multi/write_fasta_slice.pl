@@ -44,11 +44,11 @@ my $help = 0;
 GetOptions(
     'help|?'       => \$help,
     'man'          => \$man,
-    'server=s'     => \$server,
-    'port=i'       => \$port,
-    'db=s'         => \$db,
-    'username=s'   => \$username,
-    'password=s'   => \$password,
+    's|server=s'   => \$server,
+    'P|port=i'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
     'y|yaml_dir=s' => \$yaml_dir,
     'parallel=i'   => \$parallel,
 ) or pod2usage(2);
@@ -87,10 +87,9 @@ for my $yaml_file ( sort @yaml_files ) {
         my $slice_set_of = LoadFile($yaml_file);
 
         my $worker = sub {
-            my $chr_name = shift;
-            my $slice_set
-                = AlignDB::IntSpan->new( $slice_set_of->{$chr_name} );
-            my $outdir = File::Spec->rel2abs($base);
+            my $chr_name  = shift;
+            my $slice_set = AlignDB::IntSpan->new( $slice_set_of->{$chr_name} );
+            my $outdir    = File::Spec->rel2abs($base);
             mkdir $base if !-d $base;
             write_slice( $chr_name, $slice_set, $outdir );
         };
@@ -120,7 +119,7 @@ sub write_slice {
 
     # position finder
     my $pos_obj = AlignDB::Position->new( dbh => $dbh );
-    
+
     my $taxon_id;
     {
         my $sth = $dbh->prepare(
@@ -183,8 +182,7 @@ sub write_slice {
             # align coordinates to target & query chromosome coordinates
             my $target_seg_start
                 = $pos_obj->at_target_chr( $align_id, $seg_start );
-            my $target_seg_end
-                = $pos_obj->at_target_chr( $align_id, $seg_end );
+            my $target_seg_end = $pos_obj->at_target_chr( $align_id, $seg_end );
 
             my $outfile
                 = "$outdir/"
@@ -200,8 +198,8 @@ sub write_slice {
                     . "\n";
                 open my $outfh, '>', $outfile;
                 print {$outfh} ">ref\n";
-                print {$outfh}
-                    substr( $ref_seq, $seg_start - 1, $seg_length ), "\n";
+                print {$outfh} substr( $ref_seq, $seg_start - 1, $seg_length ),
+                    "\n";
                 print {$outfh} ">target\n";
                 print {$outfh}
                     substr( $target_seq, $seg_start - 1, $seg_length ), "\n";
@@ -209,8 +207,8 @@ sub write_slice {
                 for my $i ( 0 .. $#query_seqs ) {
                     print {$outfh} ">query$i\n";
                     print {$outfh}
-                        substr( $query_seqs[$i], $seg_start - 1,
-                        $seg_length ), "\n";
+                        substr( $query_seqs[$i], $seg_start - 1, $seg_length ),
+                        "\n";
                 }
                 print {$outfh} "\n";
                 close $outfh;

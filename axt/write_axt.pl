@@ -37,23 +37,23 @@ my $length_threshold = $Config->{write}{feature_threshold};
 my $feature          = $Config->{write}{feature};
 
 # run in parallel mode
-my $parallel = $Config->{feature}{parallel};
+my $parallel = $Config->{generate}{parallel};
 
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'ensembl=s'  => \$ensembl_db,
-    'length=i'   => \$length_threshold,
-    'feature=s'  => \$feature,
-    'parallel=i' => \$parallel,
+    'help|?'        => \$help,
+    'man'           => \$man,
+    's|server=s'    => \$server,
+    'P|port=i'      => \$port,
+    'd|db=s'        => \$db,
+    'u|username=s'  => \$username,
+    'p|password=s'  => \$password,
+    'e|ensembl=s'   => \$ensembl_db,
+    'l|lt|length=i' => \$length_threshold,
+    'feature=s'     => \$feature,
+    'parallel=i'    => \$parallel,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -189,8 +189,7 @@ my $worker = sub {
             # align coordinates to target & query chromosome coordinates
             my $target_seg_start
                 = $pos_obj->at_target_chr( $align_id, $seg_start );
-            my $target_seg_end
-                = $pos_obj->at_target_chr( $align_id, $seg_end );
+            my $target_seg_end = $pos_obj->at_target_chr( $align_id, $seg_end );
             my $query_seg_start
                 = $pos_obj->at_query_chr( $align_id, $seg_start );
             my $query_seg_end = $pos_obj->at_query_chr( $align_id, $seg_end );
@@ -245,15 +244,14 @@ __END__
 =head1 SYNOPSIS
 
     write_axt.pl [options]
-     Options:
-       --help            brief help message
-       --man             full documentation
-       --server          MySQL server IP/Domain name
-       --db              database name
-       --username        username
-       --password        password
-       --ensembl         ensembl database name
-       
+      Options:
+        --help              brief help message
+        --man               full documentation
+        --server            MySQL server IP/Domain name
+        --db                database name
+        --username          username
+        --password          password
+        --ensembl           ensembl database name
 
 =head1 OPTIONS
 

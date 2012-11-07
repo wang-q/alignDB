@@ -34,15 +34,15 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'      => \$help,
-    'man'         => \$man,
-    'server=s'    => \$server,
-    'port=s'      => \$port,
-    'db=s'        => \$db,
-    'username=s'  => \$username,
-    'password=s'  => \$password,
-    'query_dir=s' => \$query_dir,
-    'length=i'    => \$length_threshold,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=s'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'query_dir=s'  => \$query_dir,
+    'length=i'     => \$length_threshold,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -124,26 +124,26 @@ foreach my $target_chr_id (@target_chr_ids) {
 
         print "Read in chromosome $chr_name sequences\n";
 
-        my $full_chr_set       = AlignDB::IntSpan->new( "1-$chr_length");
+        my $full_chr_set       = AlignDB::IntSpan->new("1-$chr_length");
         my $query_chr_set      = AlignDB::IntSpan->new();
         my $complement_chr_set = AlignDB::IntSpan->new();
-        
+
         $query_sth->execute( $target_chr_id, $query_chr_id );
         while ( my @row = $query_sth->fetchrow_array ) {
             my ( $chr_start, $chr_end ) = @row;
-            $query_chr_set->add( "$chr_start-$chr_end");
+            $query_chr_set->add("$chr_start-$chr_end");
         }
-        
-        $complement_chr_set = $full_chr_set->diff( $query_chr_set);
+
+        $complement_chr_set = $full_chr_set->diff($query_chr_set);
 
         print "complement_chr_set generated\n";
 
         open OUTFH, ">$chr_name.complement.fa";
         my @spans = $complement_chr_set->spans();
-        my $i = 0;
+        my $i     = 0;
     SEG: foreach my $span (@spans) {
-            my $seg_start = $span->[0];
-            my $seg_end = $span->[1];
+            my $seg_start  = $span->[0];
+            my $seg_end    = $span->[1];
             my $seg_length = $seg_end - $seg_start + 1;
             next if ( $seg_length < $length_threshold );
 
