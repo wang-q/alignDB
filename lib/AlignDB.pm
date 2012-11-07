@@ -1785,7 +1785,7 @@ sub get_query_chr_info {
 # See Also   : get_chr_info
 sub get_chrs {
     my $self = shift;
-    my $goal = shift;
+    my $goal = shift || 'target';
 
     my $dbh = $self->dbh;
 
