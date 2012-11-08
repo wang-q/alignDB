@@ -1819,8 +1819,8 @@ foreach my $n (@tasks) {
     #if ($n == 8) { &$extreme_amplitude_group; next; }
     #if ($n == 24) { &$segment_extreme_indel;  next; }
 
-    #if ( $n == 26 ) { &$segment_gc_indel_cr; next; }
-    #if ( $n == 27 ) { &$segment_cv_indel_cr; next; }
+    if ( $n == 30 ) { &$segment_gc_indel_cr; next; }
+    if ( $n == 31 ) { &$segment_cv_indel_cr; next; }
 }
 
 $stopwatch->end_message;
