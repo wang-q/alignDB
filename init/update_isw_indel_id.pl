@@ -27,23 +27,23 @@ my $stopwatch = AlignDB::Stopwatch->new(
 );
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'db=s'       => \$db,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=i'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -67,10 +67,10 @@ my $dbh = $obj->dbh;
 # start update
 #----------------------------------------------------------#
 {
-    
+
     # alter table isw if column isw_indel_id does not exist
-    my $check_result = $obj->check_column('isw', 'isw_indel_id');
-    if (!defined $check_result) {
+    my $check_result = $obj->check_column( 'isw', 'isw_indel_id' );
+    if ( !defined $check_result ) {
         print "Alter table structure\n";
         my $alter_query = q{
             alter table `isw` 
@@ -99,6 +99,9 @@ my $dbh = $obj->dbh;
 
     $isw_sth_1->finish;
     $isw_sth_2->finish;
+
+    my $index = "CREATE INDEX indel_isw_id_FK ON isw ( isw_indel_id );";
+    $obj->execute_sql($index);
 }
 
 $stopwatch->end_message;

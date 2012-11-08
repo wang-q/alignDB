@@ -58,20 +58,20 @@ my $help = 0;
 my $man  = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'length=i'   => \$length_thredhold,
-    'dir=s'      => \$dir_fa,
-    'id=i'       => \$target_id,
-    'block'      => \$block,
-    'parallel=i' => \$parallel,
-    'batch=i'    => \$batch_number,
-    'gzip'       => \$gzip,
+    'help|?'        => \$help,
+    'man'           => \$man,
+    's|server=s'    => \$server,
+    'P|port=i'      => \$port,
+    'd|db=s'        => \$db,
+    'u|username=s'  => \$username,
+    'p|password=s'  => \$password,
+    'l|lt|length=i' => \$length_thredhold,
+    'dir=s'         => \$dir_fa,
+    'id=i'          => \$target_id,
+    'block'         => \$block,
+    'parallel=i'    => \$parallel,
+    'batch=i'       => \$batch_number,
+    'gzip'          => \$gzip,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -82,6 +82,17 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 system "perl $FindBin::Bin/../init/init_alignDB.pl"
     . " -d=$db -i=$FindBin::Bin/../minit.sql";
+
+{    # add index on isw_indel_id
+    my $obj = AlignDB::Multi->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+
+    my $index = "CREATE INDEX indel_isw_id_FK ON isw ( isw_indel_id );";
+    $obj->execute_sql($index);
+}
 
 #----------------------------------------------------------#
 # Search for all files and push their paths to @files
