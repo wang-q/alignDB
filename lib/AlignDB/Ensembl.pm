@@ -36,6 +36,7 @@ sub BUILD {
         _non_repeat_set => '??',
         _te_set         => '??',
         _non_te_set     => '??',
+        _ncnr_set       => '??',
     };
 
     # Connect to the ensembl database
@@ -139,8 +140,7 @@ sub set_slice {
     );
 
     for my $te_type (@te_types) {
-        for my $te ( @{ $slice->get_all_RepeatFeatures( undef, $te_type ) } )
-        {
+        for my $te ( @{ $slice->get_all_RepeatFeatures( undef, $te_type ) } ) {
             $te = $te->transform('chromosome');
             $te_set->merge( _ftr2runlist($te) );
         }
@@ -148,6 +148,8 @@ sub set_slice {
     $te_set = $slice_set->intersect($te_set);
 
     my $non_te_set = $slice_set->diff($te_set);
+
+    my $ncnr_set = $slice_set->diff($cds_set)->intersect($non_repeat_set);
 
     # Store slice specified properties and feature sets
     $self->{slice}{_chr}            = $chr;
@@ -165,6 +167,7 @@ sub set_slice {
     $self->{slice}{_non_repeat_set} = $non_repeat_set;
     $self->{slice}{_te_set}         = $te_set;
     $self->{slice}{_non_te_set}     = $non_te_set;
+    $self->{slice}{_ncnr_set}       = $ncnr_set;
 
     return;
 }
