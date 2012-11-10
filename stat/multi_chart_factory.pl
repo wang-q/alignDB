@@ -202,6 +202,43 @@ my @sheet_names = @{ $excel_obj->sheet_names };
     }
 }
 
+{
+
+    #----------------------------#
+    # worksheet -- distance_ld
+    #----------------------------#
+    my @sheets = grep {/^ld/} @sheet_names;
+    foreach (@sheets) {
+        my $sheet_name = $_;
+        my %option     = (
+            chart_serial => 1,
+            x_column     => 1,
+            y_column     => 2,
+            y2_column    => 4,
+            first_row    => 3,
+            last_row     => 13,
+            x_max_scale  => 10,
+            x_title      => "Distance to indels (d1)",
+            y_title      => "r",
+            y2_title     => "Dprime",
+            Height       => 200,
+            Width        => 260,
+            Top          => 14.25,
+            Left         => 650,
+        );
+        $excel_obj->draw_2y( $sheet_name, \%option );
+
+        # chart 2
+        $option{chart_serial}++;
+        $option{y_column}  = 3;
+        $option{y_title}   = "r**2";
+        $option{y2_column} = 5;
+        $option{y2_title}  = "|Dprime|";
+        $option{Top} += $option{Height} + 14.25;
+        $excel_obj->draw_2y( $sheet_name, \%option );
+    }
+}
+
 #----------------------------------------------------------#
 # POST Processing
 #----------------------------------------------------------#

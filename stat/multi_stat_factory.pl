@@ -33,7 +33,7 @@ my $run               = $Config->{stat}{run};
 my $combine_threshold = $Config->{stat}{combine_threshold};
 my $outfile           = "";
 
-my $all_freq;
+my $max_freq;    # count freq one by one to $max_freq
 
 my $help = 0;
 my $man  = 0;
@@ -47,7 +47,7 @@ GetOptions(
     'u|username=s'           => \$username,
     'p|password=s'           => \$password,
     'o|output=s'             => \$outfile,
-    'f|freq=s'               => \$all_freq,
+    'max|max_freq=s'         => \$max_freq,
     'r|run=s'                => \$run,
     'ct|combine_threshold=i' => \$combine_threshold,
 ) or pod2usage(2);
@@ -122,15 +122,16 @@ if ( $combine_threshold == 0 ) {
 #----------------------------#
 # count freq
 #----------------------------#
-if ( !$all_freq ) {
+my $all_freq;
+{
     my $dbh = $write_obj->dbh;
 
     my $sql_query = q{
-            SELECT DISTINCT COUNT(q.query_id) + 1
-            FROM  query q, sequence s
-            WHERE q.seq_id = s.seq_id
-            GROUP BY s.align_id
-        };
+        SELECT DISTINCT COUNT(q.query_id) + 1
+        FROM  query q, sequence s
+        WHERE q.seq_id = s.seq_id
+        GROUP BY s.align_id
+    };
     my $sth = $dbh->prepare($sql_query);
 
     my @counts;
@@ -145,10 +146,48 @@ if ( !$all_freq ) {
     $all_freq = $counts[0];
 }
 
+if ( $all_freq < 3 ) {
+    die "all_freq is $all_freq, are you sure this is a AlignDB::Multi DB?\n";
+}
+
 my @freqs;
-foreach ( 1 .. $all_freq - 1 ) {
-    my $name = $_ . "of" . $all_freq;
-    push @freqs, [ $name, $_, $_ ];
+if ($max_freq) {
+    for ( 1 .. $max_freq - 1 ) {
+        my $name = $_ . "of" . $all_freq;
+        push @freqs, [ $name, $_, $_ ];
+    }
+}
+else {
+
+    # for 22 flies, 1, 2, low, mid, high, 20, 21
+    {
+        my @all_freqs = 1 .. $all_freq - 1;
+        if ( scalar @all_freqs <= 7 ) {
+            for (@all_freqs) {
+                my $name = $_ . "of" . $all_freq;
+                push @freqs, [ $name, $_, $_ ];
+            }
+        }
+        else {
+            for ( 1, 2 ) {
+                my $name = $_ . "of" . $all_freq;
+                push @freqs, [ $name, $_, $_ ];
+            }
+
+            my @to_be_combs = @all_freqs[ 2 .. $all_freq - 4 ];
+            my @chunks      = reverse apportion( scalar @to_be_combs, 3 );
+            my @chunks_freq = multi_slice( \@to_be_combs, @chunks );
+            for my $chunk (@chunks_freq) {
+                my $name = join( '_', @{$chunk} ) . "of" . $all_freq;
+                push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
+            }
+
+            for ( $all_freq - 3, $all_freq - 2 ) {
+                my $name = $_ . "of" . $all_freq;
+                push @freqs, [ $name, $_, $_ ];
+            }
+        }
+    }
 }
 
 #----------------------------------------------------------#
@@ -1427,6 +1466,175 @@ my $frequency_pigccv = sub {
     }
 };
 
+my $ld = sub {
+
+    #----------------------------------------------------------#
+    # worksheet -- distance_ld
+    #----------------------------------------------------------#
+
+    {
+        my $sheet_name = 'ld';
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        {    # write header
+            my @headers = qw{distance AVG_r AVG_r2 AVG_Dprime AVG_Dprime_abs
+                COUNT};
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            my $sql_query = q{
+                SELECT
+                    w.isw_distance distance,
+                    AVG(s.snp_r) AVG_r,
+                    AVG(POWER(s.snp_r, 2)) AVG_r2,
+                    AVG(s.snp_dprime) AVG_Dprime,
+                    AVG(ABS(s.snp_dprime)) AVG_Dprime_abs,
+                    COUNT(*) COUNT
+                FROM indel i, isw w, snp s
+                WHERE 1 = 1
+                AND i.indel_id = w.isw_indel_id
+                AND w.isw_id = s.isw_id
+                AND i.indel_freq != 'unknown'
+                AND s.snp_freq != 'unknown'
+                GROUP BY w.isw_distance 
+            };
+            my %option = (
+                sql_query => $sql_query,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    }
+
+};
+
+my $ld_insdel = sub {
+    my @type_levels = ( [ 'ins', 'I' ], [ 'del', 'D' ], );
+
+    my $write_sheet = sub {
+        my ($level) = @_;
+        my $sheet_name = 'ld_' . $level->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        {    # write header
+            my @headers = qw{distance AVG_r AVG_r2 AVG_Dprime AVG_Dprime_abs
+                COUNT};
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            my $sql_query = q{
+                SELECT
+                    w.isw_distance distance,
+                    AVG(s.snp_r) AVG_r,
+                    AVG(POWER(s.snp_r, 2)) AVG_r2,
+                    AVG(s.snp_dprime) AVG_Dprime,
+                    AVG(ABS(s.snp_dprime)) AVG_Dprime_abs,
+                    COUNT(*) COUNT
+                FROM indel i, isw w, snp s
+                WHERE 1 = 1
+                AND i.indel_id = w.isw_indel_id
+                AND w.isw_id = s.isw_id
+                AND i.indel_freq != 'unknown'
+                AND s.snp_freq != 'unknown'
+                AND i.indel_type = ?
+                GROUP BY w.isw_distance 
+            };
+            my %option = (
+                sql_query  => $sql_query,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
+    foreach (@type_levels) {
+        &$write_sheet($_);
+    }
+};
+
+my $ld_freq = sub {
+    my @freq_levels = @freqs;
+
+    my $write_sheet = sub {
+        my ($level) = @_;
+        my $sheet_name = 'ld_freq_' . $level->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        {    # write header
+            my @headers = qw{distance AVG_r AVG_r2 AVG_Dprime AVG_Dprime_abs
+                COUNT};
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            my $sql_query = q{
+                SELECT
+                    w.isw_distance distance,
+                    AVG(s.snp_r) AVG_r,
+                    AVG(POWER(s.snp_r, 2)) AVG_r2,
+                    AVG(s.snp_dprime) AVG_Dprime,
+                    AVG(ABS(s.snp_dprime)) AVG_Dprime_abs,
+                    COUNT(*) COUNT
+                FROM indel i, isw w, snp s
+                WHERE 1 = 1
+                AND i.indel_id = w.isw_indel_id
+                AND w.isw_id = s.isw_id
+                AND i.indel_freq != 'unknown'
+                AND s.snp_freq != 'unknown'
+                AND i.indel_freq >= ?
+                AND i.indel_freq <= ?
+                GROUP BY w.isw_distance 
+            };
+            my %option = (
+                sql_query  => $sql_query,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1], $level->[2] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
+    foreach (@freq_levels) {
+        &$write_sheet($_);
+    }
+};
+
 foreach my $n (@tasks) {
     if ( $n == 1 ) { &$basic; &$process; &$summary; &$summary_indel; next; }
     if ( $n == 2 ) { &$distance; &$distance_length; next; }
@@ -1444,11 +1652,33 @@ foreach my $n (@tasks) {
     if ( $n == 23 ) { &$frequency_distance2;  next; }
     if ( $n == 24 ) { &$frequency_distance3;  next; }
 
+    if ( $n == 30 ) { &$ld;        next; }
+    if ( $n == 31 ) { &$ld_insdel; next; }
+    if ( $n == 32 ) { &$ld_freq;   next; }
 }
 
 $stopwatch->end_message;
 exit;
 
+# codes come from http://www.perlmonks.org/?node_id=516493
+sub apportion {
+    my ( $elements, $pieces ) = @_;
+    my $small_chunk     = int $elements / $pieces;
+    my $oversized_count = $elements % $pieces;
+    (   ( 1 + $small_chunk ) x ($oversized_count),
+        ($small_chunk) x ( $pieces - $oversized_count )
+    );
+}
+
+sub multi_slice {
+    my ( $aref, @chunk_sizes ) = @_;
+    my $hi_i = -1;
+    map {
+        my $lo_i = $hi_i + 1;
+        $hi_i += $_;
+        [ @$aref[ $lo_i .. $hi_i ] ]
+    } @chunk_sizes;
+}
 __END__
 
 =head1 NAME
@@ -1468,25 +1698,6 @@ __END__
             --outfile            outfile filename
             --run               run special analysis
             --freq              max freq
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
 
 =cut
 
