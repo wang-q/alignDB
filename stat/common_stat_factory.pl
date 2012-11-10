@@ -793,7 +793,7 @@ my $distance_coding = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw_extra', 'isw_feature1' ) ) {
+    unless ( $write_obj->check_column( 'isw', 'isw_coding' ) ) {
         return;
     }
 
@@ -845,10 +845,8 @@ my $distance_coding = sub {
                     STD(isw_cv) STD_cv,
                     COUNT(*) COUNT
                 FROM isw
-                  INNER JOIN isw_extra ON
-                    isw.isw_id = isw_extra.isw_id
-                WHERE (isw_extra.isw_feature1 >= ?)
-                  AND (isw_extra.isw_feature1  <= ?)
+                WHERE (isw.isw_coding >= ?)
+                  AND (isw.isw_coding  <= ?)
                   AND isw_distance IN 
             };
             my %option = (
@@ -870,7 +868,7 @@ my $distance_non_coding = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw_extra', 'isw_feature1' ) ) {
+    unless ( $write_obj->check_column( 'isw', 'isw_coding' ) ) {
         return;
     }
 
@@ -922,10 +920,8 @@ my $distance_non_coding = sub {
                     STD(isw_cv) STD_cv,
                     COUNT(*) COUNT
                 FROM isw
-                  INNER JOIN isw_extra ON
-                    isw.isw_id = isw_extra.isw_id
-                WHERE (isw_extra.isw_feature1 >= ?)
-                  AND (isw_extra.isw_feature1  <= ?)
+                WHERE (isw.isw_coding >= ?)
+                  AND (isw.isw_coding  <= ?)
                   AND isw_distance IN 
             };
             my %option = (
@@ -947,7 +943,7 @@ my $density_coding = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw_extra', 'isw_feature1' ) ) {
+    unless ( $write_obj->check_column( 'isw', 'isw_coding' ) ) {
         return;
     }
 
@@ -1000,10 +996,8 @@ my $density_coding = sub {
                     STD(isw_cv) STD_cv,
                     COUNT(*) COUNT
                 FROM isw
-                  INNER JOIN isw_extra ON
-                    isw.isw_id = isw_extra.isw_id
-                WHERE (isw_extra.isw_feature1 >= ?)
-                  AND (isw_extra.isw_feature1  <= ?)
+                WHERE (isw.isw_coding >= ?)
+                  AND (isw.isw_coding  <= ?)
                   AND isw_density IN 
             };
             my %option = (
@@ -1025,7 +1019,7 @@ my $density_non_coding = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw_extra', 'isw_feature1' ) ) {
+    unless ( $write_obj->check_column( 'isw', 'isw_coding' ) ) {
         return;
     }
 
@@ -1078,10 +1072,8 @@ my $density_non_coding = sub {
                     STD(isw_cv) STD_cv,
                     COUNT(*) COUNT
                 FROM isw
-                  INNER JOIN isw_extra ON
-                    isw.isw_id = isw_extra.isw_id
-                WHERE (isw_extra.isw_feature1 >= ?)
-                  AND (isw_extra.isw_feature1  <= ?)
+                WHERE (isw.isw_coding >= ?)
+                  AND (isw.isw_coding <= ?)
                   AND isw_density IN 
             };
             my %option = (

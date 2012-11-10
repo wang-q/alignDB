@@ -497,15 +497,15 @@ SELECT 'coding', coding.SUM,
        'non_coding', non_coding.SUM,
        'isw', isw.SUM
 FROM   (SELECT SUM(i.isw_length) SUM
-        FROM isw i, isw_extra e
-        WHERE i.isw_id = e.isw_id
+        FROM isw i
+        WHERE 1 = 1
         AND i.isw_distance != -1
-        AND e.isw_feature1 BETWEEN 1 AND 1) coding,
+        AND i.isw_coding BETWEEN 1 AND 1) coding,
        (SELECT SUM(i.isw_length) SUM
-        FROM isw i, isw_extra e
-        WHERE i.isw_id = e.isw_id
+        FROM isw i
+        WHERE 1 = 1
         AND i.isw_distance != -1
-        AND e.isw_feature1 BETWEEN 0 AND 0) non_coding,
+        AND 1.isw_coding BETWEEN 0 AND 0) non_coding,
        (SELECT SUM(i.isw_length) SUM
         FROM isw i
         WHERE i.isw_distance != -1) isw
@@ -513,13 +513,13 @@ FROM   (SELECT SUM(i.isw_length) SUM
 # snp number coding--non_coding 
 SELECT 'coding', coding.COUNT, 'non_coding', non_coding.COUNT
 FROM   (SELECT COUNT(*) COUNT
-        FROM isw_extra e, snp s
-        WHERE e.isw_id = s.isw_id
-        AND e.isw_feature1 BETWEEN 1 AND 1) coding,
+        FROM isw i, snp s
+        WHERE i.isw_id = s.isw_id
+        AND i.isw_coding BETWEEN 1 AND 1) coding,
        (SELECT COUNT(*) COUNT
-        FROM isw_extra e, snp s
-        WHERE e.isw_id = s.isw_id
-        AND e.isw_feature1 BETWEEN 0 AND 0) non_coding
+        FROM isw i, snp s
+        WHERE i.isw_id = s.isw_id
+        AND i.isw_coding BETWEEN 0 AND 0) non_coding
 
 #----------------------------------------------------------#
 # segment                                

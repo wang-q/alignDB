@@ -122,38 +122,34 @@ sub ns { return AlignDB::SQL->new; }
     print $sql->as_sql if $verbose;
 }
 
-#SELECT isw.isw_distance distance,
-#       COUNT(*) COUNT,
-#FROM isw INNER JOIN isw_extra ON isw.isw_id = isw_extra.isw_id
-#WHERE isw_extra.isw_feature1 >= ?
-#AND isw_extra.isw_feature1 <= ?
+#SELECT
+#  isw.isw_distance distance,
+#  COUNT(*) COUNT
+#FROM 
+#WHERE (isw.isw_coding >= ?)
+#  AND (isw.isw_coding <= ?)
 {
     my $sql = ns();
     $sql->add_select( 'isw.isw_distance', 'distance' );
     $sql->add_select( 'COUNT(*)',         'COUNT' );
 
-    $sql->add_join(
-        isw => {
-            type      => 'inner',
-            table     => 'isw_extra',
-            condition => 'isw.isw_id = isw_extra.isw_id',
-        }
-    );
-    $sql->add_where( 'isw_extra.isw_feature1' => { op => '>=', value => '1' } );
-    $sql->add_where( 'isw_extra.isw_feature1' => { op => '<=', value => '1' } );
+    $sql->from( ['isw'] );
+    $sql->add_where( 'isw.isw_coding' => { op => '>=', value => '1' } );
+    $sql->add_where( 'isw.isw_coding' => { op => '<=', value => '1' } );
     $sql->group( { column => 'isw.isw_distance' } );
 
     $sql_file->set( 'common-distance_coding_combine-2', $sql );
     print $sql->as_sql if $verbose;
 }
 
-#SELECT AVG(isw.isw_distance) AVG_distance,
-#       AVG(isw.isw_pi) AVG_pi,
-#       COUNT(*) COUNT,
-#       STD(isw.isw_pi) STD_pi
-#FROM isw INNER JOIN isw_extra ON isw.isw_id = isw_extra.isw_id
-#WHERE isw_extra.isw_feature1 >= ?
-#AND isw_extra.isw_feature1 <= ?
+#SELECT
+#  AVG(isw.isw_distance) AVG_distance,
+#  AVG(isw.isw_pi) AVG_pi,
+#  COUNT(*) COUNT,
+#  STD(isw.isw_pi) STD_pi
+#FROM 
+#WHERE (isw.isw_coding >= ?)
+#  AND (isw.isw_coding <= ?)
 {
     my $sql = ns();
     $sql->add_select( 'AVG(isw.isw_distance)', 'AVG_distance' );
@@ -161,15 +157,9 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_select( 'COUNT(*)',              'COUNT' );
     $sql->add_select( 'STD(isw.isw_pi)',       'STD_pi' );
 
-    $sql->add_join(
-        isw => {
-            type      => 'inner',
-            table     => 'isw_extra',
-            condition => 'isw.isw_id = isw_extra.isw_id',
-        }
-    );
-    $sql->add_where( 'isw_extra.isw_feature1' => { op => '>=', value => '1' } );
-    $sql->add_where( 'isw_extra.isw_feature1' => { op => '<=', value => '1' } );
+    $sql->from( ['isw'] );
+    $sql->add_where( 'isw.isw_coding' => { op => '>=', value => '1' } );
+    $sql->add_where( 'isw.isw_coding' => { op => '<=', value => '1' } );
 
     $sql_file->set( 'common-distance_coding-2', $sql );
     print $sql->as_sql if $verbose;
@@ -341,18 +331,23 @@ sub ns { return AlignDB::SQL->new; }
     print $sql->as_sql if $verbose;
 }
 
-#SELECT isw.isw_distance distance,
-#       AVG(isw.isw_pi) AVG_pi,
-#       COUNT(*) COUNT,
-#       STD(isw.isw_pi) STD_pi
-#FROM isw INNER JOIN indel_extra e1 ON isw.indel_id = e1.indel_id
-#         INNER JOIN indel_extra e2 ON isw.prev_indel_id = e2.indel_id
-#WHERE isw.isw_type IN ('S')
-#AND e1.isw_feature1 >= ?
-#AND e1.isw_feature1 <= ?
-#AND e2.isw_feature1 >= ?
-#AND e2.isw_feature1 <= ?
-#GROUP BY isw.isw_distance
+#SELECT
+#  isw.isw_distance distance,
+#  AVG(isw.isw_pi) AVG_pi,
+#  COUNT(*) COUNT,
+#  STD(isw.isw_pi) STD_pi
+#FROM isw
+#  INNER JOIN indel_extra e1 ON
+#    isw.indel_id = e1.indel_id
+#  INNER JOIN indel_extra e2 ON
+#    isw.prev_indel_id = e2.indel_id
+#WHERE (isw.isw_type IN ('S'))
+#  AND (e1.indel_feature3 >= ?)
+#  AND (e1.indel_feature3 <= ?)
+#  AND (e2.indel_feature3 >= ?)
+#  AND (e2.indel_feature3 <= ?)
+#GROUP BY
+#  isw.isw_distance
 {
     my $sql = ns();
     $sql->add_select( 'isw.isw_distance', 'distance' );
@@ -383,15 +378,19 @@ sub ns { return AlignDB::SQL->new; }
     print $sql->as_sql if $verbose;
 }
 
-#SELECT isw.isw_distance distance,
-#       AVG(isw.isw_pi) AVG_pi,
-#       COUNT(*) COUNT,
-#       STD(isw.isw_pi) STD_pi
-#FROM isw INNER JOIN indel_extra ON isw.isw_indel_id = indel_extra.indel_id
-#WHERE isw.isw_type IN ('L', 'R')
-#AND indel_extra.isw_feature1 >= ?
-#AND indel_extra.isw_feature1 <= ?
-#GROUP BY isw.isw_distance
+#SELECT
+#  isw.isw_distance distance,
+#  AVG(isw.isw_pi) AVG_pi,
+#  COUNT(*) COUNT,
+#  STD(isw.isw_pi) STD_pi
+#FROM isw
+#  INNER JOIN indel_extra ON
+#    isw.isw_indel_id = indel_extra.indel_id
+#WHERE (isw.isw_type IN ('L', 'R'))
+#  AND (indel_extra.indel_feature3 >= ?)
+#  AND (indel_extra.indel_feature3 <= ?)
+#GROUP BY
+#  isw.isw_distance
 {
     my $sql = ns();
     $sql->add_select( 'isw.isw_distance', 'distance' );
@@ -417,14 +416,17 @@ sub ns { return AlignDB::SQL->new; }
     print $sql->as_sql if $verbose;
 }
 
-#SELECT 'Total',
-#       AVG(isw_pi) AVG_pi,
-#       COUNT(*) COUNT,
-#       STD(isw_pi) STD_pi
-#FROM isw INNER JOIN indel_extra ON isw.isw_indel_id = indel_extra.indel_id
-#WHERE isw.isw_type IN ('L', 'R')
-#AND indel_extra.isw_feature1 >= ?
-#AND indel_extra.isw_feature1 <= ?
+#SELECT
+#  'Total',
+#  AVG(isw_pi) AVG_pi,
+#  COUNT(*) COUNT,
+#  STD(isw_pi) STD_pi
+#FROM isw
+#  INNER JOIN indel_extra ON
+#    isw.isw_indel_id = indel_extra.indel_id
+#WHERE (isw.isw_type IN ('L', 'R'))
+#  AND (indel_extra.indel_feature3 >= ?)
+#  AND (indel_extra.indel_feature3 <= ?)
 {
     my $sql = ns();
     $sql->select( ['\'Total\''] );
@@ -449,14 +451,16 @@ sub ns { return AlignDB::SQL->new; }
     print $sql->as_sql if $verbose;
 }
 
-#SELECT isw_distance distance,
-#       AVG(isw_pi) AVG_pi,
-#       COUNT(isw_pi) COUNT,
-#       STD(isw_pi) STD_pi
-#FROM indel INNER JOIN isw ON isw.indel_id = indel.indel_id
-#           INNER JOIN align ON align.align_id = indel.align_id
-##WHERE align.align_coding BETWEEN ? AND ?
-#GROUP BY isw.isw_distance
+#SELECT
+#  isw.isw_distance distance,
+#  AVG(isw.isw_pi) AVG_pi,
+#  COUNT(*) COUNT,
+#  STD(isw.isw_pi) STD_pi
+#FROM indel
+#  INNER JOIN isw ON
+#    isw.indel_id = indel.indel_id
+#  INNER JOIN align ON
+#    align.align_id = indel.align_id
 {
     my $sql = ns();
     $sql->add_select( 'isw.isw_distance', 'distance' );
@@ -568,18 +572,18 @@ sub ns { return AlignDB::SQL->new; }
     print $sql->as_sql if $verbose;
 }
 
-#SELECT AVG(isw.isw_distance) AVG_distance,
-#       AVG(isw.isw_pi) AVG_pi,
-#       AVG(isw.isw_d_indel) AVG_d_indel,
-#       AVG(isw.isw_d_noindel) AVG_d_noindel,
-#       AVG(isw.isw_d_complex) AVG_d_complex,
-#       COUNT(*) COUNT,
-#       AVG(isw.isw_d_indel) / AVG(isw.isw_d_noindel)  `Di/Dn`
-#FROM isw INNER JOIN isw_extra ON isw.isw_id = isw_extra.isw_id
-#WHERE isw.isw_distance >= 0
-#AND isw.isw_d_indel IS NOT NULL
-#AND isw_extra.isw_feature1 >= ?
-#AND isw_extra.isw_feature1 <= ?
+#SELECT
+#  AVG(isw.isw_distance) AVG_distance,
+#  AVG(isw.isw_pi) AVG_pi,
+#  AVG(isw.isw_d_indel) AVG_d_indel,
+#  AVG(isw.isw_d_noindel) AVG_d_noindel,
+#  AVG(isw.isw_d_complex) AVG_d_complex,
+#  COUNT(*) COUNT,
+#  AVG(isw.isw_d_indel) / AVG(isw.isw_d_noindel) `Di/Dn`
+#FROM isw
+#WHERE (isw.isw_distance >= 0)
+#  AND (isw.isw_d_indel IS NOT NULL)
+#  AND (isw.isw_coding >= ?)
 {
     my $sql = ns();
     $sql->add_select( 'AVG(isw.isw_distance)',  'AVG_distance' );
@@ -590,18 +594,12 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_select( 'COUNT(*)',               'COUNT' );
     $sql->add_select( 'AVG(isw.isw_d_indel) / AVG(isw.isw_d_noindel)',
         '`Di/Dn`' );
-
-    $sql->add_join(
-        isw => {
-            type      => 'inner',
-            table     => 'isw_extra',
-            condition => 'isw.isw_id = isw_extra.isw_id',
-        }
-    );
+    
+    $sql->from( ['isw'] );
     $sql->add_where( 'isw.isw_distance'       => \'>= 0' );
     $sql->add_where( 'isw.isw_d_indel'        => \'IS NOT NULL' );
-    $sql->add_where( 'isw_extra.isw_feature1' => { op => '>=', value => '1' } );
-    $sql->add_where( 'isw_extra.isw_feature1' => { op => '<=', value => '1' } );
+    $sql->add_where( 'isw.isw_coding' => { op => '>=', value => '1' } );
+    $sql->add_where( 'isw.isw_coding' => { op => '<=', value => '1' } );
 
     $sql_file->set( 'three-distance_coding-2', $sql );
     print $sql->as_sql if $verbose;

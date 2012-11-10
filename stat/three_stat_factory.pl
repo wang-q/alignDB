@@ -2967,7 +2967,7 @@ my $distance_tri_trv_coding = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw_extra', 'isw_feature1' ) ) {
+    unless ( $write_obj->check_column( 'isw', 'isw_coding' ) ) {
         return;
     }
 
@@ -3002,47 +3002,42 @@ my $distance_tri_trv_coding = sub {
 
     # write contents
     {
-        my $sql_query1 = q~
+        my $sql_query1 = q{
             # base change
             SELECT i.isw_distance distance, COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, isw_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND i.isw_id = e.isw_id
             AND s.snp_occured IN ("T", "Q")
             AND i.isw_distance BETWEEN -1 AND 10
-            AND e.isw_feature1 = 1
+            AND i.isw_coding = 1
             GROUP BY i.isw_distance
             UNION
             SELECT '5-10', COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, isw_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND i.isw_id = e.isw_id
             AND s.snp_occured IN ("T", "Q")
             AND i.isw_distance BETWEEN 5 AND 10
-            AND e.isw_feature1 = 1
-            
-        ~;
-        my $sql_query2 = q~
+            AND i.isw_coding = 1
+        };
+        my $sql_query2 = q{
             # base change
             SELECT i.isw_distance distance, COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, isw_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND i.isw_id = e.isw_id
             AND s.snp_occured IN ("T", "Q")
             AND CONCAT(ref_base, IF(s.snp_occured = "T", target_base, query_base)) IN (in_list)
             AND i.isw_distance BETWEEN -1 AND 10
-            AND e.isw_feature1 = 1
+            AND i.isw_coding = 1
             GROUP BY i.isw_distance
             UNION
             SELECT '5-10', COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, isw_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND i.isw_id = e.isw_id
             AND s.snp_occured IN ("T", "Q")
             AND CONCAT(ref_base, IF(s.snp_occured = "T", target_base, query_base)) IN (in_list)
             AND i.isw_distance BETWEEN 5 AND 10
-            AND e.isw_feature1 = 1
-        ~;
+            AND i.isw_coding = 1
+        };
         my %option = (
             sql_query1 => $sql_query1,
             sql_query2 => $sql_query2,
@@ -3063,7 +3058,7 @@ my $distance_tri_trv_non_coding = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw_extra', 'isw_feature1' ) ) {
+    unless ( $write_obj->check_column( 'isw', 'isw_coding' ) ) {
         return;
     }
 
@@ -3098,47 +3093,42 @@ my $distance_tri_trv_non_coding = sub {
 
     # write contents
     {
-        my $sql_query1 = q~
+        my $sql_query1 = q{
             # base change
             SELECT i.isw_distance distance, COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, isw_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND i.isw_id = e.isw_id
             AND s.snp_occured IN ("T", "Q")
             AND i.isw_distance BETWEEN -1 AND 10
-            AND e.isw_feature1 = 0
+            AND i.isw_coding = 0
             GROUP BY i.isw_distance
             UNION
             SELECT '5-10', COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, isw_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND i.isw_id = e.isw_id
             AND s.snp_occured IN ("T", "Q")
             AND i.isw_distance BETWEEN 5 AND 10
-            AND e.isw_feature1 = 0
-            
-        ~;
-        my $sql_query2 = q~
+            AND i.isw_coding = 0
+        };
+        my $sql_query2 = q{
             # base change
             SELECT i.isw_distance distance, COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, isw_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND i.isw_id = e.isw_id
             AND s.snp_occured IN ("T", "Q")
             AND CONCAT(ref_base, IF(s.snp_occured = "T", target_base, query_base)) IN (in_list)
             AND i.isw_distance BETWEEN -1 AND 10
-            AND e.isw_feature1 = 0
+            AND i.isw_coding = 0
             GROUP BY i.isw_distance
             UNION
             SELECT '5-10', COUNT(s.snp_id) snp_number
-            FROM snp s, isw i, isw_extra e
+            FROM snp s, isw i
             WHERE s.isw_id = i.isw_id
-            AND i.isw_id = e.isw_id
             AND s.snp_occured IN ("T", "Q")
             AND CONCAT(ref_base, IF(s.snp_occured = "T", target_base, query_base)) IN (in_list)
             AND i.isw_distance BETWEEN 5 AND 10
-            AND e.isw_feature1 = 0
-        ~;
+            AND i.isw_coding = 0
+        };
         my %option = (
             sql_query1 => $sql_query1,
             sql_query2 => $sql_query2,

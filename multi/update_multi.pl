@@ -317,11 +317,11 @@ UPDATE: for my $align_id (@align_ids) {
                     my $isw_chr_end   = $chr_pos[$isw_end];
 
                     my $isw_chr_runlist = "$isw_chr_start-$isw_chr_end";
-                    my $isw_feature1    = $ensembl->feature_portion( '_cds_set',
+                    my $isw_coding    = $ensembl->feature_portion( '_cds_set',
                         $isw_chr_runlist );
-                    my $isw_feature2 = $ensembl->feature_portion( '_repeat_set',
+                    my $isw_repeats = $ensembl->feature_portion( '_repeat_set',
                         $isw_chr_runlist );
-                    $isw_feature_sth->execute( $isw_feature1, $isw_feature2,
+                    $isw_feature_sth->execute( $isw_coding, $isw_repeats,
                         $isw_id, );
                 }
 
