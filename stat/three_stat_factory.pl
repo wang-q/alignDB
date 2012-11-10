@@ -539,7 +539,7 @@ my $distance_coding = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel_extra', 'indel_feature1' ) ) {
+    unless ( $write_obj->check_column( 'indel', 'indel_coding' ) ) {
         return;
     }
 
@@ -604,7 +604,7 @@ my $distance_non_coding = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel_extra', 'indel_feature1' ) ) {
+    unless ( $write_obj->check_column( 'indel', 'indel_coding' ) ) {
         return;
     }
 
@@ -673,7 +673,7 @@ my $distance_dir_dnr = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw_extra', 'isw_feature4' ) ) {
+    unless ( $write_obj->check_column( 'isw', 'isw_d_ir' ) ) {
         return;
     }
 
@@ -695,49 +695,24 @@ my $distance_dir_dnr = sub {
 
     # write contents
     {
-        my $sql_query = q~
+        my $sql_query = q{
             # distance effect
             SELECT isw_distance distance,
                    AVG(isw_pi) AVG_pi,
-                   AVG(isw_feature4) AVG_d_ir,
-                   AVG(isw_feature5) AVG_d_nr,
-                   AVG(isw_feature8) AVG_d_total,
+                   AVG(isw_d_ir) AVG_d_ir,
+                   AVG(isw_d_nr) AVG_d_nr,
+                   AVG(isw_d_total) AVG_d_total,
                    COUNT(*) COUNT
-            FROM isw i, isw_extra e
-            WHERE isw_distance >= 0
-            AND isw_feature4 IS NOT NULL
-            and i.isw_id = e.isw_id
+            FROM isw i
+            WHERE 1 =1
+            AND isw_distance >= 0
+            AND isw_d_ir IS NOT NULL
             GROUP BY isw_distance
-        ~;
+        };
         my %option = (
             sql_query => $sql_query,
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    # write footer
-    {
-        $sheet_row += 2;
-        my $sql_query = q~
-            # isw average
-            SELECT 'Total',
-                   AVG(isw_pi) AVG_pi,
-                   AVG(isw_feature4) AVG_d_ir,
-                   AVG(isw_feature5) AVG_d_nr,
-                   AVG(isw_feature8) AVG_d_total,
-                   COUNT(*) COUNT
-            FROM isw i, isw_extra e
-            WHERE isw_distance >= 0
-            AND isw_feature4 IS NOT NULL
-            and i.isw_id = e.isw_id
-        ~;
-        my %option = (
-            sql_query      => $sql_query,
-            sheet_row      => $sheet_row,
-            sheet_col      => $sheet_col,
-            content_format => 'TOTAL',
         );
         ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
@@ -753,7 +728,7 @@ my $distance_dtr_dqr = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw_extra', 'isw_feature6' ) ) {
+    unless ( $write_obj->check_column( 'isw', 'isw_d_tr' ) ) {
         return;
     }
 
@@ -775,261 +750,24 @@ my $distance_dtr_dqr = sub {
 
     # write contents
     {
-        my $sql_query = q~
+        my $sql_query = q{
             # distance effect
             SELECT isw_distance distance,
                    AVG(isw_pi) AVG_pi,
-                   AVG(isw_feature6) AVG_d_tr,
-                   AVG(isw_feature7) AVG_d_qr,
-                   AVG(isw_feature8) AVG_d_total,
+                   AVG(isw_d_tr) AVG_d_tr,
+                   AVG(isw_d_qr) AVG_d_qr,
+                   AVG(isw_d_total) AVG_d_total,
                    COUNT(*) COUNT
-            FROM isw i, isw_extra e
-            WHERE isw_distance >= 0
-            AND isw_feature6 IS NOT NULL
-            and i.isw_id = e.isw_id
+            FROM isw i
+            WHERE 1 =1
+            AND isw_distance >= 0
+            AND isw_d_tr IS NOT NULL
             GROUP BY isw_distance
-        ~;
+        };
         my %option = (
             sql_query => $sql_query,
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    # write footer
-    {
-        $sheet_row += 2;
-        my $sql_query = q~
-            # isw average
-            SELECT 'Total',
-                   AVG(isw_pi) AVG_pi,
-                   AVG(isw_feature6) AVG_d_tr,
-                   AVG(isw_feature7) AVG_d_qr,
-                   AVG(isw_feature8) AVG_d_total,
-                   COUNT(*) COUNT
-            FROM isw i, isw_extra e
-            WHERE isw_distance >= 0
-            AND isw_feature6 IS NOT NULL
-            and i.isw_id = e.isw_id
-        ~;
-        my %option = (
-            sql_query      => $sql_query,
-            sheet_row      => $sheet_row,
-            sheet_col      => $sheet_col,
-            content_format => 'TOTAL',
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    print "Sheet \"$sheet_name\" has been generated.\n";
-};
-
-#----------------------------------------------------------#
-# worksheet -- target_dtr_dqr
-#----------------------------------------------------------#
-#
-my $target_dtr_dqr = sub {
-
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw_extra', 'isw_feature6' ) ) {
-        return;
-    }
-
-    my $sheet_name = 'target_dtr_dqr';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # write header
-        my @headers = qw{distance AVG_pi AVG_d_tr AVG_d_qr AVG_d_total COUNT};
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
-
-    # write contents
-    {
-        my $sql_query = q~
-            # distance effect
-            SELECT isw_distance distance,
-                   AVG(isw_pi) AVG_pi,
-                   AVG(isw_feature6) AVG_d_tr,
-                   AVG(isw_feature7) AVG_d_qr,
-                   AVG(isw_feature8) AVG_d_total,
-                   COUNT(*) COUNT
-            FROM isw_extra e,
-                 (SELECT isw_id, isw_distance, isw_pi
-                 FROM   isw,
-                        indel i
-                 WHERE  i.indel_occured = "T"
-                 AND isw_type = 'R'
-                 AND isw.indel_id = i.indel_id
-                 UNION 
-                 SELECT isw_id, isw_distance, isw_pi
-                 FROM   isw,
-                        indel i
-                 WHERE  i.indel_occured = "T"
-                 AND isw_type = 'L'
-                 AND isw.prev_indel_id = i.indel_id) i
-            WHERE i.isw_distance >= 0
-            AND e.isw_feature6 IS NOT NULL
-            AND i.isw_id = e.isw_id
-            GROUP BY isw_distance
-        ~;
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    # write footer
-    {
-        $sheet_row += 2;
-        my $sql_query = q~
-            # isw average
-            SELECT 'Total',
-                   AVG(isw_pi) AVG_pi,
-                   AVG(isw_feature6) AVG_d_tr,
-                   AVG(isw_feature7) AVG_d_qr,
-                   AVG(isw_feature8) AVG_d_total,
-                   COUNT(*) COUNT
-            FROM isw_extra e,
-                 (SELECT isw_id, isw_distance, isw_pi
-                 FROM   isw,
-                        indel i
-                 WHERE  i.indel_occured = "T"
-                 AND isw_type = 'R'
-                 AND isw.indel_id = i.indel_id
-                 UNION 
-                 SELECT isw_id, isw_distance, isw_pi
-                 FROM   isw,
-                        indel i
-                 WHERE  i.indel_occured = "T"
-                 AND isw_type = 'L'
-                 AND isw.prev_indel_id = i.indel_id) i
-            WHERE i.isw_distance >= 0
-            AND e.isw_feature6 IS NOT NULL
-            AND i.isw_id = e.isw_id
-        ~;
-        my %option = (
-            sql_query      => $sql_query,
-            sheet_row      => $sheet_row,
-            sheet_col      => $sheet_col,
-            content_format => 'TOTAL',
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    print "Sheet \"$sheet_name\" has been generated.\n";
-};
-
-#----------------------------------------------------------#
-# worksheet -- query_dtr_dqr
-#----------------------------------------------------------#
-#
-my $query_dtr_dqr = sub {
-
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw_extra', 'isw_feature6' ) ) {
-        return;
-    }
-
-    my $sheet_name = 'query_dtr_dqr';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # write header
-        my @headers = qw{distance AVG_pi AVG_d_tr AVG_d_qr AVG_d_total COUNT};
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
-
-    # write contents
-    {
-        my $sql_query = q~
-            # distance effect
-            SELECT isw_distance distance,
-                   AVG(isw_pi) AVG_pi,
-                   AVG(isw_feature6) AVG_d_tr,
-                   AVG(isw_feature7) AVG_d_qr,
-                   AVG(isw_feature8) AVG_d_total,
-                   COUNT(*) COUNT
-            FROM isw_extra e,
-                 (SELECT isw_id, isw_distance, isw_pi
-                 FROM   isw,
-                        indel i
-                 WHERE  i.indel_occured = "Q"
-                 AND isw_type = 'R'
-                 AND isw.indel_id = i.indel_id
-                 UNION 
-                 SELECT isw_id, isw_distance, isw_pi
-                 FROM   isw,
-                        indel i
-                 WHERE  i.indel_occured = "Q"
-                 AND isw_type = 'L'
-                 AND isw.prev_indel_id = i.indel_id) i
-            WHERE i.isw_distance >= 0
-            AND e.isw_feature6 IS NOT NULL
-            AND i.isw_id = e.isw_id
-            GROUP BY isw_distance
-        ~;
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    # write footer
-    {
-        $sheet_row += 2;
-        my $sql_query = q~
-            # isw average
-            SELECT 'Total',
-                   AVG(isw_pi) AVG_pi,
-                   AVG(isw_feature6) AVG_d_tr,
-                   AVG(isw_feature7) AVG_d_qr,
-                   AVG(isw_feature8) AVG_d_total,
-                   COUNT(*) COUNT
-            FROM isw_extra e,
-                 (SELECT isw_id, isw_distance, isw_pi
-                 FROM   isw,
-                        indel i
-                 WHERE  i.indel_occured = "Q"
-                 AND isw_type = 'R'
-                 AND isw.indel_id = i.indel_id
-                 UNION 
-                 SELECT isw_id, isw_distance, isw_pi
-                 FROM   isw,
-                        indel i
-                 WHERE  i.indel_occured = "Q"
-                 AND isw_type = 'L'
-                 AND isw.prev_indel_id = i.indel_id) i
-            WHERE i.isw_distance >= 0
-            AND e.isw_feature6 IS NOT NULL
-            AND i.isw_id = e.isw_id
-        ~;
-        my %option = (
-            sql_query      => $sql_query,
-            sheet_row      => $sheet_row,
-            sheet_col      => $sheet_col,
-            content_format => 'TOTAL',
         );
         ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
@@ -1228,7 +966,7 @@ my $snp_distance_non_slip = sub {
 
         # write contents
         {
-            my $sql_query = q~
+            my $sql_query = q{
                 # distance effect
                 SELECT  ssw_distance `distance`,
                         AVG(w.window_pi) `AVG_pi`,
@@ -1240,28 +978,26 @@ my $snp_distance_non_slip = sub {
                 FROM    ssw s, window w, snp,
                        (SELECT isw_id
                         FROM   isw,
-                               indel i,
-                               indel_extra e
-                        WHERE  i.indel_id = e.indel_id
-                        AND e.indel_feature3 BETWEEN 0 AND 0
+                               indel i
+                        WHERE  1 = 1
+                        AND isw.indel_id = i.indel_id
+                        AND i.indel_slippage BETWEEN 0 AND 0
                         AND isw_type = 'R'
                         AND isw_distance BETWEEN ? AND ?
-                        AND isw.indel_id = i.indel_id
                         UNION 
                         SELECT isw_id
                         FROM   isw,
-                               indel i,
-                               indel_extra e
-                        WHERE  i.indel_id = e.indel_id
-                        AND e.indel_feature3 BETWEEN 0 AND 0
+                               indel i
+                        WHERE  1 = 1
+                        AND isw.prev_indel_id = i.indel_id
+                        AND i.indel_slippage BETWEEN 0 AND 0
                         AND isw_type = 'L'
-                        AND isw_distance BETWEEN ? AND ?
-                        AND isw.prev_indel_id = i.indel_id) i
+                        AND isw_distance BETWEEN ? AND ?) i
                 WHERE s.window_id = w.window_id
                 AND snp.snp_id = s.snp_id
                 AND snp.isw_id = i.isw_id
                 GROUP BY ssw_distance
-            ~;
+            };
             my %option = (
                 sql_query  => $sql_query,
                 sheet_row  => $sheet_row,
@@ -1270,55 +1006,6 @@ my $snp_distance_non_slip = sub {
                     $snp_levels->[1], $snp_levels->[2],
                     $snp_levels->[1], $snp_levels->[2]
                 ],
-            );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-        }
-
-        # write footer
-        {
-            $sheet_row += 2;
-            my $sql_query = q~
-                # isw average
-                SELECT  'Total',
-                        AVG(w.window_pi) `AVG_pi`,
-                        AVG(ssw_d_snp) `AVG_d_snp`,
-                        AVG(ssw_d_nosnp) `AVG_d_nosnp`,
-                        AVG(ssw_d_complex) `AVG_d_complex`,
-                        COUNT(*) `COUNT`,
-                        AVG(ssw_d_snp) / AVG(ssw_d_nosnp)  `Ds/Dns`
-                FROM    ssw s, window w, snp, 
-                       (SELECT isw_id
-                        FROM   isw,
-                               indel i,
-                               indel_extra e
-                        WHERE  i.indel_id = e.indel_id
-                        AND e.indel_feature3 BETWEEN 0 AND 0
-                        AND isw_type = 'R'
-                        AND isw_distance BETWEEN ? AND ?
-                        AND isw.indel_id = i.indel_id
-                        UNION 
-                        SELECT isw_id
-                        FROM   isw,
-                               indel i,
-                               indel_extra e
-                        WHERE  i.indel_id = e.indel_id
-                        AND e.indel_feature3 BETWEEN 0 AND 0
-                        AND isw_type = 'L'
-                        AND isw_distance BETWEEN ? AND ?
-                        AND isw.prev_indel_id = i.indel_id) i
-                WHERE s.window_id = w.window_id
-                AND snp.snp_id = s.snp_id
-                AND snp.isw_id = i.isw_id
-            ~;
-            my %option = (
-                sql_query  => $sql_query,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [
-                    $snp_levels->[1], $snp_levels->[2],
-                    $snp_levels->[1], $snp_levels->[2]
-                ],
-                content_format => 'TOTAL',
             );
             ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
@@ -1533,7 +1220,7 @@ my $indel_occured = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel_extra', 'indel_feature4' ) ) {
+    unless ( $write_obj->check_column( 'indel', 'indel_other_occured' ) ) {
         return;
     }
 
@@ -1565,13 +1252,13 @@ my $indel_occured = sub {
         my $query_name = 'Original';
         my $sql_query  = q{
             SELECT  i.indel_occured,
-                    e.indel_feature3,
+                    i.indel_slippage,
                     AVG(i.indel_length) AVG_length,
                     STD(i.indel_length) STD_length,
                     COUNT(*) COUNT
-            FROM indel i, indel_extra e
-            WHERE i.indel_id = e.indel_id
-            GROUP BY i.indel_occured, e.indel_feature3
+            FROM indel i
+            WHERE 1 = 1
+            GROUP BY i.indel_occured, i.indel_slippage
             ORDER BY i.indel_occured DESC
         };
         my %option = (
@@ -1588,15 +1275,15 @@ my $indel_occured = sub {
         $sheet_row++;
         my $query_name = 'Another_ref';
         my $sql_query  = q{
-            SELECT  e.indel_feature4,
-                    e.indel_feature3,
+            SELECT  i.indel_other_occured,
+                    i.indel_slippage,
                     AVG(i.indel_length) AVG_length,
                     STD(i.indel_length) STD_length,
                     COUNT(*) COUNT
-            FROM indel i, indel_extra e
-            WHERE i.indel_id = e.indel_id
-            GROUP BY e.indel_feature4, e.indel_feature3
-            ORDER BY e.indel_feature4 DESC
+            FROM indel i
+            WHERE 1 = 1
+            GROUP BY i.indel_other_occured, i.indel_slippage
+            ORDER BY i.indel_other_occured DESC
         };
         my %option = (
             query_name => $query_name,
@@ -1612,18 +1299,18 @@ my $indel_occured = sub {
         $sheet_row++;
         my $query_name = 'Occured_not_change';
         my $sql_query  = q{
-            SELECT  CONCAT(i.indel_occured, "->", e.indel_feature4) `change`,
-                    e.indel_feature3 `slippage-like`,
+            SELECT  CONCAT(i.indel_occured, "->", i.indel_other_occured) `change`,
+                    i.indel_slippage `slippage-like`,
                     AVG(i.indel_length) AVG_length,
                     STD(i.indel_length) STD_length,
                     COUNT(*) COUNT
-            FROM indel i, indel_extra e
-            WHERE i.indel_id = e.indel_id
-            AND e.indel_feature4 IS NOT NULL
-            AND i.indel_occured = e.indel_feature4
-            GROUP BY CONCAT(i.indel_occured, "->", e.indel_feature4),
-                    e.indel_feature3
-            ORDER BY CONCAT(i.indel_occured, "->", e.indel_feature4) DESC
+            FROM indel i
+            WHERE 1 = 1
+            AND i.indel_other_occured IS NOT NULL
+            AND i.indel_occured = i.indel_other_occured
+            GROUP BY CONCAT(i.indel_occured, "->", i.indel_other_occured),
+                    i.indel_slippage
+            ORDER BY CONCAT(i.indel_occured, "->", i.indel_other_occured) DESC
         };
         my %option = (
             query_name => $query_name,
@@ -1639,18 +1326,18 @@ my $indel_occured = sub {
         $sheet_row++;
         my $query_name = 'Occured_change';
         my $sql_query  = q{
-            SELECT  CONCAT(i.indel_occured, "->", e.indel_feature4) `change`, 
-                    e.indel_feature3 `slippage-like`,
+            SELECT  CONCAT(i.indel_occured, "->", i.indel_other_occured) `change`, 
+                    i.indel_slippage `slippage-like`,
                     AVG(i.indel_length) AVG_length,
                     STD(i.indel_length) STD_length,
                     COUNT(*) COUNT
-            FROM indel i, indel_extra e
-            WHERE i.indel_id = e.indel_id
-            AND e.indel_feature4 IS NOT NULL
-            AND i.indel_occured != e.indel_feature4
-            GROUP BY CONCAT(i.indel_occured, "->", e.indel_feature4),
-                    e.indel_feature3
-            ORDER BY CONCAT(i.indel_occured, "->", e.indel_feature4) DESC
+            FROM indel i
+            WHERE 1 = 1
+            AND e.indel_other_occured IS NOT NULL
+            AND i.indel_occured != i.indel_other_occured
+            GROUP BY CONCAT(i.indel_occured, "->", i.indel_other_occured),
+                    i.indel_slippage
+            ORDER BY CONCAT(i.indel_occured, "->", i.indel_other_occured) DESC
         };
         my %option = (
             query_name => $query_name,
@@ -1667,15 +1354,15 @@ my $indel_occured = sub {
         my $query_name = 'Occured_vanish';
         my $sql_query  = q{
             SELECT  CONCAT(i.indel_occured, "->") `vanish`, 
-                    e.indel_feature3 `slippage-like`,
+                    i.indel_slippage `slippage-like`,
                     AVG(i.indel_length) AVG_length,
                     STD(i.indel_length) STD_length,
                     COUNT(*) COUNT
-            FROM indel i, indel_extra e
-            WHERE i.indel_id = e.indel_id
-            AND e.indel_feature4 IS NULL
+            FROM indel i
+            WHERE 1 = 1
+            AND i.indel_other_occured IS NULL
             GROUP BY CONCAT(i.indel_occured, "->"),
-                    e.indel_feature3
+                    i.indel_slippage
             ORDER BY CONCAT(i.indel_occured, "->") DESC
         };
         my %option = (
@@ -1697,7 +1384,7 @@ my $snp_occured = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'snp_extra', 'snp_feature4' ) ) {
+    unless ( $write_obj->check_column( 'snp', 'snp_other_occured' ) ) {
         return;
     }
 
@@ -1747,11 +1434,11 @@ my $snp_occured = sub {
         $sheet_row++;
         my $query_name = 'Another_ref';
         my $sql_query  = q{
-            SELECT  e.snp_feature4,
+            SELECT  s.snp_other_occured,
                     COUNT(*) COUNT
-            FROM snp_extra e
-            GROUP BY e.snp_feature4
-            ORDER BY e.snp_feature4 DESC
+            FROM snp s
+            GROUP BY s.snp_other_occured
+            ORDER BY s.snp_other_occured DESC
         };
         my %option = (
             query_name => $query_name,
@@ -1767,14 +1454,14 @@ my $snp_occured = sub {
         $sheet_row++;
         my $query_name = 'Occured_not_change';
         my $sql_query  = q{
-            SELECT  CONCAT(s.snp_occured, "->", e.snp_feature4) `change`,
+            SELECT  CONCAT(s.snp_occured, "->", s.snp_other_occured) `change`,
                     COUNT(*) COUNT
-            FROM snp s, snp_extra e
-            WHERE s.snp_id = e.snp_id
-            AND e.snp_feature4 IS NOT NULL
-            AND s.snp_occured = e.snp_feature4
-            GROUP BY CONCAT(s.snp_occured, "->", e.snp_feature4)
-            ORDER BY CONCAT(s.snp_occured, "->", e.snp_feature4) DESC
+            FROM snp s
+            WHERE 1 = 1
+            AND s.snp_other_occured IS NOT NULL
+            AND s.snp_occured = s.snp_other_occured
+            GROUP BY CONCAT(s.snp_occured, "->", s.snp_other_occured)
+            ORDER BY CONCAT(s.snp_occured, "->", s.snp_other_occured) DESC
         };
         my %option = (
             query_name => $query_name,
@@ -1790,14 +1477,14 @@ my $snp_occured = sub {
         $sheet_row++;
         my $query_name = 'Occured_change';
         my $sql_query  = q{
-            SELECT  CONCAT(s.snp_occured, "->", e.snp_feature4) `change`,
+            SELECT  CONCAT(s.snp_occured, "->", s.snp_other_occured) `change`,
                     COUNT(*) COUNT
-            FROM snp s, snp_extra e
-            WHERE s.snp_id = e.snp_id
-            AND e.snp_feature4 IS NOT NULL
-            AND s.snp_occured != e.snp_feature4
-            GROUP BY CONCAT(s.snp_occured, "->", e.snp_feature4)
-            ORDER BY CONCAT(s.snp_occured, "->", e.snp_feature4) DESC
+            FROM snp s
+            WHERE 1 = 1
+            AND s.snp_other_occured IS NOT NULL
+            AND s.snp_occured != s.snp_other_occured
+            GROUP BY CONCAT(s.snp_occured, "->", s.snp_other_occured)
+            ORDER BY CONCAT(s.snp_occured, "->", s.snp_other_occured) DESC
         };
         my %option = (
             query_name => $query_name,
@@ -1815,9 +1502,9 @@ my $snp_occured = sub {
         my $sql_query  = q{
             SELECT  CONCAT(s.snp_occured, "->") `vanish`, 
                     COUNT(*) COUNT
-            FROM snp s, snp_extra e
-            WHERE s.snp_id = e.snp_id
-            AND e.snp_feature4 IS NULL
+            FROM snp s
+            WHERE 1 = 1
+            AND s.snp_other_occured IS NULL
             GROUP BY CONCAT(s.snp_occured, "->")
             ORDER BY CONCAT(s.snp_occured, "->") DESC
         };
@@ -1841,7 +1528,7 @@ my $indel_distance_slip = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel_extra', 'indel_feature3' ) ) {
+    unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
         return;
     }
 
@@ -1873,7 +1560,7 @@ my $indel_distance_slip = sub {
 
         # write contents
         {
-            my $sql_query = q~
+            my $sql_query = q{
                 # distance effect
                 SELECT isw_distance distance,
                        AVG(isw_pi) AVG_pi,
@@ -1885,78 +1572,29 @@ my $indel_distance_slip = sub {
                 FROM    isw,
                        (SELECT isw_id
                         FROM   isw,
-                               indel i,
-                               indel_extra e
-                        WHERE  i.indel_id = e.indel_id
-                        AND e.indel_feature3 BETWEEN ? AND ?
-                        AND isw_type = 'R'
+                               indel i
+                        WHERE  1= 1
                         AND isw.indel_id = i.indel_id
+                        AND i.indel_slippage BETWEEN ? AND ?
+                        AND isw_type = 'R'
                         UNION 
                         SELECT isw_id
                         FROM   isw,
-                               indel i,
-                               indel_extra e
-                        WHERE  i.indel_id = e.indel_id
-                        AND e.indel_feature3 BETWEEN ? AND ?
-                        AND isw_type = 'L'
-                        AND isw.prev_indel_id = i.indel_id) i
+                               indel i
+                        WHERE  1 = 1
+                        AND isw.prev_indel_id = i.indel_id
+                        AND i.indel_slippage BETWEEN ? AND ?
+                        AND isw_type = 'L') i
                 WHERE  isw_distance >= 0
                 AND isw_d_indel IS NOT NULL 
                 AND isw.isw_id = i.isw_id
                 GROUP BY isw_distance
-            ~;
+            };
             my %option = (
                 sql_query  => $sql_query,
                 sheet_row  => $sheet_row,
                 sheet_col  => $sheet_col,
                 bind_value => [
-                    $slip_levels->[1], $slip_levels->[2],
-                    $slip_levels->[1], $slip_levels->[2]
-                ],
-            );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-        }
-
-        # write footer
-        {
-            $sheet_row += 2;
-            my $sql_query = q~
-                # isw average
-                SELECT 'Total',
-                       AVG(isw_pi) AVG_pi,
-                       AVG(isw_d_indel) AVG_d_indel,
-                       AVG(isw_d_noindel) AVG_d_noindel,
-                       AVG(isw_d_complex) AVG_d_complex,
-                       COUNT(*) COUNT,
-                       AVG(isw_d_indel) / AVG(isw_d_noindel)  `Di/Dn`
-                FROM isw,
-                       (SELECT isw_id
-                        FROM   isw,
-                               indel i,
-                               indel_extra e
-                        WHERE  i.indel_id = e.indel_id
-                        AND e.indel_feature3 BETWEEN ? AND ?
-                        AND isw_type = 'R'
-                        AND isw.indel_id = i.indel_id
-                        UNION 
-                        SELECT isw_id
-                        FROM   isw,
-                               indel i,
-                               indel_extra e
-                        WHERE  i.indel_id = e.indel_id
-                        AND e.indel_feature3 BETWEEN ? AND ?
-                        AND isw_type = 'L'
-                        AND isw.prev_indel_id = i.indel_id) i
-                WHERE  isw_distance >= 0
-                AND isw_d_indel IS NOT NULL 
-                AND isw.isw_id = i.isw_id
-            ~;
-            my %option = (
-                sql_query      => $sql_query,
-                sheet_row      => $sheet_row,
-                sheet_col      => $sheet_col,
-                content_format => 'TOTAL',
-                bind_value     => [
                     $slip_levels->[1], $slip_levels->[2],
                     $slip_levels->[1], $slip_levels->[2]
                 ],
@@ -1980,7 +1618,7 @@ my $indel_slip_di_group = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel_extra', 'indel_feature3' ) ) {
+    unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
         return;
     }
 
@@ -2016,13 +1654,13 @@ my $indel_slip_di_group = sub {
                    AVG(isw_d_indel) AVG_d_indel,
                    COUNT(*) COUNT,
                    STD(isw_d_indel) STD_d_indel
-            FROM indel, isw, indel_extra
-            WHERE isw.isw_type = 'R'
+            FROM indel, isw
+            WHERE 1 =1
+            AND isw.indel_id = indel.indel_id
+            AND isw.isw_type = 'R'
             AND isw.isw_density > 9
             AND isw.isw_distance <= 5
-            AND isw.indel_id = indel.indel_id
-            AND indel.indel_id = indel_extra.indel_id
-            AND indel_extra.indel_feature3 BETWEEN ? AND ?
+            AND indel.indel_slippage BETWEEN ? AND ?
             AND indel.indel_seq NOT LIKE "%N%"
             GROUP BY CONCAT(isw.isw_type, isw.isw_distance)
             ORDER BY CONCAT(isw.isw_type, isw.isw_distance) DESC
@@ -2033,13 +1671,13 @@ my $indel_slip_di_group = sub {
                    AVG(isw_d_indel) AVG_d_indel,
                    COUNT(*) COUNT,
                    STD(isw_d_indel) STD_d_indel
-            FROM indel, isw, indel_extra
-            WHERE isw.isw_type = 'L'
+            FROM indel, isw
+            WHERE 1 = 1
+            AND isw.prev_indel_id = indel.indel_id
+            AND isw.isw_type = 'L'
             AND isw.isw_density > 9
             AND isw.isw_distance <= 5
-            AND isw.prev_indel_id = indel.indel_id
-            AND indel.indel_id = indel_extra.indel_id
-            AND indel_extra.indel_feature3 BETWEEN ? AND ?
+            AND indel.indel_slippage BETWEEN ? AND ?
             AND indel.indel_seq NOT LIKE "%N%"
             GROUP BY CONCAT(isw.isw_type, isw.isw_distance)
         ~;
@@ -2064,7 +1702,7 @@ my $indel_slip_dn_group = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel_extra', 'indel_feature3' ) ) {
+    unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
         return;
     }
 
@@ -2100,13 +1738,12 @@ my $indel_slip_dn_group = sub {
                    AVG(isw_d_noindel) AVG_d_noindel,
                    COUNT(*) COUNT,
                    STD(isw_d_noindel) STD_d_noindel
-            FROM indel, isw, indel_extra
+            FROM indel, isw
             WHERE isw.isw_type = 'R'
             AND isw.isw_density > 9
             AND isw.isw_distance <= 5
             AND isw.indel_id = indel.indel_id
-            AND indel.indel_id = indel_extra.indel_id
-            AND indel_extra.indel_feature3 BETWEEN ? AND ?
+            AND indel.indel_slippage BETWEEN ? AND ?
             AND indel.indel_seq NOT LIKE "%N%"
             GROUP BY CONCAT(isw.isw_type, isw.isw_distance)
             ORDER BY CONCAT(isw.isw_type, isw.isw_distance) DESC
@@ -2117,13 +1754,12 @@ my $indel_slip_dn_group = sub {
                    AVG(isw_d_noindel) AVG_d_noindel,
                    COUNT(*) COUNT,
                    STD(isw_d_noindel) STD_d_noindel
-            FROM indel, isw, indel_extra
+            FROM indel, isw
             WHERE isw.isw_type = 'L'
             AND isw.isw_density > 9
             AND isw.isw_distance <= 5
             AND isw.prev_indel_id = indel.indel_id
-            AND indel.indel_id = indel_extra.indel_id
-            AND indel_extra.indel_feature3 BETWEEN ? AND ?
+            AND indel.indel_slippage BETWEEN ? AND ?
             AND indel.indel_seq NOT LIKE "%N%"
             GROUP BY CONCAT(isw.isw_type, isw.isw_distance)
         ~;
@@ -3511,19 +3147,17 @@ my $di_dn_ttest = sub {
             FROM    isw,
                    (SELECT isw_id
                     FROM   isw,
-                           indel i,
-                           indel_extra e
-                    WHERE  i.indel_id = e.indel_id
-                    AND e.indel_feature3 BETWEEN 0 AND 0
+                           indel i
+                    WHERE  1 = 1
+                    AND i.indel_slippage BETWEEN 0 AND 0
                     AND isw_type = 'R'
                     AND isw.indel_id = i.indel_id
                     UNION 
                     SELECT isw_id
                     FROM   isw,
-                           indel i,
-                           indel_extra e
-                    WHERE  i.indel_id = e.indel_id
-                    AND e.indel_feature3 BETWEEN 0 AND 0
+                           indel i
+                    WHERE  1 = 1
+                    AND i.indel_slippage BETWEEN 0 AND 0
                     AND isw_type = 'L'
                     AND isw.prev_indel_id = i.indel_id) i
             WHERE  isw_distance >= 0
@@ -3581,19 +3215,17 @@ my $di_dn_ttest = sub {
             FROM    isw,
                    (SELECT isw_id
                     FROM   isw,
-                           indel i,
-                           indel_extra e
-                    WHERE  i.indel_id = e.indel_id
-                    AND e.indel_feature3 BETWEEN 0 AND 0
+                           indel i
+                    WHERE 1 = 1
+                    AND i.indel_slippage BETWEEN 0 AND 0
                     AND isw_type = 'R'
                     AND isw.indel_id = i.indel_id
                     UNION 
                     SELECT isw_id
                     FROM   isw,
-                           indel i,
-                           indel_extra e
-                    WHERE  i.indel_id = e.indel_id
-                    AND e.indel_feature3 BETWEEN 0 AND 0
+                           indel i
+                    WHERE  1 = 1
+                    AND i.indel_slippage BETWEEN 0 AND 0
                     AND isw_type = 'L'
                     AND isw.prev_indel_id = i.indel_id) i
             WHERE  isw_distance >= 0
@@ -3755,20 +3387,18 @@ my $indel_distance_tq = sub {
                 FROM    isw,
                         (SELECT isw_id
                         FROM   isw,
-                               indel i,
-                               indel_extra e
+                               indel i
                         WHERE i.indel_id = e.indel_id
-                        AND e.indel_feature3 BETWEEN 0 AND 0
+                        AND i.indel_slippage BETWEEN 0 AND 0
                         AND i.indel_occured = ?
                         AND isw_type = 'R'
                         AND isw.indel_id = i.indel_id
                         UNION 
                         SELECT isw_id
                         FROM   isw,
-                               indel i,
-                               indel_extra e
+                               indel i
                         WHERE  i.indel_id = e.indel_id
-                        AND e.indel_feature3 BETWEEN 0 AND 0
+                        AND i.indel_slippage BETWEEN 0 AND 0
                         AND i.indel_occured = ?
                         AND isw_type = 'L'
                         AND isw.prev_indel_id = i.indel_id) i                        
@@ -3801,20 +3431,18 @@ my $indel_distance_tq = sub {
                 FROM isw,
                         (SELECT isw_id
                         FROM   isw,
-                               indel i,
-                               indel_extra e
-                        WHERE i.indel_id = e.indel_id
-                        AND e.indel_feature3 BETWEEN 0 AND 0
+                               indel i
+                        WHERE 1 = 1
+                        AND i.indel_slippage BETWEEN 0 AND 0
                         AND i.indel_occured = ?
                         AND isw_type = 'R'
                         AND isw.indel_id = i.indel_id
                         UNION 
                         SELECT isw_id
                         FROM   isw,
-                               indel i,
-                               indel_extra e
-                        WHERE  i.indel_id = e.indel_id
-                        AND e.indel_feature3 BETWEEN 0 AND 0
+                               indel i
+                        WHERE  1 = 1
+                        AND i.indel_slippage BETWEEN 0 AND 0
                         AND i.indel_occured = ?
                         AND isw_type = 'L'
                         AND isw.prev_indel_id = i.indel_id) i     
@@ -3866,7 +3494,6 @@ foreach my $n (@tasks) {
     }
     if ( $n == 22 ) { &$distance_cpg;     next; }
     if ( $n == 23 ) { &$distance_dir_dnr; &$distance_dtr_dqr; next; }
-    if ( $n == 24 ) { &$target_dtr_dqr;   &$query_dtr_dqr; next; }
 
     if ( $n == 52 ) { &$ds_dns;                  next; }
     if ( $n == 54 ) { &$snp_distance_non_slip;   next; }

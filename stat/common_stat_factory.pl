@@ -1463,25 +1463,25 @@ my $indel_position_group = sub {
         = ( [ 1, 1, 0, 0 ], [ 1, 1, 1, 1 ], [ 0, 0, 0, 0 ], [ 0, 0, 1, 1 ], );
 
     {    # write contents
-        my $thaw_sql_R = $sql_file->retrieve('common-indel_extra_r-0');
+        my $thaw_sql_R = $sql_file->retrieve('common-indel_feature_r-0');
         $thaw_sql_R->add_where(
-            'indel_extra.indel_feature1' => { op => '>=', value => '0' } );
+            'indel.indel_coding' => { op => '>=', value => '0' } );
         $thaw_sql_R->add_where(
-            'indel_extra.indel_feature1' => { op => '<=', value => '0' } );
+            'indel.indel_coding' => { op => '<=', value => '0' } );
         $thaw_sql_R->add_where(
-            'indel_extra.indel_feature2' => { op => '>=', value => '0' } );
+            'indel.indel_repeats' => { op => '>=', value => '0' } );
         $thaw_sql_R->add_where(
-            'indel_extra.indel_feature2' => { op => '<=', value => '0' } );
+            'indel.indel_repeats' => { op => '<=', value => '0' } );
 
-        my $thaw_sql_L = $sql_file->retrieve('common-indel_extra_l-0');
+        my $thaw_sql_L = $sql_file->retrieve('common-indel_feature_l-0');
         $thaw_sql_L->add_where(
-            'indel_extra.indel_feature1' => { op => '>=', value => '0' } );
+            'indel.indel_coding' => { op => '>=', value => '0' } );
         $thaw_sql_L->add_where(
-            'indel_extra.indel_feature1' => { op => '<=', value => '0' } );
+            'indel.indel_coding' => { op => '<=', value => '0' } );
         $thaw_sql_L->add_where(
-            'indel_extra.indel_feature2' => { op => '>=', value => '0' } );
+            'indel.indel_repeats' => { op => '>=', value => '0' } );
         $thaw_sql_L->add_where(
-            'indel_extra.indel_feature2' => { op => '<=', value => '0' } );
+            'indel.indel_repeats' => { op => '<=', value => '0' } );
 
         my %option = (
             sql_query_1 => $thaw_sql_R->as_sql,
@@ -1503,7 +1503,7 @@ my $indel_coding_group = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel_extra', 'indel_feature1' ) ) {
+    unless ( $write_obj->check_column( 'indel', 'indel_coding' ) ) {
         return;
     }
 
@@ -1528,19 +1528,19 @@ my $indel_coding_group = sub {
         = ( [ 'D', 0, 0 ], [ 'I', 0, 0 ], [ 'D', 1, 1 ], [ 'I', 1, 1 ], );
 
     {    # write contents
-        my $thaw_sql_R = $sql_file->retrieve('common-indel_extra_r-0');
+        my $thaw_sql_R = $sql_file->retrieve('common-indel_feature_r-0');
         $thaw_sql_R->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_R->add_where(
-            'indel_extra.indel_feature1' => { op => '>=', value => '0' } );
+            'indel.indel_coding' => { op => '>=', value => '0' } );
         $thaw_sql_R->add_where(
-            'indel_extra.indel_feature1' => { op => '<=', value => '0' } );
+            'indel.indel_coding' => { op => '<=', value => '0' } );
 
-        my $thaw_sql_L = $sql_file->retrieve('common-indel_extra_l-0');
+        my $thaw_sql_L = $sql_file->retrieve('common-indel_feature_l-0');
         $thaw_sql_L->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_L->add_where(
-            'indel_extra.indel_feature1' => { op => '>=', value => '0' } );
+            'indel.indel_coding' => { op => '>=', value => '0' } );
         $thaw_sql_L->add_where(
-            'indel_extra.indel_feature1' => { op => '<=', value => '0' } );
+            'indel.indel_coding' => { op => '<=', value => '0' } );
 
         my %option = (
             sql_query_1 => $thaw_sql_R->as_sql,
@@ -1562,7 +1562,7 @@ my $indel_repeat_group = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel_extra', 'indel_feature2' ) ) {
+    unless ( $write_obj->check_column( 'indel', 'indel_repeats' ) ) {
         return;
     }
 
@@ -1587,19 +1587,19 @@ my $indel_repeat_group = sub {
         = ( [ 'D', 0, 0 ], [ 'I', 0, 0 ], [ 'D', 1, 1 ], [ 'I', 1, 1 ], );
 
     {    # write contents
-        my $thaw_sql_R = $sql_file->retrieve('common-indel_extra_r-0');
+        my $thaw_sql_R = $sql_file->retrieve('common-indel_feature_r-0');
         $thaw_sql_R->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_R->add_where(
-            'indel_extra.indel_feature2' => { op => '>=', value => '0' } );
+            'indel.indel_repeats' => { op => '>=', value => '0' } );
         $thaw_sql_R->add_where(
-            'indel_extra.indel_feature2' => { op => '<=', value => '0' } );
+            'indel.indel_repeats' => { op => '<=', value => '0' } );
 
-        my $thaw_sql_L = $sql_file->retrieve('common-indel_extra_l-0');
+        my $thaw_sql_L = $sql_file->retrieve('common-indel_feature_l-0');
         $thaw_sql_L->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_L->add_where(
-            'indel_extra.indel_feature2' => { op => '>=', value => '0' } );
+            'indel.indel_repeats' => { op => '>=', value => '0' } );
         $thaw_sql_L->add_where(
-            'indel_extra.indel_feature2' => { op => '<=', value => '0' } );
+            'indel.indel_repeats' => { op => '<=', value => '0' } );
 
         my %option = (
             sql_query_1 => $thaw_sql_R->as_sql,
@@ -1621,7 +1621,7 @@ my $indel_slip_group = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel_extra', 'indel_feature3' ) ) {
+    unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
         return;
     }
 
@@ -1646,19 +1646,19 @@ my $indel_slip_group = sub {
         = ( [ 'D', 0, 0 ], [ 'I', 0, 0 ], [ 'D', 1, 1 ], [ 'I', 1, 1 ], );
 
     {    # write contents
-        my $thaw_sql_R = $sql_file->retrieve('common-indel_extra_r-0');
+        my $thaw_sql_R = $sql_file->retrieve('common-indel_feature_r-0');
         $thaw_sql_R->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_R->add_where(
-            'indel_extra.indel_feature3' => { op => '>=', value => '0' } );
+            'indel.indel_slippage' => { op => '>=', value => '0' } );
         $thaw_sql_R->add_where(
-            'indel_extra.indel_feature3' => { op => '<=', value => '0' } );
+            'indel.indel_slippage' => { op => '<=', value => '0' } );
 
-        my $thaw_sql_L = $sql_file->retrieve('common-indel_extra_l-0');
+        my $thaw_sql_L = $sql_file->retrieve('common-indel_feature_l-0');
         $thaw_sql_L->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_L->add_where(
-            'indel_extra.indel_feature3' => { op => '>=', value => '0' } );
+            'indel.indel_slippage' => { op => '>=', value => '0' } );
         $thaw_sql_L->add_where(
-            'indel_extra.indel_feature3' => { op => '<=', value => '0' } );
+            'indel.indel_slippage' => { op => '<=', value => '0' } );
 
         my %option = (
             sql_query_1 => $thaw_sql_R->as_sql,
@@ -2231,7 +2231,7 @@ my $distance_slip = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel_extra', 'indel_feature3' ) ) {
+    unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
         return;
     }
 
@@ -2309,7 +2309,7 @@ my $distance_gc_slip = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel_extra', 'indel_feature3' ) ) {
+    unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
         return;
     }
 

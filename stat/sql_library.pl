@@ -249,18 +249,19 @@ sub ns { return AlignDB::SQL->new; }
     print $sql_L->as_sql if $verbose;
 }
 
-#SELECT CONCAT(isw.isw_type, isw.isw_distance) isw_type_distance,
-#       AVG(isw_pi) AVG_pi,
-#       COUNT(isw_pi) COUNT,
-#       STD(isw_pi) STD_pi
-#FROM indel INNER JOIN isw ON indel.indel_id = isw.indel_id
-#           INNER JOIN indel_extra ON indel.indel_id = indel_extra.indel_id
-#WHERE isw.isw_density > 9
-#AND isw.isw_distance <= 5
-#AND isw.isw_type = 'R'
-#AND indel_extra.indel_feature1 BETWEEN ? AND ?
-#AND indel_extra.indel_feature2 BETWEEN ? AND ?
-#GROUP BY CONCAT(isw.isw_type, isw.isw_distance) DESC
+#SELECT
+#  CONCAT(isw_type, isw_distance) isw_type_distance,
+#  AVG(isw.isw_pi) AVG_pi,
+#  COUNT(*) COUNT,
+#  STD(isw.isw_pi) STD_pi
+#FROM indel
+#  INNER JOIN isw ON
+#    indel.indel_id = isw.indel_id
+#WHERE (isw.isw_density > 9)
+#  AND (isw.isw_distance <= 5)
+#  AND (isw.isw_type = 'R')
+#GROUP BY
+#  CONCAT(isw.isw_type, isw.isw_distance) DESC
 {
     my $sql = ns();
     $sql->add_select( 'CONCAT(isw_type, isw_distance)', 'isw_type_distance' );
@@ -276,10 +277,6 @@ sub ns { return AlignDB::SQL->new; }
             {   type      => 'inner',
                 table     => 'isw',
                 condition => 'indel.indel_id = isw.indel_id',
-            },
-            {   type      => 'inner',
-                table     => 'indel_extra',
-                condition => 'indel.indel_id = indel_extra.indel_id',
             },
         ]
     );
@@ -297,17 +294,13 @@ sub ns { return AlignDB::SQL->new; }
                 table     => 'isw',
                 condition => 'indel.indel_id = isw.prev_indel_id',
             },
-            {   type      => 'inner',
-                table     => 'indel_extra',
-                condition => 'indel.indel_id = indel_extra.indel_id',
-            },
         ]
     );
     $sql_L->add_where( 'isw.isw_type' => \'= \'L\'' );
     $sql_L->group( { column => 'CONCAT(isw.isw_type, isw.isw_distance)' } );
 
-    $sql_file->set( 'common-indel_extra_r-0', $sql_R->freeze );
-    $sql_file->set( 'common-indel_extra_l-0', $sql_L->freeze );
+    $sql_file->set( 'common-indel_feature_r-0', $sql_R->freeze );
+    $sql_file->set( 'common-indel_feature_l-0', $sql_L->freeze );
     print $sql_R->as_sql if $verbose;
     print $sql_L->as_sql if $verbose;
 }
@@ -337,15 +330,15 @@ sub ns { return AlignDB::SQL->new; }
 #  COUNT(*) COUNT,
 #  STD(isw.isw_pi) STD_pi
 #FROM isw
-#  INNER JOIN indel_extra e1 ON
-#    isw.indel_id = e1.indel_id
-#  INNER JOIN indel_extra e2 ON
-#    isw.prev_indel_id = e2.indel_id
+#  INNER JOIN indel i1 ON
+#    isw.indel_id = i1.indel_id
+#  INNER JOIN indel i2 ON
+#    isw.prev_indel_id = i2.indel_id
 #WHERE (isw.isw_type IN ('S'))
-#  AND (e1.indel_feature3 >= ?)
-#  AND (e1.indel_feature3 <= ?)
-#  AND (e2.indel_feature3 >= ?)
-#  AND (e2.indel_feature3 <= ?)
+#  AND (i1.indel_slippage >= ?)
+#  AND (i1.indel_slippage <= ?)
+#  AND (i2.indel_slippage >= ?)
+#  AND (i2.indel_slippage <= ?)
 #GROUP BY
 #  isw.isw_distance
 {
@@ -358,20 +351,20 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_join(
         isw => [
             {   type      => 'inner',
-                table     => 'indel_extra e1',
-                condition => 'isw.indel_id = e1.indel_id',
+                table     => 'indel i1',
+                condition => 'isw.indel_id = i1.indel_id',
             },
             {   type      => 'inner',
-                table     => 'indel_extra e2',
-                condition => 'isw.prev_indel_id = e2.indel_id',
+                table     => 'indel i2',
+                condition => 'isw.prev_indel_id = i2.indel_id',
             },
         ]
     );
     $sql->add_where( 'isw.isw_type'      => \q{IN ('S')} );
-    $sql->add_where( 'e1.indel_feature3' => { op => '>=', value => '1' } );
-    $sql->add_where( 'e1.indel_feature3' => { op => '<=', value => '1' } );
-    $sql->add_where( 'e2.indel_feature3' => { op => '>=', value => '1' } );
-    $sql->add_where( 'e2.indel_feature3' => { op => '<=', value => '1' } );
+    $sql->add_where( 'i1.indel_slippage' => { op => '>=', value => '1' } );
+    $sql->add_where( 'i1.indel_slippage' => { op => '<=', value => '1' } );
+    $sql->add_where( 'i2.indel_slippage' => { op => '>=', value => '1' } );
+    $sql->add_where( 'i2.indel_slippage' => { op => '<=', value => '1' } );
     $sql->group( { column => 'isw.isw_distance' } );
 
     $sql_file->set( 'common-distance_slip_s-4', $sql );
@@ -384,11 +377,11 @@ sub ns { return AlignDB::SQL->new; }
 #  COUNT(*) COUNT,
 #  STD(isw.isw_pi) STD_pi
 #FROM isw
-#  INNER JOIN indel_extra ON
-#    isw.isw_indel_id = indel_extra.indel_id
+#  INNER JOIN indel ON
+#    isw.isw_indel_id = indel.indel_id
 #WHERE (isw.isw_type IN ('L', 'R'))
-#  AND (indel_extra.indel_feature3 >= ?)
-#  AND (indel_extra.indel_feature3 <= ?)
+#  AND (indel.indel_slippage >= ?)
+#  AND (indel.indel_slippage <= ?)
 #GROUP BY
 #  isw.isw_distance
 {
@@ -401,15 +394,15 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_join(
         isw => {
             type      => 'inner',
-            table     => 'indel_extra',
-            condition => 'isw.isw_indel_id = indel_extra.indel_id',
+            table     => 'indel',
+            condition => 'isw.isw_indel_id = indel.indel_id',
         }
     );
     $sql->add_where( 'isw.isw_type' => \q{IN ('L', 'R')} );
     $sql->add_where(
-        'indel_extra.indel_feature3' => { op => '>=', value => '1' } );
+        'indel.indel_slippage' => { op => '>=', value => '1' } );
     $sql->add_where(
-        'indel_extra.indel_feature3' => { op => '<=', value => '1' } );
+        'indel.indel_slippage' => { op => '<=', value => '1' } );
     $sql->group( { column => 'isw.isw_distance' } );
 
     $sql_file->set( 'common-distance_slip_lr-2', $sql );
@@ -422,11 +415,11 @@ sub ns { return AlignDB::SQL->new; }
 #  COUNT(*) COUNT,
 #  STD(isw_pi) STD_pi
 #FROM isw
-#  INNER JOIN indel_extra ON
-#    isw.isw_indel_id = indel_extra.indel_id
+#  INNER JOIN indel ON
+#    isw.isw_indel_id = indel.indel_id
 #WHERE (isw.isw_type IN ('L', 'R'))
-#  AND (indel_extra.indel_feature3 >= ?)
-#  AND (indel_extra.indel_feature3 <= ?)
+#  AND (indel.indel_slippage >= ?)
+#  AND (indel.indel_slippage <= ?)
 {
     my $sql = ns();
     $sql->select( ['\'Total\''] );
@@ -437,15 +430,15 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_join(
         isw => {
             type      => 'inner',
-            table     => 'indel_extra',
-            condition => 'isw.isw_indel_id = indel_extra.indel_id',
+            table     => 'indel',
+            condition => 'isw.isw_indel_id = indel.indel_id',
         }
     );
     $sql->add_where( 'isw.isw_type' => \q{IN ('L', 'R')} );
     $sql->add_where(
-        'indel_extra.indel_feature3' => { op => '>=', value => '1' } );
+        'indel.indel_slippage' => { op => '>=', value => '1' } );
     $sql->add_where(
-        'indel_extra.indel_feature3' => { op => '<=', value => '1' } );
+        'indel.indel_slippage' => { op => '<=', value => '1' } );
 
     $sql_file->set( 'common-distance_slip_total-2', $sql );
     print $sql->as_sql if $verbose;
