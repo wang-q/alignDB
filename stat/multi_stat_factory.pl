@@ -182,7 +182,7 @@ else {
                 push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
             }
 
-            for ( $all_freq - 3, $all_freq - 2 ) {
+            for ( $all_freq - 2, $all_freq - 1 ) {
                 my $name = $_ . "of" . $all_freq;
                 push @freqs, [ $name, $_, $_ ];
             }
@@ -1635,6 +1635,68 @@ my $ld_freq = sub {
     }
 };
 
+my $ld_insdel_freq = sub {
+    my @type_levels = ( [ 'ins', 'I' ], [ 'del', 'D' ], );
+    my @freq_levels = @freqs;
+
+    my $write_sheet = sub {
+        my ( $type, $freq ) = @_;
+        my $sheet_name = 'ld_' . $type->[0] . '_' . $freq->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        {    # write header
+            my @headers = qw{distance AVG_r AVG_r2 AVG_Dprime AVG_Dprime_abs
+                COUNT};
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            my $sql_query = q{
+                SELECT
+                    w.isw_distance distance,
+                    AVG(s.snp_r) AVG_r,
+                    AVG(POWER(s.snp_r, 2)) AVG_r2,
+                    AVG(s.snp_dprime) AVG_Dprime,
+                    AVG(ABS(s.snp_dprime)) AVG_Dprime_abs,
+                    COUNT(*) COUNT
+                FROM indel i, isw w, snp s
+                WHERE 1 = 1
+                AND i.indel_id = w.isw_indel_id
+                AND w.isw_id = s.isw_id
+                AND i.indel_freq != 'unknown'
+                AND s.snp_freq != 'unknown'
+                AND i.indel_type = ?
+                AND i.indel_freq >= ?
+                AND i.indel_freq <= ?
+                GROUP BY w.isw_distance 
+            };
+            my %option = (
+                sql_query  => $sql_query,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $type->[1], $freq->[1], $freq->[2] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
+    for my $type (@type_levels) {
+        for my $freq (@freq_levels) {
+            &$write_sheet( $type, $freq );
+        }
+    }
+};
+
 foreach my $n (@tasks) {
     if ( $n == 1 ) { &$basic; &$process; &$summary; &$summary_indel; next; }
     if ( $n == 2 ) { &$distance; &$distance_length; next; }
@@ -1652,9 +1714,10 @@ foreach my $n (@tasks) {
     if ( $n == 23 ) { &$frequency_distance2;  next; }
     if ( $n == 24 ) { &$frequency_distance3;  next; }
 
-    if ( $n == 30 ) { &$ld;        next; }
-    if ( $n == 31 ) { &$ld_insdel; next; }
-    if ( $n == 32 ) { &$ld_freq;   next; }
+    if ( $n == 30 ) { &$ld;             next; }
+    if ( $n == 31 ) { &$ld_insdel;      next; }
+    if ( $n == 32 ) { &$ld_freq;        next; }
+    if ( $n == 33 ) { &$ld_insdel_freq; next; }
 }
 
 $stopwatch->end_message;
