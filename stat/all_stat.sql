@@ -320,42 +320,6 @@ WHERE a.align_id = i.align_id
 GROUP BY a.align_id
 
 #----------------------------------------------------------#
-# Indel slippage                               
-#----------------------------------------------------------#
-
-SELECT indel_feature3, COUNT(*)
-FROM indel, indel_extra
-WHERE indel.indel_id = indel_extra.indel_id
-AND indel.indel_length = 1
-AND indel.indel_seq NOT LIKE "%N%"
-GROUP BY indel_feature3;
-
-SELECT indel_feature3, COUNT(*)
-FROM indel, indel_extra
-WHERE indel.indel_id = indel_extra.indel_id
-AND indel.indel_length = 1
-AND indel.left_extand >= 100
-AND indel.right_extand >= 100
-AND indel.indel_seq NOT LIKE "%N%"
-GROUP BY indel_feature3;
-
-# non-slippage-like indel number
-SELECT DISTINCT i.indel_id
-FROM    (SELECT e.indel_id
-        FROM   isw,
-               indel_extra e
-        WHERE  e.indel_feature3 BETWEEN 0 AND 0
-        AND isw_type = 'R'
-        AND isw.indel_id = e.indel_id
-        UNION 
-        SELECT e.indel_id
-        FROM   isw,
-               indel_extra e
-        WHERE  e.indel_feature3 BETWEEN 0 AND 0
-        AND isw_type = 'L'
-        AND isw.prev_indel_id = e.indel_id) i
-
-#----------------------------------------------------------#
 # GC wave                                        
 #----------------------------------------------------------#
 # crest_trough length & indel
@@ -482,15 +446,15 @@ GROUP BY c.chr_id
 # indel number coding--non_coding
 SELECT 'coding', coding.COUNT, 'non_coding', non_coding.COUNT
 FROM   (SELECT COUNT(i.indel_id) COUNT
-        FROM indel i, indel_extra e
-        WHERE i.indel_id = e.indel_id
+        FROM indel i
+        WHERE 1 = 1
         AND (i.left_extand >= 100 OR i.right_extand >= 100)
-        AND e.indel_feature1 BETWEEN 1 AND 1) coding,
+        AND i.indel_coding BETWEEN 1 AND 1) coding,
        (SELECT COUNT(i.indel_id) COUNT
-        FROM indel i, indel_extra e
-        WHERE i.indel_id = e.indel_id
+        FROM indel i
+        WHERE 1 = 1
         AND (i.left_extand >= 100 OR i.right_extand >= 100)
-        AND e.indel_feature1 BETWEEN 0 AND 0) non_coding
+        AND i.indel_coding BETWEEN 0 AND 0) non_coding
 
 # isw length coding--non_coding
 SELECT 'coding', coding.SUM, 
@@ -586,15 +550,6 @@ set isw_pi =  -0.75 * log2(1- (4.0/3.0)* isw_pi)
 SELECT avg(isw_pi) FROM isw_b i
 
 #----------------------------------------------------------#
-# MODIFY                                             
-#----------------------------------------------------------#
-DELETE QUICK FROM indel_extra
-LIMIT 5000000;
-
-DELETE QUICK FROM isw_extra
-LIMIT 5000000;
-
-#----------------------------------------------------------#
 # Fix errors                                         
 #----------------------------------------------------------#
 # isw_distance error
@@ -680,30 +635,4 @@ WHERE s.window_id = w.window_id AND
       w.window_coding IN (0, 1)
 GROUP BY coding;
 
-#----------------------------------------------------------#
-# yeast_4                                         
-#----------------------------------------------------------#
-# 1/3 indels
-SELECT i.indel_length
-FROM indel i,
-     indel_extra e
-WHERE i.indel_id = e.indel_id AND
-      i.indel_occured IS NOT NULL AND
-      i.indel_occured = e.indel_feature4 AND
-      i.indel_occured IN ('T', 'Q') AND
-      e.indel_feature4 IN ('T', 'Q') AND
-      i.indel_length BETWEEN 1 AND 50 AND
-      e.indel_feature3 = 0
-
-# 2/3 indels
-SELECT i.indel_length
-FROM indel i,
-     indel_extra e
-WHERE i.indel_id = e.indel_id AND
-      i.indel_occured IS NOT NULL AND
-      i.indel_occured != e.indel_feature4 AND
-      i.indel_occured IN ('T', 'Q') AND
-      e.indel_feature4 IN ('T', 'Q') AND
-      i.indel_length BETWEEN 1 AND 50 AND
-      e.indel_feature3 = 0
 

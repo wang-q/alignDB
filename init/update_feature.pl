@@ -83,10 +83,6 @@ my @jobs;
         my @batching = splice @align_ids, 0, $batch_number;
         push @jobs, [@batching];
     }
-
-    $obj->empty_table('indel_extra');
-    $obj->empty_table('isw_extra');
-    $obj->empty_table('snp_extra');
 }
 
 #----------------------------------------------------------#
@@ -143,11 +139,10 @@ my $worker = sub {
 
     # update indel table in the new feature column
     my $indel_feature = q{
-        INSERT INTO indel_extra (
-            indel_extra_id, indel_id, prev_indel_id,
-            indel_feature1, indel_feature2
-        )
-        VALUES (NULL, ?, ?, ?, ?)
+        UPDATE indel
+        SET indel_coding = ?,
+            indel_repeats = ?
+        WHERE indel_id = ?
     };
     my $indel_feature_sth = $dbh->prepare($indel_feature);
 
@@ -286,14 +281,12 @@ UPDATE: for my $align_id (@align_ids) {
 
             {
                 my $indel_chr_runlist = "$indel_chr_start-$indel_chr_end";
-                my $indel_feature1    = $ensembl->feature_portion( '_cds_set',
+                my $indel_coding      = $ensembl->feature_portion( '_cds_set',
                     $indel_chr_runlist );
-                my $indel_feature2 = $ensembl->feature_portion( '_repeat_set',
+                my $indel_repeats = $ensembl->feature_portion( '_repeat_set',
                     $indel_chr_runlist );
-                $indel_feature_sth->execute(
-                    $indel_id,       $prev_indel_id,
-                    $indel_feature1, $indel_feature2
-                );
+                $indel_feature_sth->execute( $indel_coding, $indel_repeats,
+                    $indel_id );
                 $indel_feature_sth->finish;
             }
 
@@ -308,12 +301,12 @@ UPDATE: for my $align_id (@align_ids) {
                     my $isw_chr_end   = $chr_pos[$isw_end];
 
                     my $isw_chr_runlist = "$isw_chr_start-$isw_chr_end";
-                    my $isw_coding    = $ensembl->feature_portion( '_cds_set',
+                    my $isw_coding      = $ensembl->feature_portion( '_cds_set',
                         $isw_chr_runlist );
                     my $isw_repeats = $ensembl->feature_portion( '_repeat_set',
                         $isw_chr_runlist );
-                    $isw_feature_sth->execute( $isw_coding,
-                        $isw_repeats, $isw_id );
+                    $isw_feature_sth->execute( $isw_coding, $isw_repeats,
+                        $isw_id );
                 }
 
                 $isw_feature_sth->finish;

@@ -295,14 +295,12 @@ UPDATE: for my $align_id (@align_ids) {
 
             {
                 my $indel_chr_runlist = "$indel_chr_start-$indel_chr_end";
-                my $indel_feature1    = $ensembl->feature_portion( '_cds_set',
+                my $indel_coding      = $ensembl->feature_portion( '_cds_set',
                     $indel_chr_runlist );
-                my $indel_feature2 = $ensembl->feature_portion( '_repeat_set',
+                my $indel_repeats = $ensembl->feature_portion( '_repeat_set',
                     $indel_chr_runlist );
-                $indel_feature_sth->execute(
-
-                    $indel_feature1, $indel_feature2, $indel_id,
-                );
+                $indel_feature_sth->execute( $indel_coding, $indel_repeats,
+                    $indel_id, );
                 $indel_feature_sth->finish;
             }
 
@@ -317,7 +315,7 @@ UPDATE: for my $align_id (@align_ids) {
                     my $isw_chr_end   = $chr_pos[$isw_end];
 
                     my $isw_chr_runlist = "$isw_chr_start-$isw_chr_end";
-                    my $isw_coding    = $ensembl->feature_portion( '_cds_set',
+                    my $isw_coding      = $ensembl->feature_portion( '_cds_set',
                         $isw_chr_runlist );
                     my $isw_repeats = $ensembl->feature_portion( '_repeat_set',
                         $isw_chr_runlist );
@@ -384,7 +382,7 @@ UPDATE: for my $align_id (@align_ids) {
                 my $window_chr_set
                     = $window_set->map_set( sub { $chr_pos[$_] } );
 
-               my $window_coding
+                my $window_coding
                     = $ensembl->feature_portion( '_cds_set', $window_chr_set );
                 my $window_repeats = $ensembl->feature_portion( '_repeat_set',
                     $window_chr_set );
@@ -426,18 +424,18 @@ my $worker_isw_cpg = sub {
     my $isw_sth = $dbh->prepare($isw_query);
 
     # update isw table in the new feature column
-    my $isw_extra = q{
+    my $isw_update = q{
         UPDATE isw
         SET isw_cpg_pi = ?
         WHERE isw_id = ?
     };
-    my $isw_extra_sth = $dbh->prepare($isw_extra);
+    my $isw_update_sth = $dbh->prepare($isw_update);
 
     # for isw
     $isw_sth->execute;
     while ( my @row = $isw_sth->fetchrow_array ) {
         my ( $isw_id, $cpg ) = @row;
-        $isw_extra_sth->execute( $cpg, $isw_id );
+        $isw_update_sth->execute( $cpg, $isw_id );
     }
 
     # update NULL value of isw_cpg_pi to 0

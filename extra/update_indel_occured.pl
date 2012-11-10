@@ -18,14 +18,14 @@ my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
 
 # occured parameters
-my $aim_db = $Config->{occured}->{aim_db};
-my $ref_db = $Config->{occured}->{ref_db};
+my $aim_db = $Config->{occured}{aim_db};
+my $ref_db = $Config->{occured}{ref_db};
 
 my $man  = 0;
 my $help = 0;
@@ -67,55 +67,11 @@ my $ref_dbh = $ref_obj->dbh;
 # Add columns
 #----------------------------#
 {
-    $aim_obj->create_column( "indel_extra", "indel_feature4", "CHAR(1)" );
-    print "Table indel_extra altered\n";
+    $aim_obj->create_column( "indel", "indel_other_occured", "CHAR(1)" );
+    print "Table indel altered\n";
 
-    $aim_obj->create_column( "snp_extra", "snp_feature4", "CHAR(1)" );
-    print "Table snp_extra altered\n";
-}
-
-#----------------------------#
-# Prefill tables if necessarily
-#----------------------------#
-
-{    # check rows in indel_extra
-    my $sql_query = q{
-        SELECT COUNT(indel_extra_id)
-        FROM indel_extra
-    };
-    my $sth = $aim_dbh->prepare($sql_query);
-    $sth->execute;
-    my ($count) = $sth->fetchrow_array;
-
-    unless ($count) {
-        $sql_query = q{
-            INSERT INTO indel_extra (indel_id)
-            SELECT indel.indel_id
-            FROM indel
-        };
-        $sth = $aim_dbh->prepare($sql_query);
-        $sth->execute;
-    }
-}
-
-{    # check rows in snp_extra
-    my $sql_query = q{
-        SELECT COUNT(snp_extra_id)
-        FROM snp_extra
-    };
-    my $sth = $aim_dbh->prepare($sql_query);
-    $sth->execute;
-    my ($count) = $sth->fetchrow_array;
-
-    unless ($count) {
-        $sql_query = q{
-            INSERT INTO snp_extra (snp_id)
-            SELECT snp.snp_id
-            FROM snp
-        };
-        $sth = $aim_dbh->prepare($sql_query);
-        $sth->execute;
-    }
+    $aim_obj->create_column( "snp", "snp_other_occured", "CHAR(1)" );
+    print "Table snp altered\n";
 }
 
 #----------------------------------------------------------#
@@ -151,13 +107,13 @@ my $ref_dbh = $ref_obj->dbh;
     my $ref_indel_sth = $ref_dbh->prepare($indel_query);
 
     # update indel table in the new feature column
-    my $indel_extra = q{
-        UPDATE indel_extra, indel
-        SET indel_extra.indel_feature4 = ?
-        WHERE indel.indel_id = indel_extra.indel_id
+    my $indel_update = q{
+        UPDATE indel
+        SET indel.indel_other_occured = ?
+        WHERE 1 = 1
         AND indel.indel_id = ?
     };
-    my $indel_extra_sth = $aim_dbh->prepare($indel_extra);
+    my $indel_update_sth = $aim_dbh->prepare($indel_update);
 
     # select all snps in this alignment
     my $snp_query = q{
@@ -169,13 +125,13 @@ my $ref_dbh = $ref_obj->dbh;
     my $ref_snp_sth = $ref_dbh->prepare($snp_query);
 
     # update snp table in the new feature column
-    my $snp_extra = q{
-        UPDATE snp_extra, snp
-        SET snp_extra.snp_feature4 = ?
-        WHERE snp.snp_id = snp_extra.snp_id
+    my $snp_update = q{
+        UPDATE snp
+        SET snp.snp_other_occured = ?
+        WHERE 1 = 1
         AND snp.snp_id = ?
     };
-    my $snp_extra_sth = $aim_dbh->prepare($snp_extra);
+    my $snp_update_sth = $aim_dbh->prepare($snp_update);
 
     $aim_align_sth->execute;
 
@@ -190,7 +146,7 @@ ALN: while ( my $row_hashref = $aim_align_sth->fetchrow_hashref ) {
 
         # if any align info in aim and ref is not identical,
         #   abandon this alignment
-        foreach ( sort keys %$aim_hashref ) {
+        for ( sort keys %$aim_hashref ) {
             if ( $aim_hashref->{$_} ne $ref_hashref->{$_} ) {
                 print " " x 4, "$_ does not match; ";
                 print "align info error, jump to next\n";
@@ -235,9 +191,10 @@ ALN: while ( my $row_hashref = $aim_align_sth->fetchrow_hashref ) {
         foreach my $indel_key ( keys %aim_indel_info ) {
             if ( exists $ref_indel_info{$indel_key} ) {
                 my $aim_indel_id = $aim_indel_info{$indel_key}->{indel_id};
-                my $indel_feature4
+                my $indel_other_occured
                     = $ref_indel_info{$indel_key}->{indel_occured};
-                $indel_extra_sth->execute( $indel_feature4, $aim_indel_id );
+                $indel_update_sth->execute( $indel_other_occured,
+                    $aim_indel_id );
             }
         }
 
@@ -271,18 +228,18 @@ ALN: while ( my $row_hashref = $aim_align_sth->fetchrow_hashref ) {
         # find corresponding snps
         foreach my $snp_key ( keys %aim_snp_info ) {
             if ( exists $ref_snp_info{$snp_key} ) {
-                my $aim_snp_id   = $aim_snp_info{$snp_key}->{snp_id};
-                my $snp_feature4 = $ref_snp_info{$snp_key}->{snp_occured};
-                $snp_extra_sth->execute( $snp_feature4, $aim_snp_id );
+                my $aim_snp_id        = $aim_snp_info{$snp_key}->{snp_id};
+                my $snp_other_occured = $ref_snp_info{$snp_key}->{snp_occured};
+                $snp_update_sth->execute( $snp_other_occured, $aim_snp_id );
             }
         }
     }
 
-    $snp_extra_sth->finish;
+    $snp_update_sth->finish;
     $ref_snp_sth->finish;
     $aim_snp_sth->finish;
 
-    $indel_extra_sth->finish;
+    $indel_update_sth->finish;
     $ref_indel_sth->finish;
     $aim_indel_sth->finish;
 

@@ -27,11 +27,11 @@ my $stopwatch = AlignDB::Stopwatch->new(
 );
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 my $chr_id;
 
@@ -39,14 +39,14 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'chr_id=i'   => \$chr_id,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=s'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'chr_id=i'     => \$chr_id,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -123,11 +123,6 @@ my $delete_ssw_sth = $dbh->prepare(
     WHERE snp_id = ?'
 );
 
-my $delete_snp_extra_sth = $dbh->prepare(
-    'DELETE FROM snp_extra
-    WHERE snp_id = ?'
-);
-
 my $delete_snp_sth = $dbh->prepare(
     'DELETE FROM snp
     WHERE snp_id = ?'
@@ -140,11 +135,6 @@ my $indel_id_sth = $dbh->prepare(
     WHERE align_id = ?'
 );
 
-my $delete_indel_extra_sth = $dbh->prepare(
-    'DELETE FROM indel_extra 
-    WHERE indel_id = ?'
-);
-
 my $delete_indel_sth = $dbh->prepare(
     'DELETE FROM indel
     WHERE indel_id = ?'
@@ -155,11 +145,6 @@ my $isw_id_sth = $dbh->prepare(
     'SELECT isw_id
     FROM isw
     WHERE indel_id = ?'
-);
-
-my $delete_isw_extra_sth = $dbh->prepare(
-    'DELETE FROM isw_extra 
-    WHERE isw_id = ?'
 );
 
 my $delete_isw_sth = $dbh->prepare(
@@ -208,7 +193,6 @@ while ( my ($align_id) = $align_id_sth->fetchrow_array ) {
     $snp_id_sth->execute($align_id);
     while ( my ($snp_id) = $snp_id_sth->fetchrow_array ) {
         $delete_ssw_sth->execute($snp_id);
-        $delete_snp_extra_sth->execute($snp_id);
         $delete_snp_sth->execute($snp_id);
     }
 
@@ -219,11 +203,9 @@ while ( my ($align_id) = $align_id_sth->fetchrow_array ) {
         # delete isw
         $isw_id_sth->execute($indel_id);
         while ( my ($isw_id) = $isw_id_sth->fetchrow_array ) {
-            $delete_isw_extra_sth->execute($isw_id);
             $delete_isw_sth->execute($isw_id);
         }
 
-        $delete_indel_extra_sth->execute($indel_id);
         $delete_indel_sth->execute($indel_id);
     }
 
@@ -240,7 +222,7 @@ while ( my ($align_id) = $align_id_sth->fetchrow_array ) {
     $delete_align_sth->execute($align_id);
 }
 
-$stopwatch->end_message();
+$stopwatch->end_message;
 
 # store program running meta info to database
 # this AlignDB object is just for storing meta info
@@ -268,24 +250,5 @@ __END__
         --username          username
         --password          password
         --chr_id            chr_id of alignments to be removed
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
 
 =cut

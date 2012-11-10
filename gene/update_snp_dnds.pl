@@ -342,7 +342,7 @@ $snp_update_sth->finish;
 $snp_sth->finish;
 
 #----------------------------------------------------------#
-# isw_extra
+# isw
 #----------------------------------------------------------#
 {
     print "Processing isw_syn, nsy, stop\n";

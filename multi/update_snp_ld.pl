@@ -71,11 +71,11 @@ my $all_freq;
     my $dbh = $obj->dbh;
 
     my $sql_query = q{
-            SELECT DISTINCT COUNT(q.query_id) + 1
-            FROM  query q, sequence s
-            WHERE q.seq_id = s.seq_id
-            GROUP BY s.align_id
-        };
+        SELECT DISTINCT COUNT(q.query_id) + 1
+        FROM  query q, sequence s
+        WHERE q.seq_id = s.seq_id
+        GROUP BY s.align_id
+    };
     my $sth = $dbh->prepare($sql_query);
 
     my @counts;

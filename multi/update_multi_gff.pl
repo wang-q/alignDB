@@ -375,18 +375,18 @@ my $worker_isw_cpg = sub {
     my $isw_sth = $dbh->prepare($isw_query);
 
     # update isw table in the new feature column
-    my $isw_extra = q{
+    my $isw_update = q{
         UPDATE isw
         SET isw_cpg_pi = ?
         WHERE isw_id = ?
     };
-    my $isw_extra_sth = $dbh->prepare($isw_extra);
+    my $isw_update_sth = $dbh->prepare($isw_update);
 
     # for isw
     $isw_sth->execute;
     while ( my @row = $isw_sth->fetchrow_array ) {
         my ( $isw_id, $cpg ) = @row;
-        $isw_extra_sth->execute( $cpg, $isw_id );
+        $isw_update_sth->execute( $cpg, $isw_id );
     }
 
     # update NULL value of isw_cpg_pi to 0

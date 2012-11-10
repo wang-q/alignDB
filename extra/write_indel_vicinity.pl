@@ -7,28 +7,29 @@ use Pod::Usage;
 use Config::Tiny;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-use AlignDB;
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(:all);
 
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+use AlignDB;
+
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new();
+my $Config = Config::Tiny->new;
 $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
 
 # occured parameters
-my $aim_db = $Config->{occured}->{aim_db};
-my $ref_db = $Config->{occured}->{ref_db};
+my $aim_db = $Config->{occured}{aim_db};
+my $ref_db = $Config->{occured}{ref_db};
 
 my $man  = 0;
 my $help = 0;
@@ -63,26 +64,21 @@ my $ref_obj = AlignDB->new(
 );
 
 # Database handler
-my $aim_dbh = $aim_obj->dbh();
-my $ref_dbh = $ref_obj->dbh();
+my $aim_dbh = $aim_obj->dbh;
+my $ref_dbh = $ref_obj->dbh;
 
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
 {
-    my @names = $aim_obj->get_names();
-    my ( undef, undef, $ref_ref_name ) = $ref_obj->get_names();
+    my @names = $aim_obj->get_names;
+    my ( undef, undef, $ref_ref_name ) = $ref_obj->get_names;
     push @names, $ref_ref_name;
 
     #----------------------------#
     # SQL queries
     #----------------------------#
-    # alignments
-    my $aim_align_query = q{
-        SELECT a.align_id
-        FROM align a
-    };
-    my $aim_align_sth = $aim_dbh->prepare($aim_align_query);
+    my @aim_align_ids = @{ $aim_obj->get_align_ids };
 
     # sequences
     my $aim_seq_query = q{
@@ -105,12 +101,11 @@ my $ref_dbh = $ref_obj->dbh();
     # find all clearly occured indels
     my $occured_indel = q{
         SELECT i.indel_id, indel_start, indel_end
-        FROM   indel i,
-               indel_extra e
-        WHERE  i.indel_id = e.indel_id
+        FROM   indel i
+        WHERE  1 = 1
         AND i.align_id = ?
         AND i.indel_occured = ?
-        And e.indel_feature4 = ?
+        And i.indel_other_occured = ?
     };
     my $occured_indel_sth = $aim_dbh->prepare($occured_indel);
 
@@ -133,7 +128,6 @@ my $ref_dbh = $ref_obj->dbh();
     };
     my $indel_vicinity_sth = $aim_dbh->prepare($indel_vicinity);
 
-
     my @occured_groups
         = ( [ 'T', 'T' ], [ 'Q', 'Q' ], [ 'T', 'Q' ], [ 'Q', 'T' ], );
 
@@ -141,29 +135,28 @@ my $ref_dbh = $ref_obj->dbh();
     # write indel vicinity sequences to file
     #----------------------------#
     # vicinity region is composed by isws
-    foreach my $g (@occured_groups) {
+    for my $g (@occured_groups) {
         my $group_name = $g->[0] . $g->[1];
         my @group_segments;
         print "For group $group_name\n";
 
         # foreach alignment
-        $aim_align_sth->execute();
-        while ( my ($align_id) = $aim_align_sth->fetchrow_array() ) {
+        for my $align_id (@aim_align_ids) {
             print " " x 4, "Processing align_id $align_id\n";
 
             $aim_seq_sth->execute($align_id);
             my ( $aim_target_seq, $aim_query_seq, $aim_ref_seq )
-                = $aim_seq_sth->fetchrow_array();
+                = $aim_seq_sth->fetchrow_array;
 
             $ref_seq_sth->execute($align_id);
-            my ($ref_ref_seq) = $ref_seq_sth->fetchrow_array();
+            my ($ref_ref_seq) = $ref_seq_sth->fetchrow_array;
 
             $occured_indel_sth->execute( $align_id, $g->[0], $g->[1] );
             while ( my @row = $occured_indel_sth->fetchrow_array ) {
                 my ( $indel_id, $indel_start, $indel_end ) = @row;
 
                 # indel vicinity region including indel itself
-                my $vicinity_region = AlignDB::IntSpan->new();
+                my $vicinity_region = AlignDB::IntSpan->new;
                 $vicinity_region->add("$indel_start-$indel_end");
 
                 # merge all isws of this indel to vicinity region
@@ -172,15 +165,15 @@ my $ref_dbh = $ref_obj->dbh();
                     my ( $isw_id, $isw_start, $isw_end ) = @row2;
                     $vicinity_region->add("$isw_start-$isw_end");
                 }
-                next if $vicinity_region->cardinality() < 100;
+                next if $vicinity_region->cardinality < 100;
 
-                if ( $vicinity_region->spans() > 1 ) {
+                if ( $vicinity_region->spans > 1 ) {
                     warn "Vicinity of indel [$indel_id] is interrupted\n";
                 }
 
                 # merge this vicinity region to occured groups
                 my @segments;
-                foreach (
+                for (
                     $aim_target_seq, $aim_query_seq,
                     $aim_ref_seq,    $ref_ref_seq
                     )
@@ -196,14 +189,13 @@ my $ref_dbh = $ref_obj->dbh();
                 }
             }
         }
-        
+
         $ref_seq_sth->finish;
         $aim_seq_sth->finish;
-        $aim_align_sth->finish;
 
         my $outfile = "$aim_db-$ref_ref_name" . "-$group_name.fas";
         open my $outfh, ">", $outfile;
-        foreach ( 0 .. 3 ) {
+        for ( 0 .. 3 ) {
             print {$outfh} ">", $names[$_], "\n";
             print {$outfh} $group_segments[$_], "\n";
         }

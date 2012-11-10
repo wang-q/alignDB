@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     11/10/2012 5:52:47 PM                        */
+/* Created on:     11/10/2012 8:29:40 PM                        */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -311,6 +311,9 @@ create table indel
    indel_dG                       double,
    indel_occured                  char(8),
    indel_type                     char(8),
+   indel_slippage                 double,
+   indel_coding                   double,
+   indel_repeats                  double,
    primary key (indel_id, prev_indel_id)
 )
 ENGINE = MyISAM;
@@ -321,30 +324,6 @@ ENGINE = MyISAM;
 create index align_indel_FK on indel
 (
    align_id
-);
-
-/*==============================================================*/
-/* Table: indel_extra                                           */
-/*==============================================================*/
-create table indel_extra
-(
-   indel_extra_id                 int                            not null AUTO_INCREMENT,
-   indel_id                       int,
-   prev_indel_id                  int,
-   indel_feature1                 double,
-   indel_feature2                 double,
-   indel_feature3                 double,
-   primary key (indel_extra_id)
-)
-ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Index: indel_indel_extra_FK                                  */
-/*==============================================================*/
-create index indel_indel_extra_FK on indel_extra
-(
-   indel_id,
-   prev_indel_id
 );
 
 /*==============================================================*/
@@ -383,25 +362,6 @@ create index indel_isw_FK on isw
 (
    indel_id,
    prev_indel_id
-);
-
-/*==============================================================*/
-/* Table: isw_extra                                             */
-/*==============================================================*/
-create table isw_extra
-(
-   isw_extra_id                   int                            not null AUTO_INCREMENT,
-   isw_id                         int,
-   primary key (isw_extra_id)
-)
-ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Index: isw_isw_extra_FK                                      */
-/*==============================================================*/
-create index isw_isw_extra_FK on isw_extra
-(
-   isw_id
 );
 
 /*==============================================================*/
@@ -602,27 +562,6 @@ create index align_snp_FK on snp
 create index isw_snp_FK on snp
 (
    isw_id
-);
-
-/*==============================================================*/
-/* Table: snp_extra                                             */
-/*==============================================================*/
-create table snp_extra
-(
-   snp_extra_id                   int                            not null AUTO_INCREMENT,
-   snp_id                         int,
-   snp_feature1                   double,
-   snp_feature2                   double,
-   primary key (snp_extra_id)
-)
-ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Index: snp_snp_extra_FK                                      */
-/*==============================================================*/
-create index snp_snp_extra_FK on snp_extra
-(
-   snp_id
 );
 
 /*==============================================================*/
