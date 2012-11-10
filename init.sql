@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     10/25/2012 11:40:24 AM                       */
+/* Created on:     11/10/2012 5:21:16 PM                        */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -369,6 +369,8 @@ create table isw
    isw_d_indel                    double,
    isw_d_noindel                  double,
    isw_d_complex                  double,
+   isw_coding                     double,
+   isw_repeats                    double,
    isw_cpg_pi                     double,
    primary key (isw_id)
 )
@@ -390,8 +392,6 @@ create table isw_extra
 (
    isw_extra_id                   int                            not null AUTO_INCREMENT,
    isw_id                         int,
-   isw_feature1                   double,
-   isw_feature2                   double,
    primary key (isw_extra_id)
 )
 ENGINE = MyISAM;
