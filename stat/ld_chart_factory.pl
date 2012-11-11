@@ -70,133 +70,39 @@ $excel_obj->jc_correction if $jc_correction;
 # draw charts section
 #----------------------------------------------------------#
 my @sheet_names = @{ $excel_obj->sheet_names };
+
 {
 
     #----------------------------#
-    # worksheet -- distance_
+    # worksheet -- ld
     #----------------------------#
-    my @sheets = grep {/^distance/} @sheet_names;
+    my @sheets = grep {/^ld/} @sheet_names;
     foreach (@sheets) {
-        my $sheet_name = $_;
-        my %option     = (
-            chart_serial  => 1,
-            x_column      => 1,
-            y_column      => 3,
-            y_last_column => 6,
-            first_row     => 3,
-            last_row      => 8,
-            x_max_scale   => 5,
-            x_title       => "Distance to indels (d1)",
-            y_title       => "Nucleotide diversity",
-            Height        => 200,
-            Width         => 260,
-            Top           => 14.25,
-            Left          => 650,
-        );
-        $excel_obj->draw_y( $sheet_name, \%option );
-
-        # chart 2
-        $option{chart_serial}++;
-        $option{y_column}      = 8;
-        $option{y_last_column} = 8;
-        $option{y_title}       = "Di/Dn";
-        $option{Top} += $option{Height} + 14.25;
-        $excel_obj->draw_y( $sheet_name, \%option );
-    }
-}
-
-{
-
-    #----------------------------#
-    # worksheet -- combined_pigccv
-    #----------------------------#
-    for (qw{combined_pigccv combined_pure_coding combined_pure_noncoding}) {
         my $sheet_name = $_;
         my %option     = (
             chart_serial => 1,
             x_column     => 1,
             y_column     => 2,
+            y2_column    => 4,
             first_row    => 3,
-            last_row     => 23,
-            x_max_scale  => 20,
+            last_row     => 13,
+            x_max_scale  => 10,
             x_title      => "Distance to indels (d1)",
-            y_title      => "Nucleotide diversity",
+            y_title      => "r",
+            y2_title     => "Dprime",
             Height       => 200,
             Width        => 260,
             Top          => 14.25,
             Left         => 650,
         );
-        $excel_obj->draw_y( $sheet_name, \%option );
-
-        # chart 2
-        $option{chart_serial}++;
-        $option{y_column} = 4;
-        $option{y_title}  = "GC proportion";
-        $option{Top} += $option{Height} + 14.25;
-        $excel_obj->draw_y( $sheet_name, \%option );
-
-        # chart 3
-        $option{chart_serial}++;
-        $option{y_column} = 6;
-        $option{y_title}  = "Window CV";
-        $option{Top} += $option{Height} + 14.25;
-        $excel_obj->draw_y( $sheet_name, \%option );
-
-        # chart 4
-        $option{chart_serial}++;
-        $option{y_column}  = 4;
-        $option{y_title}   = "GC proportion";
-        $option{y2_column} = 6;
-        $option{y2_title}  = "Window CV";
-        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_2y( $sheet_name, \%option );
-    }
-}
-
-{
-
-    #----------------------------#
-    # worksheet -- pigccv_freq_
-    #----------------------------#
-    my @sheets = grep {/^pigccv_freq/} @sheet_names;
-    foreach (@sheets) {
-        my $sheet_name = $_;
-        my %option     = (
-            chart_serial => 1,
-            x_column     => 1,
-            y_column     => 2,
-            first_row    => 3,
-            last_row     => 8,
-            x_max_scale  => 5,
-            x_title      => "Distance to indels (d1)",
-            y_title      => "Nucleotide diversity",
-            Height       => 200,
-            Width        => 260,
-            Top          => 14.25,
-            Left         => 650,
-        );
-        $excel_obj->draw_y( $sheet_name, \%option );
 
         # chart 2
         $option{chart_serial}++;
-        $option{y_column} = 4;
-        $option{y_title}  = "GC proportion";
-        $option{Top} += $option{Height} + 14.25;
-        $excel_obj->draw_y( $sheet_name, \%option );
-
-        # chart 3
-        $option{chart_serial}++;
-        $option{y_column} = 6;
-        $option{y_title}  = "Window CV";
-        $option{Top} += $option{Height} + 14.25;
-        $excel_obj->draw_y( $sheet_name, \%option );
-
-        # chart 4
-        $option{chart_serial}++;
-        $option{y_column}  = 4;
-        $option{y_title}   = "GC proportion";
-        $option{y2_column} = 6;
-        $option{y2_title}  = "Window CV";
+        $option{y_column}  = 3;
+        $option{y_title}   = "r**2";
+        $option{y2_column} = 5;
+        $option{y2_title}  = "|Dprime|";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_2y( $sheet_name, \%option );
     }
