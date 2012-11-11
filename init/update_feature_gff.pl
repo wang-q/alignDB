@@ -18,6 +18,7 @@ use AlignDB::Stopwatch;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
+use AlignDB::Multi;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -39,13 +40,15 @@ my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
+my $gff_files;
+
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
 
 # number of alignments process in one child process
 my $batch_number = $Config->{generate}{batch};
 
-my $gff_files;
+my $multi;
 
 my $man  = 0;
 my $help = 0;
@@ -61,6 +64,7 @@ GetOptions(
     'gff_file=s'   => \$gff_files,      # support multiply file, seperated by ,
     'parallel=i'   => \$parallel,
     'batch=i'      => \$batch_number,
+    'multi'        => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -118,12 +122,22 @@ my $worker = sub {
     #----------------------------#
     # Init objects
     #----------------------------#
-    # create alignDB object for this scope
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
+
+    my $obj;
+    if ( !$multi ) {
+        $obj = AlignDB->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+    }
+    else {
+        $obj = AlignDB::Multi->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+    }
 
     # Database handler
     my $dbh = $obj->dbh;
@@ -396,18 +410,17 @@ sub feature_portion {
     my $feature_portion = $n / $pos_n;
 
     return $feature_portion;
-
 }
 
 __END__
 
 =head1 NAME
 
-    update_multi_gff.pl - Add annotation info to alignDB with gff annotations
+    update_feature_gff.pl - Add annotation info to alignDB with gff annotations
 
 =head1 SYNOPSIS
 
-    update_multi.pl [options]
+    update_feature_gff.pl [options]
       Options:
         --help              brief help message
         --man               full documentation
@@ -415,27 +428,8 @@ __END__
         --db                database name
         --username          username
         --password          password
-        --ensembl           ensembl database name
+        --gff               gff files, support multiply file, seperated by ,
         --parallel          run in parallel mode
         --batch             number of alignments process in one child process
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
 
 =cut

@@ -33,6 +33,8 @@ my $password   = $Config->{database}{password};
 my $db_name    = $Config->{database}{db};
 my $ensembl_db = $Config->{database}{ensembl};
 
+my $gff_file = '';
+
 # axt
 my $axt_dir       = $Config->{taxon}{axt_dir};
 my $axt_threshold = $Config->{generate}{axt_threshold};
@@ -74,6 +76,7 @@ GetOptions(
     't|target=s'             => \$target,
     'q|query=s'              => \$query,
     'e|ensembl=s'            => \$ensembl_db,
+    'gff_file=s'             => \$gff_file,
     'parallel=i'             => \$parallel,
     'batch=i'                => \$batch_number,
     'at|lt|axt_threshold=i'  => \$axt_threshold,
@@ -176,6 +179,15 @@ my $dispatch = {
         . " -e=$ensembl_db"
         . " --parallel=$parallel"
         . " --batch=$batch_number",
+    '30gff' => "perl $FindBin::Bin/../init/update_feature_gff.pl"
+        . " -s=$server"
+        . " --port=$port"
+        . " -u=$username"
+        . " --password=$password"
+        . " -d=$db_name"
+        . " --parallel=$parallel"
+        . " --batch=$batch_number"
+        . " --gff_file=$gff_file",
     31 => "perl $FindBin::Bin/../init/update_indel_slippage.pl"
         . " -s=$server"
         . " --port=$port"
@@ -235,7 +247,12 @@ my $dispatch = {
 
 # use the dispatch template to generate $cmd
 for my $step (@tasks) {
+    if ( $gff_file and $step == 30 ) {
+        $step = '30gff';
+    }
+
     my $cmd = $dispatch->{$step};
+
     next unless $cmd;
 
     $stopwatch->block_message("Processing Step $step");

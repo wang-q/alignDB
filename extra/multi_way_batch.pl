@@ -169,7 +169,7 @@ my $dispatch = {
         . " --parallel=$parallel"
         . " --batch=$batch_number"
         . " --multi",
-    '30gff' => "perl $FindBin::Bin/../multi/update_multi_gff.pl"
+    '30gff' => "perl $FindBin::Bin/../init/update_feature_gff.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
@@ -177,7 +177,8 @@ my $dispatch = {
         . " -d=$db_name"
         . " --parallel=$parallel"
         . " --batch=$batch_number"
-        . " --gff_file=$gff_file",
+        . " --gff_file=$gff_file"
+        . " --multi",
     31 => undef,
     32 => undef,
     33 => "perl $FindBin::Bin/../gene/update_snp_dnds.pl"
