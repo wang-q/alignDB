@@ -174,9 +174,9 @@ my $worker = sub {
     # update snp table in the new feature column
     my $snp_feature = q{
         UPDATE snp
-        SET snp_coding = ?,
+        SET snp_coding  = ?,
             snp_repeats = ?
-        WHERE snp_id = ?
+        WHERE snp_id    = ?
     };
     my $snp_feature_sth = $dbh->prepare($snp_feature);
 
@@ -362,56 +362,6 @@ UPDATE: for my $align_id (@align_ids) {
     return;
 };
 
-# XXX This calc is wrong! multi-seqs are different from pair_seqs
-my $worker_isw_cpg = sub {
-    print "Processing isw_cpg_pi\n";
-
-    # create alignDB object for this scope
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-
-    # Database handler
-    my $dbh = $obj->dbh;
-
-    # select all snps in this alignment
-    my $isw_query = q{
-        SELECT  i.isw_id id,
-                COUNT(*) /i.isw_length * 1.0 cpg
-        FROM isw i, snp s
-        WHERE i.isw_id = s.isw_id
-        AND s.snp_cpg = 1
-        GROUP BY i.isw_id
-    };
-    my $isw_sth = $dbh->prepare($isw_query);
-
-    # update isw table in the new feature column
-    my $isw_update = q{
-        UPDATE isw
-        SET isw_cpg_pi = ?
-        WHERE isw_id = ?
-    };
-    my $isw_update_sth = $dbh->prepare($isw_update);
-
-    # for isw
-    $isw_sth->execute;
-    while ( my @row = $isw_sth->fetchrow_array ) {
-        my ( $isw_id, $cpg ) = @row;
-        $isw_update_sth->execute( $cpg, $isw_id );
-    }
-
-    {    # update NULL value of isw_cpg_pi to 0
-        my $isw_null = q{
-            UPDATE isw
-            SET isw_cpg_pi = 0
-            WHERE isw_cpg_pi IS NULL
-        };
-        $obj->execute_sql($isw_null);
-    }
-};
-
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
@@ -421,8 +371,6 @@ my $run = AlignDB::Run->new(
     code     => $worker,
 );
 $run->run;
-
-$worker_isw_cpg->();
 
 $stopwatch->end_message;
 
