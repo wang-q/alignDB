@@ -713,6 +713,157 @@ sub ns { return AlignDB::SQL->new; }
     print $sql->as_sql if $verbose;
 }
 
+#----------------------------------------------------------#
+# ld_stat_factory.pl SQL
+#----------------------------------------------------------#
+
+#SELECT
+#  isw.isw_distance distance,
+#  AVG(snp.snp_r) AVG_r,
+#  AVG(POWER(snp.snp_r, 2)) AVG_r2,
+#  AVG(snp.snp_dprime) AVG_Dprime,
+#  AVG(ABS(snp.snp_dprime)) AVG_Dprime_abs,
+#  COUNT(*) COUNT
+#FROM isw
+#  INNER JOIN indel ON
+#    isw.isw_indel_id = indel.indel_id
+#  INNER JOIN snp ON
+#    isw.isw_id = snp.isw_id
+#WHERE (indel.indel_occured != 'unknown')
+#  AND (snp.snp_occured != 'unknown')
+#GROUP BY
+#  isw.isw_distance
+{
+    my $name = 'ld-ld-0';
+
+    my $sql = ns();
+    $sql->add_select( 'isw.isw_distance',         'distance' );
+    $sql->add_select( 'AVG(snp.snp_r)',           'AVG_r' );
+    $sql->add_select( 'AVG(POWER(snp.snp_r, 2))', 'AVG_r2' );
+    $sql->add_select( 'AVG(snp.snp_dprime)',      'AVG_Dprime' );
+    $sql->add_select( 'AVG(ABS(snp.snp_dprime))', 'AVG_Dprime_abs' );
+    $sql->add_select( 'COUNT(*)',                 'COUNT' );
+
+    $sql->add_join(
+        isw => [
+            {   type      => 'inner',
+                table     => 'indel',
+                condition => 'isw.isw_indel_id = indel.indel_id',
+            },
+            {   type      => 'inner',
+                table     => 'snp',
+                condition => 'isw.isw_id = snp.isw_id',
+            },
+        ]
+    );
+    $sql->add_where( 'indel.indel_occured' => \"!= 'unknown'" );
+    $sql->add_where( 'snp.snp_occured'     => \"!= 'unknown'" );
+    $sql->group( { column => 'isw.isw_distance' } );
+
+    $sql_file->set( $name, $sql );
+
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
+#SELECT
+#  isw.isw_distance distance,
+#  AVG(POWER(snp.snp_r, 2)) AVG_r2,
+#  AVG(POWER(snp.snp_r_s, 2)) AVG_r2_s,
+#  AVG(ABS(snp.snp_dprime)) AVG_Dprime_abs,
+#  AVG(ABS(snp.snp_dprime_s)) AVG_Dprime_abs_s,
+#  COUNT(*) COUNT
+#FROM isw
+#  INNER JOIN indel ON
+#    isw.isw_indel_id = indel.indel_id
+#  INNER JOIN snp ON
+#    isw.isw_id = snp.isw_id
+#WHERE (indel.indel_occured != 'unknown')
+#  AND (snp.snp_occured != 'unknown')
+#GROUP BY
+#  isw.isw_distance
+{
+    my $name = 'ld-snp_ld-0';
+
+    my $sql = ns();
+    $sql->add_select( 'isw.isw_distance',           'distance' );
+    $sql->add_select( 'AVG(POWER(snp.snp_r, 2))',   'AVG_r2' );
+    $sql->add_select( 'AVG(POWER(snp.snp_r_s, 2))', 'AVG_r2_s' );
+    $sql->add_select( 'AVG(ABS(snp.snp_dprime))',   'AVG_Dprime_abs' );
+    $sql->add_select( 'AVG(ABS(snp.snp_dprime_s))', 'AVG_Dprime_abs_s' );
+    $sql->add_select( 'COUNT(*)',                   'COUNT' );
+
+    $sql->add_join(
+        isw => [
+            {   type      => 'inner',
+                table     => 'indel',
+                condition => 'isw.isw_indel_id = indel.indel_id',
+            },
+            {   type      => 'inner',
+                table     => 'snp',
+                condition => 'isw.isw_id = snp.isw_id',
+            },
+        ]
+    );
+    $sql->add_where( 'indel.indel_occured' => \"!= 'unknown'" );
+    $sql->add_where( 'snp.snp_occured'     => \"!= 'unknown'" );
+    $sql->group( { column => 'isw.isw_distance' } );
+
+    $sql_file->set( $name, $sql );
+
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
+#SELECT
+#  isw.isw_distance distance,
+#  AVG(POWER(snp.snp_r, 2)) AVG_r2,
+#  AVG(snp.snp_r2_s) AVG_r2_s,
+#  AVG(ABS(snp.snp_dprime)) AVG_Dprime_abs,
+#  AVG(snp.snp_dprime_abs_s) AVG_Dprime_abs_s,
+#  COUNT(*) COUNT
+#FROM isw
+#  INNER JOIN indel ON
+#    isw.isw_indel_id = indel.indel_id
+#  INNER JOIN snp ON
+#    isw.isw_id = snp.isw_id
+#WHERE (indel.indel_occured != 'unknown')
+#  AND (snp.snp_occured != 'unknown')
+#GROUP BY
+#  isw.isw_distance
+{
+    my $name = 'ld-snps_ld-0';
+
+    my $sql = ns();
+    $sql->add_select( 'isw.isw_distance',          'distance' );
+    $sql->add_select( 'AVG(POWER(snp.snp_r, 2))',  'AVG_r2' );
+    $sql->add_select( 'AVG(snp.snp_r2_s)',         'AVG_r2_s' );
+    $sql->add_select( 'AVG(ABS(snp.snp_dprime))',  'AVG_Dprime_abs' );
+    $sql->add_select( 'AVG(snp.snp_dprime_abs_s)', 'AVG_Dprime_abs_s' );
+    $sql->add_select( 'COUNT(*)',                  'COUNT' );
+
+    $sql->add_join(
+        isw => [
+            {   type      => 'inner',
+                table     => 'indel',
+                condition => 'isw.isw_indel_id = indel.indel_id',
+            },
+            {   type      => 'inner',
+                table     => 'snp',
+                condition => 'isw.isw_id = snp.isw_id',
+            },
+        ]
+    );
+    $sql->add_where( 'indel.indel_occured' => \"!= 'unknown'" );
+    $sql->add_where( 'snp.snp_occured'     => \"!= 'unknown'" );
+    $sql->group( { column => 'isw.isw_distance' } );
+
+    $sql_file->set( $name, $sql );
+
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
 END {
     $sql_file->write;
 }
