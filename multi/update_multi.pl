@@ -116,21 +116,6 @@ my $worker = sub {
     #----------------------------#
     # SQL query and DBI sths
     #----------------------------#
-    # alignments' chromosomal location
-    my $align_seq_query = q{
-        SELECT c.chr_name,
-               a.align_length,
-               s.chr_start,
-               s.chr_end,
-               s.seq_seq
-        FROM align a, target t, sequence s, chromosome c
-        WHERE a.align_id = s.align_id
-        AND t.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
-        AND a.align_id = ?
-    };
-    my $align_seq_sth = $dbh->prepare($align_seq_query);
-
     # update align table
     my $align_feature = q{
         UPDATE align
@@ -180,7 +165,7 @@ my $worker = sub {
 
     # select all snps for this indel
     my $snp_query = q{
-        SELECT snp_id, snp_pos, mutant_to
+        SELECT snp_id, snp_pos
         FROM snp
         WHERE align_id = ?
     };
@@ -189,10 +174,9 @@ my $worker = sub {
     # update snp table in the new feature column
     my $snp_feature = q{
         UPDATE snp
-        SET snp_coding  = ?,
-            snp_repeats = ?,
-            snp_cpg     = ?
-        WHERE snp_id    = ?
+        SET snp_coding = ?,
+            snp_repeats = ?
+        WHERE snp_id = ?
     };
     my $snp_feature_sth = $dbh->prepare($snp_feature);
 
@@ -217,12 +201,14 @@ UPDATE: for my $align_id (@align_ids) {
         #----------------------------#
         # for each alignment
         #----------------------------#
-        $align_seq_sth->execute($align_id);
-        my ( $chr_name, $align_length, $chr_start, $chr_end, $target_seq )
-            = $align_seq_sth->fetchrow_array;
-        print
-            "prosess align $align_id ",
-            "in $chr_name $chr_start - $chr_end\n";
+        my $target_info  = $obj->get_target_info($align_id);
+        my $chr_name     = $target_info->{chr_name};
+        my $chr_start    = $target_info->{chr_start};
+        my $chr_end      = $target_info->{chr_end};
+        my $align_length = $target_info->{align_length};
+        my ($target_seq) = @{ $obj->get_seqs($align_id) };
+        $obj->process_message($align_id);
+
         next UPDATE if $chr_name =~ /rand|un|contig|hap|scaf|gi_/i;
 
         $chr_name =~ s/chr0?//i;
@@ -337,36 +323,14 @@ UPDATE: for my $align_id (@align_ids) {
             my $cds_set    = $ensembl->feature_set_obj('_cds_set');
             my $repeat_set = $ensembl->feature_set_obj('_repeat_set');
             while ( my @row = $snp_query_sth->fetchrow_array ) {
-                my ( $snp_id, $snp_pos, $snp_mutant_to ) = @row;
+                my ( $snp_id, $snp_pos ) = @row;
                 my $snp_chr_pos = $chr_pos[$snp_pos];
 
-                # coding and repeats
                 my $snp_coding  = $cds_set->member($snp_chr_pos);
                 my $snp_repeats = $repeat_set->member($snp_chr_pos);
-
-                # cpg
-                my $snp_cpg = 0;
-
-                my $left_base  = substr( $target_seq, $snp_pos - 2, 1 );
-                my $right_base = substr( $target_seq, $snp_pos,     1 );
-
-                # CpG to TpG, C to T transition
-                # On the reverse strand, is CpG to CpA
-                if ( $snp_mutant_to eq "C->T" ) {    # original base is C
-                    if ( $right_base eq "G" ) {
-                        $snp_cpg = 1;
-                    }
-                }
-                elsif ( $snp_mutant_to eq "G->A" ) {    # original base is G
-                    if ( $left_base eq "C" ) {
-                        $snp_cpg = 1;
-                    }
-                }
-
-                $snp_feature_sth->execute( $snp_coding, $snp_repeats, $snp_cpg,
-                    $snp_id, );
+                $snp_feature_sth->execute( $snp_coding, $snp_repeats, $snp_id,
+                );
             }
-
             $snp_feature_sth->finish;
             $snp_query_sth->finish;
         }
@@ -438,13 +402,14 @@ my $worker_isw_cpg = sub {
         $isw_update_sth->execute( $cpg, $isw_id );
     }
 
-    # update NULL value of isw_cpg_pi to 0
-    my $isw_null = q{
-        UPDATE isw
-        SET isw_cpg_pi = 0
-        WHERE isw_cpg_pi IS NULL
-    };
-    $obj->execute_sql($isw_null);
+    {    # update NULL value of isw_cpg_pi to 0
+        my $isw_null = q{
+            UPDATE isw
+            SET isw_cpg_pi = 0
+            WHERE isw_cpg_pi IS NULL
+        };
+        $obj->execute_sql($isw_null);
+    }
 };
 
 #----------------------------------------------------------#
