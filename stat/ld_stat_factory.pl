@@ -59,8 +59,8 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 my @tasks;
 
 if ( $run eq 'all' ) {
-    @tasks = ( 1 .. 20 );
-    $outfile = "$db.multi.xlsx" unless $outfile;
+    @tasks = ( 1 .. 50 );
+    $outfile = "$db.ld.xlsx" unless $outfile;
 }
 else {
     $run =~ s/\"\'//s;
@@ -76,7 +76,7 @@ else {
 
     unless ($outfile) {
         my $runlist = $set->runlist;
-        $outfile = "$db.multi.$runlist.xlsx";
+        $outfile = "$db.ld.$runlist.xlsx";
     }
 }
 
@@ -93,8 +93,7 @@ my $write_obj = AlignDB::WriteExcel->new(
     outfile => $outfile,
 );
 
-my $lib = "$FindBin::Bin/sql.lib";
-my $sql_file = AlignDB::SQL::Library->new( lib => $lib );
+my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::Bin/sql.lib" );
 
 # auto detect combine threshold
 if ( $combine_threshold == 0 ) {
@@ -178,8 +177,15 @@ else {
             my @chunks      = reverse apportion( scalar @to_be_combs, 3 );
             my @chunks_freq = multi_slice( \@to_be_combs, @chunks );
             for my $chunk (@chunks_freq) {
-                my $name = join( '_', @{$chunk} ) . "of" . $all_freq;
-                push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
+                if ( $chunk->[0] == $chunk->[-1] ) {
+                    my $name = $chunk->[0] . "of" . $all_freq;
+                    push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
+                }
+                else {
+                    my $name = join( '_', $chunk->[0], $chunk->[-1] ) . "of"
+                        . $all_freq;
+                    push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
+                }
             }
 
             for ( $all_freq - 2, $all_freq - 1 ) {
@@ -190,9 +196,9 @@ else {
     }
 }
 
-    #----------------------------------------------------------#
-    # worksheet -- distance_ld
-    #----------------------------------------------------------#
+#----------------------------------------------------------#
+# worksheet -- distance_ld
+#----------------------------------------------------------#
 my $ld = sub {
 
     {
@@ -200,9 +206,10 @@ my $ld = sub {
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
+        my $thaw_sql = $sql_file->retrieve('ld-ld-0');
+
         {    # write header
-            my @headers = qw{distance AVG_r AVG_r2 AVG_Dprime AVG_Dprime_abs
-                COUNT};
+            my @headers = $thaw_sql->as_header;
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -214,24 +221,8 @@ my $ld = sub {
         }
 
         {    # write contents
-            my $sql_query = q{
-                SELECT
-                    w.isw_distance distance,
-                    AVG(s.snp_r) AVG_r,
-                    AVG(POWER(s.snp_r, 2)) AVG_r2,
-                    AVG(s.snp_dprime) AVG_Dprime,
-                    AVG(ABS(s.snp_dprime)) AVG_Dprime_abs,
-                    COUNT(*) COUNT
-                FROM indel i, isw w, snp s
-                WHERE 1 = 1
-                AND i.indel_id = w.isw_indel_id
-                AND w.isw_id = s.isw_id
-                AND i.indel_freq != 'unknown'
-                AND s.snp_freq != 'unknown'
-                GROUP BY w.isw_distance 
-            };
             my %option = (
-                sql_query => $sql_query,
+                sql_query => $thaw_sql->as_sql,
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
             );
@@ -252,9 +243,10 @@ my $ld_insdel = sub {
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
+        my $thaw_sql = $sql_file->retrieve('ld-ld-0');
+
         {    # write header
-            my @headers = qw{distance AVG_r AVG_r2 AVG_Dprime AVG_Dprime_abs
-                COUNT};
+            my @headers = $thaw_sql->as_header;
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -266,25 +258,9 @@ my $ld_insdel = sub {
         }
 
         {    # write contents
-            my $sql_query = q{
-                SELECT
-                    w.isw_distance distance,
-                    AVG(s.snp_r) AVG_r,
-                    AVG(POWER(s.snp_r, 2)) AVG_r2,
-                    AVG(s.snp_dprime) AVG_Dprime,
-                    AVG(ABS(s.snp_dprime)) AVG_Dprime_abs,
-                    COUNT(*) COUNT
-                FROM indel i, isw w, snp s
-                WHERE 1 = 1
-                AND i.indel_id = w.isw_indel_id
-                AND w.isw_id = s.isw_id
-                AND i.indel_freq != 'unknown'
-                AND s.snp_freq != 'unknown'
-                AND i.indel_type = ?
-                GROUP BY w.isw_distance 
-            };
+            $thaw_sql->add_where( 'indel.indel_type' => \'= ?' );
             my %option = (
-                sql_query  => $sql_query,
+                sql_query  => $thaw_sql->as_sql,
                 sheet_row  => $sheet_row,
                 sheet_col  => $sheet_col,
                 bind_value => [ $level->[1] ],
@@ -295,7 +271,7 @@ my $ld_insdel = sub {
         print "Sheet \"$sheet_name\" has been generated.\n";
     };
 
-    foreach (@type_levels) {
+    for (@type_levels) {
         &$write_sheet($_);
     }
 };
@@ -309,9 +285,10 @@ my $ld_freq = sub {
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
+        my $thaw_sql = $sql_file->retrieve('ld-ld-0');
+
         {    # write header
-            my @headers = qw{distance AVG_r AVG_r2 AVG_Dprime AVG_Dprime_abs
-                COUNT};
+            my @headers = $thaw_sql->as_header;
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -323,26 +300,10 @@ my $ld_freq = sub {
         }
 
         {    # write contents
-            my $sql_query = q{
-                SELECT
-                    w.isw_distance distance,
-                    AVG(s.snp_r) AVG_r,
-                    AVG(POWER(s.snp_r, 2)) AVG_r2,
-                    AVG(s.snp_dprime) AVG_Dprime,
-                    AVG(ABS(s.snp_dprime)) AVG_Dprime_abs,
-                    COUNT(*) COUNT
-                FROM indel i, isw w, snp s
-                WHERE 1 = 1
-                AND i.indel_id = w.isw_indel_id
-                AND w.isw_id = s.isw_id
-                AND i.indel_freq != 'unknown'
-                AND s.snp_freq != 'unknown'
-                AND i.indel_freq >= ?
-                AND i.indel_freq <= ?
-                GROUP BY w.isw_distance 
-            };
+            $thaw_sql->add_where( 'indel.indel_freq' => \'>= ?' );
+            $thaw_sql->add_where( 'indel.indel_freq' => \'<= ?' );
             my %option = (
-                sql_query  => $sql_query,
+                sql_query  => $thaw_sql->as_sql,
                 sheet_row  => $sheet_row,
                 sheet_col  => $sheet_col,
                 bind_value => [ $level->[1], $level->[2] ],
@@ -353,7 +314,7 @@ my $ld_freq = sub {
         print "Sheet \"$sheet_name\" has been generated.\n";
     };
 
-    foreach (@freq_levels) {
+    for (@freq_levels) {
         &$write_sheet($_);
     }
 };
@@ -368,9 +329,10 @@ my $ld_insdel_freq = sub {
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
+        my $thaw_sql = $sql_file->retrieve('ld-ld-0');
+
         {    # write header
-            my @headers = qw{distance AVG_r AVG_r2 AVG_Dprime AVG_Dprime_abs
-                COUNT};
+            my @headers = $thaw_sql->as_header;
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -382,27 +344,11 @@ my $ld_insdel_freq = sub {
         }
 
         {    # write contents
-            my $sql_query = q{
-                SELECT
-                    w.isw_distance distance,
-                    AVG(s.snp_r) AVG_r,
-                    AVG(POWER(s.snp_r, 2)) AVG_r2,
-                    AVG(s.snp_dprime) AVG_Dprime,
-                    AVG(ABS(s.snp_dprime)) AVG_Dprime_abs,
-                    COUNT(*) COUNT
-                FROM indel i, isw w, snp s
-                WHERE 1 = 1
-                AND i.indel_id = w.isw_indel_id
-                AND w.isw_id = s.isw_id
-                AND i.indel_freq != 'unknown'
-                AND s.snp_freq != 'unknown'
-                AND i.indel_type = ?
-                AND i.indel_freq >= ?
-                AND i.indel_freq <= ?
-                GROUP BY w.isw_distance 
-            };
+            $thaw_sql->add_where( 'indel.indel_type' => \'= ?' );
+            $thaw_sql->add_where( 'indel.indel_freq' => \'>= ?' );
+            $thaw_sql->add_where( 'indel.indel_freq' => \'<= ?' );
             my %option = (
-                sql_query  => $sql_query,
+                sql_query  => $thaw_sql->as_sql,
                 sheet_row  => $sheet_row,
                 sheet_col  => $sheet_col,
                 bind_value => [ $type->[1], $freq->[1], $freq->[2] ],
@@ -420,11 +366,405 @@ my $ld_insdel_freq = sub {
     }
 };
 
-foreach my $n (@tasks) {
+#my $sub_ld = sub {
+#
+#    {
+#        my $sheet_name = 'sub_ld';
+#        my $sheet;
+#        my ( $sheet_row, $sheet_col );
+#
+#        {    # write header
+#            my @headers = qw{distance AVG_r2_i AVG_Dprime_abs_i AVG_r2_ni
+#                AVG_Dprime_abs_ni COUNT};
+#            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+#            my %option = (
+#                sheet_row => $sheet_row,
+#                sheet_col => $sheet_col,
+#                header    => \@headers,
+#            );
+#            ( $sheet, $sheet_row )
+#                = $write_obj->write_header_direct( $sheet_name, \%option );
+#        }
+#
+#        {    # write contents
+#            my $sql_query = q{
+#                SELECT
+#                    w.isw_distance distance,
+#                    AVG(POWER(s.snp_r_i, 2)) AVG_r2_i,
+#                    AVG(POWER(s.snp_r_ni, 2)) AVG_r2_ni,
+#                    AVG(ABS(s.snp_dprime_i)) AVG_Dprime_abs_i,
+#                    AVG(ABS(s.snp_dprime_ni)) AVG_Dprime_abs_ni,
+#                    COUNT(*) COUNT
+#                FROM indel i, isw w, snp s
+#                WHERE 1 = 1
+#                AND i.indel_id = w.isw_indel_id
+#                AND w.isw_id = s.isw_id
+#                AND i.indel_freq != 'unknown'
+#                AND s.snp_freq != 'unknown'
+#                GROUP BY w.isw_distance
+#            };
+#            my %option = (
+#                sql_query => $sql_query,
+#                sheet_row => $sheet_row,
+#                sheet_col => $sheet_col,
+#            );
+#            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+#        }
+#
+#        print "Sheet \"$sheet_name\" has been generated.\n";
+#    }
+#
+#};
+
+my $snp_ld = sub {
+
+    {
+        my $sheet_name = 'snp_ld';
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-snp_ld-0');
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            my %option = (
+                sql_query => $thaw_sql->as_sql,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    }
+};
+
+my $snp_ld_insdel = sub {
+    my @type_levels = ( [ 'ins', 'I' ], [ 'del', 'D' ], );
+
+    my $write_sheet = sub {
+        my ($level) = @_;
+        my $sheet_name = 'snp_ld_' . $level->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-snp_ld-0');
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            $thaw_sql->add_where( 'indel.indel_type' => \'= ?' );
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
+    for (@type_levels) {
+        &$write_sheet($_);
+    }
+};
+
+my $snp_ld_freq = sub {
+    my @freq_levels = @freqs;
+
+    my $write_sheet = sub {
+        my ($level) = @_;
+        my $sheet_name = 'snp_ld_freq_' . $level->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-snp_ld-0');
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            $thaw_sql->add_where( 'indel.indel_freq' => \'>= ?' );
+            $thaw_sql->add_where( 'indel.indel_freq' => \'<= ?' );
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1], $level->[2] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
+    for (@freq_levels) {
+        &$write_sheet($_);
+    }
+};
+
+my $snp_ld_insdel_freq = sub {
+    my @type_levels = ( [ 'ins', 'I' ], [ 'del', 'D' ], );
+    my @freq_levels = @freqs;
+
+    my $write_sheet = sub {
+        my ( $type, $freq ) = @_;
+        my $sheet_name = 'snp_ld_' . $type->[0] . '_' . $freq->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-snp_ld-0');
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            $thaw_sql->add_where( 'indel.indel_type' => \'= ?' );
+            $thaw_sql->add_where( 'indel.indel_freq' => \'>= ?' );
+            $thaw_sql->add_where( 'indel.indel_freq' => \'<= ?' );
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $type->[1], $freq->[1], $freq->[2] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
+    for my $type (@type_levels) {
+        for my $freq (@freq_levels) {
+            &$write_sheet( $type, $freq );
+        }
+    }
+};
+
+my $snps_ld = sub {
+
+    {
+        my $sheet_name = 'snps_ld';
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            my %option = (
+                sql_query => $thaw_sql->as_sql,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    }
+};
+
+my $snps_ld_insdel = sub {
+    my @type_levels = ( [ 'ins', 'I' ], [ 'del', 'D' ], );
+
+    my $write_sheet = sub {
+        my ($level) = @_;
+        my $sheet_name = 'snps_ld_' . $level->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            $thaw_sql->add_where( 'indel.indel_type' => \'= ?' );
+            my %option = (
+                sql_query => $thaw_sql->as_sql,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                bind_value => [ $level->[1] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
+    for (@type_levels) {
+        &$write_sheet($_);
+    }
+};
+
+my $snps_ld_freq = sub {
+    my @freq_levels = @freqs;
+
+    my $write_sheet = sub {
+        my ($level) = @_;
+        my $sheet_name = 'snps_ld_freq_' . $level->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            $thaw_sql->add_where( 'indel.indel_freq' => \'>= ?' );
+            $thaw_sql->add_where( 'indel.indel_freq' => \'<= ?' );
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1], $level->[2] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
+    for (@freq_levels) {
+        &$write_sheet($_);
+    }
+};
+
+my $snps_ld_insdel_freq = sub {
+    my @type_levels = ( [ 'ins', 'I' ], [ 'del', 'D' ], );
+    my @freq_levels = @freqs;
+
+    my $write_sheet = sub {
+        my ( $type, $freq ) = @_;
+        my $sheet_name = 'snps_ld_' . $type->[0] . '_' . $freq->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            $thaw_sql->add_where( 'indel.indel_type' => \'= ?' );
+            $thaw_sql->add_where( 'indel.indel_freq' => \'>= ?' );
+            $thaw_sql->add_where( 'indel.indel_freq' => \'<= ?' );
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $type->[1], $freq->[1], $freq->[2] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
+    for my $type (@type_levels) {
+        for my $freq (@freq_levels) {
+            &$write_sheet( $type, $freq );
+        }
+    }
+};
+
+for my $n (@tasks) {
     if ( $n == 1 ) { &$ld;             next; }
     if ( $n == 2 ) { &$ld_insdel;      next; }
     if ( $n == 3 ) { &$ld_freq;        next; }
     if ( $n == 4 ) { &$ld_insdel_freq; next; }
+
+    #if ( $n == 5 ) { &$sub_ld;         next; }
+
+    #if ( $n == 11 ) { &$snp_ld;             next; }
+    #if ( $n == 12 ) { &$snp_ld_insdel;      next; }
+    #if ( $n == 13 ) { &$snp_ld_freq;        next; }
+    #if ( $n == 14 ) { &$snp_ld_insdel_freq; next; }
+    
+    if ( $n == 21 ) { &$snps_ld; next; }
+    if ( $n == 22 ) { &$snps_ld_insdel;      next; }
+    if ( $n == 23 ) { &$snps_ld_freq;        next; }
+    if ( $n == 24 ) { &$snps_ld_insdel_freq; next; }
 }
 
 $stopwatch->end_message;
@@ -453,21 +793,21 @@ __END__
 
 =head1 NAME
 
-    multi_stat_factory.pl - Generate statistical Excel files from malignDB
+    ld_stat_factory.pl - Generate statistical Excel files from malignDB
 
 =head1 SYNOPSIS
 
-    multi_stat_factory.pl [options]
-        Options:
-            --help              brief help message
-            --man               full documentation
-            --server            MySQL server IP/Domain name
-            --db                database name
-            --username          username
-            --password          password
-            --outfile            outfile filename
-            --run               run special analysis
-            --freq              max freq
+    ld_stat_factory.pl [options]
+      Options:
+        --help              brief help message
+        --man               full documentation
+        --server            MySQL server IP/Domain name
+        --db                database name
+        --username          username
+        --password          password
+        --outfile            outfile filename
+        --run               run special analysis
+        --freq              max freq
 
 =cut
 
