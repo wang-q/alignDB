@@ -31,10 +31,10 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'    => \$help,
-    'man'       => \$man,
-    'lib=s'     => \$lib_file,
-    'verbose=s' => \$verbose,
+    'help|?'  => \$help,
+    'man'     => \$man,
+    'lib=s'   => \$lib_file,
+    'verbose' => \$verbose,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -125,7 +125,7 @@ sub ns { return AlignDB::SQL->new; }
 #SELECT
 #  isw.isw_distance distance,
 #  COUNT(*) COUNT
-#FROM 
+#FROM
 #WHERE (isw.isw_coding >= ?)
 #  AND (isw.isw_coding <= ?)
 {
@@ -147,7 +147,7 @@ sub ns { return AlignDB::SQL->new; }
 #  AVG(isw.isw_pi) AVG_pi,
 #  COUNT(*) COUNT,
 #  STD(isw.isw_pi) STD_pi
-#FROM 
+#FROM
 #WHERE (isw.isw_coding >= ?)
 #  AND (isw.isw_coding <= ?)
 {
@@ -398,11 +398,9 @@ sub ns { return AlignDB::SQL->new; }
             condition => 'isw.isw_indel_id = indel.indel_id',
         }
     );
-    $sql->add_where( 'isw.isw_type' => \q{IN ('L', 'R')} );
-    $sql->add_where(
-        'indel.indel_slippage' => { op => '>=', value => '1' } );
-    $sql->add_where(
-        'indel.indel_slippage' => { op => '<=', value => '1' } );
+    $sql->add_where( 'isw.isw_type'         => \q{IN ('L', 'R')} );
+    $sql->add_where( 'indel.indel_slippage' => { op => '>=', value => '1' } );
+    $sql->add_where( 'indel.indel_slippage' => { op => '<=', value => '1' } );
     $sql->group( { column => 'isw.isw_distance' } );
 
     $sql_file->set( 'common-distance_slip_lr-2', $sql );
@@ -434,11 +432,9 @@ sub ns { return AlignDB::SQL->new; }
             condition => 'isw.isw_indel_id = indel.indel_id',
         }
     );
-    $sql->add_where( 'isw.isw_type' => \q{IN ('L', 'R')} );
-    $sql->add_where(
-        'indel.indel_slippage' => { op => '>=', value => '1' } );
-    $sql->add_where(
-        'indel.indel_slippage' => { op => '<=', value => '1' } );
+    $sql->add_where( 'isw.isw_type'         => \q{IN ('L', 'R')} );
+    $sql->add_where( 'indel.indel_slippage' => { op => '>=', value => '1' } );
+    $sql->add_where( 'indel.indel_slippage' => { op => '<=', value => '1' } );
 
     $sql_file->set( 'common-distance_slip_total-2', $sql );
     print $sql->as_sql if $verbose;
@@ -587,12 +583,12 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_select( 'COUNT(*)',               'COUNT' );
     $sql->add_select( 'AVG(isw.isw_d_indel) / AVG(isw.isw_d_noindel)',
         '`Di/Dn`' );
-    
+
     $sql->from( ['isw'] );
-    $sql->add_where( 'isw.isw_distance'       => \'>= 0' );
-    $sql->add_where( 'isw.isw_d_indel'        => \'IS NOT NULL' );
-    $sql->add_where( 'isw.isw_coding' => { op => '>=', value => '1' } );
-    $sql->add_where( 'isw.isw_coding' => { op => '<=', value => '1' } );
+    $sql->add_where( 'isw.isw_distance' => \'>= 0' );
+    $sql->add_where( 'isw.isw_d_indel'  => \'IS NOT NULL' );
+    $sql->add_where( 'isw.isw_coding'   => { op => '>=', value => '1' } );
+    $sql->add_where( 'isw.isw_coding'   => { op => '<=', value => '1' } );
 
     $sql_file->set( 'three-distance_coding-2', $sql );
     print $sql->as_sql if $verbose;
