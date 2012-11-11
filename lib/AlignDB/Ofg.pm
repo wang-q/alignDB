@@ -111,7 +111,7 @@ sub insert_ofg {
             }
         }
         if ( @align_ofg == 0 ) {
-            warn "Match wrong gce positions\n";
+            warn "Match wrong ofg positions\n";
             next;
         }
 

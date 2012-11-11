@@ -86,7 +86,7 @@ my $write_obj = AlignDB::WriteExcel->new(
 );
 
 #----------------------------------------------------------#
-# worksheet -- summary_gene
+# worksheet -- summary
 #----------------------------------------------------------#
 #
 my $summary_gene = sub {
