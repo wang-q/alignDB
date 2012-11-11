@@ -33,17 +33,17 @@ my $stopwatch = AlignDB::Stopwatch->new(
 );
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 # run in parallel mode
-my $parallel = $Config->{feature}->{parallel};
+my $parallel = $Config->{generate}{parallel};
 
 # number of alignments process in one child process
-my $batch_number = $Config->{feature}->{batch};
+my $batch_number = $Config->{generate}{batch};
 
 my $gff_files;
 
@@ -51,16 +51,16 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'gff_file=s' => \$gff_files,      # support multiply file, seperated by ,
-    'parallel=i' => \$parallel,
-    'batch=i'    => \$batch_number,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=i'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'gff_file=s'   => \$gff_files,      # support multiply file, seperated by ,
+    'parallel=i'   => \$parallel,
+    'batch=i'      => \$batch_number,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -131,28 +131,16 @@ my $worker = sub {
     #----------------------------#
     # SQL query and DBI sths
     #----------------------------#
-    # alignments' chromosomal location
-    my $align_seq_query = q{
-        SELECT c.chr_name,
-               a.align_length,
-               s.chr_start,
-               s.chr_end,
-               s.seq_seq
-        FROM align a, target t, sequence s, chromosome c
-        WHERE a.align_id = s.align_id
-        AND t.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
-        AND a.align_id = ?
-    };
-    my $align_seq_sth = $dbh->prepare($align_seq_query);
-
     # update align table
     my $align_feature = q{
         UPDATE align
-        SET align_coding  = ?,
+        SET align_coding = ?,
             align_repeats = ?,
-            align_te      = ?
-        WHERE align_id    = ?
+            align_te = ?,
+            align_coding_runlist = ?,
+            align_repeats_runlist = ?,
+            align_te_runlist = ?
+        WHERE align_id = ?
     };
     my $align_feature_sth = $dbh->prepare($align_feature);
 
@@ -192,7 +180,7 @@ my $worker = sub {
 
     # select all snps for this indel
     my $snp_query = q{
-        SELECT snp_id, snp_pos, mutant_to
+        SELECT snp_id, snp_pos
         FROM snp
         WHERE align_id = ?
     };
@@ -202,24 +190,41 @@ my $worker = sub {
     my $snp_feature = q{
         UPDATE snp
         SET snp_coding  = ?,
-            snp_repeats = ?,
-            snp_cpg     = ?
+            snp_repeats = ?
         WHERE snp_id    = ?
     };
     my $snp_feature_sth = $dbh->prepare($snp_feature);
 
-    for my $align_id (@align_ids) {
+    # select all windows for this alignment
+    my $window_query = q{
+        SELECT window_id, window_runlist
+        FROM window
+        WHERE align_id = ?
+    };
+    my $window_query_sth = $dbh->prepare($window_query);
+
+    # update window table in the new feature column
+    my $window_update_query = q{
+        UPDATE window
+        SET window_coding = ?, window_repeats = ?
+        WHERE window_id = ?
+    };
+    my $window_update_sth = $dbh->prepare($window_update_query);
+
+UPDATE: for my $align_id (@align_ids) {
 
         #----------------------------#
         # for each alignment
         #----------------------------#
-        $align_seq_sth->execute($align_id);
-        my ( $chr_name, $align_length, $chr_start, $chr_end, $target_seq )
-            = $align_seq_sth->fetchrow_array;
-        print
-            "prosess align $align_id ",
-            "in $chr_name $chr_start - $chr_end\n";
-        next UPDATE if $chr_name =~ /rand|un|contig|hap|scaf/i;
+        my $target_info  = $obj->get_target_info($align_id);
+        my $chr_name     = $target_info->{chr_name};
+        my $chr_start    = $target_info->{chr_start};
+        my $chr_end      = $target_info->{chr_end};
+        my $align_length = $target_info->{align_length};
+        my ($target_seq) = @{ $obj->get_seqs($align_id) };
+        $obj->process_message($align_id);
+
+        next UPDATE if $chr_name =~ /rand|un|contig|hap|scaf|gi_/i;
 
         $chr_name =~ s/chr0?//i;
 
@@ -256,9 +261,11 @@ my $worker = sub {
             my $align_chr_runlist = "$align_chr_start-$align_chr_end";
             my $align_coding      = feature_portion( $cds_set_of->{$chr_name},
                 $align_chr_runlist );
+            my $align_cds_set
+                = $cds_set_of->{$chr_name}->map_set( sub { $align_pos{$_} } );
 
             $align_feature_sth->execute( $align_coding, undef, undef,
-                $align_id, );
+                $align_cds_set->runlist, undef, undef, $align_id, );
 
             $align_feature_sth->finish;
         }
@@ -277,8 +284,7 @@ my $worker = sub {
                 my $indel_coding = feature_portion( $cds_set_of->{$chr_name},
                     $indel_chr_runlist );
 
-                $indel_feature_sth->execute( $indel_coding, undef, $indel_id,
-                );
+                $indel_feature_sth->execute( $indel_coding, undef, $indel_id, );
                 $indel_feature_sth->finish;
             }
 
@@ -293,8 +299,7 @@ my $worker = sub {
                     my $isw_chr_end   = $chr_pos[$isw_end];
 
                     my $isw_chr_runlist = "$isw_chr_start-$isw_chr_end";
-                    my $isw_coding
-                        = feature_portion( $cds_set_of->{$chr_name},
+                    my $isw_coding = feature_portion( $cds_set_of->{$chr_name},
                         $isw_chr_runlist );
 
                     $isw_feature_sth->execute( $isw_coding, undef, $isw_id, );
@@ -312,90 +317,41 @@ my $worker = sub {
         {
             $snp_query_sth->execute($align_id);
             while ( my @row = $snp_query_sth->fetchrow_array ) {
-                my ( $snp_id, $snp_pos, $snp_mutant_to ) = @row;
+                my ( $snp_id, $snp_pos ) = @row;
                 my $snp_chr_pos = $chr_pos[$snp_pos];
 
-                # coding and repeats
-                my $snp_coding
-                    = $cds_set_of->{$chr_name}->member($snp_chr_pos);
+                # coding
+                my $snp_coding = $cds_set_of->{$chr_name}->member($snp_chr_pos);
 
-                # cpg
-                my $snp_cpg = 0;
-
-                my $left_base  = substr( $target_seq, $snp_pos - 2, 1 );
-                my $right_base = substr( $target_seq, $snp_pos,     1 );
-
-                # CpG to TpG, C to T transition
-                # On the reverse strand, is CpG to CpA
-                if ( $snp_mutant_to eq "C->T" ) {    # original base is C
-                    if ( $right_base eq "G" ) {
-                        $snp_cpg = 1;
-                    }
-                }
-                elsif ( $snp_mutant_to eq "G->A" ) {    # original base is G
-                    if ( $left_base eq "C" ) {
-                        $snp_cpg = 1;
-                    }
-                }
-
-                $snp_feature_sth->execute( $snp_coding, undef, $snp_cpg,
-                    $snp_id, );
+                $snp_feature_sth->execute( $snp_coding, undef, $snp_id, );
             }
 
             $snp_feature_sth->finish;
             $snp_query_sth->finish;
         }
+
+        #----------------------------#
+        # process each windows
+        #----------------------------#
+        {
+            $window_query_sth->execute($align_id);
+            while ( my @row5 = $window_query_sth->fetchrow_array ) {
+                my ( $window_id, $window_runlist ) = @row5;
+                my $window_set = AlignDB::IntSpan->new($window_runlist);
+                my $window_chr_set
+                    = $window_set->map_set( sub { $chr_pos[$_] } );
+                my $window_coding = feature_portion( $cds_set_of->{$chr_name},
+                    $window_chr_set );
+                $window_update_sth->execute( $window_coding, undef, $window_id,
+                );
+            }
+
+            $window_update_sth->finish;
+            $window_query_sth->finish;
+        }
     }
 
     return;
-};
-
-my $worker_isw_cpg = sub {
-    print "Processing isw_cpg_pi\n";
-
-    # create alignDB object for this scope
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-
-    # Database handler
-    my $dbh = $obj->dbh;
-
-    # select all snps in this alignment
-    my $isw_query = q{
-        SELECT  i.isw_id id,
-                COUNT(*) /i.isw_length * 1.0 cpg
-        FROM isw i, snp s
-        WHERE i.isw_id = s.isw_id
-        AND s.snp_cpg = 1
-        GROUP BY i.isw_id
-    };
-    my $isw_sth = $dbh->prepare($isw_query);
-
-    # update isw table in the new feature column
-    my $isw_update = q{
-        UPDATE isw
-        SET isw_cpg_pi = ?
-        WHERE isw_id = ?
-    };
-    my $isw_update_sth = $dbh->prepare($isw_update);
-
-    # for isw
-    $isw_sth->execute;
-    while ( my @row = $isw_sth->fetchrow_array ) {
-        my ( $isw_id, $cpg ) = @row;
-        $isw_update_sth->execute( $cpg, $isw_id );
-    }
-
-    # update NULL value of isw_cpg_pi to 0
-    my $isw_null = q{
-        UPDATE isw
-        SET isw_cpg_pi = 0
-        WHERE isw_cpg_pi IS NULL
-    };
-    $obj->execute_sql($isw_null);
 };
 
 #----------------------------------------------------------#
@@ -407,8 +363,6 @@ my $run = AlignDB::Run->new(
     code     => $worker,
 );
 $run->run;
-
-$worker_isw_cpg->();
 
 $stopwatch->end_message;
 
