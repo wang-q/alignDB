@@ -1515,16 +1515,16 @@ __END__
 =head1 SYNOPSIS
 
     multi_stat_factory.pl [options]
-        Options:
-            --help              brief help message
-            --man               full documentation
-            --server            MySQL server IP/Domain name
-            --db                database name
-            --username          username
-            --password          password
-            --outfile            outfile filename
-            --run               run special analysis
-            --freq              max freq
+      Options:
+        --help              brief help message
+        --man               full documentation
+        --server            MySQL server IP/Domain name
+        --db                database name
+        --username          username
+        --password          password
+        --outfile            outfile filename
+        --run               run special analysis
+        --freq              max freq
 
 =cut
 

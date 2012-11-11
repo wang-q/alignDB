@@ -48,10 +48,10 @@ my $insert_exonsw   = $Config->{gene}{insert_exonsw};
 my $insert_codingsw = $Config->{gene}{insert_codingsw};
 
 # run in parallel mode
-my $parallel = $Config->{feature}{parallel};
+my $parallel = $Config->{generate}{parallel};
 
 # number of alignments process in one child process
-my $batch_number = $Config->{feature}{batch};
+my $batch_number = $Config->{generate}{batch};
 
 my $multi;
 
