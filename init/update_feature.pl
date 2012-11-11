@@ -14,6 +14,7 @@ use AlignDB::Stopwatch;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
+use AlignDB::Multi;
 use AlignDB::Ensembl;
 
 #----------------------------------------------------------#
@@ -43,6 +44,8 @@ my $parallel = $Config->{generate}{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{generate}{batch};
 
+my $multi;
+
 my $man  = 0;
 my $help = 0;
 
@@ -57,6 +60,7 @@ GetOptions(
     'ensembl=s'    => \$ensembl_db,
     'parallel=i'   => \$parallel,
     'batch=i'      => \$batch_number,
+    'multi'             => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -95,12 +99,22 @@ my $worker = sub {
     #----------------------------#
     # Init objects
     #----------------------------#
-    # create alignDB object for this scope
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
+
+    my $obj;
+    if ( !$multi ) {
+        $obj = AlignDB->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+    }
+    else {
+        $obj = AlignDB::Multi->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+    }
 
     # Database handler
     my $dbh = $obj->dbh;
@@ -131,7 +145,7 @@ my $worker = sub {
 
     # select all indels in this alignment
     my $indel_query = q{
-        SELECT indel_id, prev_indel_id, indel_start, indel_end
+        SELECT indel_id, indel_start, indel_end
         FROM indel
         WHERE align_id = ?
     };
@@ -140,9 +154,9 @@ my $worker = sub {
     # update indel table in the new feature column
     my $indel_feature = q{
         UPDATE indel
-        SET indel_coding = ?,
+        SET indel_coding  = ?,
             indel_repeats = ?
-        WHERE indel_id = ?
+        WHERE indel_id    = ?
     };
     my $indel_feature_sth = $dbh->prepare($indel_feature);
 
@@ -157,9 +171,9 @@ my $worker = sub {
     # update isw table in the new feature column
     my $isw_feature = q{
         UPDATE isw
-        SET isw_coding = ?,
+        SET isw_coding  = ?,
             isw_repeats = ?
-        WHERE isw_id = ?
+        WHERE isw_id    = ?
     };
     my $isw_feature_sth = $dbh->prepare($isw_feature);
 
@@ -174,9 +188,9 @@ my $worker = sub {
     # update snp table in the new feature column
     my $snp_feature = q{
         UPDATE snp
-        SET snp_coding = ?,
+        SET snp_coding  = ?,
             snp_repeats = ?
-        WHERE snp_id = ?
+        WHERE snp_id    = ?
     };
     my $snp_feature_sth = $dbh->prepare($snp_feature);
 
@@ -275,7 +289,7 @@ UPDATE: for my $align_id (@align_ids) {
         #----------------------------#
         $indel_query_sth->execute($align_id);
         while ( my @row3 = $indel_query_sth->fetchrow_array ) {
-            my ( $indel_id, $prev_indel_id, $indel_start, $indel_end ) = @row3;
+            my ( $indel_id, $indel_start, $indel_end ) = @row3;
             my $indel_chr_start = $chr_pos[$indel_start];
             my $indel_chr_end   = $chr_pos[$indel_end];
 
@@ -286,7 +300,7 @@ UPDATE: for my $align_id (@align_ids) {
                 my $indel_repeats = $ensembl->feature_portion( '_repeat_set',
                     $indel_chr_runlist );
                 $indel_feature_sth->execute( $indel_coding, $indel_repeats,
-                    $indel_id );
+                    $indel_id, );
                 $indel_feature_sth->finish;
             }
 
@@ -306,7 +320,7 @@ UPDATE: for my $align_id (@align_ids) {
                     my $isw_repeats = $ensembl->feature_portion( '_repeat_set',
                         $isw_chr_runlist );
                     $isw_feature_sth->execute( $isw_coding, $isw_repeats,
-                        $isw_id );
+                        $isw_id, );
                 }
 
                 $isw_feature_sth->finish;

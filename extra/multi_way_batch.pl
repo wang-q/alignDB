@@ -159,15 +159,16 @@ my $dispatch = {
         . " --parallel=$parallel"
         . " --batch=$batch_number"
         . " --multi",
-    30 => "perl $FindBin::Bin/../multi/update_multi.pl"
+    30 => "perl $FindBin::Bin/../init/update_feature.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
         . " -d=$db_name"
+        . " -e=$ensembl_db"
         . " --parallel=$parallel"
         . " --batch=$batch_number"
-        . " -e=$ensembl_db",
+        . " --multi",
     '30gff' => "perl $FindBin::Bin/../multi/update_multi_gff.pl"
         . " -s=$server"
         . " --port=$port"

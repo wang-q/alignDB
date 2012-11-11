@@ -952,63 +952,6 @@ ISW: for my $isw_id (@isw_ids) {
     return;
 }
 
-sub get_seqs {
-    my $self     = shift;
-    my $align_id = shift;
-    my $flag;
-    if ( defined $self->caching_id ) {
-        if ( $self->caching_id == $align_id ) {
-            $flag = 0;
-        }
-        else {
-            $flag = 1;
-        }
-    }
-    else {
-        $flag = 1;
-    }
-
-    if ($flag) {
-
-        # Get database handle
-        my $dbh = $self->dbh;
-
-        my $target_sth = $dbh->prepare(
-            q{
-            SELECT s.seq_seq
-            FROM target t, sequence s
-            WHERE s.align_id = ?
-            AND s.seq_id = t.seq_id
-            }
-        );
-
-        my $query_sth = $dbh->prepare(
-            q{
-            SELECT s.seq_seq
-            FROM query q, sequence s
-            WHERE s.align_id = ?
-            AND s.seq_id = q.seq_id
-            }
-        );
-
-        $target_sth->execute($align_id);
-        my ($target_seq) = $target_sth->fetchrow_array;
-        $target_sth->finish;
-
-        $query_sth->execute($align_id);
-        my @query_seqs;
-        while ( my ($query_seq) = $query_sth->fetchrow_array ) {
-            push @query_seqs, $query_seq;
-        }
-        $query_sth->finish;
-
-        $self->{caching_id} = $align_id;
-        $self->{caching_seqs} = [ $target_seq, @query_seqs ];
-    }
-
-    return $self->caching_seqs;
-}
-
 sub get_slice_stat {
     my $self     = shift;
     my $align_id = shift;

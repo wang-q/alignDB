@@ -12,6 +12,7 @@ use AlignDB::Stopwatch;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
+use AlignDB::Multi;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -26,17 +27,20 @@ my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
+my $multi;
+
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=s'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'multi'        => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -48,25 +52,35 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Update CpG info of $db...");
 
-my $obj = AlignDB->new(
-    mysql  => "$db:$server",
-    user   => $username,
-    passwd => $password,
-);
+my $obj;
+if ( !$multi ) {
+    $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+
+    # get reference names via AlignDB methods
+    my ( undef, undef, $ref_name ) = $obj->get_names;
+    if ( !$ref_name or $ref_name eq 'NULL' ) {
+        die "$db is not a three-way alignDB\n";
+    }
+}
+else {
+    $obj = AlignDB::Multi->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+}
 
 # Database handler
 my $dbh = $obj->dbh;
 
-# get reference names via AlignDB methods
-my ( undef, undef, $ref_name ) = $obj->get_names;
-if ( !$ref_name or $ref_name eq 'NULL' ) {
-    die "$db is not a three-way alignDB\n";
-}
-
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
-{
+if ( !$multi ) {
     my @align_ids = @{ $obj->get_align_ids };
 
     # select all snps in this alignment
@@ -79,7 +93,7 @@ if ( !$ref_name or $ref_name eq 'NULL' ) {
         AND ref_base IN ("C", "G")
         AND snp_occured IN ("T", "Q")
     };
-    my $snp_sth = $dbh->prepare($snp_query);
+    my $snp_query_sth = $dbh->prepare($snp_query);
 
     # update snp table in the new feature column
     my $snp_update = q{
@@ -94,8 +108,8 @@ if ( !$ref_name or $ref_name eq 'NULL' ) {
 
         my ( $target_seq, $query_seq ) = @{ $obj->get_seqs($align_id) };
 
-        $snp_sth->execute($align_id);
-        while ( my @row = $snp_sth->fetchrow_array ) {
+        $snp_query_sth->execute($align_id);
+        while ( my @row = $snp_query_sth->fetchrow_array ) {
             my ($snp_id,   $snp_pos,     $target_base, $query_base,
                 $ref_base, $snp_occured, $mutated_base
             ) = @row;
@@ -125,28 +139,84 @@ if ( !$ref_name or $ref_name eq 'NULL' ) {
                 }
             }
 
-            next unless $snp_cpg;
-
             $snp_update_sth->execute( $snp_cpg, $snp_id );
         }
-
     }
-
-    # update NULL value of snp_cpg to 0
-    my $snp_null = q{
-        UPDATE snp
-        SET snp_cpg = 0
-        WHERE snp_cpg IS NULL
-    };
-    my $snp_null_sth = $dbh->prepare($snp_null);
-    $snp_null_sth->execute;
-
-    $snp_null_sth->finish;
     $snp_update_sth->finish;
-    $snp_sth->finish;
+    $snp_query_sth->finish;
 
+    {    # update NULL value of snp_cpg to 0
+        my $snp_null = q{
+            UPDATE snp
+            SET snp_cpg = 0
+            WHERE snp_cpg IS NULL
+        };
+        $obj->execute_sql($snp_null);
+    }
+}
+else {
+    my @align_ids = @{ $obj->get_align_ids };
+
+    # select all snps for this indel
+    my $snp_query = q{
+        SELECT snp_id, snp_pos, mutant_to
+        FROM snp
+        WHERE align_id = ?
+    };
+    my $snp_query_sth = $dbh->prepare($snp_query);
+
+    # update snp table in the new feature column
+    my $snp_update = q{
+        UPDATE snp
+        SET snp_cpg = ?
+        WHERE snp_id = ?
+    };
+    my $snp_update_sth = $dbh->prepare($snp_update);
+
+    for my $align_id (@align_ids) {
+        my ($target_seq) = @{ $obj->get_seqs($align_id) };
+
+        $snp_query_sth->execute($align_id);
+        while ( my @row = $snp_query_sth->fetchrow_array ) {
+            my ( $snp_id, $snp_pos, $snp_mutant_to ) = @row;
+
+            # cpg
+            my $snp_cpg = 0;
+
+            my $left_base  = substr( $target_seq, $snp_pos - 2, 1 );
+            my $right_base = substr( $target_seq, $snp_pos,     1 );
+
+            # CpG to TpG, C to T transition
+            # On the reverse strand, is CpG to CpA
+            if ( $snp_mutant_to eq "C->T" ) {    # original base is C
+                if ( $right_base eq "G" ) {
+                    $snp_cpg = 1;
+                }
+            }
+            elsif ( $snp_mutant_to eq "G->A" ) {    # original base is G
+                if ( $left_base eq "C" ) {
+                    $snp_cpg = 1;
+                }
+            }
+
+            $snp_update_sth->execute( $snp_cpg, $snp_id, );
+        }
+    }
+    $snp_update_sth->finish;
+    $snp_query_sth->finish;
+
+    {    # update NULL value of snp_cpg to 0
+        my $snp_null = q{
+            UPDATE snp
+            SET snp_cpg = 0
+            WHERE snp_cpg IS NULL
+        };
+        $obj->execute_sql($snp_null);
+    }
 }
 
+# XXX This calc is wrong for AlignDB::Multi!
+# multi-seqs are different from pair_seqs
 {
     print "Processing isw_cpg\n";
 
@@ -176,14 +246,15 @@ if ( !$ref_name or $ref_name eq 'NULL' ) {
         $isw_update_sth->execute( $cpg, $isw_id );
     }
 
-    # update NULL value of isw_cpg to 0
-    my $isw_null = q{
-        UPDATE isw
-        SET isw_cpg_pi = 0
-        WHERE isw_cpg_pi IS NULL
-    };
-    my $isw_null_sth = $dbh->prepare($isw_null);
-    $isw_null_sth->execute;
+    {    # update NULL value of isw_cpg_pi to 0
+        my $isw_null = q{
+            UPDATE isw
+            SET isw_cpg_pi = 0
+            WHERE isw_cpg_pi IS NULL
+        };
+        $obj->execute_sql($isw_null);
+    }
+};
 
 }
 
