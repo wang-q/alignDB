@@ -640,7 +640,7 @@ where_values:
   isw.isw_type: !!perl/ref
     =: = 'R'
 
-[ld-ld-0]
+[ld-indel_ld-0]
 ---
 __CLASS__: AlignDB::SQL-0.123160
 _sql: "SELECT\n  isw.isw_distance distance,\n  AVG(snp.snp_r) AVG_r,\n  AVG(POWER(snp.snp_r,
@@ -754,9 +754,11 @@ where_values:
 __CLASS__: AlignDB::SQL-0.123160
 _sql: "SELECT\n  isw.isw_distance distance,\n  AVG(POWER(snp.snp_r, 2)) AVG_r2,\n
   \ AVG(snp.snp_r2_s) AVG_r2_s,\n  AVG(ABS(snp.snp_dprime)) AVG_Dprime_abs,\n  AVG(snp.snp_dprime_abs_s)
-  AVG_Dprime_abs_s,\n  COUNT(*) COUNT\nFROM isw\n  INNER JOIN indel ON\n    isw.isw_indel_id
-  = indel.indel_id\n  INNER JOIN snp ON\n    isw.isw_id = snp.isw_id\nWHERE (indel.indel_occured
-  != 'unknown')\n  AND (snp.snp_occured != 'unknown')\nGROUP BY\n  isw.isw_distance\n"
+  AVG_Dprime_abs_s,\n  AVG(snp.snp_r2_i) AVG_r2_i,\n  AVG(snp.snp_r2_ni) AVG_r2_ni,\n
+  \ AVG(snp.snp_dprime_abs_i) AVG_Dprime_abs_i,\n  AVG(snp.snp_dprime_abs_ni) AVG_Dprime_abs_ni,\n
+  \ COUNT(*) COUNT\nFROM isw\n  INNER JOIN indel ON\n    isw.isw_indel_id = indel.indel_id\n
+  \ INNER JOIN snp ON\n    isw.isw_id = snp.isw_id\nWHERE (indel.indel_occured !=
+  'unknown')\n  AND (snp.snp_occured != 'unknown')\nGROUP BY\n  isw.isw_distance\n"
 bind: []
 from: []
 group:
@@ -779,18 +781,30 @@ select:
 - AVG(snp.snp_r2_s)
 - AVG(ABS(snp.snp_dprime))
 - AVG(snp.snp_dprime_abs_s)
+- AVG(snp.snp_r2_i)
+- AVG(snp.snp_r2_ni)
+- AVG(snp.snp_dprime_abs_i)
+- AVG(snp.snp_dprime_abs_ni)
 - COUNT(*)
 select_map:
   AVG(ABS(snp.snp_dprime)): AVG_Dprime_abs
   AVG(POWER(snp.snp_r, 2)): AVG_r2
+  AVG(snp.snp_dprime_abs_i): AVG_Dprime_abs_i
+  AVG(snp.snp_dprime_abs_ni): AVG_Dprime_abs_ni
   AVG(snp.snp_dprime_abs_s): AVG_Dprime_abs_s
+  AVG(snp.snp_r2_i): AVG_r2_i
+  AVG(snp.snp_r2_ni): AVG_r2_ni
   AVG(snp.snp_r2_s): AVG_r2_s
   COUNT(*): COUNT
   isw.isw_distance: distance
 select_map_reverse:
   AVG_Dprime_abs: AVG(ABS(snp.snp_dprime))
+  AVG_Dprime_abs_i: AVG(snp.snp_dprime_abs_i)
+  AVG_Dprime_abs_ni: AVG(snp.snp_dprime_abs_ni)
   AVG_Dprime_abs_s: AVG(snp.snp_dprime_abs_s)
   AVG_r2: AVG(POWER(snp.snp_r, 2))
+  AVG_r2_i: AVG(snp.snp_r2_i)
+  AVG_r2_ni: AVG(snp.snp_r2_ni)
   AVG_r2_s: AVG(snp.snp_r2_s)
   COUNT: COUNT(*)
   distance: isw.isw_distance

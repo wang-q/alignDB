@@ -74,9 +74,9 @@ my @sheet_names = @{ $excel_obj->sheet_names };
 {
 
     #----------------------------#
-    # worksheet -- ld
+    # worksheet -- indel_ld
     #----------------------------#
-    my @sheets = grep {/^ld/} @sheet_names;
+    my @sheets = grep {/^indel_ld/} @sheet_names;
     foreach (@sheets) {
         my $sheet_name = $_;
         my %option     = (
@@ -103,43 +103,6 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         $option{y_title}   = "r**2";
         $option{y2_column} = 5;
         $option{y2_title}  = "|Dprime|";
-        $option{Top} += $option{Height} + 14.25;
-        $excel_obj->draw_2y( $sheet_name, \%option );
-    }
-}
-
-{
-
-    #----------------------------#
-    # worksheet -- sub_ld
-    #----------------------------#
-    my @sheets = grep {/^sub_ld/} @sheet_names;
-    foreach (@sheets) {
-        my $sheet_name = $_;
-        my %option     = (
-            chart_serial => 1,
-            x_column     => 1,
-            y_column     => 2,
-            y2_column    => 4,
-            first_row    => 3,
-            last_row     => 13,
-            x_max_scale  => 10,
-            x_title      => "Distance to indels (d1)",
-            y_title      => "indel-group r**2",
-            y2_title     => "indel-group |Dprime|",
-            Height       => 200,
-            Width        => 260,
-            Top          => 14.25,
-            Left         => 650,
-        );
-        $excel_obj->draw_2y( $sheet_name, \%option );
-
-        # chart 2
-        $option{chart_serial}++;
-        $option{y_column}  = 3;
-        $option{y_title}   = "nonindel-group r**2",
-        $option{y2_column} = 5;
-        $option{y2_title}  = "nonindel-group |Dprime|",
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_2y( $sheet_name, \%option );
     }
@@ -204,7 +167,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             Height       => 200,
             Width        => 260,
             Top          => 14.25,
-            Left         => 650,
+            Left         => 900,
         );
         $excel_obj->draw_2y( $sheet_name, \%option );
 
@@ -214,6 +177,24 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         $option{y_title}   = "near snps r**2",
         $option{y2_column} = 5;
         $option{y2_title}  = "near snps |Dprime|",
+        $option{Top} += $option{Height} + 14.25;
+        $excel_obj->draw_2y( $sheet_name, \%option );
+
+        # chart 3
+        $option{chart_serial}++;
+        $option{y_column}  = 6;
+        $option{y_title}   = "indel group snps r**2",
+        $option{y2_column} = 8;
+        $option{y2_title}  = "indel group snps |Dprime|",
+        $option{Top} += $option{Height} + 14.25;
+        $excel_obj->draw_2y( $sheet_name, \%option );
+
+        # chart 4
+        $option{chart_serial}++;
+        $option{y_column}  = 7;
+        $option{y_title}   = "nonindel group snps r**2",
+        $option{y2_column} = 9;
+        $option{y2_title}  = "nonindel group snps |Dprime|",
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_2y( $sheet_name, \%option );
     }

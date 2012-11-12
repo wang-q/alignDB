@@ -734,7 +734,7 @@ sub ns { return AlignDB::SQL->new; }
 #GROUP BY
 #  isw.isw_distance
 {
-    my $name = 'ld-ld-0';
+    my $name = 'ld-indel_ld-0';
 
     my $sql = ns();
     $sql->add_select( 'isw.isw_distance',         'distance' );
@@ -821,6 +821,10 @@ sub ns { return AlignDB::SQL->new; }
 #  AVG(snp.snp_r2_s) AVG_r2_s,
 #  AVG(ABS(snp.snp_dprime)) AVG_Dprime_abs,
 #  AVG(snp.snp_dprime_abs_s) AVG_Dprime_abs_s,
+#  AVG(snp.snp_r2_i) AVG_r2_i,
+#  AVG(snp.snp_r2_ni) AVG_r2_ni,
+#  AVG(snp.snp_dprime_abs_i) AVG_Dprime_abs_i,
+#  AVG(snp.snp_dprime_abs_ni) AVG_Dprime_abs_ni,
 #  COUNT(*) COUNT
 #FROM isw
 #  INNER JOIN indel ON
@@ -835,12 +839,16 @@ sub ns { return AlignDB::SQL->new; }
     my $name = 'ld-snps_ld-0';
 
     my $sql = ns();
-    $sql->add_select( 'isw.isw_distance',          'distance' );
-    $sql->add_select( 'AVG(POWER(snp.snp_r, 2))',  'AVG_r2' );
-    $sql->add_select( 'AVG(snp.snp_r2_s)',         'AVG_r2_s' );
-    $sql->add_select( 'AVG(ABS(snp.snp_dprime))',  'AVG_Dprime_abs' );
-    $sql->add_select( 'AVG(snp.snp_dprime_abs_s)', 'AVG_Dprime_abs_s' );
-    $sql->add_select( 'COUNT(*)',                  'COUNT' );
+    $sql->add_select( 'isw.isw_distance',           'distance' );
+    $sql->add_select( 'AVG(POWER(snp.snp_r, 2))',   'AVG_r2' );
+    $sql->add_select( 'AVG(snp.snp_r2_s)',          'AVG_r2_s' );
+    $sql->add_select( 'AVG(ABS(snp.snp_dprime))',   'AVG_Dprime_abs' );
+    $sql->add_select( 'AVG(snp.snp_dprime_abs_s)',  'AVG_Dprime_abs_s' );
+    $sql->add_select( 'AVG(snp.snp_r2_i)',          'AVG_r2_i' );
+    $sql->add_select( 'AVG(snp.snp_r2_ni)',         'AVG_r2_ni' );
+    $sql->add_select( 'AVG(snp.snp_dprime_abs_i)',  'AVG_Dprime_abs_i' );
+    $sql->add_select( 'AVG(snp.snp_dprime_abs_ni)', 'AVG_Dprime_abs_ni' );
+    $sql->add_select( 'COUNT(*)',                   'COUNT' );
 
     $sql->add_join(
         isw => [

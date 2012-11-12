@@ -46,17 +46,22 @@ my $parallel = $Config->{generate}{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{generate}{batch};
 
+my $near_range = 100;
+
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    's|server=s'   => \$server,
-    'P|port=i'     => \$port,
-    'd|db=s'       => \$db,
-    'u|username=s' => \$username,
-    'p|password=s' => \$password,
+    'help|?'            => \$help,
+    'man'               => \$man,
+    's|server=s'        => \$server,
+    'P|port=i'          => \$port,
+    'd|db=s'            => \$db,
+    'u|username=s'      => \$username,
+    'p|password=s'      => \$password,
+    'parallel=i'        => \$parallel,
+    'batch=i'           => \$batch_number,
+    'near|near_range=i' => \$near_range,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -103,24 +108,24 @@ my @jobs;
     $obj->create_column( "snp", "snp_r",      "DOUBLE" );
     $obj->create_column( "snp", "snp_dprime", "DOUBLE" );
 
-    #  r and D' with nearest snp
-    ##$obj->create_column( "snp", "snp_nearest_snp_id", "int" );
-    #$obj->create_column( "snp", "snp_r_s",             "DOUBLE" );
-    #$obj->create_column( "snp", "snp_dprime_s",        "DOUBLE" );
-
     # r2 and |D'| with near snps
     # include self
     $obj->create_column( "snp", "snp_near_snp_number", "int" );
     $obj->create_column( "snp", "snp_r2_s",            "DOUBLE" );
     $obj->create_column( "snp", "snp_dprime_abs_s",    "DOUBLE" );
 
-    ## indel group
-    #$obj->create_column( "snp", "snp_r_i",      "DOUBLE" );
-    #$obj->create_column( "snp", "snp_dprime_i", "DOUBLE" );
-    #
-    ## nonindel group
-    #$obj->create_column( "snp", "snp_r_ni",      "DOUBLE" );
-    #$obj->create_column( "snp", "snp_dprime_ni", "DOUBLE" );
+    # indel group
+    $obj->create_column( "snp", "snp_r2_i",         "DOUBLE" );
+    $obj->create_column( "snp", "snp_dprime_abs_i", "DOUBLE" );
+
+    # nonindel group
+    $obj->create_column( "snp", "snp_r2_ni",         "DOUBLE" );
+    $obj->create_column( "snp", "snp_dprime_abs_ni", "DOUBLE" );
+
+    #  r and D' with nearest snp
+    ##$obj->create_column( "snp", "snp_nearest_snp_id", "int" );
+    #$obj->create_column( "snp", "snp_r_s",             "DOUBLE" );
+    #$obj->create_column( "snp", "snp_dprime_s",        "DOUBLE" );
 
     print "Table snp altered\n";
 
@@ -153,7 +158,7 @@ my $worker = sub {
         SELECT i.indel_id, i.indel_freq, i.indel_occured
         FROM indel i
         WHERE 1=1
-        AND i.indel_type != 'C'
+        AND i.indel_occured != 'unknown'
         AND i.align_id = ?
     };
     my $indel_sth = $dbh->prepare($indel_query);
@@ -191,18 +196,46 @@ my $worker = sub {
     #        s.snp_dprime_s  = ?
     #    WHERE s.snp_id = ?
     #};
-    my $update_query = q{
+    my $update_indel_snp_query = q{
         UPDATE
             snp s
         SET
             s.snp_r         = ?,
-            s.snp_dprime    = ?,
-            s.snp_near_snp_number = ?,
-            s.snp_r2_s       = ?,
-            s.snp_dprime_abs_s  = ?
+            s.snp_dprime    = ?
         WHERE s.snp_id = ?
     };
-    my $update_sth = $dbh->prepare($update_query);
+    my $update_indel_snp_sth = $dbh->prepare($update_indel_snp_query);
+
+    my $update_snps_query = q{
+        UPDATE
+            snp s
+        SET
+            s.snp_near_snp_number = ?,
+            s.snp_r2_s            = ?,
+            s.snp_dprime_abs_s    = ?
+        WHERE s.snp_id = ?
+    };
+    my $update_snps_sth = $dbh->prepare($update_snps_query);
+
+    #    UPDATE snp s
+    #    SET s.snp_r         = ?,
+    #        s.snp_dprime    = ?,
+    #        s.snp_r_i       = ?,
+    #        s.snp_dprime_i  = ?,
+    #        s.snp_r_ni      = ?,
+    #        s.snp_dprime_ni = ?
+    #    WHERE s.snp_id = ?
+    my $update_sub_snps_query = q{
+        UPDATE
+            snp s
+        SET
+            s.snp_r2_i          = ?,
+            s.snp_dprime_abs_i  = ?,
+            s.snp_r2_ni         = ?,
+            s.snp_dprime_abs_ni = ?
+        WHERE s.snp_id = ?
+    };
+    my $update_sub_snps_sth = $dbh->prepare($update_sub_snps_query);
 
     # for each align
     for my $align_id (@align_ids) {
@@ -218,27 +251,55 @@ my $worker = sub {
             }, {}, $align_id
         );
 
-        #print Dump $all_snps;
-        #last;
+        # average LD with near snps
+        if ( scalar @{$all_snps} > 1 ) {
+            for my $cur_snp ( @{$all_snps} ) {
+                my $snp_id  = $cur_snp->[0];
+                my $snp_pos = $cur_snp->[3];
+                my ( $near_snp_number, $r2_s, $dprime_abs_s );
+                my $near_snps
+                    = find_near_snps( $all_snps, $snp_pos, $near_range );
+                $near_snp_number = scalar @{$near_snps};
 
+                if ( $near_snp_number > 1 ) {
+                    my ( @r2_s, @dprime_abs_s );
+                    my $combinat = Math::Combinatorics->new(
+                        count => 2,
+                        data  => $near_snps,
+                    );
+                    while ( my @combo = $combinat->next_combination ) {
+                        my ( $pair_r_s, $pair_dprime_s )
+                            = calc_ld( $combo[0]->[2], $combo[1]->[2] );
+                        push @r2_s,         $pair_r_s**2;
+                        push @dprime_abs_s, abs($pair_dprime_s);
+                    }
+                    $r2_s         = average(@r2_s);
+                    $dprime_abs_s = average(@dprime_abs_s);
+                }
+                $update_snps_sth->execute( $near_snp_number, $r2_s,
+                    $dprime_abs_s, $snp_id );
+            }
+        }
+
+        # LD with nearest indel
         $indel_sth->execute($align_id);
         while ( my @row = $indel_sth->fetchrow_array ) {
             my ( $indel_id, $indel_freq, $indel_occured ) = @row;
 
-            #my $group_i  = AlignDB::IntSpan->new;
-            #my $group_ni = AlignDB::IntSpan->new;
-            #for my $i ( 0 .. $all_freq - 1 ) {
-            #    my $ichar = substr $indel_occured, $i, 1;
-            #    if ( $ichar eq 'o' ) {
-            #        $group_i->add( $i + 1 );
-            #    }
-            #    elsif ( $ichar eq 'x' ) {
-            #        $group_ni->add( $i + 1 );
-            #    }
-            #    else {
-            #        die "$i $ichar\n";
-            #    }
-            #}
+            my $group_i  = AlignDB::IntSpan->new;
+            my $group_ni = AlignDB::IntSpan->new;
+            for my $i ( 0 .. $all_freq - 1 ) {
+                my $ichar = substr $indel_occured, $i, 1;
+                if ( $ichar eq 'o' ) {
+                    $group_i->add( $i + 1 );
+                }
+                elsif ( $ichar eq 'x' ) {
+                    $group_ni->add( $i + 1 );
+                }
+                else {
+                    die "indel occured error [$i] [$ichar]\n";
+                }
+            }
 
             $snp_sth->execute($indel_id);
             while ( my @row = $snp_sth->fetchrow_array ) {
@@ -247,8 +308,58 @@ my $worker = sub {
                 # LD with nearest indel
                 my ( $r, $dprime );
                 ( $r, $dprime ) = calc_ld( $indel_occured, $snp_occured );
+                $update_indel_snp_sth->execute( $r, $dprime, $snp_id );
 
-                #$update_sth->execute( $r, $dprime, $snp_id );
+                my ( $r2_i, $dprime_abs_i, $r2_ni, $dprime_abs_ni, );
+                if ( $group_i->size > 1 and $group_i->size < $all_freq - 1 ) {
+                    my $near_snps
+                        = find_near_snps( $all_snps, $snp_pos, $near_range );
+                    my $near_snp_number = scalar @{$near_snps};
+
+                    if ( $near_snp_number > 1 ) {
+                        {    # LD inside indel group
+                            my ( @r2_i, @dprime_abs_i );
+                            my $combinat = Math::Combinatorics->new(
+                                count => 2,
+                                data  => $near_snps,
+                            );
+                            while ( my @combo = $combinat->next_combination ) {
+                                my ( $pair_r_i, $pair_dprime_i ) = calc_ld(
+                                    $group_i->substr_span( $combo[0]->[2] ),
+                                    $group_i->substr_span( $combo[1]->[2] )
+                                );
+                                next unless defined $pair_r_i;
+                                push @r2_i,         $pair_r_i**2;
+                                push @dprime_abs_i, abs($pair_dprime_i);
+                            }
+                            next unless scalar @r2_i > 0;
+                            $r2_i         = average(@r2_i);
+                            $dprime_abs_i = average(@dprime_abs_i);
+                        }
+
+                        {    # LD inside nonindel group
+                            my ( @r2_ni, @dprime_abs_ni );
+                            my $combinat = Math::Combinatorics->new(
+                                count => 2,
+                                data  => $near_snps,
+                            );
+                            while ( my @combo = $combinat->next_combination ) {
+                                my ( $pair_r_ni, $pair_dprime_ni ) = calc_ld(
+                                    $group_ni->substr_span( $combo[0]->[2] ),
+                                    $group_ni->substr_span( $combo[1]->[2] )
+                                );
+                                next unless defined $pair_r_ni;
+                                push @r2_ni,         $pair_r_ni**2;
+                                push @dprime_abs_ni, abs($pair_dprime_ni);
+                            }
+                            next unless scalar @r2_ni > 0;
+                            $r2_ni         = average(@r2_ni);
+                            $dprime_abs_ni = average(@dprime_abs_ni);
+                        }
+                    }
+                }
+                $update_sub_snps_sth->execute( $r2_i, $dprime_abs_i, $r2_ni,
+                    $dprime_abs_ni, $snp_id );
 
                 # LD with nearest snp
                 #my ( $nearest_snp_id, $r_s, $dprime_s );
@@ -260,55 +371,11 @@ my $worker = sub {
                 #}
                 #$update_sth->execute( $r, $dprime, $nearest_snp_id, $r_s,
                 #    $dprime_s, $snp_id );
-
-                # average LD with near snps
-                my ( $near_snp_number, $r2_s, $dprime_abs_s );
-                if ( scalar @{$all_snps} > 1 ) {
-                    my $near_snps = find_near_snps( $all_snps, $snp_pos );
-                    $near_snp_number = scalar @{$near_snps};
-
-                    if ( $near_snp_number > 1 ) {
-                        my ( @r2_s, @dprime_abs_s );
-                        my $combinat = Math::Combinatorics->new(
-                            count => 2,
-                            data  => $near_snps,
-                        );
-                        while ( my @combo = $combinat->next_combination ) {
-                            my ( $pair_r_s, $pair_dprime_s )
-                                = calc_ld( $combo[0]->[2], $combo[1]->[2] );
-                            push @r2_s,         $pair_r_s**2;
-                            push @dprime_abs_s, abs($pair_dprime_s);
-                        }
-                        $r2_s         = average(@r2_s);
-                        $dprime_abs_s = average(@dprime_abs_s);
-                    }
-                }
-                $update_sth->execute( $r, $dprime, $near_snp_number, $r2_s,
-                    $dprime_abs_s, $snp_id );
-
-                #my ( $r_i, $dprime_i, $r_ni, $dprime_ni, );
-
-                #
-                #if ( $group_i->size > 1 and $group_i->size < $all_freq - 1 ) {
-                #
-                #    # LD inside indel group
-                #    ( $r_i, $dprime_i ) = calc_ld(
-                #        $group_i->substr_span($indel_occured),
-                #        $group_i->substr_span($snp_occured)
-                #    );
-                #
-                #    # LD inside nonindel group
-                #    ( $r_ni, $dprime_ni ) = calc_ld(
-                #        $group_ni->substr_span($indel_occured),
-                #        $group_ni->substr_span($snp_occured)
-                #    );
-                #}
-                #$update_sth->execute( $r, $dprime, $r_i, $dprime_i, $r_ni,
-                #    $dprime_ni, $snp_id );
             }
         }
     }
-    $update_sth->finish;
+    $update_snps_sth->finish;
+    $update_indel_snp_sth->finish;
     $snp_sth->finish;
     $indel_sth->finish;
 };
@@ -407,10 +474,11 @@ sub find_nearest_snp {
 sub find_near_snps {
     my $all_ary = shift;
     my $pos     = shift;
+    my $range   = shift;
 
     my @sorted = map { $_->[0] }
         sort { $a->[1] <=> $b->[1] }
-        grep { $_->[1] <= 50 }
+        grep { $_->[1] <= $range }
         map { [ $_, abs( $_->[3] - $pos ) ] } @{$all_ary};
 
     return \@sorted;
