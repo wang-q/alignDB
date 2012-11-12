@@ -16,10 +16,10 @@ use Statistics::PointEstimation;
 use Statistics::TTest;
 use Statistics::Descriptive;
 
-has 'outfile' => ( is => 'ro', isa => 'Str' );    # output file, autogenerable
-has 'workbook' => ( is => 'rw', isa => 'Object' );     # excel workbook object
-has 'format'   => ( is => 'ro', isa => 'HashRef' );    # excel formats
-has 'columns'  => ( is => 'ro', isa => 'HashRef' );    # excel column names
+has 'outfile'  => ( is => 'ro', isa => 'Str' );     # output file, autogenerable
+has 'workbook' => ( is => 'rw', isa => 'Object' );  # excel workbook object
+has 'format'   => ( is => 'ro', isa => 'HashRef' ); # excel formats
+has 'columns'  => ( is => 'ro', isa => 'HashRef' ); # excel column names
 
 sub BUILD {
     my $self = shift;
@@ -169,8 +169,7 @@ sub write_row_direct {
     # query name
     my $query_name = $option->{query_name};
     if ( defined $query_name ) {
-        $sheet->write( $sheet_row, $sheet_col - 1, $query_name,
-            $fmt->{NAME} );
+        $sheet->write( $sheet_row, $sheet_col - 1, $query_name, $fmt->{NAME} );
     }
 
     # array_ref
@@ -221,8 +220,7 @@ sub write_content_direct {
     # query name
     my $query_name = $option->{query_name};
     if ( defined $query_name ) {
-        $sheet->write( $sheet_row, $sheet_col - 1, $query_name,
-            $fmt->{NAME} );
+        $sheet->write( $sheet_row, $sheet_col - 1, $query_name, $fmt->{NAME} );
     }
 
     # content format
@@ -1057,6 +1055,46 @@ sub quantile_sql {
     }
 
     return $self->quantile( \@data, $part_number );
+}
+
+sub calc_threshold {
+    my $self = shift;
+
+    my $dbh = $self->dbh;
+
+    my ( $sum_threshold, $combine_threshold );
+
+    my $sth = $dbh->prepare(q{ SELECT SUM(align_length) FROM align });
+    $sth->execute;
+    my ($total_length) = $sth->fetchrow_array;
+
+    if ( $total_length <= 1_000_000 ) {
+        $sum_threshold = int( $total_length / 10 );
+    }
+    elsif ( $total_length <= 10_000_000 ) {
+        $sum_threshold = int( $total_length / 10 );
+    }
+    elsif ( $total_length <= 100_000_000 ) {
+        $sum_threshold = int( $total_length / 20 );
+    }
+    elsif ( $total_length <= 1_000_000_000 ) {
+        $sum_threshold = int( $total_length / 50 );
+    }
+    else {
+        $sum_threshold = int( $total_length / 100 );
+    }
+
+    if ( $total_length <= 1_000_000 ) {
+        $combine_threshold = 100;
+    }
+    elsif ( $total_length <= 10_000_000 ) {
+        $combine_threshold = 500;
+    }
+    else {
+        $combine_threshold = 1000;
+    }
+
+    return ( $sum_threshold, $combine_threshold );
 }
 
 # instance destructor
