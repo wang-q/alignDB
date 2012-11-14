@@ -30,9 +30,9 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'    => \$help,
-    'man'       => \$man,
-    'd|dir=s' => \$dir,
+    'help|?'     => \$help,
+    'man'        => \$man,
+    'd|dir=s'    => \$dir,
     's|suffix=s' => \$suffix,
 ) or pod2usage(2);
 
@@ -49,19 +49,20 @@ unless ( $excel = Win32::OLE->new("Excel.Application") ) {
 }
 $excel->{DisplayAlerts} = 0;
 
-my @xlsx_files = File::Find::Rule->file->name($suffix)->in($dir);
+my @files = File::Find::Rule->file->name($suffix)->in($dir);
+printf "\n----Total $suffix Files: %4s----\n\n", scalar @files;
 
-for my $xlsx (@xlsx_files) {
-    $xlsx = File::Spec->rel2abs($xlsx);
-    print $xlsx, "\n";
-    my $newbook = $excel->Workbooks->Open($xlsx)
+for my $file (@files) {
+    $file = File::Spec->rel2abs($file);
+    print $file, "\n";
+    my $newbook = $excel->Workbooks->Open($file)
         or die "Cannot open xlsx file\n";
-    my $xls = $xlsx;
+    my $xls = $file;
     $xls =~ s/xlsx$/xls/i;
-    
-    # xlExcel8    56 Excel8 
+
+    # xlExcel8    56 Excel8
     # xlExcel9795 43 Excel9795 # this doesn't work
-    $newbook->SaveAs($xls, 56);
+    $newbook->SaveAs( $xls, 56 );
 }
 
 $excel->Quit;
