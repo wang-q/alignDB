@@ -137,9 +137,9 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         # chart 2
         $option{chart_serial}++;
         $option{y_column}  = 3;
-        $option{y_title}   = "nearest snp r**2",
+        $option{y_title}   = "nearest snp r**2";
         $option{y2_column} = 5;
-        $option{y2_title}  = "nearest snp |Dprime|",
+        $option{y2_title}  = "nearest snp |Dprime|";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_2y( $sheet_name, \%option );
     }
@@ -174,30 +174,64 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         # chart 2
         $option{chart_serial}++;
         $option{y_column}  = 3;
-        $option{y_title}   = "near snps r**2",
+        $option{y_title}   = "near snps r**2";
         $option{y2_column} = 5;
-        $option{y2_title}  = "near snps |Dprime|",
+        $option{y2_title}  = "near snps |Dprime|";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_2y( $sheet_name, \%option );
 
         # chart 3
         $option{chart_serial}++;
         $option{y_column}  = 6;
-        $option{y_title}   = "indel group snps r**2",
+        $option{y_title}   = "indel group snps r**2";
         $option{y2_column} = 8;
-        $option{y2_title}  = "indel group snps |Dprime|",
+        $option{y2_title}  = "indel group snps |Dprime|";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_2y( $sheet_name, \%option );
 
         # chart 4
         $option{chart_serial}++;
         $option{y_column}  = 7;
-        $option{y_title}   = "nonindel group snps r**2",
+        $option{y_title}   = "nonindel group snps r**2";
         $option{y2_column} = 9;
-        $option{y2_title}  = "nonindel group snps |Dprime|",
+        $option{y2_title}  = "nonindel group snps |Dprime|";
         $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_2y( $sheet_name, \%option );
     }
+}
+
+{
+    my $sheet_name = 'segment_gc_indel_3';
+    my %option     = (
+        chart_serial => 1,
+        x_column     => 2,
+        y_column     => 7,
+        x_title      => "GC proportion",
+        y_title      => "near snps r**2",
+        Height       => 200,
+        Width        => 260,
+        Top          => 14.25,
+        Left         => 800,
+        without_line => 1,
+        marker_size  => 5,
+    );
+    $excel_obj->draw_xy( $sheet_name, \%option );
+
+    $sheet_name = 'segment_cv_indel_3';
+    %option     = (
+        chart_serial => 1,
+        x_column     => 2,
+        y_column     => 7,
+        x_title      => "Segment CV",
+        y_title      => "near snps r**2",
+        Height       => 200,
+        Width        => 260,
+        Top          => 14.25,
+        Left         => 800,
+        without_line => 1,
+        marker_size  => 5,
+    );
+    $excel_obj->draw_xy( $sheet_name, \%option );
 }
 
 #----------------------------------------------------------#
