@@ -66,11 +66,11 @@ my $help = 0;
 GetOptions(
     'help|?'           => \$help,
     'man'              => \$man,
-    'server=s'         => \$server,
-    'port=i'           => \$port,
-    'db=s'             => \$db,
-    'username=s'       => \$username,
-    'password=s'       => \$password,
+    's|server=s'       => \$server,
+    'P|port=i'         => \$port,
+    'd|db=s'           => \$db,
+    'u|username=s'     => \$username,
+    'p|password=s'     => \$password,
     'insert_gc=s'      => \$insert_gc,
     'insert_segment=s' => \$insert_segment,
     'alt_level'        => \$alt_level,
@@ -155,28 +155,19 @@ my $worker = sub {
 
     # alignments' chromosomal location, target_seq and query_seq
     my $align_seq_query = q{
-        SELECT c.chr_name,
-               s.chr_start,
-               s.chr_end,
-               a.align_length,
+        SELECT a.align_length,
                a.align_comparable_runlist
-        FROM align a, target t, sequence s, chromosome c
-        WHERE a.align_id = s.align_id
-        AND t.seq_id = s.seq_id
-        AND s.chr_id = c.chr_id
+        FROM align a
         AND a.align_id = ?
     };
     my $align_seq_sth = $dbh->prepare($align_seq_query);
 
     # for each alignment
     for my $align_id (@align_ids) {
+        $obj->process_message($align_id);
         $align_seq_sth->execute($align_id);
-        my ( $chr_name, $chr_start, $chr_end, $align_length,
-            $comparable_runlist )
+        my ( $align_length, $comparable_runlist )
             = $align_seq_sth->fetchrow_array;
-
-        print "prosess align $align_id ",
-            "in $chr_name $chr_start - $chr_end\n";
 
         # comparable runlist
         my $comparable_set = AlignDB::IntSpan->new($comparable_runlist);

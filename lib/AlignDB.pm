@@ -23,7 +23,6 @@ has 'dbh'     => ( is => 'ro', isa => 'Object' );  # store database handle here
 has 'dG_calc' => ( is => 'ro', isa => 'Object' );  # dG calculator
 has 'window_maker' => ( is => 'ro', isa => 'Object' );   # sliding windows maker
 has 'insert_dG' => ( is => 'ro', isa => 'Bool', default => 0 );
-has 'insert_ssw' => ( is => 'ro', isa => 'Bool', default => 0 );
 has 'threshold'  => ( is => 'ro', isa => 'Int',  default => 10_000 );
 
 has 'caching_id' => ( is => 'ro', isa => 'Int' );        # caching seqs
@@ -447,7 +446,48 @@ sub _modify_isw {
     return;
 }
 
-sub _insert_ssw {
+sub _insert_seq {
+    my $self     = shift;
+    my $seq_info = shift;
+
+    croak "Pass a seq to this method!\n" if !defined $seq_info->{seq};
+
+    for my $key (qw{chr_id chr_start chr_end chr_strand length gc runlist}) {
+        if ( !defined $seq_info->{$key} ) {
+            $seq_info->{$key} = undef;
+        }
+    }
+
+    # Get database handle
+    my $dbh = $self->dbh;
+
+    my $seq_insert = $dbh->prepare(
+        q{
+        INSERT INTO sequence (
+            seq_id, chr_id, align_id, chr_start, chr_end,
+            chr_strand, seq_length, seq_seq, seq_gc, seq_runlist
+        )
+        VALUES (
+            NULL, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?
+        )
+        }
+    );
+
+    $seq_insert->execute(
+        $seq_info->{chr_id},     $seq_info->{align_id},
+        $seq_info->{chr_start},  $seq_info->{chr_end},
+        $seq_info->{chr_strand}, $seq_info->{length},
+        $seq_info->{seq},        $seq_info->{gc},
+        $seq_info->{runlist},
+    );
+
+    my $seq_id = $self->last_insert_id;
+
+    return $seq_id;
+}
+
+sub insert_ssw {
     my $self     = shift;
     my $align_id = shift;
 
@@ -545,7 +585,7 @@ sub _insert_ssw {
 
                 my ( $d_snp, $d_nosnp, $d_complex ) = ( 0, 0, 0 );
 
-                foreach ( $ssw_start .. $ssw_end ) {
+                for ( $ssw_start .. $ssw_end ) {
                     if ( exists $snp_info->{$_} ) {
                         my $occured = $snp_info->{$_}{snp_occured};
                         if ( $occured eq 'N' ) {
@@ -582,47 +622,6 @@ sub _insert_ssw {
     }
 
     return;
-}
-
-sub _insert_seq {
-    my $self     = shift;
-    my $seq_info = shift;
-
-    croak "Pass a seq to this method!\n" if !defined $seq_info->{seq};
-
-    for my $key (qw{chr_id chr_start chr_end chr_strand length gc runlist}) {
-        if ( !defined $seq_info->{$key} ) {
-            $seq_info->{$key} = undef;
-        }
-    }
-
-    # Get database handle
-    my $dbh = $self->dbh;
-
-    my $seq_insert = $dbh->prepare(
-        q{
-        INSERT INTO sequence (
-            seq_id, chr_id, align_id, chr_start, chr_end,
-            chr_strand, seq_length, seq_seq, seq_gc, seq_runlist
-        )
-        VALUES (
-            NULL, ?, ?, ?, ?,
-            ?, ?, ?, ?, ?
-        )
-        }
-    );
-
-    $seq_insert->execute(
-        $seq_info->{chr_id},     $seq_info->{align_id},
-        $seq_info->{chr_start},  $seq_info->{chr_end},
-        $seq_info->{chr_strand}, $seq_info->{length},
-        $seq_info->{seq},        $seq_info->{gc},
-        $seq_info->{runlist},
-    );
-
-    my $seq_id = $self->last_insert_id;
-
-    return $seq_id;
 }
 
 ##################################################
@@ -889,13 +888,6 @@ sub add_align {
     #----------------------------#
     if ( defined $ref_info->{seq} ) {
         $self->_modify_isw($align_id);
-    }
-
-    #----------------------------#
-    # INSERT INTO ssw
-    #----------------------------#
-    if ( defined $ref_info->{seq} and $self->insert_ssw ) {
-        $self->_insert_ssw($align_id);
     }
 
     return $align_id;
