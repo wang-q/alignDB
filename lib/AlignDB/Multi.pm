@@ -527,47 +527,6 @@ sub add_align {
     return;
 }
 
-sub _insert_seq {
-    my $self     = shift;
-    my $seq_info = shift;
-
-    croak "Pass a seq to this method!\n" if !defined $seq_info->{seq};
-
-    for my $key (qw{chr_id chr_start chr_end chr_strand length gc runlist}) {
-        if ( !defined $seq_info->{$key} ) {
-            $seq_info->{$key} = undef;
-        }
-    }
-
-    # Get database handle
-    my $dbh = $self->dbh;
-
-    my $seq_insert = $dbh->prepare(
-        q{
-        INSERT INTO sequence (
-            seq_id, chr_id, align_id, chr_start, chr_end,
-            chr_strand, seq_length, seq_seq, seq_gc, seq_runlist
-        )
-        VALUES (
-            NULL, ?, ?, ?, ?,
-            ?, ?, ?, ?, ?
-        )
-        }
-    );
-
-    $seq_insert->execute(
-        $seq_info->{chr_id},     $seq_info->{align_id},
-        $seq_info->{chr_start},  $seq_info->{chr_end},
-        $seq_info->{chr_strand}, $seq_info->{length},
-        $seq_info->{seq},        $seq_info->{gc},
-        $seq_info->{runlist},
-    );
-
-    my $seq_id = $self->last_insert_id;
-
-    return $seq_id;
-}
-
 sub update_misc {
     my $self = shift;
 
