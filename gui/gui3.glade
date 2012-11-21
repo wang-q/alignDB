@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <glade-interface>
-  <!-- interface-requires gtk+ 2.6 -->
-  <!-- interface-naming-policy toplevel-contextual -->
+<!-- interface-requires gtk+ 2.6 -->
+<!-- interface-naming-policy toplevel-contextual -->
   <widget class="GtkWindow" id="window_main">
     <property name="title" translatable="yes">alignDB GUI3</property>
     <property name="resizable">False</property>
@@ -1795,7 +1795,7 @@
                         <child>
                           <widget class="GtkLabel" id="label19">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">T/Q/R:</property>
+                            <property name="label" translatable="yes">T/Q/O:</property>
                             <property name="single_line_mode">True</property>
                           </widget>
                           <packing>
