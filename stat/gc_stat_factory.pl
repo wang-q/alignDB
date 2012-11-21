@@ -98,59 +98,16 @@ my $write_obj = AlignDB::WriteExcel->new(
     outfile => $outfile,
 );
 
-my $lib = "$FindBin::Bin/sql.lib";
-my $sql_file = AlignDB::SQL::Library->new( lib => $lib );
+my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::Bin/sql.lib" );
 
 # auto detect sum threshold
 if ( $sum_threshold == 0 ) {
-    my $dbh = $write_obj->dbh;
-
-    my $sql_query = q{
-        SELECT SUM(align_length)
-        FROM align
-    };
-    my $sth = $dbh->prepare($sql_query);
-    $sth->execute;
-    my ($total_length) = $sth->fetchrow_array;
-
-    if ( $total_length <= 1_000_000 ) {
-        $sum_threshold = int( $total_length / 10 );
-    }
-    elsif ( $total_length <= 10_000_000 ) {
-        $sum_threshold = int( $total_length / 10 );
-    }
-    elsif ( $total_length <= 100_000_000 ) {
-        $sum_threshold = int( $total_length / 20 );
-    }
-    elsif ( $total_length <= 1_000_000_000 ) {
-        $sum_threshold = int( $total_length / 50 );
-    }
-    else {
-        $sum_threshold = int( $total_length / 100 );
-    }
+    ( $sum_threshold, undef ) = $write_obj->calc_threshold;
 }
 
 # auto detect combine threshold
 if ( $combine_threshold == 0 ) {
-    my $dbh = $write_obj->dbh;
-
-    my $sql_query = q{
-        SELECT SUM(align_length)
-        FROM align
-    };
-    my $sth = $dbh->prepare($sql_query);
-    $sth->execute;
-    my ($total_length) = $sth->fetchrow_array;
-
-    if ( $total_length <= 1_000_000 ) {
-        $combine_threshold = 100;
-    }
-    elsif ( $total_length <= 10_000_000 ) {
-        $combine_threshold = 500;
-    }
-    else {
-        $combine_threshold = 1000;
-    }
+    ( undef, $combine_threshold ) = $write_obj->calc_threshold;
 }
 
 #----------------------------------------------------------#

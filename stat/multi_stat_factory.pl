@@ -30,6 +30,7 @@ my $db       = $Config->{database}{db};
 
 # stat parameter
 my $run               = $Config->{stat}{run};
+my $sum_threshold     = $Config->{stat}{sum_threshold};
 my $combine_threshold = $Config->{stat}{combine_threshold};
 my $outfile           = "";
 
@@ -49,6 +50,7 @@ GetOptions(
     'o|output=s'             => \$outfile,
     'max|max_freq=s'         => \$max_freq,
     'r|run=s'                => \$run,
+    't|st|threshold=i'       => \$sum_threshold,
     'ct|combine_threshold=i' => \$combine_threshold,
 ) or pod2usage(2);
 
@@ -93,30 +95,16 @@ my $write_obj = AlignDB::WriteExcel->new(
     outfile => $outfile,
 );
 
-my $lib = "$FindBin::Bin/sql.lib";
-my $sql_file = AlignDB::SQL::Library->new( lib => $lib );
+my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::Bin/sql.lib" );
+
+# auto detect sum threshold
+if ( $sum_threshold == 0 ) {
+    ( $sum_threshold, undef ) = $write_obj->calc_threshold;
+}
 
 # auto detect combine threshold
 if ( $combine_threshold == 0 ) {
-    my $dbh = $write_obj->dbh;
-
-    my $sql_query = q{
-        SELECT SUM(align_length)
-        FROM align
-    };
-    my $sth = $dbh->prepare($sql_query);
-    $sth->execute;
-    my ($total_length) = $sth->fetchrow_array;
-
-    if ( $total_length <= 1_000_000 ) {
-        $combine_threshold = 100;
-    }
-    elsif ( $total_length <= 10_000_000 ) {
-        $combine_threshold = 500;
-    }
-    else {
-        $combine_threshold = 1000;
-    }
+    ( undef, $combine_threshold ) = $write_obj->calc_threshold;
 }
 
 #----------------------------#
