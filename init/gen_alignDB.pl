@@ -62,20 +62,20 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'      => \$help,
-    'man'         => \$man,
-    'server=s'    => \$server,
-    'port=i'      => \$port,
-    'db=s'        => \$db,
-    'username=s'  => \$username,
-    'password=s'  => \$password,
-    'axt_dir=s'   => \$axt_dir,
-    'target=s'    => \$target,
-    'query=s'     => \$query,
-    'length=i'    => \$axt_threshold,
-    'insert_dG=s' => \$insert_dG,
-    'parallel=i'  => \$parallel,
-    'gzip'        => \$gzip,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=i'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'axt_dir=s'    => \$axt_dir,
+    'target=s'     => \$target,
+    'query=s'      => \$query,
+    'length=i'     => \$axt_threshold,
+    'insert_dG=s'  => \$insert_dG,
+    'parallel=i'   => \$parallel,
+    'gzip'         => \$gzip,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -197,24 +197,5 @@ __END__
         --length            threshold of alignment length
         --insert_dG         do deltaG related processes
         --parallel          run in parallel mode
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
 
 =cut

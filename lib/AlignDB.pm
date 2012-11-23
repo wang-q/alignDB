@@ -711,14 +711,9 @@ sub add_align {
     # deltaG calculator
     my $dG_calc = $self->dG_calc;
 
-    #----------------------------------------------------------#
-    # GET seq info
-    #----------------------------------------------------------#
-    # taxon_id
-    my $target_taxon_id = $target_info->{taxon_id} || 0;
-    my $query_taxon_id  = $query_info->{taxon_id}  || 0;
-    my $ref_taxon_id    = $ref_info->{taxon_id}    || 0;
-
+    #----------------------------#
+    # fill empty key
+    #----------------------------#
     for my $key (qw{chr_name chr_start chr_end chr_strand}) {
         if ( !defined $query_info->{$key} ) {
             $query_info->{$key} = undef;
@@ -732,7 +727,8 @@ sub add_align {
     $query_info->{query_strand} ||= "+";
 
     {
-        my $target_chr_id_of = $self->get_chr_id_hash($target_taxon_id);
+        my $target_chr_id_of
+            = $self->get_chr_id_hash( $target_info->{taxon_id} );
         if ( exists $target_chr_id_of->{ $target_info->{chr_name} } ) {
             $target_info->{chr_id}
                 = $target_chr_id_of->{ $target_info->{chr_name} };
@@ -741,7 +737,7 @@ sub add_align {
             $target_info->{chr_id} = $target_chr_id_of->{'chrUn'};
         }
 
-        my $query_chr_id_of = $self->get_chr_id_hash($query_taxon_id);
+        my $query_chr_id_of = $self->get_chr_id_hash( $query_info->{taxon_id} );
         if ( defined $query_info->{chr_name}
             and exists $query_chr_id_of->{ $query_info->{chr_name} } )
         {
@@ -753,7 +749,7 @@ sub add_align {
         }
 
         if ($ref_seq) {
-            my $ref_chr_id_of = $self->get_chr_id_hash($ref_taxon_id);
+            my $ref_chr_id_of = $self->get_chr_id_hash( $ref_info->{taxon_id} );
             if ( defined $ref_info->{chr_name}
                 and exists $ref_chr_id_of->{ $ref_info->{chr_name} } )
             {
