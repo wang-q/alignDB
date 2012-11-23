@@ -29,7 +29,7 @@ my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
 # format parameters
-my $wrap    = 60;
+my $wrap    = 50;
 my $spacing = 0;
 
 my $align_id = 1;
@@ -147,7 +147,7 @@ while ( my $hash_ref = $indel_query_sth->fetchrow_hashref ) {
 # species name format
 my $name_format = $workbook->add_format(
     font => 'Courier New',
-    size => 8,
+    size => 10,
 );
 
 # variation position format
@@ -180,7 +180,7 @@ for my $fg ( keys %{$snp_fg_of} ) {
     for my $bg ( keys %{$snp_bg_of} ) {
         $snp_format->{"$fg$bg"} = $workbook->add_format(
             font   => 'Courier New',
-            size   => 8,
+            size   => 10,
             bold   => 1,
             align  => 'center',
             valign => 'vcenter',
@@ -203,7 +203,7 @@ my $merge_format = {};
 for my $bg ( keys %{$indel_bg_of} ) {
     $indel_format->{$bg} = $workbook->add_format(
         font   => 'Courier New',
-        size   => 8,
+        size   => 10,
         bold   => 1,
         align  => 'center',
         valign => 'vcenter',
@@ -211,7 +211,7 @@ for my $bg ( keys %{$indel_bg_of} ) {
     );
     $merge_format->{$bg} = $workbook->add_format(
         font   => 'Courier New',
-        size   => 8,
+        size   => 10,
         bold   => 1,
         align  => 'center',
         valign => 'vcenter',
