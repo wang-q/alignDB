@@ -23,7 +23,7 @@ has 'dbh'     => ( is => 'ro', isa => 'Object' );  # store database handle here
 has 'dG_calc' => ( is => 'ro', isa => 'Object' );  # dG calculator
 has 'window_maker' => ( is => 'ro', isa => 'Object' );   # sliding windows maker
 has 'insert_dG' => ( is => 'ro', isa => 'Bool', default => 0 );
-has 'threshold'  => ( is => 'ro', isa => 'Int',  default => 10_000 );
+has 'threshold' => ( is => 'ro', isa => 'Int', default => 10_000 );
 
 has 'caching_id' => ( is => 'ro', isa => 'Int' );        # caching seqs
 has 'caching_seqs' =>
@@ -66,66 +66,22 @@ sub BUILD {
     return;
 }
 
-sub _tvsq_id {
-    my ( $self, $target_taxon_id, $target_name, $query_taxon_id, $query_name,
-        $ref_taxon_id, $ref_name )
-        = @_;
-
-    my $dbh = $self->dbh;
-
-    my $tvsq_id;
-    my $tvsq = $dbh->prepare(
-        q{
-        SELECT tvsq_id FROM tvsq
-        WHERE target_taxon_id = ?
-        AND query_taxon_id = ?
-        }
-    );
-    $tvsq->execute( $target_taxon_id, $query_taxon_id );
-    while ( my @row = $tvsq->fetchrow_array ) {
-        ($tvsq_id) = @row;
-    }
-    $tvsq->finish;
-
-    unless ( defined $tvsq_id ) {
-        my $tvsq_insert = $dbh->prepare(
-            q{
-            INSERT INTO tvsq (
-                tvsq_id, target_taxon_id, target_name,
-                query_taxon_id, query_name, ref_taxon_id, ref_name
-            )
-            VALUES (
-                NULL, ?, ?,
-                ?, ?, ?, ?
-            )
-            }
-        );
-        $tvsq_insert->execute(
-            $target_taxon_id, $target_name,  $query_taxon_id,
-            $query_name,      $ref_taxon_id, $ref_name
-        );
-        ($tvsq_id) = $self->last_insert_id;
-    }
-
-    return $tvsq_id;
-}
-
 sub _insert_align {
-    my ( $self, $tvsq_id, $target_seq_ref, $query_seq_ref ) = @_;
+    my ( $self, $target_seq_ref, $query_seq_ref ) = @_;
 
     my $dbh = $self->dbh;
 
     my $align_insert = $dbh->prepare(
         q{
         INSERT INTO align (
-            align_id, tvsq_id, align_length,
+            align_id, align_length,
             align_comparables, align_identities, align_differences,
             align_gaps, align_ns, align_error,
             align_pi, align_target_gc, align_average_gc,
             align_comparable_runlist, align_indel_runlist
         )
         VALUES (
-            NULL, ?, ?,
+            NULL, ?,
             ?, ?, ?,
             ?, ?, ?,
             ?, ?, ?,
@@ -137,9 +93,8 @@ sub _insert_align {
     my $result = pair_seq_stat( $$target_seq_ref, $$query_seq_ref );
 
     $align_insert->execute(
-        $tvsq_id,     $result->[0], $result->[1], $result->[2],
-        $result->[3], $result->[4], $result->[5], $result->[6],
-        $result->[7], $result->[8], $result->[9],
+        $result->[0], $result->[1], $result->[2], $result->[3], $result->[4],
+        $result->[5], $result->[6], $result->[7], $result->[8], $result->[9],
     );
     $align_insert->finish;
 
@@ -625,6 +580,103 @@ sub insert_ssw {
 }
 
 ##################################################
+# Usage      : $self->parse_axt_file( $opt );
+# Purpose    : read in alignments and chromosome position
+#            :   info from .axt file
+#            : then pass them to add_align method
+# Returns    : none
+# Parameters : $opt:        option hashref
+# Throws     : no exceptions
+# Comments   : This method is the most important one in this module.
+#            : All generating operations are performed here.
+# See Also   : n/a
+sub parse_axt_file {
+    my $self     = shift;
+    my $axt_file = shift;
+    my $opt      = shift;
+
+    my $target_taxon_id = $opt->{target_taxon_id};
+    my $query_taxon_id  = $opt->{query_taxon_id};
+    my $threshold       = $opt->{threshold};
+    my $gzip            = $opt->{gzip};
+
+    # minimal length
+    $threshold ||= $self->threshold;
+
+    my $axt_fh;
+    if ( !$gzip ) {
+        open $axt_fh, '<', $axt_file;
+    }
+    else {
+        open $axt_fh, '<:via(gzip)', $axt_file;
+    }
+
+    while (1) {
+        my $summary_line = <$axt_fh>;
+        unless ($summary_line) {
+            last;
+        }
+        if ( $summary_line =~ /^#/ ) {
+            next;
+        }
+        chomp $summary_line;
+        chomp( my $first_line = <$axt_fh> );
+        $first_line = uc $first_line;
+        chomp( my $second_line = <$axt_fh> );
+        $second_line = uc $second_line;
+        my $dummy = <$axt_fh>;
+
+        unless ( length $first_line > $threshold ) {
+            next;
+        }
+
+        my ($align_serial, $first_chr,    $first_start,
+            $first_end,    $second_chr,   $second_start,
+            $second_end,   $query_strand, $align_score,
+        ) = split /\s+/, $summary_line;
+
+        my $first_strand;
+        if ( $first_end > $first_start ) {
+            $first_strand = "+";
+        }
+        else {
+            $first_strand = "-";
+        }
+        my $second_strand;
+        if ( $second_end > $second_start ) {
+            $second_strand = "+";
+        }
+        else {
+            $second_strand = "-";
+        }
+
+        my $target_info = {
+            taxon_id   => $target_taxon_id,
+            chr_name   => $first_chr,
+            chr_start  => $first_start,
+            chr_end    => $first_end,
+            chr_strand => $first_strand,
+            seq        => $first_line,
+        };
+        my $query_info = {
+            taxon_id     => $query_taxon_id,
+            chr_name     => $second_chr,
+            chr_start    => $second_start,
+            chr_end      => $second_end,
+            chr_strand   => $second_strand,
+            query_strand => $query_strand,
+            seq          => $second_line,
+        };
+
+        $self->add_align( $target_info, $query_info );
+    }
+
+    close $axt_fh;
+
+    return;
+}
+
+##################################################
 # Usage      : $self->add_align(
 #            :     $target_info, $query_info,
 #            :     $ref_info, $all_indel,
@@ -667,31 +719,51 @@ sub add_align {
     my $query_taxon_id  = $query_info->{taxon_id}  || 0;
     my $ref_taxon_id    = $ref_info->{taxon_id}    || 0;
 
-    # name
-    my $target_name = $target_info->{name} || $target_taxon_id;
-    my $query_name  = $query_info->{name}  || $query_taxon_id;
-    my $ref_name    = $ref_info->{name}    || $ref_taxon_id;
-
-    for my $key (qw{chr_id chr_name chr_start chr_end chr_strand}) {
-        if ( !defined $target_info->{$key} ) {
-            $target_info->{$key} = undef;
-        }
+    for my $key (qw{chr_name chr_start chr_end chr_strand}) {
         if ( !defined $query_info->{$key} ) {
             $query_info->{$key} = undef;
         }
-        if ( defined $ref_info->{seq} ) {
+        if ($ref_seq) {
             if ( !defined $ref_info->{$key} ) {
-                $query_info->{$key} = undef;
+                $ref_info->{$key} = undef;
             }
         }
     }
     $query_info->{query_strand} ||= "+";
 
-    # Get tvsq_id from table tvsq or insert a new one
-    my $tvsq_id = $self->_tvsq_id(
-        $target_taxon_id, $target_name,  $query_taxon_id,
-        $query_name,      $ref_taxon_id, $ref_name
-    );
+    {
+        my $target_chr_id_of = $self->get_chr_id_hash($target_taxon_id);
+        if ( exists $target_chr_id_of->{ $target_info->{chr_name} } ) {
+            $target_info->{chr_id}
+                = $target_chr_id_of->{ $target_info->{chr_name} };
+        }
+        else {
+            $target_info->{chr_id} = $target_chr_id_of->{'chrUn'};
+        }
+
+        my $query_chr_id_of = $self->get_chr_id_hash($query_taxon_id);
+        if ( defined $query_info->{chr_name}
+            and exists $query_chr_id_of->{ $query_info->{chr_name} } )
+        {
+            $query_info->{chr_id}
+                = $query_chr_id_of->{ $query_info->{chr_name} };
+        }
+        else {
+            $query_info->{chr_id} = $query_chr_id_of->{'chrUn'};
+        }
+
+        if ($ref_seq) {
+            my $ref_chr_id_of = $self->get_chr_id_hash($ref_taxon_id);
+            if ( defined $ref_info->{chr_name}
+                and exists $ref_chr_id_of->{ $ref_info->{chr_name} } )
+            {
+                $ref_info->{chr_id} = $ref_chr_id_of->{ $ref_info->{chr_name} };
+            }
+            else {
+                $ref_info->{chr_id} = $ref_chr_id_of->{'chrUn'};
+            }
+        }
+    }
 
     # align length
     my $align_length = length $target_seq;
@@ -703,7 +775,7 @@ sub add_align {
     #----------------------------#
     # INSERT INTO align
     #----------------------------#
-    my $align_id = $self->_insert_align( $tvsq_id, \$target_seq, \$query_seq );
+    my $align_id = $self->_insert_align( \$target_seq, \$query_seq );
     printf "Prosess align %s in %s %s - %s\n", $align_id,
         $target_info->{chr_name}, $target_info->{chr_start},
         $target_info->{chr_end};
@@ -893,131 +965,6 @@ sub add_align {
     return $align_id;
 }
 
-##################################################
-# Usage      : $self->parse_axt_file( $opt );
-# Purpose    : read in alignments and chromosome position
-#            :   info from .axt file
-#            : then pass them to add_align method
-# Returns    : none
-# Parameters : $opt:        option hashref
-# Throws     : no exceptions
-# Comments   : This method is the most important one in this module.
-#            : All generating operations are performed here.
-# See Also   : n/a
-sub parse_axt_file {
-    my $self     = shift;
-    my $axt_file = shift;
-    my $opt      = shift;
-
-    my $target_taxon_id = $opt->{target_taxon_id};
-    my $target_name     = $opt->{target_name};
-    my $query_taxon_id  = $opt->{query_taxon_id};
-    my $query_name      = $opt->{query_name};
-    my $threshold       = $opt->{threshold};
-    my $not_db          = $opt->{not_db};
-    my $gzip            = $opt->{gzip};
-
-    # minimal length
-    $threshold ||= $self->threshold;
-
-    my $axt_fh;
-    if ( !$gzip ) {
-        open $axt_fh, '<', $axt_file;
-    }
-    else {
-        open $axt_fh, '<:via(gzip)', $axt_file;
-    }
-
-    my $target_chr_id = $self->get_chr_id_hash($target_taxon_id);
-    my $query_chr_id  = $self->get_chr_id_hash($query_taxon_id);
-
-    my %all_info_of;
-
-    while (1) {
-        my $summary_line = <$axt_fh>;
-        unless ($summary_line) {
-            last;
-        }
-        if ( $summary_line =~ /^#/ ) {
-            next;
-        }
-        chomp $summary_line;
-        chomp( my $first_line = <$axt_fh> );
-        $first_line = uc $first_line;
-        chomp( my $second_line = <$axt_fh> );
-        $second_line = uc $second_line;
-        my $dummy = <$axt_fh>;
-
-        unless ( length $first_line > $threshold ) {
-            next;
-        }
-
-        my ($align_serial, $first_chr,    $first_start,
-            $first_end,    $second_chr,   $second_start,
-            $second_end,   $query_strand, $align_score,
-        ) = split /\s+/, $summary_line;
-
-        #print "$align_serial\n";
-
-        if ( $first_chr =~ /scaff|contig|super|bac|ran|gi_|EQ/i ) {
-            $first_chr = 'chrUn';
-        }
-        if ( $second_chr =~ /scaff|contig|super|bac|ran|gi_|EQ/i ) {
-            $second_chr = 'chrUn';
-        }
-
-        my $first_strand;
-        if ( $first_end > $first_start ) {
-            $first_strand = "+";
-        }
-        else {
-            $first_strand = "-";
-        }
-        my $second_strand;
-        if ( $second_end > $second_start ) {
-            $second_strand = "+";
-        }
-        else {
-            $second_strand = "-";
-        }
-
-        my $target_info = {
-            taxon_id   => $target_taxon_id,
-            name       => $target_name,
-            chr_id     => $target_chr_id->{$first_chr},
-            chr_name   => $first_chr,
-            chr_start  => $first_start,
-            chr_end    => $first_end,
-            chr_strand => $first_strand,
-            seq        => $first_line,
-        };
-        my $query_info = {
-            taxon_id     => $query_taxon_id,
-            name         => $query_name,
-            chr_id       => $query_chr_id->{$second_chr},
-            chr_name     => $second_chr,
-            chr_start    => $second_start,
-            chr_end      => $second_end,
-            chr_strand   => $second_strand,
-            query_strand => $query_strand,
-            seq          => $second_line,
-        };
-
-        if ($not_db) {
-            $all_info_of{$align_serial}           = {};
-            $all_info_of{$align_serial}->{target} = $target_info;
-            $all_info_of{$align_serial}->{query}  = $query_info;
-        }
-        else {
-            $self->add_align( $target_info, $query_info );
-        }
-    }
-
-    close $axt_fh;
-
-    return \%all_info_of;
-}
-
 sub get_seqs {
     my $self     = shift;
     my $align_id = shift;
@@ -1094,6 +1041,119 @@ sub get_seq_ref {
     $sth->finish;
 
     return $seq;
+}
+
+##################################################
+# Usage      : $self->get_names;
+# Purpose    : get target_name, query_name & ref_name
+# Returns    : ( $target_name, $query_name, $ref_name )
+# Parameters : none
+# Throws     : no exceptions
+# Comments   : none
+# See Also   : n/a
+sub get_names {
+    my $self = shift;
+    my $align_id = shift || 1;
+
+    my $dbh = $self->dbh;
+
+    my @names;
+    for my $table (qw{target query reference}) {
+        my $query = qq{
+            SELECT 
+                c.common_name
+            FROM
+                sequence s
+                    INNER JOIN
+                _TABLE_ ON s.seq_id = _TABLE_.seq_id
+                    INNER JOIN
+                (SELECT 
+                    c.taxon_id, t.common_name, c.chr_id
+                FROM
+                    chromosome c
+                INNER JOIN taxon t ON c.taxon_id = t.taxon_id) c ON c.chr_id = s.chr_id
+            WHERE
+                s.align_id = ?
+        };
+
+        $query =~ s/_TABLE_/$table/g;
+
+        my $sth = $dbh->prepare($query);
+        $sth->execute($align_id);
+        while ( my ($name) = $sth->fetchrow_array ) {
+            push @names, $name;
+        }
+        $sth->finish;
+    }
+
+    return (@names);
+}
+
+##################################################
+# Usage      : $self->get_taxon_ids;
+# Purpose    : get target_taxon_id, query_taxon_id & ref_taxon_id
+# Returns    : ( $target_taxon_id, $query_taxon_id, $ref_taxon_id )
+# Parameters : none
+# Throws     : no exceptions
+# Comments   : none
+# See Also   : n/a
+sub get_taxon_ids {
+    my $self = shift;
+    my $align_id = shift || 1;
+
+    my $dbh = $self->dbh;
+
+    my @ids;
+    for my $table (qw{target query reference}) {
+        my $query = qq{
+            SELECT 
+                c.taxon_id
+            FROM
+                sequence s
+                    INNER JOIN
+                _TABLE_ ON s.seq_id = _TABLE_.seq_id
+                    INNER JOIN
+                (SELECT 
+                    c.taxon_id, t.common_name, c.chr_id
+                FROM
+                    chromosome c
+                INNER JOIN taxon t ON c.taxon_id = t.taxon_id) c ON c.chr_id = s.chr_id
+            WHERE
+                s.align_id = ?
+        };
+
+        $query =~ s/_TABLE_/$table/g;
+
+        my $sth = $dbh->prepare($query);
+        $sth->execute($align_id);
+        while ( my ($id) = $sth->fetchrow_array ) {
+            push @ids, $id;
+        }
+        $sth->finish;
+    }
+
+    return (@ids);
+}
+
+sub update_names {
+    my $self    = shift;
+    my $name_of = shift;
+
+    my $dbh = $self->dbh;
+
+    my $query = q{
+        UPDATE taxon
+        SET common_name = ?
+        WHERE taxon_id = ?
+    };
+
+    my $sth = $dbh->prepare($query);
+    for my $taxon_id ( keys %{$name_of} ) {
+        $sth->execute( $name_of->{$taxon_id}, $taxon_id );
+    }
+    $sth->finish;
+
+    return;
 }
 
 sub get_sets {
@@ -1466,69 +1526,6 @@ sub check_column {
 }
 
 ##################################################
-# Usage      : $self->get_names;
-# Purpose    : get target_name, query_name & ref_name
-# Returns    : ( $target_name, $query_name, $ref_name )
-# Parameters : none
-# Throws     : no exceptions
-# Comments   : none
-# See Also   : n/a
-sub get_names {
-    my $self = shift;
-    my $align_id = shift || 1;
-
-    my $dbh = $self->dbh;
-
-    my $query = qq{
-        SELECT  t.target_name,
-                t.query_name,
-                t.ref_name
-        FROM tvsq t, align a
-        WHERE t.tvsq_id = a.tvsq_id
-        AND a.align_id = ?
-    };
-
-    my $sth = $dbh->prepare($query);
-    $sth->execute($align_id);
-    my ( $target_name, $query_name, $ref_name ) = $sth->fetchrow_array;
-    $sth->finish;
-
-    return ( $target_name, $query_name, $ref_name );
-}
-
-##################################################
-# Usage      : $self->get_taxon_ids;
-# Purpose    : get target_taxon_id, query_taxon_id & ref_taxon_id
-# Returns    : ( $target_taxon_id, $query_taxon_id, $ref_taxon_id )
-# Parameters : none
-# Throws     : no exceptions
-# Comments   : none
-# See Also   : n/a
-sub get_taxon_ids {
-    my $self = shift;
-    my $align_id = shift || 1;
-
-    my $dbh = $self->dbh;
-
-    my $query = qq{
-        SELECT  t.target_taxon_id,
-                t.query_taxon_id,
-                t.ref_taxon_id
-        FROM tvsq t, align a
-        WHERE t.tvsq_id = a.tvsq_id
-        AND a.align_id = ?
-    };
-
-    my $sth = $dbh->prepare($query);
-    $sth->execute($align_id);
-    my ( $target_taxon_id, $query_taxon_id, $ref_taxon_id )
-        = $sth->fetchrow_array;
-    $sth->finish;
-
-    return ( $target_taxon_id, $query_taxon_id, $ref_taxon_id );
-}
-
-##################################################
 # Usage      : $self->get_chr_info($chr_id);
 # Purpose    : get the chr_name and chr_length of a given chr_id
 # Returns    : ($chr_name, $chr_length)
@@ -1802,6 +1799,31 @@ sub get_chrs {
     $sth->finish;
 
     return $array_ref;
+}
+
+sub get_freq {
+    my $self = shift;
+
+    my $dbh = $self->dbh;
+
+    my $sql_query = q{
+        SELECT DISTINCT COUNT(q.query_id) + 1
+        FROM  query q, sequence s
+        WHERE q.seq_id = s.seq_id
+        GROUP BY s.align_id
+    };
+    my $sth = $dbh->prepare($sql_query);
+
+    my @counts;
+    $sth->execute;
+    while ( my ($count) = $sth->fetchrow_array ) {
+        push @counts, $count;
+    }
+    if ( scalar @counts > 1 ) {
+        die "Database corrupts, freqs are not consistent\n";
+    }
+
+    return $counts[0];
 }
 
 sub process_message {

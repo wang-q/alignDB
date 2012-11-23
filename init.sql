@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     11/10/2012 8:29:40 PM                        */
+/* Created on:     11/23/2012 8:33:48 PM                        */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -9,7 +9,6 @@
 create table align
 (
    align_id                       int                            not null AUTO_INCREMENT,
-   tvsq_id                        int,
    align_length                   int,
    align_comparables              int,
    align_identities               int,
@@ -34,14 +33,6 @@ create table align
    primary key (align_id)
 )
 ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Index: tvsq_align_FK                                         */
-/*==============================================================*/
-create index tvsq_align_FK on align
-(
-   tvsq_id
-);
 
 /*==============================================================*/
 /* Table: chromosome                                            */
@@ -628,22 +619,6 @@ create table taxon
    common_name                    text,
    classification                 text,
    primary key (taxon_id)
-)
-ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Table: tvsq                                                  */
-/*==============================================================*/
-create table tvsq
-(
-   tvsq_id                        int                            not null AUTO_INCREMENT,
-   target_taxon_id                int,
-   target_name                    text,
-   query_taxon_id                 int,
-   query_name                     text,
-   ref_taxon_id                   int,
-   ref_name                       text,
-   primary key (tvsq_id)
 )
 ENGINE = MyISAM;
 

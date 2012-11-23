@@ -95,6 +95,25 @@ if ( scalar @files == 0 or $gzip ) {
     $gzip++;
 }
 
+{    # update names
+    my $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+
+    # Database handler
+    my $dbh = $obj->dbh;
+
+    my ( $target_taxon_id, $target_name ) = split ",", $target;
+    my ( $query_taxon_id,  $query_name )  = split ",", $query;
+    $target_name = $target_taxon_id unless $target_name;
+    $query_name  = $query_taxon_id  unless $query_name;
+
+    $obj->update_names(
+        { $target_taxon_id => $target_name, $query_taxon_id => $query_name } );
+}
+
 #----------------------------------------------------------#
 # worker
 #----------------------------------------------------------#
@@ -111,20 +130,16 @@ my $worker = sub {
         insert_dG => $insert_dG,
     );
 
-    my ( $target_taxon_id, $target_name ) = split ",", $target;
-    my ( $query_taxon_id,  $query_name )  = split ",", $query;
+    my ( $target_taxon_id, ) = split ",", $target;
+    my ( $query_taxon_id, )  = split ",", $query;
 
     die "target_taxon_id not defined\n" unless $target_taxon_id;
     die "query_taxon_id not defined\n"  unless $query_taxon_id;
-    $target_name = $target_taxon_id unless $target_name;
-    $query_name  = $query_taxon_id  unless $query_name;
 
     $obj->parse_axt_file(
         $infile,
         {   target_taxon_id => $target_taxon_id,
-            target_name     => $target_name,
             query_taxon_id  => $query_taxon_id,
-            query_name      => $query_name,
             threshold       => $axt_threshold,
             gzip            => $gzip,
         }

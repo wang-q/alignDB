@@ -606,6 +606,15 @@ SEG: for (@segments) {
                     = sort { $ingroup_order{$a} <=> $ingroup_order{$b} } @combo;
                 my ( $tname, $qname ) = @combo;
                 print "insert $tname $qname\n";
+                $goal_obj->update_names(
+                    {   $info_of{$tname}->{taxon_id} =>
+                            $info_of{$tname}->{name},
+                        $info_of{$qname}->{taxon_id} =>
+                            $info_of{$qname}->{name},
+                        $info_of{$outgroup}->{taxon_id} =>
+                            $info_of{$outgroup}->{name},
+                    }
+                );
                 my $cur_align_id
                     = $goal_obj->add_align( $info_of{$tname}, $info_of{$qname},
                     $info_of{$outgroup}, $info_of{$outgroup}->{all_indel} );

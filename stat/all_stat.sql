@@ -10,59 +10,43 @@ GROUP BY t.taxon_id
 
 # Alignment_length
 SELECT CONCAT(vs.target_name, ' vs. ', vs.query_name), SUM(a.align_length) Alignment_length
-FROM align a, tvsq vs
-WHERE a.tvsq_id = vs.tvsq_id
-GROUP BY vs.tvsq_id
+FROM align a
+
 
 # No_of_windows
 SELECT CONCAT(vs.target_name, ' vs. ', vs.query_name), COUNT(w.isw_id) No_of_windows
-FROM indel i, isw w, align a, tvsq vs
-WHERE a.tvsq_id = vs.tvsq_id
-AND a.align_id = i.align_id
+FROM indel i, isw w, align a
+WHERE a.align_id = i.align_id
 AND i.indel_id = w.indel_id
-GROUP BY vs.tvsq_id
 
 # No_of_SNPs
 SELECT CONCAT(vs.target_name, ' vs. ', vs.query_name), SUM(a.differences) No_of_SNPs
-FROM align a, tvsq vs
-WHERE a.tvsq_id = vs.tvsq_id
-GROUP BY vs.tvsq_id
+FROM align a
 
 # No_of_Indels
 SELECT CONCAT(vs.target_name, ' vs. ', vs.query_name), COUNT(i.indel_id) No_of_Indels
-FROM indel i, align a, tvsq vs
-WHERE a.tvsq_id = vs.tvsq_id
-AND a.align_id = i.align_id
-GROUP BY vs.tvsq_id
+FROM indel i, align a
+WHERE a.align_id = i.align_id
 
 # Total Pi
 SELECT CONCAT(vs.target_name, ' vs. ', vs.query_name), (SUM(a.differences) * 1.0  / SUM(a.comparable_bases)) Pi
-FROM align a, tvsq vs
-WHERE a.tvsq_id = vs.tvsq_id
-GROUP BY vs.tvsq_id
+FROM align a
 
 # Total Pi 2
 SELECT CONCAT(vs.target_name, ' vs. ', vs.query_name), AVG(a.pi) Pi
-FROM align a, tvsq vs
-WHERE a.tvsq_id = vs.tvsq_id
-GROUP BY vs.tvsq_id
+FROM align a
 
 # Total Pi 3
 SELECT original.Name, -0.75 * log2(1- (4.0/3.0)* original.Pi) JC_Pi
 FROM
     (SELECT CONCAT(vs.target_name, ' vs. ', vs.query_name) Name, (SUM(a.differences) * 1.0 / SUM(a.comparable_bases) ) Pi
-    FROM align a, tvsq vs
-    WHERE a.tvsq_id = vs.tvsq_id
-    GROUP BY vs.tvsq_id) original
+    FROM align a) original
 
 # AVG GC%
 SELECT concat(vs.target_name, ' vs. ', vs.query_name),
        sum(a.align_length * a.align_average_gc) /
        sum(a.align_length)
-FROM align a,
-     tvsq vs
-WHERE a.tvsq_id = vs.tvsq_id
-GROUP BY vs.tvsq_id
+FROM align a
 
 #----------------------------------------------------------#
 # INDIVIDUAL STAT                                     
