@@ -110,29 +110,7 @@ if ( $combine_threshold == 0 ) {
 #----------------------------#
 # count freq
 #----------------------------#
-my $all_freq;
-{
-    my $dbh = $write_obj->dbh;
-
-    my $sql_query = q{
-        SELECT DISTINCT COUNT(q.query_id) + 1
-        FROM  query q, sequence s
-        WHERE q.seq_id = s.seq_id
-        GROUP BY s.align_id
-    };
-    my $sth = $dbh->prepare($sql_query);
-
-    my @counts;
-    $sth->execute;
-    while ( my ($count) = $sth->fetchrow_array ) {
-        push @counts, $count;
-    }
-    if ( scalar @counts > 1 ) {
-        die "Database corrupts, freqs are not consistent\n";
-    }
-
-    $all_freq = $counts[0];
-}
+my $all_freq = $write_obj->get_freq;
 
 if ( $all_freq < 3 ) {
     die "all_freq is $all_freq, are you sure this is a AlignDB::Multi DB?\n";
