@@ -112,7 +112,7 @@ if ( $combine_threshold == 0 ) {
 #----------------------------#
 my $all_freq = $write_obj->get_freq;
 
-if ( $all_freq < 3 ) {
+if ( $all_freq < 2 ) {
     die "all_freq is $all_freq, are you sure this is a AlignDB::Multi DB?\n";
 }
 
@@ -238,7 +238,7 @@ my $basic = sub {
     {    # write contents
         my $query_name = 'SNVs per 100 bp';
         my $sql_query  = q{
-            SELECT  SUM(a.align_differences) / SUM(a.align_comparables) * 100.0
+            SELECT  SUM(a.align_differences) * 1.0 / SUM(a.align_comparables) * 100.0
             FROM    align a
         };
         my %option = (

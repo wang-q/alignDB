@@ -191,7 +191,7 @@ my $basic = sub {
     {    # write contents
         my $query_name = 'SNVs per 100 bp';
         my $sql_query  = q{
-            SELECT  SUM(a.align_differences) / SUM(a.align_comparables) * 100.0
+            SELECT  SUM(a.align_differences) * 1.0 / SUM(a.align_comparables) * 100.0
             FROM    align a
         };
         my %option = (
@@ -208,7 +208,7 @@ my $basic = sub {
         my $sql_query  = q{
             SELECT -0.75 * log2( 1 - ( 4.0 / 3.0 ) * original.Pi )
             FROM (
-                SELECT SUM(a.align_differences) * 1.0 / SUM(a.align_comparables) Pi
+                SELECT AVG(a.align_pi) Pi
                 FROM align a
                 ) original
         };
