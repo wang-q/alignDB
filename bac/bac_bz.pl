@@ -327,7 +327,6 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
     print {$fh} "perl $FindBin::Bin/../extra/join_dbs.pl"
         . " --no_insert 1 --trimmed_fasta 1"
         . " --length 1000"
-        . " --reduce_end 10"
         . " --goal_db $name_str"
         . " --outgroup 0query --target 0target"
         . " --queries "
