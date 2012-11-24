@@ -678,7 +678,7 @@ sub build_seq {
 
     my $query_info = $obj->get_query_info($align_id);
     $db_info->{query}{chr_id}       = $query_info->{chr_id};
-    $db_info->{target}{chr_name}    = $target_info->{chr_name};
+    $db_info->{query}{chr_name}     = $query_info->{chr_name};
     $db_info->{query}{chr_strand}   = $query_info->{chr_strand};
     $db_info->{query}{query_strand} = $query_info->{query_strand};
 
