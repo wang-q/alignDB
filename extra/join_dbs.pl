@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
 use Getopt::Long;
 use Pod::Usage;
@@ -50,7 +51,6 @@ my $goal_db;
 
 # ref parameter
 my $length_threshold = $Config->{ref}{length_threshold};
-my $raw_fasta        = $Config->{ref}{raw_fasta};
 my $trimmed_fasta    = $Config->{ref}{trimmed_fasta};
 my $reduce_end       = $Config->{ref}{reduce_end};
 
@@ -58,6 +58,8 @@ my $no_insert       = 0;
 my $discard_distant = 0;
 
 my $crude_only = 0;
+
+my $block = 0;    # output blocked fasta
 
 # realign parameters
 my $indel_expand = $Config->{ref}{indel_expand};
@@ -82,8 +84,8 @@ GetOptions(
     'target=s'          => \$target,
     'queries=s'         => \$queries,
     'length=i'          => \$length_threshold,
+    'block'             => \$block,
     'crude_only'        => \$crude_only,
-    'raw_fasta=s'       => \$raw_fasta,
     'trimmed_fasta=s'   => \$trimmed_fasta,
     'reduce_end=i'      => \$reduce_end,
     'init_db=s'         => \$init_db,
@@ -411,22 +413,28 @@ SEG: for (@segments) {
                 mkdir $goal_db_crude, 0777
                     or die "Cannot create [$goal_db_crude] directory: $!";
             }
-            my $first_taxon_id = $info_of{ $all_names[1] }->{taxon_id};
-            my $outfile
-                = "./$goal_db_crude/"
-                . "id$first_taxon_id"
-                . "_$chr_name"
-                . "_$seg_start"
-                . "_$seg_end" . ".fas";
-            print " " x 4, "$outfile\n";
-            open my $out_fh, '>', $outfile
-                or die("Cannot open output file $outfile");
-            for my $name (@all_names) {
-                my $seq = $info_of{$name}->{seq};
-                print {$out_fh} ">", $info_of{$name}->{name}, "\n";
-                print {$out_fh} $seq, "\n";
+
+            if ( !$block ) {
+                my $first_taxon_id = $info_of{ $all_names[1] }->{taxon_id};
+                my $outfile
+                    = "./$goal_db_crude/"
+                    . "id$first_taxon_id"
+                    . "_$chr_name"
+                    . "_$seg_start"
+                    . "_$seg_end" . ".fas";
+                print " " x 4, "$outfile\n";
+                open my $out_fh, '>', $outfile;
+                write_fasta( \%info_of, \@all_names, $out_fh );
+                close $out_fh;
             }
-            close $out_fh;
+            else {
+                my $outfile = "./$goal_db_crude/" . $chr_name . ".fas";
+                print " " x 4, "$outfile\n";
+                open my $out_fh, '>>', $outfile;
+                write_fasta( \%info_of, \@all_names, $out_fh, 1 );
+                print {$out_fh} "\n";
+                close $out_fh;
+            }
 
             next SEG;
         }
@@ -437,33 +445,6 @@ SEG: for (@segments) {
         {
             print " " x 4, "start finding realign region\n";
             realign( \%info_of, \@all_names );
-        }
-
-        #----------------------------#
-        # output a raw fasta alignment for further use
-        #----------------------------#
-        if ($raw_fasta) {
-            my $goal_db_raw = "$goal_db.raw";
-            unless ( -e $goal_db_raw ) {
-                mkdir $goal_db_raw, 0777
-                    or die "Cannot create [$goal_db_raw] directory: $!";
-            }
-            my $first_taxon_id = $info_of{ $all_names[1] }->{taxon_id};
-            my $outfile
-                = "./$goal_db_raw/"
-                . "id$first_taxon_id"
-                . "_$chr_name"
-                . "_$seg_start"
-                . "_$seg_end" . ".fas";
-            print " " x 4, "$outfile\n";
-            open my $out_fh, '>', $outfile
-                or die("Cannot open output file $outfile");
-            for my $name (@all_names) {
-                my $seq = $info_of{$name}->{seq};
-                print {$out_fh} ">", $info_of{$name}->{name}, "\n";
-                print {$out_fh} $seq, "\n";
-            }
-            close $out_fh;
         }
 
         #----------------------------#
@@ -575,24 +556,30 @@ SEG: for (@segments) {
         if ($trimmed_fasta) {
             unless ( -e $goal_db ) {
                 mkdir $goal_db, 0777
-                    or die "Cannot create \"$goal_db\" directory: $!";
+                    or die "Cannot create [$goal_db] directory: $!";
             }
-            my $first_taxon_id = $info_of{ $all_names[1] }->{taxon_id};
-            my $outfile
-                = "./$goal_db/"
-                . "id$first_taxon_id"
-                . "_$chr_name"
-                . "_$seg_start"
-                . "_$seg_end" . ".fas";
-            print " " x 4, "$outfile\n";
-            open my $out_fh, '>', $outfile
-                or die("Cannot open OUT file $outfile");
-            for my $name (@all_names) {
-                my $seq = $info_of{$name}->{seq};
-                print {$out_fh} ">", $info_of{$name}->{name}, "\n";
-                print {$out_fh} $seq, "\n";
+
+            if ( !$block ) {
+                my $first_taxon_id = $info_of{ $all_names[1] }->{taxon_id};
+                my $outfile
+                    = "./$goal_db/"
+                    . "id$first_taxon_id"
+                    . "_$chr_name"
+                    . "_$seg_start"
+                    . "_$seg_end" . ".fas";
+                print " " x 4, "$outfile\n";
+                open my $out_fh, '>', $outfile;
+                write_fasta( \%info_of, \@all_names, $out_fh );
+                close $out_fh;
             }
-            close $out_fh;
+            else {
+                my $outfile = "./$goal_db/" . $chr_name . ".fas";
+                print " " x 4, "$outfile\n";
+                open my $out_fh, '>>', $outfile;
+                write_fasta( \%info_of, \@all_names, $out_fh, 1 );
+                print {$out_fh} "\n";
+                close $out_fh;
+            }
         }
 
         if ( !$no_insert ) {
@@ -677,10 +664,9 @@ sub build_seq {
     $db_info->{target}{chr_strand} = $target_info->{chr_strand};
 
     my $query_info = $obj->get_query_info($align_id);
-    $db_info->{query}{chr_id}       = $query_info->{chr_id};
-    $db_info->{query}{chr_name}     = $query_info->{chr_name};
-    $db_info->{query}{chr_strand}   = $query_info->{chr_strand};
-    $db_info->{query}{query_strand} = $query_info->{query_strand};
+    $db_info->{query}{chr_id}     = $query_info->{chr_id};
+    $db_info->{query}{chr_name}   = $query_info->{chr_name};
+    $db_info->{query}{chr_strand} = $query_info->{query_strand};
 
     ( $db_info->{target}{full_seq}, $db_info->{query}{full_seq} )
         = @{ $obj->get_seqs($align_id) };
@@ -720,6 +706,33 @@ sub build_seq {
 
     delete $db_info->{target}{full_seq};
     delete $db_info->{query}{full_seq};
+
+    return;
+}
+
+sub write_fasta {
+    my $info_of     = shift;
+    my $all_names   = shift;
+    my $fh          = shift;
+    my $full_header = shift;
+
+    for my $name ( @${all_names} ) {
+        my $name_info = $info_of->{$name};
+        if ($full_header) {
+            print {$fh} ">" . $name_info->{name};
+            print {$fh} "." . $name_info->{chr_name};
+            print {$fh} "(" . $name_info->{chr_strand} . ")";
+            print {$fh} ":" . $name_info->{chr_start};
+            print {$fh} "-" . $name_info->{chr_end};
+            print {$fh} "|species=" . $name_info->{name};
+            print {$fh} "\n";
+        }
+        else {
+            print {$fh} ">" . $name_info->{name};
+            print {$fh} "\n";
+        }
+        print {$fh} $name_info->{seq}, "\n";
+    }
 
     return;
 }
