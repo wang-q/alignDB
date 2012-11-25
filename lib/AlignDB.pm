@@ -77,15 +77,13 @@ sub _insert_align {
             align_id, align_length,
             align_comparables, align_identities, align_differences,
             align_gaps, align_ns, align_error,
-            align_pi, align_target_gc, align_average_gc,
-            align_comparable_runlist, align_indel_runlist
+            align_pi, align_target_gc, align_average_gc
         )
         VALUES (
             NULL, ?,
             ?, ?, ?,
             ?, ?, ?,
-            ?, ?, ?,
-            NULL, NULL
+            ?, ?, ?
         )
         }
     );
@@ -635,27 +633,12 @@ sub parse_axt_file {
             $second_end,   $query_strand, $align_score,
         ) = split /\s+/, $summary_line;
 
-        my $first_strand;
-        if ( $first_end > $first_start ) {
-            $first_strand = "+";
-        }
-        else {
-            $first_strand = "-";
-        }
-        my $second_strand;
-        if ( $second_end > $second_start ) {
-            $second_strand = "+";
-        }
-        else {
-            $second_strand = "-";
-        }
-
         my $target_info = {
             taxon_id   => $target_taxon_id,
             chr_name   => $first_chr,
             chr_start  => $first_start,
             chr_end    => $first_end,
-            chr_strand => $first_strand,
+            chr_strand => '+',
             seq        => $first_line,
         };
         my $query_info = {
@@ -663,7 +646,7 @@ sub parse_axt_file {
             chr_name     => $second_chr,
             chr_start    => $second_start,
             chr_end      => $second_end,
-            chr_strand   => $second_strand,
+            chr_strand   => $query_strand,
             query_strand => $query_strand,
             seq          => $second_line,
         };
@@ -804,7 +787,7 @@ sub add_align {
             INSERT INTO query (
                 query_id, seq_id, query_strand, query_position
             )
-            VALUES ( NULL, ?, ?, 0 )
+            VALUES ( NULL, ?, ?, 1 )
             }
         );
         $query_info->{align_id} = $align_id;
@@ -1178,7 +1161,8 @@ sub get_sets {
 }
 
 sub get_chr_id_hash {
-    my ( $self, $taxon_id ) = @_;
+    my $self     = shift;
+    my $taxon_id = shift;
 
     my %chr_id = ();
     my $dbh    = $self->dbh;
@@ -1188,7 +1172,6 @@ sub get_chr_id_hash {
     while ( my $ref = $chromosome->fetchrow_hashref ) {
         $chr_id{ $ref->{chr_name} } = $ref->{chr_id};
     }
-
     $chromosome->finish;
 
     return \%chr_id;

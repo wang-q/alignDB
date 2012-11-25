@@ -39,9 +39,8 @@ my $gff_file = '';
 my $dir_fa           = '/home/wangq/Date/Alignment/yeast6/';
 my $length_threshold = $Config->{ref}{length_threshold};
 
-# input is galaxy style blocked fasta
-my $block;
-my $target_id;    # taxon id of target
+my $block;         # input is galaxy style blocked fasta
+my $file_id_of;    # taxon_id-name mapping file
 
 # running tasks
 my $run = "common";
@@ -70,7 +69,7 @@ GetOptions(
     'f|fasta_dir=s'          => \$dir_fa,
     'e|ensembl=s'            => \$ensembl_db,
     'gff_file=s'             => \$gff_file,
-    'id=i'                   => \$target_id,
+    'id|id_of=s'             => \$file_id_of,
     'block'                  => \$block,
     'parallel=i'             => \$parallel,
     'batch=i'                => \$batch_number,
@@ -128,8 +127,8 @@ my $dispatch = {
         . " --length=$length_threshold"
         . " --parallel=$parallel"
         . " --batch=$batch_number"
-        . ( $block     ? " --block"         : "" )
-        . ( $target_id ? " --id $target_id" : "" ),
+        . " --id $file_id_of"
+        . ( $block ? " --block" : "" ),
     2  => undef,
     3  => undef,
     10 => "perl $FindBin::Bin/../init/insert_gc.pl"

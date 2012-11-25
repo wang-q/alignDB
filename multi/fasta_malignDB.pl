@@ -42,9 +42,8 @@ my $db       = $Config->{database}{db};
 my $dir_fa           = '';
 my $length_thredhold = 5000;
 
-# input is galaxy style blocked fasta
-my $block;
-my $target_id;    # taxon id of target
+my $block;         # input is galaxy style blocked fasta
+my $file_id_of;    # taxon_id-name mapping file
 
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
@@ -52,7 +51,7 @@ my $parallel = $Config->{generate}{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{generate}{batch};
 
-my $gzip;         # open .fas.gz
+my $gzip;          # open .fas.gz
 
 my $help = 0;
 my $man  = 0;
@@ -67,7 +66,7 @@ GetOptions(
     'p|password=s'  => \$password,
     'l|lt|length=i' => \$length_thredhold,
     'dir=s'         => \$dir_fa,
-    'id=i'          => \$target_id,
+    'id|id_of=s'    => \$file_id_of,
     'block'         => \$block,
     'parallel=i'    => \$parallel,
     'batch=i'       => \$batch_number,
@@ -92,6 +91,17 @@ system "perl $FindBin::Bin/../init/init_alignDB.pl"
 
     my $index = "CREATE INDEX indel_isw_id_FK ON isw ( isw_indel_id );";
     $obj->execute_sql($index);
+}
+
+my $id_of = {};
+{
+    open my $fh, '<', $file_id_of;
+    while (<$fh>) {
+        chomp;
+        my ( $id, $name ) = split /,/;
+        $id_of->{$name} = $id;
+    }
+    close $fh;
 }
 
 #----------------------------------------------------------#
@@ -129,7 +139,6 @@ my $worker = sub {
     my $opt = shift;
 
     my @infiles = @$job;
-    my $block   = $opt->{block};
 
     my $obj = AlignDB::Multi->new(
         mysql  => "$db:$server",
@@ -139,12 +148,8 @@ my $worker = sub {
 
     for my $infile (@infiles) {
         print "process " . basename($infile) . "\n";
-        if ( !$block ) {
-            $obj->parse_fasta_file( $infile, $opt );
-        }
-        else {
-            $obj->parse_block_fasta_file( $infile, $opt );
-        }
+        $obj->parse_block_fasta_file( $infile, $opt );
+        print "Done.\n\n";
     }
 };
 
@@ -156,8 +161,7 @@ my $run = AlignDB::Run->new(
     jobs     => \@jobs,
     code     => $worker,
     opt      => {
-        block     => $block,
-        id        => $target_id,
+        id_of     => $id_of,
         threshold => $length_thredhold,
         gzip      => $gzip,
     },
@@ -212,10 +216,6 @@ __END__
         --length            threshold of alignment length
         --parallel          run in parallel mode
 
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
-
 =cut
 
+perl ~/Scripts/alignDB/multi/fasta_malignDB.pl -d S288CvsRM11Spar --block --id ~/data/alignment/yeast_combine/id2name.csv --dir ~/data/alignment/yeast_combine/S288CvsRM11Spar_mafft --length 5000 --paralle 1

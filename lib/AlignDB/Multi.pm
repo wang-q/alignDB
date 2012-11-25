@@ -14,150 +14,11 @@ use AlignDB::Util qw(:all);
 
 extends qw(AlignDB);
 
-sub parse_fasta_file {
-    my $self   = shift;
-    my $infile = shift;
-    my $opt    = shift;
-
-    my $threshold = $opt->{threshold};
-    my $gzip      = $opt->{gzip};
-
-    # id3702_chr1_10023790_10038033.fas
-    my $fasta_qr = qr{
-        id(\d+)         # target taxon id
-        [\_\-]          # spacer
-        ((?:chr)?\w+)   # target chr name
-        [\_\-]          # spacer
-        (\d+)           # target chr start
-        [\_\-]          # spacer
-        (\d+)           # target chr end
-        \.fa            # suffix
-    }xi;
-    $infile =~ $fasta_qr;
-
-    my $target_info = {
-        taxon_id  => $1,
-        chr_name  => $2,
-        chr_start => $3,
-        chr_end   => $4,
-    };
-
-    # read in fasta file
-    my $in_fh;
-    if ( !$gzip ) {
-        open $in_fh, '<', $infile;
-    }
-    else {
-        open $in_fh, '<:via(gzip)', $infile;
-    }
-    my $content = do { local $/; <$in_fh> };
-    close $in_fh;
-
-    my @names = ( $content =~ />(\w+)\r?\n/g );
-    my @seqs  = ( $content =~ />\w+\r?\n([\-\w]+)\r?\n/g );
-
-    next if length $seqs[0] < $threshold;
-    $self->add_align( $target_info, \@names, \@seqs );
-
-    return;
-}
-
-sub parse_block_fasta_file {
-    my $self   = shift;
-    my $infile = shift;
-    my $opt    = shift;
-
-    my $threshold = $opt->{threshold};
-    my $id        = $opt->{id};
-    my $gzip      = $opt->{gzip};
-
-    my $in_fh;
-    if ( !$gzip ) {
-        open $in_fh, '<', $infile;
-    }
-    else {
-        open $in_fh, '<:via(gzip)', $infile;
-    }
-    my $content = '';
-    while ( my $line = <$in_fh> ) {
-        if ( $line =~ /^\s+$/ and $content =~ /\S/ ) {
-            my @lines = grep {/\S/} split /\n/, $content;
-            $content = '';
-            die "headers not equal to seqs\n" if @lines % 2;
-            die "Two few lines in block\n" if @lines < 4;
-
-            my ( @seqs, @names );
-            while (@lines) {
-                my $name = shift @lines;
-                $name =~ s/^\>//;
-                chomp $name;
-                my $seq = shift @lines;
-                chomp $seq;
-                push @names, $name;
-                push @seqs,  $seq;
-            }
-
-            my @short_names;
-            for my $name (@names) {
-                my ($short) = split /\./, $name;
-                push @short_names, $short;
-            }
-
-            # S288C.chrI(1):27070-29557|species=S288C
-            my $target_line = $names[1];
-            my $head_qr     = qr{
-                ([\w_]+)        # target name
-                [\.]            # spacer
-                ((?:chr)?\w+)   # target chr name
-                \((.)\)         # strand
-                [\:]            # spacer
-                (\d+)           # target chr start
-                [\_\-]          # spacer
-                (\d+)           # target chr end
-            }xi;
-            $target_line =~ $head_qr;
-
-            my $target_info = {
-                name       => $1,
-                chr_name   => $2,
-                chr_strand => $3,
-                chr_start  => $4,
-                chr_end    => $5,
-            };
-            if ($id) {
-                $target_info->{taxon_id} = $id;
-            }
-
-            next if length $seqs[0] < $threshold;
-            $self->add_align( $target_info, \@names, \@seqs );
-        }
-        else {
-            $content .= $line;
-        }
-    }
-    close $in_fh;
-
-    return;
-}
-
 sub add_align {
-    my $self        = shift;
-    my $target_info = shift;
-    my $names       = shift;
-    my $seq_refs    = shift;
-
-    my $target_taxon_id  = $target_info->{taxon_id};
-    my $target_chr_name  = $target_info->{chr_name};
-    my $target_chr_start = $target_info->{chr_start};
-    my $target_chr_end   = $target_info->{chr_end};
-
-    unless ($target_taxon_id) {
-        warn "Target taxon id not set\n";
-        return;
-    }
-
-    my $target_chr_id
-        = $self->get_chr_id_hash($target_taxon_id)->{$target_chr_name};
+    my $self     = shift;
+    my $info_of  = shift;
+    my $names    = shift;
+    my $seq_refs = shift;
 
     # Get database handle
     my $dbh = $self->dbh;
@@ -168,12 +29,14 @@ sub add_align {
             align_id, 
             align_length, align_comparables, align_identities,
             align_differences, align_gaps, align_ns,
-            align_error, align_pi
+            align_error, align_pi,
+            align_target_gc, align_average_gc
         )
         VALUES (
             NULL,
             ?, ?, ?,
             ?, ?, ?,
+            ?, ?,
             ?, ?
         )
         }
@@ -206,9 +69,8 @@ sub add_align {
     {
         my @seq_infos;    # store info of each seqs
         for my $i ( 0 .. $seq_count - 1 ) {
-            my $seq_info = {};
+            my $seq_info = $info_of->{ $names[$i] };
             $seq_info->{align_id} = $align_id;
-            $seq_info->{name}     = $names[$i];
             $seq_info->{seq}      = $seqs[$i];
             $seq_info->{length}   = $align_length;
             $seq_info->{gc}       = calc_gc_ratio( $seqs[$i] );
@@ -244,10 +106,6 @@ sub add_align {
                 VALUES ( NULL, ? )
                 }
             );
-            $seq_infos[1]->{chr_id}     = $target_chr_id;
-            $seq_infos[1]->{chr_start}  = $target_chr_start;
-            $seq_infos[1]->{chr_end}    = $target_chr_end;
-            $seq_infos[1]->{chr_strand} = '+';
             my $target_seq_id = $self->_insert_seq( $seq_infos[1] );
             $target_insert->execute($target_seq_id);
             $target_insert->finish;
@@ -256,13 +114,17 @@ sub add_align {
         {    # and queries
             my $query_insert = $dbh->prepare(
                 q{
-                INSERT INTO query ( query_id, seq_id, query_strand )
-                VALUES ( NULL, ?, ? )
+                INSERT INTO query (
+                    query_id, seq_id, query_strand, query_position
+                )
+                VALUES ( NULL, ?, ?, ? )
                 }
             );
             for my $i ( 2 .. $seq_count - 1 ) {
                 my $query_seq_id = $self->_insert_seq( $seq_infos[$i] );
-                $query_insert->execute( $query_seq_id, '+', );
+                $query_insert->execute( $query_seq_id,
+                    $seq_infos[$i]->{chr_strand},
+                    $i - 1 );
             }
             $query_insert->finish;
         }
@@ -513,6 +375,93 @@ sub add_align {
             }
         }
     }
+
+    return;
+}
+
+sub parse_block_fasta_file {
+    my $self   = shift;
+    my $infile = shift;
+    my $opt    = shift;
+
+    my $id_of     = $opt->{id_of};
+    my $threshold = $opt->{threshold};
+    my $gzip      = $opt->{gzip};
+
+    my $in_fh;
+    if ( !$gzip ) {
+        open $in_fh, '<', $infile;
+    }
+    else {
+        open $in_fh, '<:via(gzip)', $infile;
+    }
+    my $content = '';
+    while ( my $line = <$in_fh> ) {
+        if ( $line =~ /^\s+$/ and $content =~ /\S/ ) {
+            my @lines = grep {/\S/} split /\n/, $content;
+            $content = '';
+            die "headers not equal to seqs\n" if @lines % 2;
+            die "Two few lines in block\n" if @lines < 4;
+
+            my ( @headers, @seqs );
+            while (@lines) {
+                my $header = shift @lines;
+                $header =~ s/^\>//;
+                chomp $header;
+                my $seq = shift @lines;
+                chomp $seq;
+                push @headers, $header;
+                push @seqs,    $seq;
+            }
+
+            next if length $seqs[0] < $threshold;
+
+            # S288C.chrI(1):27070-29557|species=S288C
+            my $head_qr = qr{
+                ([\w_]+)        # name
+                [\.]            # spacer
+                ((?:chr)?\w+)   # chr name
+                \((.)\)         # strand
+                [\:]            # spacer
+                (\d+)           # chr start
+                [\_\-]          # spacer
+                (\d+)           # chr end
+            }xi;
+
+            #S288C:
+            #  chr_end: 667886
+            #  chr_id: 265
+            #  chr_name: chrIV
+            #  chr_start: 652404
+            #  chr_strand: +
+            #  name: S288C
+            #  taxon_id: 4932
+            my $info_of = {};
+            my @names;
+            for my $header (@headers) {
+                $header =~ $head_qr;
+                my $name = $1;
+                push @names, $name;
+                $info_of->{$name} = {
+                    chr_name   => $2,
+                    chr_strand => $3,
+                    chr_start  => $4,
+                    chr_end    => $5,
+                };
+                $info_of->{$name}{name}     = $name;
+                $info_of->{$name}{taxon_id} = $id_of->{$name};
+                $info_of->{$name}{chr_id}
+                    = $self->get_chr_id_hash( $info_of->{$name}{taxon_id} )
+                    ->{ $info_of->{$name}{chr_name} };
+            }
+
+            $self->add_align( $info_of, \@names, \@seqs );
+        }
+        else {
+            $content .= $line;
+        }
+    }
+    close $in_fh;
 
     return;
 }
