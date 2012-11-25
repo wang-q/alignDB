@@ -416,16 +416,16 @@ sub parse_block_fasta_file {
 
             next if length $seqs[0] < $threshold;
 
-            # S288C.chrI(1):27070-29557|species=S288C
+            # S288C.chrI(+):27070-29557|species=S288C
             my $head_qr = qr{
-                ([\w_]+)        # name
-                [\.]            # spacer
-                ((?:chr)?\w+)   # chr name
-                \((.+)\)         # strand
-                [\:]            # spacer
-                (\d+)           # chr start
-                [\_\-]          # spacer
-                (\d+)           # chr end
+                ([\w_]+)            # name
+                [\.]                # spacer
+                ((?:chr)?[\w-]+)    # chr name
+                \((.+)\)            # strand
+                [\:]                # spacer
+                (\d+)               # chr start
+                [\_\-]              # spacer
+                (\d+)               # chr end
             }xi;
 
             #S288C:
