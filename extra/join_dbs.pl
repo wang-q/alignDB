@@ -882,7 +882,22 @@ SEG: for (@segments) {
     }
 }
 
+if ( !$no_insert and $init_db and $goal_db ) {
+    my $cmd
+        = "perl $FindBin::Bin/../init/update_isw_indel_id.pl"
+        . " -s=$server"
+        . " --port=$port"
+        . " -d=$goal_db"
+        . " -u=$username"
+        . " --password=$password";
+    print "\n", "=" x 12, "CMD", "=" x 15, "\n";
+    print $cmd , "\n";
+    print "=" x 30, "\n";
+    system($cmd);
+}
+
 $stopwatch->end_message;
+
 
 # store program running meta info to database
 END {
@@ -935,4 +950,4 @@ $ perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11,S288CvsYJM789 \
 --goal_db S288CvsThree --no_insert=1 --trimmed_fasta=1 \
 --outgroup 0query --target 0target --queries 1query,2query
 
-$ perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar --outgroup 0query --target 0target --queries 1query
+$ perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar --outgroup 0query --target 0target --queries 1query --length 5000
