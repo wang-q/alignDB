@@ -144,8 +144,15 @@ else {
             my @chunks      = reverse apportion( scalar @to_be_combs, 3 );
             my @chunks_freq = multi_slice( \@to_be_combs, @chunks );
             for my $chunk (@chunks_freq) {
-                my $name = join( '_', @{$chunk} ) . "of" . $all_freq;
-                push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
+                if ( $chunk->[0] == $chunk->[-1] ) {
+                    my $name = $chunk->[0] . "of" . $all_freq;
+                    push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
+                }
+                else {
+                    my $name = join( '_', $chunk->[0], $chunk->[-1] ) . "of"
+                        . $all_freq;
+                    push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
+                }
             }
 
             for ( $all_freq - 2, $all_freq - 1 ) {
