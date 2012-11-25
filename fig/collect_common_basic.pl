@@ -79,17 +79,17 @@ texts:
   - text: "avg-align"
     pos: I1
   - text: "File"
-    pos: L1
+    pos: J1
 [% FOREACH item IN data -%]
   - text: [% item.name %]
     pos: A[% loop.index + 2%]
   - text: [% item.file %]
-    pos: L[% loop.index + 2%]
+    pos: J[% loop.index + 2%]
 [% END -%]
 borders:
-  - range: A1:L1
+  - range: A1:J1
     top: 1
-  - range: A1:L1
+  - range: A1:J1
     bottom: 1
 ranges:
 [% FOREACH item IN data -%]
@@ -120,4 +120,8 @@ print "$output\n";
 
 system("perl $FindBin::Bin/./excel_table.pl -i $output");
 
-__DATA__
+__END__
+
+=head1 SYNOPSIS
+
+perl collect_common_basic.pl -d d:\wq\GC\autochart\121125_saccharomyces\
