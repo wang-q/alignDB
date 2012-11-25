@@ -195,7 +195,6 @@ sub build_seq {
 sub pseudo_align {
     my $db_info_of = shift;
     my $all_dbs    = shift;
-    my $all_names  = shift;
 
     my $pos_count = 0;
     while (1) {
@@ -285,7 +284,7 @@ sub realign {
     #   expand indel by a range of $indel_expand
 
     my %indel_sets;
-    for (@$all_names) {
+    for ( @{$all_names} ) {
         $indel_sets{$_} = find_indel_set( $info_of->{$_}{seq}, $indel_expand );
     }
 
@@ -393,9 +392,10 @@ sub trim_hf {
 #   target G----C
 #   query  G----C
 sub trim_outgroup {
-    my $info_of   = shift;
-    my $all_names = shift;
-    my $outgroup  = shift;
+    my $info_of       = shift;
+    my $all_names     = shift;
+    my $ingroup_names = shift;
+    my $outgroup      = shift;
 
     # add raw_seqs to outgroup info hash
     # it will be used in $goal_obj->add_align
@@ -404,8 +404,8 @@ sub trim_outgroup {
     # don't expand indel set here
     # last is outgroup
     my %indel_sets;
-    for my $i ( 0 .. @{$all_names} - 2 ) {
-        my $name = $all_names->[$i];
+    for my $i ( 0 .. @{$ingroup_names} - 1 ) {
+        my $name = $ingroup_names->[$i];
         $indel_sets{$name} = find_indel_set( $info_of->{$name}{seq} );
     }
 
@@ -426,7 +426,7 @@ sub trim_outgroup {
     for ( reverse $trim_region->spans ) {
         my $seg_start = $_->[0];
         my $seg_end   = $_->[1];
-        for (@$all_names) {
+        for ( @{$all_names} ) {
             substr(
                 $info_of->{$_}{seq},
                 $seg_start - 1,
@@ -614,9 +614,9 @@ if ( !$no_insert and $init_db and $goal_db ) {
 }
 
 #----------------------------------------------------------#
-# Init objects
+# dbs, names
 #----------------------------------------------------------#
-my ( @all_dbs, @all_names );
+my ( @all_dbs, @all_names, @ingroup_names, $target_db );
 {
     @all_dbs = split ",", $dbs;
     my @queries = split ",", $queries;
@@ -633,26 +633,22 @@ my ( @all_dbs, @all_names );
     elsif ( !scalar @queries ) {
         die "Queries not defined\n";
     }
+
     @all_names = ( $target, @queries, $outgroup );
+    @ingroup_names = ( $target, @queries );
+
+    $target =~ /^(\d+)(.+)/;
+    $target_db = $all_dbs[$1];
 }
+
+#----------------------------------------------------------#
+# Start
+#----------------------------------------------------------#
 
 #----------------------------#
 # info hash
 #----------------------------#
 my $db_info_of = build_db_info( $server, $username, $password, \@all_dbs );
-
-my $target_db;
-{
-    $target =~ /^(\d+)(.+)/;
-    $target_db = $all_dbs[$1];
-}
-
-my @ingroup_names = @all_names;
-pop @ingroup_names;
-
-#----------------------------------------------------------#
-# Start
-#----------------------------------------------------------#
 
 #----------------------------#
 # build intersect chromosome set
@@ -747,23 +743,25 @@ SEG: for (@segments) {
             }
 
             if ( !$block ) {
-                my $first_taxon_id = $info_of{ $all_names[0] }->{taxon_id};
+                my $target_taxon_id = $info_of{$target}->{taxon_id};
                 my $outfile
                     = "./$goal_db_crude/"
-                    . "id$first_taxon_id"
+                    . "id$target_taxon_id"
                     . "_$chr_name"
                     . "_$seg_start"
                     . "_$seg_end" . ".fas";
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>', $outfile;
-                write_fasta( \%info_of, \@all_names, $out_fh, $full_header );
+                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
+                    $out_fh, $full_header );
                 close $out_fh;
             }
             else {
                 my $outfile = "./$goal_db_crude/" . $chr_name . ".fas";
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>>', $outfile;
-                write_fasta( \%info_of, \@all_names, $out_fh, 1 );
+                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
+                    $out_fh, 1 );
                 print {$out_fh} "\n";
                 close $out_fh;
             }
@@ -787,7 +785,7 @@ SEG: for (@segments) {
         #   target G----C
         #   query  G----C
         {
-            trim_outgroup( \%info_of, \@all_names, $outgroup );
+            trim_outgroup( \%info_of, \@all_names, \@ingroup_names, $outgroup );
         }
 
         #----------------------------#
@@ -819,23 +817,25 @@ SEG: for (@segments) {
             }
 
             if ( !$block ) {
-                my $first_taxon_id = $info_of{ $all_names[0] }->{taxon_id};
+                my $target_taxon_id = $info_of{$target}->{taxon_id};
                 my $outfile
                     = "./$goal_db/"
-                    . "id$first_taxon_id"
+                    . "id$target_taxon_id"
                     . "_$chr_name"
                     . "_$seg_start"
                     . "_$seg_end" . ".fas";
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>', $outfile;
-                write_fasta( \%info_of, \@all_names, $out_fh, $full_header );
+                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
+                    $out_fh, $full_header );
                 close $out_fh;
             }
             else {
                 my $outfile = "./$goal_db/" . $chr_name . ".fas";
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>>', $outfile;
-                write_fasta( \%info_of, \@all_names, $out_fh, 1 );
+                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
+                    $out_fh, 1 );
                 print {$out_fh} "\n";
                 close $out_fh;
             }
