@@ -551,8 +551,8 @@ my $no_insert = 0;
 
 my $crude_only = 0;
 
-my $block       = 0;    # output blocked fasta
-my $full_header = 0;    # output full header
+my $block         = 0;    # output blocked fasta
+my $simple_header = 0;    # output simple header
 
 # realign parameters
 my $indel_expand = $Config->{ref}{indel_expand};
@@ -578,7 +578,7 @@ GetOptions(
     'queries=s'       => \$queries,
     'length=i'        => \$length_threshold,
     'block'           => \$block,
-    'full_header'     => \$full_header,
+    'simple_header'   => \$simple_header,
     'crude_only'      => \$crude_only,
     'trimmed_fasta=s' => \$trimmed_fasta,
     'init_db=s'       => \$init_db,
@@ -753,7 +753,7 @@ SEG: for (@segments) {
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>', $outfile;
                 write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
-                    $out_fh, $full_header );
+                    $out_fh, $simple_header );
                 close $out_fh;
             }
             else {
@@ -827,7 +827,7 @@ SEG: for (@segments) {
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>', $outfile;
                 write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
-                    $out_fh, $full_header );
+                    $out_fh, $simple_header );
                 close $out_fh;
             }
             else {
