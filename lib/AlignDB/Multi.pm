@@ -179,20 +179,6 @@ sub add_align {
         }
     );
 
-    my $align_update_sql = $dbh->prepare(
-        q{
-        UPDATE align
-        SET align_indels = ?,
-            align_target_gc = ?,
-            align_average_gc = ?,
-            align_comparable_runlist = ?,
-            align_indel_runlist = ?
-        WHERE align_id = ?
-        }
-    );
-    my ( $align_indels, $align_target_gc, $align_average_gc,
-        $align_comparable_runlist, $align_indel_runlist );
-
     my @names     = @{$names};
     my @seqs      = @{$seq_refs};
     my $seq_count = scalar @{$names};
@@ -204,14 +190,12 @@ sub add_align {
         }
     }
 
-    $align_target_gc  = calc_gc_ratio( $seqs[1] );
-    $align_average_gc = calc_gc_ratio( @seqs[ 1 .. $#seqs ] );
-
-    my $align_stat = multi_seq_stat(@seqs);
+    my $align_stat = multi_seq_stat( @seqs[ 1 .. $#seqs ] );
     $align_insert_sql->execute(
         $align_stat->[0], $align_stat->[1], $align_stat->[2],
         $align_stat->[3], $align_stat->[4], $align_stat->[5],
-        $align_stat->[6], $align_stat->[7]
+        $align_stat->[6], $align_stat->[7], $align_stat->[8],
+        $align_stat->[9],
     );
     $align_insert_sql->finish;
     my $align_id = $self->last_insert_id;
@@ -237,73 +221,79 @@ sub add_align {
             push @seq_infos, $seq_info;
         }
 
-        # ref
-        my $ref_insert = $dbh->prepare(
-            q{
-            INSERT INTO reference (
-                ref_id, seq_id, ref_raw_seq, ref_complex_indel
-            )
-            VALUES (
-                NULL, ?, ?, ?
-            )
-            }
-        );
-        my $ref_seq_id = $self->_insert_seq( $seq_infos[0] );
-        $ref_insert->execute( $ref_seq_id, $seq_infos[0]->{seq}, '-' );
-        $ref_insert->finish;
-
-        # target
-        my $target_insert = $dbh->prepare(
-            q{
-            INSERT INTO target ( target_id, seq_id )
-            VALUES ( NULL, ? )
-            }
-        );
-        $seq_infos[1]->{chr_id}     = $target_chr_id;
-        $seq_infos[1]->{chr_start}  = $target_chr_start;
-        $seq_infos[1]->{chr_end}    = $target_chr_end;
-        $seq_infos[1]->{chr_strand} = '+';
-        my $target_seq_id = $self->_insert_seq( $seq_infos[1] );
-        $target_insert->execute($target_seq_id);
-        $target_insert->finish;
-
-        # and queries
-        my $query_insert = $dbh->prepare(
-            q{
-            INSERT INTO query ( query_id, seq_id, query_strand )
-            VALUES ( NULL, ?, ? )
-            }
-        );
-        for my $i ( 2 .. $seq_count - 1 ) {
-            my $query_seq_id = $self->_insert_seq( $seq_infos[$i] );
-            $query_insert->execute( $query_seq_id, '+', );
+        {    # ref
+            my $ref_insert = $dbh->prepare(
+                q{
+                INSERT INTO reference (
+                    ref_id, seq_id, ref_raw_seq, ref_complex_indel
+                )
+                VALUES (
+                    NULL, ?, ?, ?
+                )
+                }
+            );
+            my $ref_seq_id = $self->_insert_seq( $seq_infos[0] );
+            $ref_insert->execute( $ref_seq_id, $seq_infos[0]->{seq}, '-' );
+            $ref_insert->finish;
         }
-        $query_insert->finish;
+
+        {    # target
+            my $target_insert = $dbh->prepare(
+                q{
+                INSERT INTO target ( target_id, seq_id )
+                VALUES ( NULL, ? )
+                }
+            );
+            $seq_infos[1]->{chr_id}     = $target_chr_id;
+            $seq_infos[1]->{chr_start}  = $target_chr_start;
+            $seq_infos[1]->{chr_end}    = $target_chr_end;
+            $seq_infos[1]->{chr_strand} = '+';
+            my $target_seq_id = $self->_insert_seq( $seq_infos[1] );
+            $target_insert->execute($target_seq_id);
+            $target_insert->finish;
+        }
+
+        {    # and queries
+            my $query_insert = $dbh->prepare(
+                q{
+                INSERT INTO query ( query_id, seq_id, query_strand )
+                VALUES ( NULL, ?, ? )
+                }
+            );
+            for my $i ( 2 .. $seq_count - 1 ) {
+                my $query_seq_id = $self->_insert_seq( $seq_infos[$i] );
+                $query_insert->execute( $query_seq_id, '+', );
+            }
+            $query_insert->finish;
+        }
     }
 
     # find indel
-    my $indel_set = AlignDB::IntSpan->new;
-    my $reference = shift @seqs;
-    for my $cur_line (@seqs) {
-        my $cur_indel_set = find_indel_set($cur_line);
-        $indel_set->merge($cur_indel_set);
+    my $indel_set      = AlignDB::IntSpan->new;
+    my $align_set      = AlignDB::IntSpan->new("1-$align_length");
+    my $comparable_set = AlignDB::IntSpan->new;
+    {
+        for my $cur_line ( @seqs[ 1 .. $#seqs ] ) {
+            my $cur_indel_set = find_indel_set($cur_line);
+            $indel_set->merge($cur_indel_set);
+        }
+        $comparable_set = $align_set->diff($indel_set);
+
+        my $align_update_sql = $dbh->prepare(
+            q{
+            UPDATE align
+            SET align_indels = ?,
+                align_comparable_runlist = ?,
+                align_indel_runlist = ?
+            WHERE align_id = ?
+            }
+        );
+        $align_update_sql->execute( scalar $indel_set->spans,
+            $comparable_set->runlist, $indel_set->runlist, $align_id );
     }
-    unshift @seqs, $reference;
-
-    my $align_set = AlignDB::IntSpan->new("1-$align_length");
-
-    my @indel_spans = $indel_set->spans;
-    $align_indels = scalar @indel_spans;
-    my $comparable_set = $align_set->diff($indel_set);
-    $align_indel_runlist      = $indel_set->runlist;
-    $align_comparable_runlist = $comparable_set->runlist;
-
-    $align_update_sql->execute( $align_indels, $align_target_gc,
-        $align_average_gc, $align_comparable_runlist, $align_indel_runlist,
-        $align_id );
 
     # insert indels
-    if ( $align_indels > 0 ) {
+    if ( scalar $indel_set->spans > 0 ) {
         my $indel_insert_sql = $dbh->prepare(
             q{
             INSERT INTO indel (
@@ -322,7 +312,7 @@ sub add_align {
         );
 
         my $prev_indel_id = 0;
-        for my $cur_indel (@indel_spans) {
+        for my $cur_indel ( $indel_set->spans ) {
             my ( $indel_start, $indel_end ) = @{$cur_indel};
             my $indel_length = $indel_end - $indel_start + 1;
 
@@ -364,7 +354,7 @@ sub add_align {
                     $indel_type = 'D';
                 }
                 else {
-                    die $cur_indel;
+                    croak "indel error $cur_indel\n";
                 }
             }
             my $indel_frequency = 0;
@@ -402,7 +392,7 @@ sub add_align {
     }
 
     #intevals
-    if ( $align_indels > 1 ) {
+    if ( scalar $indel_set->spans > 1 ) {
         my $fetch_indel_id_sql = $dbh->prepare(
             q{
             SELECT indel_id, prev_indel_id
@@ -474,11 +464,11 @@ sub add_align {
                         ( substr $cur_line, $isw_start - 1, $isw_length );
                 }
                 my $isw_ref_seq    = shift @isw_seq;
-                my $isw_average_gc = &calc_gc_ratio(@isw_seq);
-                my $isw_target_gc  = &calc_gc_ratio( $isw_seq[0] );
                 my $isw_stat       = multi_seq_stat(@isw_seq);
                 my $isw_difference = $isw_stat->[3];
                 my $isw_pi         = $isw_stat->[7];
+                my $isw_target_gc  = $isw_stat->[8];
+                my $isw_average_gc = $isw_stat->[9];
 
                 my $isw_indel_id;
                 if ( $isw_type eq 'L' ) {
@@ -1007,7 +997,7 @@ sub _D_indels {
     my ( $ref_seq, $first_seq, $second_seq ) = @_;
 
     my $length = length $ref_seq;
-    my ( $d1, $d2, $dc ) = &ref_pair_D( $ref_seq, $first_seq, $second_seq );
+    my ( $d1, $d2, $dc ) = ref_pair_D( $ref_seq, $first_seq, $second_seq );
     for ( $d1, $d2, $dc ) {
         $_ *= $length;
     }
@@ -1035,7 +1025,7 @@ sub _two_group_D {
     for my $g1_side_seq (@g1_seqs) {
         for my $g2_side_seq (@g2_seqs) {
             my ( $di, $dn, $dc )
-                = &_D_indels( $ref_seq, $g1_side_seq, $g2_side_seq );
+                = _D_indels( $ref_seq, $g1_side_seq, $g2_side_seq );
             push @d1, $di;
             push @d2, $dn;
             push @dc, $dc;
@@ -1049,7 +1039,7 @@ sub _two_group_D {
         my $j = $i + 1;
         while ( $g1_seqs[$j] ) {
             my ( $d1, $d2, $dc )
-                = &_D_indels( $ref_seq, $g1_seqs[$i], $g1_seqs[$j] );
+                = _D_indels( $ref_seq, $g1_seqs[$i], $g1_seqs[$j] );
             push @db11, ( $d1 + $d2 );
             push @dc, $dc;
             $j++;
@@ -1061,7 +1051,7 @@ sub _two_group_D {
         my $j = $i + 1;
         while ( $g2_seqs[$j] ) {
             my ( $d1, $d2, $dc )
-                = &_D_indels( $ref_seq, $g2_seqs[$i], $g2_seqs[$j] );
+                = _D_indels( $ref_seq, $g2_seqs[$i], $g2_seqs[$j] );
             push @db22, ( $d1 + $d2 );
             push @dc, $dc;
             $j++;
