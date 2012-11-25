@@ -421,7 +421,7 @@ sub parse_block_fasta_file {
                 ([\w_]+)        # name
                 [\.]            # spacer
                 ((?:chr)?\w+)   # chr name
-                \((.)\)         # strand
+                \((.+)\)         # strand
                 [\:]            # spacer
                 (\d+)           # chr start
                 [\_\-]          # spacer
@@ -448,6 +448,13 @@ sub parse_block_fasta_file {
                     chr_start  => $4,
                     chr_end    => $5,
                 };
+                if ( $info_of->{$name}{chr_strand} eq '1' ) {
+                    $info_of->{$name}{chr_strand} = '+';
+                }
+                elsif ( $info_of->{$name}{chr_strand} eq '-1' ) {
+                    $info_of->{$name}{chr_strand} = '-';
+                }
+
                 $info_of->{$name}{name}     = $name;
                 $info_of->{$name}{taxon_id} = $id_of->{$name};
                 $info_of->{$name}{chr_id}
