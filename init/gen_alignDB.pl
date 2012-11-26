@@ -51,7 +51,6 @@ my $query  = $query_taxon_id . "," . $query_name;      # query sequence
 # program parameter
 my $axt_threshold
     = $Config->{generate}{axt_threshold};    # legnth threshold of align
-my $insert_dG = $Config->{generate}{insert_dG};    # dG
 
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
@@ -73,7 +72,6 @@ GetOptions(
     'target=s'     => \$target,
     'query=s'      => \$query,
     'length=i'     => \$axt_threshold,
-    'insert_dG=s'  => \$insert_dG,
     'parallel=i'   => \$parallel,
     'gzip'         => \$gzip,
 ) or pod2usage(2);
@@ -127,7 +125,6 @@ my $worker = sub {
         mysql     => "$db:$server",
         user      => $username,
         passwd    => $password,
-        insert_dG => $insert_dG,
     );
 
     my ( $target_taxon_id, ) = split ",", $target;
@@ -195,7 +192,6 @@ __END__
         --target            "target_taxon_id,target_name"
         --query             "query_taxon_id,query_name"
         --length            threshold of alignment length
-        --insert_dG         do deltaG related processes
         --parallel          run in parallel mode
 
 =cut

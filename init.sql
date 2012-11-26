@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     11/26/2012 4:59:33 PM                        */
+/* Created on:     11/26/2012 9:56:15 PM                        */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -299,7 +299,6 @@ create table indel
    left_extand                    int,
    right_extand                   int,
    indel_gc                       double,
-   indel_dG                       double,
    indel_occured                  char(8),
    indel_type                     char(8),
    indel_slippage                 double,
@@ -335,8 +334,6 @@ create table isw
    isw_pi                         double,
    isw_target_gc                  double,
    isw_average_gc                 double,
-   isw_target_dG                  double,
-   isw_query_dG                   double,
    isw_d_indel                    double,
    isw_d_noindel                  double,
    isw_d_complex                  double,
@@ -641,8 +638,6 @@ create table window
    window_pi                      double,
    window_target_gc               double,
    window_average_gc              double,
-   window_target_dG               double,
-   window_query_dG                double,
    window_coding                  double,
    window_repeats                 double,
    window_ns_indel                double,

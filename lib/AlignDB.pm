@@ -9,20 +9,17 @@ use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 use List::MoreUtils qw(any);
 use YAML qw(Dump Load DumpFile LoadFile);
 
-use AlignDB::DeltaG;
 use AlignDB::IntSpan;
 use AlignDB::Window;
 use AlignDB::Util qw(:all);
 
-has 'mysql'   => ( is => 'ro', isa => 'Str' );     # e.g. 'alignDB:202.119.43.5'
-has 'server'  => ( is => 'ro', isa => 'Str' );     # e.g. '202.119.43.5'
-has 'db'      => ( is => 'ro', isa => 'Str' );     # e.g. 'alignDB'
-has 'user'    => ( is => 'ro', isa => 'Str' );     # database username
-has 'passwd'  => ( is => 'ro', isa => 'Str' );     # database password
-has 'dbh'     => ( is => 'ro', isa => 'Object' );  # store database handle here
-has 'dG_calc' => ( is => 'ro', isa => 'Object' );  # dG calculator
+has 'mysql'  => ( is => 'ro', isa => 'Str' );      # e.g. 'alignDB:202.119.43.5'
+has 'server' => ( is => 'ro', isa => 'Str' );      # e.g. '202.119.43.5'
+has 'db'     => ( is => 'ro', isa => 'Str' );      # e.g. 'alignDB'
+has 'user'   => ( is => 'ro', isa => 'Str' );      # database username
+has 'passwd' => ( is => 'ro', isa => 'Str' );      # database password
+has 'dbh'    => ( is => 'ro', isa => 'Object' );   # store database handle here
 has 'window_maker' => ( is => 'ro', isa => 'Object' );   # sliding windows maker
-has 'insert_dG' => ( is => 'ro', isa => 'Bool', default => 0 );
 has 'threshold' => ( is => 'ro', isa => 'Int', default => 10_000 );
 
 has 'caching_id' => ( is => 'ro', isa => 'Int' );        # caching seqs
@@ -56,9 +53,6 @@ sub BUILD {
     $dbh = DBI->connect( "dbi:mysql:$mysql", $user, $passwd )
         or confess "Cannot connect to MySQL database at $mysql";
     $self->{dbh} = $dbh;
-
-    my $dG_calc = AlignDB::DeltaG->new;
-    $self->{dG_calc} = $dG_calc;
 
     my $window_maker = AlignDB::Window->new;
     $self->{window_maker} = $window_maker;
@@ -146,7 +140,6 @@ sub _insert_isw {
             isw_start, isw_end, isw_length, 
             isw_type, isw_distance, isw_density,
             isw_pi, isw_target_gc, isw_average_gc,
-            isw_target_dG, isw_query_dG,
             isw_d_indel, isw_d_noindel, isw_d_complex
         )
         VALUES (
@@ -154,7 +147,6 @@ sub _insert_isw {
             ?, ?, ?,
             ?, ?, ?,
             ?, ?, ?,
-            ?, ?,
             NULL, NULL, NULL
         )
         }
@@ -211,18 +203,12 @@ sub _insert_isw {
             elsif ( $isw->{type} eq 'S' ) {
                 $isw_indel_id = $prev_indel_id;
             }
-
+            my $isw_stat = $self->get_slice_stat( $align_id, $isw_set );
             $isw_insert->execute(
-                $indel_id,
-                $prev_indel_id,
-                $isw_indel_id,
-                $isw_start,
-                $isw_end,
-                $isw_length,
-                $isw->{type},
-                $isw->{distance},
-                $isw->{density},
-                ( $self->get_slice_pi_gc_dG( $align_id, $isw_set ) )
+                $indel_id,      $prev_indel_id,   $isw_indel_id,
+                $isw_start,     $isw_end,         $isw_length,
+                $isw->{type},   $isw->{distance}, $isw->{density},
+                $isw_stat->[7], $isw_stat->[8],   $isw_stat->[9],
             );
         }
     }
@@ -702,9 +688,6 @@ sub add_align {
 
     my $dbh = $self->dbh;
 
-    # deltaG calculator
-    my $dG_calc = $self->dG_calc;
-
     #----------------------------#
     # fill empty key
     #----------------------------#
@@ -849,13 +832,13 @@ sub add_align {
                 indel_id, prev_indel_id, align_id,
                 indel_start, indel_end, indel_length,
                 indel_seq, indel_insert, left_extand, right_extand,
-                indel_gc, indel_dG, indel_occured, indel_type
+                indel_gc, indel_occured, indel_type
             )
             VALUES (
                 NULL, ?, ?,
                 ?, ?, ?,
                 ?, ?, ?, ?,
-                ?, ?, ?, ?
+                ?, ?, ?
             )'
         );
         my $indel_regex = qr{^\-+$};
@@ -905,8 +888,7 @@ sub add_align {
                 $prev_indel_id, $align_id,         $_->{start},
                 $_->{end},      $_->{length},      $_->{seq},
                 $_->{insert},   $_->{left_extand}, $_->{right_extand},
-                $_->{gc},       $_->{dG},          $indel_occured,
-                $indel_type,
+                $_->{gc},       $indel_occured,    $indel_type,
             );
             ($prev_indel_id) = $self->last_insert_id;
         }
@@ -1193,22 +1175,9 @@ sub get_slice_stat {
     my $align_id = shift;
     my $set      = shift;
 
-    my $dG_calc = $self->dG_calc;
-
     my $seqs_ref = $self->get_seqs($align_id);
-
     my @seq_slices = map { $set->substr_span($_) } @$seqs_ref;
-
     my $result = pair_seq_stat(@seq_slices);
-
-    if ( $self->insert_dG ) {
-        my @seq_dG = map { $dG_calc->polymer_deltaG($_) } @seq_slices;
-
-        push @$result, (@seq_dG);
-    }
-    else {
-        push @$result, ( undef, undef );
-    }
 
     return $result;
 }
@@ -1239,21 +1208,6 @@ sub get_slice_indel {
     return ( $set_indel, $real_indel );
 }
 
-sub get_slice_pi_gc_dG {
-    my $self     = shift;
-    my $align_id = shift;
-    my $set      = shift;
-
-    my $slice_stat = $self->get_slice_stat( $align_id, $set );
-    my $pi         = $slice_stat->[7];
-    my $target_gc  = $slice_stat->[8];
-    my $average_gc = $slice_stat->[9];
-    my $target_dG  = $slice_stat->[10];
-    my $query_dG   = $slice_stat->[11];
-
-    return ( $pi, $target_gc, $average_gc, $target_dG, $query_dG );
-}
-
 ##################################################
 # Usage      : internal method
 #            : $self->insert_window(
@@ -1281,14 +1235,12 @@ sub insert_window {
             window_runlist, window_comparables, window_identities,
             window_differences, window_indel, window_pi,
             window_target_gc, window_average_gc,
-            window_target_dG, window_query_dG,
             window_coding, window_repeats, window_ns_indel
         )
         VALUES (
             NULL, ?, ?, ?, ?,
             ?, ?, ?,
             ?, ?, ?,
-            ?, ?,
             ?, ?,
             NULL, NULL, NULL
         )
@@ -1317,11 +1269,10 @@ sub insert_window {
 
     my $window_stat = $self->get_slice_stat( $align_id, $window_set );
     $window_insert->execute(
-        $align_id,          $window_start,     $window_end,
-        $window_length,     $window_runlist,   $window_stat->[1],
-        $window_stat->[2],  $window_stat->[3], $window_indel,
-        $window_stat->[7],  $window_stat->[8], $window_stat->[9],
-        $window_stat->[10], $window_stat->[11],
+        $align_id,         $window_start,     $window_end,
+        $window_length,    $window_runlist,   $window_stat->[1],
+        $window_stat->[2], $window_stat->[3], $window_indel,
+        $window_stat->[7], $window_stat->[8], $window_stat->[9],
     );
 
     return $self->last_insert_id;
@@ -1909,7 +1860,6 @@ __END__
         mysql          => "$db:$server",
         user           => $username,
         passwd         => $password,
-        insert_dG      => $insert_dG,
     );
     $obj->parse_axt_file(
         {   axt_file        => $infile,

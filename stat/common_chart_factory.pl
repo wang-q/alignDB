@@ -221,38 +221,13 @@ $excel_obj->jc_correction if $jc_correction;
     # worksheet -- distance_gc_non_slip
     #----------------------------#
     $sheet_name = 'distance_gc_non_slip';
-
     $excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
     # worksheet -- distance_gc_slip
     #----------------------------#
     $sheet_name = 'distance_gc_slip';
-
     $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- distance_dG
-    #----------------------------#
-    $sheet_name = 'distance_dG';
-    $option{y_title} = "delta G";
-
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- distance_dG_coding
-    #----------------------------#
-    $sheet_name = 'distance_dG_coding';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- distance_dG_non_coding
-    #----------------------------#
-    $sheet_name = 'distance_dG_non_coding';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
-
 }
 
 {
@@ -285,28 +260,6 @@ $excel_obj->jc_correction if $jc_correction;
     $option{y_title} = "GC proportion";
 
     #$excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- density_dG
-    #----------------------------#
-    $sheet_name = 'density_dG';
-    $option{y_title} = "delta G";
-
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- density_dG_coding
-    #----------------------------#
-    $sheet_name = 'density_dG_coding';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- density_dG_non_coding
-    #----------------------------#
-    $sheet_name = 'density_dG_non_coding';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
 }
 
 {
@@ -513,15 +466,6 @@ $excel_obj->jc_correction if $jc_correction;
     $option{section_end}    = 26;
     $option{section_length} = 25;
     $option{y_title}        = "GC proportion";
-
-    $excel_obj->draw_dd( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- dd_group_dG
-    #----------------------------#
-    $sheet_name         = 'dd_group_dG';
-    @group_name         = qw/200--399 400--1399 1400-2999 >=3000/;
-    $option{group_name} = \@group_name;
 
     $excel_obj->draw_dd( $sheet_name, \%option );
 }

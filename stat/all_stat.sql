@@ -272,15 +272,6 @@ GROUP BY isw_density
 
 # density effect
 SELECT isw_density density, 
-       AVG((isw_target_dG + isw_query_dG) / 2) AVG_dG, 
-       COUNT((isw_target_dG + isw_query_dG) / 2) COUNT, 
-       STD((isw_target_dG + isw_query_dG) / 2) STD_dG
-FROM isw i
-WHERE isw_length = 100
-GROUP BY isw_density
-
-# density effect
-SELECT isw_density density, 
        AVG(isw_average_gc) AVG_gc, 
        COUNT(isw_average_gc) COUNT, 
        STD(isw_average_gc) STD_gc

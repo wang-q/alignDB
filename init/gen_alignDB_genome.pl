@@ -157,11 +157,11 @@ __END__
 
 =head1 NAME
 
-    gen_alignDB.pl - Generate alignDB from axt files
+    gen_alignDB_genome.pl - Generate alignDB from axt files
 
 =head1 SYNOPSIS
 
-    gen_alignDB.pl [options]
+    gen_alignDB_genome.pl [options]
       Options:
         --help              brief help message
         --man               full documentation
@@ -174,27 +174,7 @@ __END__
         --target            "target_taxon_id,target_name"
         --query             "query_taxon_id,query_name"
         --length            threshold of alignment length
-        --insert_dG         do deltaG related processes
         --parallel          run in parallel mode
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
 
 =cut
 
