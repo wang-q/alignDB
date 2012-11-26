@@ -82,17 +82,6 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 system "perl $FindBin::Bin/../init/init_alignDB.pl"
     . " -d=$db -i=$FindBin::Bin/../minit.sql";
 
-{    # add index on isw_indel_id
-    my $obj = AlignDB::Multi->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-
-    my $index = "CREATE INDEX indel_isw_id_FK ON isw ( isw_indel_id );";
-    $obj->execute_sql($index);
-}
-
 my $id_of = {};
 {
     open my $fh, '<', $file_id_of;

@@ -142,7 +142,7 @@ sub _insert_isw {
     my $isw_insert = $dbh->prepare(
         q{
         INSERT INTO isw (
-            isw_id, indel_id, prev_indel_id,
+            isw_id, indel_id, prev_indel_id, isw_indel_id,
             isw_start, isw_end, isw_length, 
             isw_type, isw_distance, isw_density,
             isw_pi, isw_target_gc, isw_average_gc,
@@ -150,7 +150,7 @@ sub _insert_isw {
             isw_d_indel, isw_d_noindel, isw_d_complex
         )
         VALUES (
-            NULL, ?, ?,
+            NULL, ?, ?, ?,
             ?, ?, ?,
             ?, ?, ?,
             ?, ?, ?,
@@ -201,9 +201,21 @@ sub _insert_isw {
             my $isw_end    = $isw_set->max;
             my $isw_length = $isw_end - $isw_start + 1;
 
+            my $isw_indel_id;
+            if ( $isw->{type} eq 'L' ) {
+                $isw_indel_id = $prev_indel_id;
+            }
+            elsif ( $isw->{type} eq 'R' ) {
+                $isw_indel_id = $indel_id;
+            }
+            elsif ( $isw->{type} eq 'S' ) {
+                $isw_indel_id = $prev_indel_id;
+            }
+
             $isw_insert->execute(
                 $indel_id,
                 $prev_indel_id,
+                $isw_indel_id,
                 $isw_start,
                 $isw_end,
                 $isw_length,
@@ -221,7 +233,6 @@ sub _insert_isw {
     $fetch_indel_id_isw->finish;
 
     return;
-
 }
 
 sub _insert_snp {
@@ -1340,6 +1351,14 @@ sub execute_sql {
     }
 
     $sth->execute(@$bind_value);
+}
+
+sub index_isw_indel_id {
+    my $self = shift;
+
+    my $query = "CREATE INDEX indel_isw_id_FK ON isw ( isw_indel_id );";
+    $self->execute_sql($query);
+    return;
 }
 
 ##################################################

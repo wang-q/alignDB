@@ -75,6 +75,7 @@ my $obj = AlignDB->new(
     user   => $username,
     passwd => $password,
 );
+$obj->index_isw_indel_id;
 my $dbh = $obj->dbh;
 
 #----------------------------------------------------------#
