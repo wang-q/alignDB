@@ -19,6 +19,7 @@ use AlignDB::Util qw(:all);
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
+use AlignDB::Multi;
 use AlignDB::Position;
 
 #----------------------------------------------------------#
@@ -59,12 +60,13 @@ my $crude_only = 0;
 my $block         = 0;    # output blocked fasta
 my $simple_header = 0;    # output simple header
 
+my $reduce_end = 10;
+
 # realign parameters
 my $indel_expand = $Config->{ref}{indel_expand};
 my $indel_join   = $Config->{ref}{indel_join};
 
-# run init_alignDB.pl or not
-my $init_db = 1;
+my $multi = 0;
 
 my $man  = 0;
 my $help = 0;
@@ -86,10 +88,10 @@ GetOptions(
     'simple_header'   => \$simple_header,
     'crude_only'      => \$crude_only,
     'trimmed_fasta=s' => \$trimmed_fasta,
-    'init_db=s'       => \$init_db,
     'no_insert=s'     => \$no_insert,
     'indel_expand=i'  => \$indel_expand,
     'indel_join=i'    => \$indel_join,
+    'multi'           => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -104,14 +106,15 @@ if ($crude_only) {
     $no_insert = 1;
 }
 
-if ( !$no_insert and $init_db and $goal_db ) {
+if ( !$no_insert and $goal_db ) {
     my $cmd
         = "perl $FindBin::Bin/../init/init_alignDB.pl"
         . " -s=$server"
         . " --port=$port"
         . " -d=$goal_db"
         . " -u=$username"
-        . " --password=$password";
+        . " --password=$password"
+        . ( $multi ? " -i=$FindBin::Bin/../minit.sql" : "" );
     print "\n", "=" x 12, "CMD", "=" x 15, "\n";
     print $cmd , "\n";
     print "=" x 30, "\n";
@@ -153,7 +156,8 @@ my ( @all_dbs, @all_names, @ingroup_names, $target_db );
 #----------------------------#
 # info hash
 #----------------------------#
-my $db_info_of = build_db_info( $server, $username, $password, \@all_dbs );
+my $db_info_of
+    = build_db_info( $server, $username, $password, \@all_dbs, $reduce_end );
 
 #----------------------------#
 # build intersect chromosome set
@@ -350,59 +354,73 @@ SEG: for (@segments) {
         # insert as a three-way alignDB
         #----------------------------#
         if ( !$no_insert ) {
-            my $goal_obj = AlignDB->new(
-                mysql  => "$goal_db:$server",
-                user   => $username,
-                passwd => $password,
-            );
-
-            # keep the original order of target and queries
-            my %ingroup_order;
-            for ( 0 .. @ingroup_names - 1 ) {
-                $ingroup_order{ $ingroup_names[$_] } = $_;
-            }
-            my $combinat = Math::Combinatorics->new(
-                count => 2,
-                data  => \@ingroup_names,
-            );
-            while ( my @combo = $combinat->next_combination ) {
-                @combo
-                    = sort { $ingroup_order{$a} <=> $ingroup_order{$b} } @combo;
-                my ( $tname, $qname ) = @combo;
-                print " " x 4, "insert $tname $qname\n";
-                $goal_obj->update_names(
-                    {   $info_of{$tname}->{taxon_id} =>
-                            $info_of{$tname}->{name},
-                        $info_of{$qname}->{taxon_id} =>
-                            $info_of{$qname}->{name},
-                        $info_of{$outgroup}->{taxon_id} =>
-                            $info_of{$outgroup}->{name},
-                    }
+            if ( !$multi ) {
+                my $goal_obj = AlignDB->new(
+                    mysql  => "$goal_db:$server",
+                    user   => $username,
+                    passwd => $password,
                 );
-                my $cur_align_id
-                    = $goal_obj->add_align( $info_of{$tname}, $info_of{$qname},
-                    $info_of{$outgroup}, $info_of{$outgroup}->{all_indel} );
+
+                # keep the original order of target and queries
+                my %ingroup_order;
+                for ( 0 .. @ingroup_names - 1 ) {
+                    $ingroup_order{ $ingroup_names[$_] } = $_;
+                }
+                my $combinat = Math::Combinatorics->new(
+                    count => 2,
+                    data  => \@ingroup_names,
+                );
+                while ( my @combo = $combinat->next_combination ) {
+                    @combo = sort { $ingroup_order{$a} <=> $ingroup_order{$b} }
+                        @combo;
+                    my ( $tname, $qname ) = @combo;
+                    print " " x 4, "insert $tname $qname\n";
+                    $goal_obj->update_names(
+                        {   $info_of{$tname}->{taxon_id} =>
+                                $info_of{$tname}->{name},
+                            $info_of{$qname}->{taxon_id} =>
+                                $info_of{$qname}->{name},
+                            $info_of{$outgroup}->{taxon_id} =>
+                                $info_of{$outgroup}->{name},
+                        }
+                    );
+                    $goal_obj->add_align( $info_of{$tname}, $info_of{$qname},
+                        $info_of{$outgroup}, $info_of{$outgroup}->{all_indel} );
+                }
+            }
+            else {
+                my $goal_obj = AlignDB::Multi->new(
+                    mysql  => "$goal_db:$server",
+                    user   => $username,
+                    passwd => $password,
+                );
+                my $name_of       = {};
+                my $multi_info_of = {};
+                my $real_names    = [];
+                my $seq_refs      = [];
+
+                # join_name : 0target
+                # real_name : human
+                for my $join_name ( $outgroup, @ingroup_names ) {
+                    my $real_name = $info_of{$join_name}->{name};
+                    my $taxon_id  = $info_of{$join_name}->{taxon_id};
+                    $name_of->{$taxon_id} = $real_name;
+
+                    $multi_info_of->{$real_name} = $info_of{$join_name};
+                    $multi_info_of->{$real_name}{chr_id}
+                        = $goal_obj->get_chr_id_hash($taxon_id)
+                        ->{ $multi_info_of->{$real_name}{chr_name} };
+                    push @{$real_names}, $real_name;
+                    push @{$seq_refs},   $info_of{$join_name}->{seq};
+                }
+                $goal_obj->update_names($name_of);
+                $goal_obj->add_align( $multi_info_of, $real_names, $seq_refs );
             }
         }
     }
 }
 
-if ( !$no_insert and $init_db and $goal_db ) {
-    my $cmd
-        = "perl $FindBin::Bin/../init/update_isw_indel_id.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -d=$goal_db"
-        . " -u=$username"
-        . " --password=$password";
-    print "\n", "=" x 12, "CMD", "=" x 15, "\n";
-    print $cmd , "\n";
-    print "=" x 30, "\n";
-    system($cmd);
-}
-
 $stopwatch->end_message;
-
 
 # store program running meta info to database
 END {
@@ -420,10 +438,11 @@ exit;
 # subs
 #----------------------------------------------------------#
 sub build_db_info {
-    my $server   = shift;
-    my $username = shift;
-    my $password = shift;
-    my $all_dbs  = shift;
+    my $server     = shift;
+    my $username   = shift;
+    my $password   = shift;
+    my $all_dbs    = shift;
+    my $reduce_end = shift;
 
     my $db_info_of = {};
     for my $db ( @{$all_dbs} ) {
@@ -460,7 +479,7 @@ sub build_db_info {
 
         for my $ref ( @{$chr_ref} ) {
             my ( $chr_id, $chr_name, $chr_length ) = @{$ref};
-            my $chr_set = build_chr_set( $cur_dbh, $chr_id );
+            my $chr_set = build_chr_set( $cur_dbh, $chr_id, $reduce_end );
             $db_info_of->{$db}{chrs}{$chr_id}{set}  = $chr_set;
             $db_info_of->{$db}{chrs}{$chr_id}{name} = $chr_name;
             $chr_id_set->add($chr_id);
@@ -472,14 +491,15 @@ sub build_db_info {
 }
 
 sub build_chr_set {
-    my $dbh    = shift;
-    my $chr_id = shift;
+    my $dbh        = shift;
+    my $chr_id     = shift;
+    my $reduce_end = shift || 0;
 
     my $chr_set = AlignDB::IntSpan->new;
 
     my $chr_query = qq{
-        SELECT  s.chr_start,
-                s.chr_end
+        SELECT  s.chr_start + $reduce_end,
+                s.chr_end - $reduce_end
         FROM sequence s, chromosome c
         WHERE c.chr_id = ?
         AND s.chr_id = c.chr_id
@@ -640,24 +660,24 @@ sub pseudo_align {
 }
 
 sub write_fasta {
-    my $info_of     = shift;
-    my $all_names   = shift;
-    my $fh          = shift;
-    my $full_header = shift;
+    my $info_of       = shift;
+    my $all_names     = shift;
+    my $fh            = shift;
+    my $simple_header = shift;
 
     for my $name ( @{$all_names} ) {
         my $name_info = $info_of->{$name};
-        if ($full_header) {
+        if ($simple_header) {
+            print {$fh} ">" . $name_info->{name};
+            print {$fh} "\n";
+        }
+        else {
             print {$fh} ">" . $name_info->{name};
             print {$fh} "." . $name_info->{chr_name};
             print {$fh} "(" . $name_info->{chr_strand} . ")";
             print {$fh} ":" . $name_info->{chr_start};
             print {$fh} "-" . $name_info->{chr_end};
             print {$fh} "|species=" . $name_info->{name};
-            print {$fh} "\n";
-        }
-        else {
-            print {$fh} ">" . $name_info->{name};
             print {$fh} "\n";
         }
         print {$fh} $name_info->{seq}, "\n";
@@ -934,15 +954,12 @@ __END__
         --queries           query list (1query,2query)
         --length            threshold of alignment length
         --realign           correct pesudo-alignment error
-        --raw_fasta         save raw fasta files
         --trimmed_fasta     save ref-trimmed fasta files
         --reduce_end        reduce align end to avoid some overlaps in
                               BlastZ results (use 10 instead of 0)
                             For two independent datasets, use 10;
                             for two dependent datasets, use 0
-        --init_db           call init_alignDB.pl
         --no_insert         don't insert into goal_db actually
-        --discard_distant
         --indel_expand
         --indel_join
 
