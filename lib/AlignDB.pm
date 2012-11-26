@@ -738,7 +738,7 @@ sub add_align {
         }
     }
 
-    # align length
+    # check align length
     my $align_length = length $target_seq;
     if ( length $query_seq != $align_length ) {
         print "The two sequences has not equal length.\n";
@@ -756,6 +756,7 @@ sub add_align {
     #----------------------------#
     # INSERT INTO target, query
     #----------------------------#
+    my $align_set = AlignDB::IntSpan->new("1-$align_length");
     {    # target
         my $target_insert = $dbh->prepare(
             q{
@@ -765,9 +766,7 @@ sub add_align {
         );
         $target_info->{align_id} = $align_id;
         $target_info->{gc}       = calc_gc_ratio($target_seq);
-        my $seq_set   = AlignDB::IntSpan->new("1-$align_length");
-        my $indel_set = find_indel_set($target_seq);
-        $seq_set                = $seq_set->diff($indel_set);
+        my $seq_set = $align_set->diff( find_indel_set($target_seq) );
         $target_info->{runlist} = $seq_set->runlist;
         $target_info->{length}  = $seq_set->cardinality;
         my $target_seq_id = $self->_insert_seq($target_info);
@@ -786,9 +785,7 @@ sub add_align {
         );
         $query_info->{align_id} = $align_id;
         $query_info->{gc}       = calc_gc_ratio($query_seq);
-        my $seq_set   = AlignDB::IntSpan->new("1-$align_length");
-        my $indel_set = find_indel_set($query_seq);
-        $seq_set               = $seq_set->diff($indel_set);
+        my $seq_set = $align_set->diff( find_indel_set($query_seq) );
         $query_info->{runlist} = $seq_set->runlist;
         $query_info->{length}  = $seq_set->cardinality;
         my $query_seq_id = $self->_insert_seq($query_info);
@@ -813,14 +810,35 @@ sub add_align {
         );
         $ref_info->{align_id} = $align_id;
         $ref_info->{gc}       = calc_gc_ratio($ref_seq);
-        my $seq_set   = AlignDB::IntSpan->new("1-$align_length");
-        my $indel_set = find_indel_set($ref_seq);
-        $seq_set             = $seq_set->diff($indel_set);
+        my $seq_set = $align_set->diff( find_indel_set($ref_seq) );
         $ref_info->{runlist} = $seq_set->runlist;
         $ref_info->{length}  = $seq_set->cardinality;
         my $ref_seq_id = $self->_insert_seq($ref_info);
         $ref_insert->execute( $ref_seq_id, $ref_raw_seq, $ref_complex_indel );
         $ref_insert->finish;
+    }
+
+    #----------------------------#
+    # UPDATE align with runlist
+    #----------------------------#
+    {
+        my $align_set      = AlignDB::IntSpan->new("1-$align_length");
+        my $target_gap_set = $align_set->diff( $target_info->{runlist} );
+        my $query_gap_set  = $align_set->diff( $query_info->{runlist} );
+        my $indel_set      = $target_gap_set->union($query_gap_set);
+        my $comparable_set = $align_set->diff($indel_set);
+
+        my $align_update = $dbh->prepare(
+            q{
+            UPDATE align
+            SET align_indels = ?,
+                align_comparable_runlist = ?,
+                align_indel_runlist = ?
+            WHERE align_id = ?
+            }
+        );
+        $align_update->execute( scalar $indel_set->spans,
+            $comparable_set->runlist, $indel_set->runlist, $align_id );
     }
 
     #----------------------------#
@@ -893,28 +911,6 @@ sub add_align {
             ($prev_indel_id) = $self->last_insert_id;
         }
         $indel_insert->finish;
-    }
-
-    #----------------------------#
-    # UPDATE align with runlist
-    #----------------------------#
-    {
-        my $align_set      = AlignDB::IntSpan->new("1-$align_length");
-        my $target_gap_set = $align_set->diff( $target_info->{runlist} );
-        my $query_gap_set  = $align_set->diff( $query_info->{runlist} );
-        my $indel_set      = $target_gap_set->union($query_gap_set);
-        my $comparable_set = $align_set->diff($indel_set);
-
-        my $align_update = $dbh->prepare(
-            q{
-            UPDATE align
-            SET align_comparable_runlist = ?,
-                align_indel_runlist = ?
-            WHERE align_id = ?
-            }
-        );
-        $align_update->execute( $comparable_set->runlist, $indel_set->runlist,
-            $align_id );
     }
 
     #----------------------------#
@@ -1175,9 +1171,9 @@ sub get_slice_stat {
     my $align_id = shift;
     my $set      = shift;
 
-    my $seqs_ref = $self->get_seqs($align_id);
+    my $seqs_ref   = $self->get_seqs($align_id);
     my @seq_slices = map { $set->substr_span($_) } @$seqs_ref;
-    my $result = pair_seq_stat(@seq_slices);
+    my $result     = pair_seq_stat(@seq_slices);
 
     return $result;
 }

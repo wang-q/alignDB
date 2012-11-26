@@ -14,6 +14,42 @@ use AlignDB::Util qw(:all);
 
 extends qw(AlignDB);
 
+sub _insert_align {
+    my $self     = shift;
+    my $seq_refs = shift;
+
+    my $dbh = $self->dbh;
+
+    my $align_insert = $dbh->prepare(
+        q{
+        INSERT INTO align (
+            align_id, align_length,
+            align_comparables, align_identities, align_differences,
+            align_gaps, align_ns, align_error,
+            align_pi, align_target_gc, align_average_gc
+        )
+        VALUES (
+            NULL, ?,
+            ?, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?
+        )
+        }
+    );
+
+    my $result = multi_seq_stat( @{$seq_refs} );
+
+    $align_insert->execute(
+        $result->[0], $result->[1], $result->[2], $result->[3], $result->[4],
+        $result->[5], $result->[6], $result->[7], $result->[8], $result->[9],
+    );
+    $align_insert->finish;
+
+    my $align_id = $self->last_insert_id;
+
+    return $align_id;
+}
+
 sub add_align {
     my $self     = shift;
     my $info_of  = shift;
@@ -23,29 +59,12 @@ sub add_align {
     # Get database handle
     my $dbh = $self->dbh;
 
-    my $align_insert_sql = $dbh->prepare(
-        q{
-        INSERT INTO align (
-            align_id, 
-            align_length, align_comparables, align_identities,
-            align_differences, align_gaps, align_ns,
-            align_error, align_pi,
-            align_target_gc, align_average_gc
-        )
-        VALUES (
-            NULL,
-            ?, ?, ?,
-            ?, ?, ?,
-            ?, ?,
-            ?, ?
-        )
-        }
-    );
+    #my @names     = @{$names};
+    my @ingroup_names = @{$names}[ 1 .. $#{$names} ];
+    my @seqs          = @{$seq_refs};
+    my $seq_count     = scalar @{$names};
 
-    my @names     = @{$names};
-    my @seqs      = @{$seq_refs};
-    my $seq_count = scalar @{$names};
-
+    # check align length
     my $align_length = length $seqs[0];
     for (@seqs) {
         if ( ( length $_ ) ne $align_length ) {
@@ -53,38 +72,32 @@ sub add_align {
         }
     }
 
-    my $align_stat = multi_seq_stat( @seqs[ 1 .. $#seqs ] );
-    $align_insert_sql->execute(
-        $align_stat->[0], $align_stat->[1], $align_stat->[2],
-        $align_stat->[3], $align_stat->[4], $align_stat->[5],
-        $align_stat->[6], $align_stat->[7], $align_stat->[8],
-        $align_stat->[9],
-    );
-    $align_insert_sql->finish;
-    my $align_id = $self->last_insert_id;
+    #----------------------------#
+    # INSERT INTO align
+    #----------------------------#
+    my $align_id = $self->_insert_align( @seqs[ 1 .. $#seqs ] );
+    printf "Prosess align %s in %s %s - %s\n", $align_id,
+        $info_of->{ $names->[1] }{chr_name},
+        $info_of->{ $names->[1] }{chr_start},
+        $info_of->{ $names->[1] }{chr_end};
 
     #----------------------------------------------------------#
-    # INSERT INTO sequence, target, query
+    # INSERT INTO sequence, target, queries, ref
     #----------------------------------------------------------#
     {
-        my @seq_infos;    # store info of each seqs
+        my $align_set = AlignDB::IntSpan->new("1-$align_length");
         for my $i ( 0 .. $seq_count - 1 ) {
-            my $seq_info = $info_of->{ $names[$i] };
-            $seq_info->{align_id} = $align_id;
-            $seq_info->{seq}      = $seqs[$i];
-            $seq_info->{length}   = $align_length;
-            $seq_info->{gc}       = calc_gc_ratio( $seqs[$i] );
-
-            my $seq_set   = AlignDB::IntSpan->new("1-$align_length");
-            my $indel_set = find_indel_set( $seqs[$i] );
-            $seq_set = $seq_set->diff($indel_set);
-            $seq_info->{runlist} = $seq_set->runlist;
-
-            push @seq_infos, $seq_info;
+            my $name = $names->[$i];
+            $info_of->{$name}{align_id} = $align_id;
+            $info_of->{$name}{seq}      = $seqs[$i];
+            $info_of->{$name}{gc}       = calc_gc_ratio( $seqs[$i] );
+            my $seq_set = $align_set->diff( find_indel_set( $seqs[$i] ) );
+            $info_of->{$name}{runlist} = $seq_set->runlist;
+            $info_of->{$name}{length}  = $seq_set->cardinality;
         }
 
         {    # ref
-            my $ref_insert = $dbh->prepare(
+            my $insert = $dbh->prepare(
                 q{
                 INSERT INTO reference (
                     ref_id, seq_id, ref_raw_seq, ref_complex_indel
@@ -94,25 +107,25 @@ sub add_align {
                 )
                 }
             );
-            my $ref_seq_id = $self->_insert_seq( $seq_infos[0] );
-            $ref_insert->execute( $ref_seq_id, $seq_infos[0]->{seq}, '-' );
-            $ref_insert->finish;
+            my $seq_id = $self->_insert_seq( $info_of->{ $names->[0] } );
+            $insert->execute( $seq_id, $info_of->{ $names->[0] }{seq}, '-' );
+            $insert->finish;
         }
 
         {    # target
-            my $target_insert = $dbh->prepare(
+            my $insert = $dbh->prepare(
                 q{
                 INSERT INTO target ( target_id, seq_id )
                 VALUES ( NULL, ? )
                 }
             );
-            my $target_seq_id = $self->_insert_seq( $seq_infos[1] );
-            $target_insert->execute($target_seq_id);
-            $target_insert->finish;
+            my $seq_id = $self->_insert_seq( $info_of->{ $names->[1] } );
+            $insert->execute($seq_id);
+            $insert->finish;
         }
 
         {    # and queries
-            my $query_insert = $dbh->prepare(
+            my $insert = $dbh->prepare(
                 q{
                 INSERT INTO query (
                     query_id, seq_id, query_strand, query_position
@@ -121,27 +134,29 @@ sub add_align {
                 }
             );
             for my $i ( 2 .. $seq_count - 1 ) {
-                my $query_seq_id = $self->_insert_seq( $seq_infos[$i] );
-                $query_insert->execute( $query_seq_id,
-                    $seq_infos[$i]->{chr_strand},
+                my $seq_id = $self->_insert_seq( $info_of->{ $names->[$i] } );
+                $insert->execute( $seq_id,
+                    $info_of->{ $names->[$i] }{chr_strand},
                     $i - 1 );
             }
-            $query_insert->finish;
+            $insert->finish;
         }
     }
 
-    # find indel
+    #----------------------------#
+    # UPDATE align with runlist
+    #----------------------------#
     my $indel_set      = AlignDB::IntSpan->new;
     my $align_set      = AlignDB::IntSpan->new("1-$align_length");
     my $comparable_set = AlignDB::IntSpan->new;
     {
-        for my $cur_line ( @seqs[ 1 .. $#seqs ] ) {
-            my $cur_indel_set = find_indel_set($cur_line);
-            $indel_set->merge($cur_indel_set);
+        for my $name (@ingroup_names) {
+            my $seq_runlist = $info_of->{$name}{runlist};
+            $indel_set->merge( $align_set->diff($seq_runlist) );
         }
         $comparable_set = $align_set->diff($indel_set);
 
-        my $align_update_sql = $dbh->prepare(
+        my $align_update = $dbh->prepare(
             q{
             UPDATE align
             SET align_indels = ?,
@@ -150,12 +165,14 @@ sub add_align {
             WHERE align_id = ?
             }
         );
-        $align_update_sql->execute( scalar $indel_set->spans,
+        $align_update->execute( scalar $indel_set->spans,
             $comparable_set->runlist, $indel_set->runlist, $align_id );
     }
 
-    # insert indels
-    if ( scalar $indel_set->spans > 0 ) {
+    #----------------------------#
+    # INSERT INTO indel
+    #----------------------------#
+    {
         my $indel_insert_sql = $dbh->prepare(
             q{
             INSERT INTO indel (
@@ -862,10 +879,8 @@ sub get_slice_stat {
     my $align_id = shift;
     my $set      = shift;
 
-    my $seqs_ref = $self->get_seqs($align_id);
-
+    my $seqs_ref   = $self->get_seqs($align_id);
     my @seq_slices = map { $set->substr_span($_) } @$seqs_ref;
-
     my $result = multi_seq_stat(@seq_slices);
 
     return $result;
