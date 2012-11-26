@@ -1021,28 +1021,6 @@ sub on_button_upd_slippage_clicked {
     return;
 }
 
-sub on_button_upd_isw_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $server   = $self->get_value("entry_server");
-    my $port     = $self->get_value("entry_port");
-    my $username = $self->get_value("entry_username");
-    my $password = $self->get_value("entry_password");
-    my $db_name  = $self->get_value("entry_db_name");
-
-    my $cmd
-        = "perl $FindBin::Bin/../init/update_isw_indel_id.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
 sub on_button_upd_segment_clicked {
     my $self   = shift;
     my $widget = shift;
