@@ -3,10 +3,9 @@ use Moose;
 use Carp;
 use autodie;
 
-use PerlIO::via::gzip;
+use IO::Zlib;
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 use List::MoreUtils qw(any uniq);
-use Statistics::Lite qw(mean);
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use AlignDB::IntSpan;
@@ -15,8 +14,8 @@ use AlignDB::Util qw(:all);
 extends qw(AlignDB);
 
 sub _insert_align {
-    my $self     = shift;
-    my $seq_refs = shift;
+    my $self = shift;
+    my @seqs = @_;
 
     my $dbh = $self->dbh;
 
@@ -37,7 +36,7 @@ sub _insert_align {
         }
     );
 
-    my $result = multi_seq_stat( @{$seq_refs} );
+    my $result = multi_seq_stat(@seqs);
 
     $align_insert->execute(
         $result->[0], $result->[1], $result->[2], $result->[3], $result->[4],
@@ -410,7 +409,7 @@ sub parse_block_fasta_file {
         open $in_fh, '<', $infile;
     }
     else {
-        open $in_fh, '<:via(gzip)', $infile;
+        $in_fh = IO::Zlib->new( $infile, "rb" );
     }
     my $content = '';
     while ( my $line = <$in_fh> ) {
@@ -485,7 +484,13 @@ sub parse_block_fasta_file {
             $content .= $line;
         }
     }
-    close $in_fh;
+
+    if ( !$gzip ) {
+        close $in_fh;
+    }
+    else {
+        $in_fh->close;
+    }
 
     return;
 }
@@ -881,7 +886,7 @@ sub get_slice_stat {
 
     my $seqs_ref   = $self->get_seqs($align_id);
     my @seq_slices = map { $set->substr_span($_) } @$seqs_ref;
-    my $result = multi_seq_stat(@seq_slices);
+    my $result     = multi_seq_stat(@seq_slices);
 
     return $result;
 }

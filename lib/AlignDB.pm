@@ -4,9 +4,9 @@ use Carp;
 use autodie;
 use DBI;
 
-use PerlIO::via::gzip;
+use IO::Zlib;
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
-use List::MoreUtils qw(any);
+use List::MoreUtils qw(any uniq);
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use AlignDB::IntSpan;
@@ -586,9 +586,9 @@ sub insert_ssw {
 #            : All generating operations are performed here.
 # See Also   : n/a
 sub parse_axt_file {
-    my $self     = shift;
-    my $axt_file = shift;
-    my $opt      = shift;
+    my $self   = shift;
+    my $infile = shift;
+    my $opt    = shift;
 
     my $target_taxon_id = $opt->{target_taxon_id};
     my $query_taxon_id  = $opt->{query_taxon_id};
@@ -598,16 +598,16 @@ sub parse_axt_file {
     # minimal length
     $threshold ||= $self->threshold;
 
-    my $axt_fh;
+    my $in_fh;
     if ( !$gzip ) {
-        open $axt_fh, '<', $axt_file;
+        open $in_fh, '<', $infile;
     }
     else {
-        open $axt_fh, '<:via(gzip)', $axt_file;
+        $in_fh = IO::Zlib->new( $infile, "rb" );
     }
 
     while (1) {
-        my $summary_line = <$axt_fh>;
+        my $summary_line = <$in_fh>;
         unless ($summary_line) {
             last;
         }
@@ -615,11 +615,11 @@ sub parse_axt_file {
             next;
         }
         chomp $summary_line;
-        chomp( my $first_line = <$axt_fh> );
+        chomp( my $first_line = <$in_fh> );
         $first_line = uc $first_line;
-        chomp( my $second_line = <$axt_fh> );
+        chomp( my $second_line = <$in_fh> );
         $second_line = uc $second_line;
-        my $dummy = <$axt_fh>;
+        my $dummy = <$in_fh>;
 
         unless ( length $first_line > $threshold ) {
             next;
@@ -651,7 +651,12 @@ sub parse_axt_file {
         $self->add_align( $target_info, $query_info );
     }
 
-    close $axt_fh;
+    if ( !$gzip ) {
+        close $in_fh;
+    }
+    else {
+        $in_fh->close;
+    }
 
     return;
 }
