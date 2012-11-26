@@ -79,8 +79,21 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 # call init_alignDB.pl
 #----------------------------------------------------------#
-system "perl $FindBin::Bin/../init/init_alignDB.pl"
-    . " -d=$db -i=$FindBin::Bin/../minit.sql";
+{
+    my $cmd
+        = "perl $FindBin::Bin/../init/init_alignDB.pl"
+        . " -s=$server"
+        . " --port=$port"
+        . " -d=$db"
+        . " -u=$username"
+        . " --password=$password"
+        . " -i=$FindBin::Bin/../minit.sql";
+    print "\n", "=" x 12, "CMD", "=" x 15, "\n";
+    print $cmd , "\n";
+    print "=" x 30, "\n";
+    system($cmd);
+}
+
 
 my $id_of = {};
 {
