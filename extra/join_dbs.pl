@@ -22,6 +22,401 @@ use AlignDB;
 use AlignDB::Position;
 
 #----------------------------------------------------------#
+# GetOpt section
+#----------------------------------------------------------#
+my $Config = Config::Tiny->new;
+$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+
+# record ARGV and Config
+my $stopwatch = AlignDB::Stopwatch->new(
+    program_name => $0,
+    program_argv => [@ARGV],
+    program_conf => $Config,
+);
+
+# Database init values
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+
+# Database info
+# Normal order: TvsR, TvsQ1, TvsQ2
+my $dbs;
+my $outgroup;
+my $target;
+my $queries;
+my $goal_db;
+
+# ref parameter
+my $length_threshold = $Config->{ref}{length_threshold};
+my $trimmed_fasta    = $Config->{ref}{trimmed_fasta};
+
+my $no_insert = 0;
+
+my $crude_only = 0;
+
+my $block         = 0;    # output blocked fasta
+my $simple_header = 0;    # output simple header
+
+# realign parameters
+my $indel_expand = $Config->{ref}{indel_expand};
+my $indel_join   = $Config->{ref}{indel_join};
+
+# run init_alignDB.pl or not
+my $init_db = 1;
+
+my $man  = 0;
+my $help = 0;
+
+GetOptions(
+    'help|?'          => \$help,
+    'man'             => \$man,
+    's|server=s'      => \$server,
+    'P|port=i'        => \$port,
+    'u|username=s'    => \$username,
+    'p|password=s'    => \$password,
+    'dbs=s'           => \$dbs,
+    'goal_db=s'       => \$goal_db,
+    'outgroup=s'      => \$outgroup,
+    'target=s'        => \$target,
+    'queries=s'       => \$queries,
+    'length=i'        => \$length_threshold,
+    'block'           => \$block,
+    'simple_header'   => \$simple_header,
+    'crude_only'      => \$crude_only,
+    'trimmed_fasta=s' => \$trimmed_fasta,
+    'init_db=s'       => \$init_db,
+    'no_insert=s'     => \$no_insert,
+    'indel_expand=i'  => \$indel_expand,
+    'indel_join=i'    => \$indel_join,
+) or pod2usage(2);
+
+pod2usage(1) if $help;
+pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+
+#----------------------------------------------------------#
+# perl init_alignDB.pl
+#----------------------------------------------------------#
+$stopwatch->start_message("Joining DBs...");
+
+if ($crude_only) {
+    $no_insert = 1;
+}
+
+if ( !$no_insert and $init_db and $goal_db ) {
+    my $cmd
+        = "perl $FindBin::Bin/../init/init_alignDB.pl"
+        . " -s=$server"
+        . " --port=$port"
+        . " -d=$goal_db"
+        . " -u=$username"
+        . " --password=$password";
+    print "\n", "=" x 12, "CMD", "=" x 15, "\n";
+    print $cmd , "\n";
+    print "=" x 30, "\n";
+    system($cmd);
+}
+
+#----------------------------------------------------------#
+# dbs, names
+#----------------------------------------------------------#
+my ( @all_dbs, @all_names, @ingroup_names, $target_db );
+{
+    @all_dbs = split ",", $dbs;
+    my @queries = split ",", $queries;
+    if ( scalar @all_dbs != scalar @queries + 1 ) {
+        printf "DB %d\tQueries %d\n", scalar @all_dbs, scalar @queries;
+        die "DB number doesn't match with species number\n";
+    }
+    elsif ( !$target ) {
+        die "Target not defined\n";
+    }
+    elsif ( !$outgroup ) {
+        die "Outgroup not defined\n";
+    }
+    elsif ( !scalar @queries ) {
+        die "Queries not defined\n";
+    }
+
+    @all_names = ( $target, @queries, $outgroup );
+    @ingroup_names = ( $target, @queries );
+
+    $target =~ /^(\d+)(.+)/;
+    $target_db = $all_dbs[$1];
+}
+
+#----------------------------------------------------------#
+# Start
+#----------------------------------------------------------#
+
+#----------------------------#
+# info hash
+#----------------------------#
+my $db_info_of = build_db_info( $server, $username, $password, \@all_dbs );
+
+#----------------------------#
+# build intersect chromosome set
+#----------------------------#
+my $chr_set_of = build_inter_chr( $db_info_of, \@all_dbs, $target_db );
+
+for my $chr_id ( sort keys %{$chr_set_of} ) {
+    my $inter_chr_set = $chr_set_of->{$chr_id};
+    my $chr_name      = $db_info_of->{$target_db}{chrs}{$chr_id}{name};
+
+    #----------------------------#
+    # process each intersects
+    #----------------------------#
+
+    my @segments = $inter_chr_set->spans;
+SEG: for (@segments) {
+        my $seg_start  = $_->[0];
+        my $seg_end    = $_->[1];
+        my $seg_length = $seg_end - $seg_start + 1;
+        next if $seg_length <= $length_threshold;
+
+        print "$chr_name:$seg_start-$seg_end; length:$seg_length\n";
+
+        for my $db_name (@all_dbs) {
+            my $pos_obj = $db_info_of->{$db_name}{pos_obj};
+            my ( $align_id, $dummy ) = @{
+                $pos_obj->positioning_align_chr_id( $chr_id, $seg_start,
+                    $seg_end )
+                };
+
+            if ( !defined $align_id ) {
+                warn " " x 4, "Find no align in $db_name, jump to next\n";
+                next SEG;
+            }
+            elsif ( defined $dummy ) {
+                warn " " x 4, "Overlapped alignment in $db_name!\n";
+            }
+            $db_info_of->{$db_name}{align_id} = $align_id;
+        }
+
+        #----------------------------#
+        # get seq, use align coordinates
+        #----------------------------#
+        for my $db_name (@all_dbs) {
+            print " " x 4, "build $db_name seqs\n";
+            my $align_id = $db_info_of->{$db_name}{align_id};
+
+            my $error
+                = build_seq( $db_info_of->{$db_name}, $seg_start, $seg_end );
+            if ($error) {
+                warn $error . " in $db_name $align_id\n";
+                next SEG;
+            }
+        }
+
+        #----------------------------#
+        # start peusdo-alignment, according to common sequences
+        #----------------------------#
+        {
+            print " " x 4, "start peusdo-alignment\n";
+            my $error = pseudo_align( $db_info_of, \@all_dbs );
+            if ($error) {
+                warn $error, "\n";
+                next SEG;
+            }
+        }
+
+        #----------------------------#
+        # build %info_of all_names hash
+        #----------------------------#
+        my %info_of;
+        for my $name (@all_names) {
+            $name =~ /^(\d+)(.+)/;
+            my $db_name_idx = $1;
+            my $torq        = $2;
+            if ( not( $torq =~ /^t/i or $torq =~ /^q/i ) ) {
+                die "$torq is not equal to target or query\n";
+            }
+            my $db_name = $all_dbs[$db_name_idx];
+            $info_of{$name} = $db_info_of->{$db_name}{$torq};
+        }
+
+        #----------------------------#
+        # output peusdo-aligned fasta, need be refined later
+        # skip all processing thereafter
+        #----------------------------#
+        if ($crude_only) {
+            my $goal_db_crude = "$goal_db.crude";
+            unless ( -e $goal_db_crude ) {
+                mkdir $goal_db_crude, 0777
+                    or die "Cannot create [$goal_db_crude] directory: $!";
+            }
+
+            if ( !$block ) {
+                my $target_taxon_id = $info_of{$target}->{taxon_id};
+                my $outfile
+                    = "./$goal_db_crude/"
+                    . "id$target_taxon_id"
+                    . "_$chr_name"
+                    . "_$seg_start"
+                    . "_$seg_end" . ".fas";
+                print " " x 4, "$outfile\n";
+                open my $out_fh, '>', $outfile;
+                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
+                    $out_fh, $simple_header );
+                close $out_fh;
+            }
+            else {
+                my $outfile = "./$goal_db_crude/" . $chr_name . ".fas";
+                print " " x 4, "$outfile\n";
+                open my $out_fh, '>>', $outfile;
+                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
+                    $out_fh, 1 );
+                print {$out_fh} "\n";
+                close $out_fh;
+            }
+
+            next SEG;
+        }
+
+        #----------------------------#
+        # clustalw realign indel_flank region
+        #----------------------------#
+        {
+            print " " x 4, "start finding realign region\n";
+            realign( \%info_of, \@all_names, $indel_expand, $indel_join );
+        }
+
+        #----------------------------#
+        # trim outgroup only sequence
+        #----------------------------#
+        # if intersect is superset of union
+        #   ref    GAAAAC
+        #   target G----C
+        #   query  G----C
+        {
+            trim_outgroup( \%info_of, \@all_names, \@ingroup_names, $outgroup );
+        }
+
+        #----------------------------#
+        # trim header and footer indels
+        #----------------------------#
+        {
+            trim_hf( \%info_of, \@all_names );
+        }
+
+        #----------------------------#
+        # record complex indels and ingroup indels
+        #----------------------------#
+        # if intersect is subset of union
+        #   ref GGAGAC
+        #   tar G-A-AC
+        #   que G----C
+        {
+            record_complex_indel( \%info_of, \@all_names, \@ingroup_names,
+                $outgroup );
+        }
+
+        #----------------------------#
+        # output a fasta alignment for further use
+        #----------------------------#
+        if ($trimmed_fasta) {
+            unless ( -e $goal_db ) {
+                mkdir $goal_db, 0777
+                    or die "Cannot create [$goal_db] directory: $!";
+            }
+
+            if ( !$block ) {
+                my $target_taxon_id = $info_of{$target}->{taxon_id};
+                my $outfile
+                    = "./$goal_db/"
+                    . "id$target_taxon_id"
+                    . "_$chr_name"
+                    . "_$seg_start"
+                    . "_$seg_end" . ".fas";
+                print " " x 4, "$outfile\n";
+                open my $out_fh, '>', $outfile;
+                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
+                    $out_fh, $simple_header );
+                close $out_fh;
+            }
+            else {
+                my $outfile = "./$goal_db/" . $chr_name . ".fas";
+                print " " x 4, "$outfile\n";
+                open my $out_fh, '>>', $outfile;
+                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
+                    $out_fh, 1 );
+                print {$out_fh} "\n";
+                close $out_fh;
+            }
+        }
+
+        #----------------------------#
+        # insert as a three-way alignDB
+        #----------------------------#
+        if ( !$no_insert ) {
+            my $goal_obj = AlignDB->new(
+                mysql  => "$goal_db:$server",
+                user   => $username,
+                passwd => $password,
+            );
+
+            # keep the original order of target and queries
+            my %ingroup_order;
+            for ( 0 .. @ingroup_names - 1 ) {
+                $ingroup_order{ $ingroup_names[$_] } = $_;
+            }
+            my $combinat = Math::Combinatorics->new(
+                count => 2,
+                data  => \@ingroup_names,
+            );
+            while ( my @combo = $combinat->next_combination ) {
+                @combo
+                    = sort { $ingroup_order{$a} <=> $ingroup_order{$b} } @combo;
+                my ( $tname, $qname ) = @combo;
+                print " " x 4, "insert $tname $qname\n";
+                $goal_obj->update_names(
+                    {   $info_of{$tname}->{taxon_id} =>
+                            $info_of{$tname}->{name},
+                        $info_of{$qname}->{taxon_id} =>
+                            $info_of{$qname}->{name},
+                        $info_of{$outgroup}->{taxon_id} =>
+                            $info_of{$outgroup}->{name},
+                    }
+                );
+                my $cur_align_id
+                    = $goal_obj->add_align( $info_of{$tname}, $info_of{$qname},
+                    $info_of{$outgroup}, $info_of{$outgroup}->{all_indel} );
+            }
+        }
+    }
+}
+
+if ( !$no_insert and $init_db and $goal_db ) {
+    my $cmd
+        = "perl $FindBin::Bin/../init/update_isw_indel_id.pl"
+        . " -s=$server"
+        . " --port=$port"
+        . " -d=$goal_db"
+        . " -u=$username"
+        . " --password=$password";
+    print "\n", "=" x 12, "CMD", "=" x 15, "\n";
+    print $cmd , "\n";
+    print "=" x 30, "\n";
+    system($cmd);
+}
+
+$stopwatch->end_message;
+
+
+# store program running meta info to database
+END {
+    if ( !$no_insert ) {
+        AlignDB->new(
+            mysql  => "$goal_db:$server",
+            user   => $username,
+            passwd => $password,
+        )->add_meta_stopwatch($stopwatch);
+    }
+}
+exit;
+
+#----------------------------------------------------------#
 # subs
 #----------------------------------------------------------#
 sub build_db_info {
@@ -515,401 +910,6 @@ sub record_complex_indel {
     # record all ingroup indel info to $info{$outgroup}
     $info_of->{$outgroup}{all_indel} = $all_indel_region->runlist;
 }
-
-#----------------------------------------------------------#
-# GetOpt section
-#----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
-
-# record ARGV and Config
-my $stopwatch = AlignDB::Stopwatch->new(
-    program_name => $0,
-    program_argv => [@ARGV],
-    program_conf => $Config,
-);
-
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-
-# Database info
-# Normal order: TvsR, TvsQ1, TvsQ2
-my $dbs;
-my $outgroup;
-my $target;
-my $queries;
-my $goal_db;
-
-# ref parameter
-my $length_threshold = $Config->{ref}{length_threshold};
-my $trimmed_fasta    = $Config->{ref}{trimmed_fasta};
-
-my $no_insert = 0;
-
-my $crude_only = 0;
-
-my $block         = 0;    # output blocked fasta
-my $simple_header = 0;    # output simple header
-
-# realign parameters
-my $indel_expand = $Config->{ref}{indel_expand};
-my $indel_join   = $Config->{ref}{indel_join};
-
-# run init_alignDB.pl or not
-my $init_db = 1;
-
-my $man  = 0;
-my $help = 0;
-
-GetOptions(
-    'help|?'          => \$help,
-    'man'             => \$man,
-    's|server=s'      => \$server,
-    'P|port=i'        => \$port,
-    'u|username=s'    => \$username,
-    'p|password=s'    => \$password,
-    'dbs=s'           => \$dbs,
-    'goal_db=s'       => \$goal_db,
-    'outgroup=s'      => \$outgroup,
-    'target=s'        => \$target,
-    'queries=s'       => \$queries,
-    'length=i'        => \$length_threshold,
-    'block'           => \$block,
-    'simple_header'   => \$simple_header,
-    'crude_only'      => \$crude_only,
-    'trimmed_fasta=s' => \$trimmed_fasta,
-    'init_db=s'       => \$init_db,
-    'no_insert=s'     => \$no_insert,
-    'indel_expand=i'  => \$indel_expand,
-    'indel_join=i'    => \$indel_join,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
-
-#----------------------------------------------------------#
-# perl init_alignDB.pl
-#----------------------------------------------------------#
-$stopwatch->start_message("Joining DBs...");
-
-if ($crude_only) {
-    $no_insert = 1;
-}
-
-if ( !$no_insert and $init_db and $goal_db ) {
-    my $cmd
-        = "perl $FindBin::Bin/../init/init_alignDB.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -d=$goal_db"
-        . " -u=$username"
-        . " --password=$password";
-    print "\n", "=" x 12, "CMD", "=" x 15, "\n";
-    print $cmd , "\n";
-    print "=" x 30, "\n";
-    system($cmd);
-}
-
-#----------------------------------------------------------#
-# dbs, names
-#----------------------------------------------------------#
-my ( @all_dbs, @all_names, @ingroup_names, $target_db );
-{
-    @all_dbs = split ",", $dbs;
-    my @queries = split ",", $queries;
-    if ( scalar @all_dbs != scalar @queries + 1 ) {
-        printf "DB %d\tQueries %d\n", scalar @all_dbs, scalar @queries;
-        die "DB number doesn't match with species number\n";
-    }
-    elsif ( !$target ) {
-        die "Target not defined\n";
-    }
-    elsif ( !$outgroup ) {
-        die "Outgroup not defined\n";
-    }
-    elsif ( !scalar @queries ) {
-        die "Queries not defined\n";
-    }
-
-    @all_names = ( $target, @queries, $outgroup );
-    @ingroup_names = ( $target, @queries );
-
-    $target =~ /^(\d+)(.+)/;
-    $target_db = $all_dbs[$1];
-}
-
-#----------------------------------------------------------#
-# Start
-#----------------------------------------------------------#
-
-#----------------------------#
-# info hash
-#----------------------------#
-my $db_info_of = build_db_info( $server, $username, $password, \@all_dbs );
-
-#----------------------------#
-# build intersect chromosome set
-#----------------------------#
-my $chr_set_of = build_inter_chr( $db_info_of, \@all_dbs, $target_db );
-
-for my $chr_id ( sort keys %{$chr_set_of} ) {
-    my $inter_chr_set = $chr_set_of->{$chr_id};
-    my $chr_name      = $db_info_of->{$target_db}{chrs}{$chr_id}{name};
-
-    #----------------------------#
-    # process each intersects
-    #----------------------------#
-
-    my @segments = $inter_chr_set->spans;
-SEG: for (@segments) {
-        my $seg_start  = $_->[0];
-        my $seg_end    = $_->[1];
-        my $seg_length = $seg_end - $seg_start + 1;
-        next if $seg_length <= $length_threshold;
-
-        print "$chr_name:$seg_start-$seg_end; length:$seg_length\n";
-
-        for my $db_name (@all_dbs) {
-            my $pos_obj = $db_info_of->{$db_name}{pos_obj};
-            my ( $align_id, $dummy ) = @{
-                $pos_obj->positioning_align_chr_id( $chr_id, $seg_start,
-                    $seg_end )
-                };
-
-            if ( !defined $align_id ) {
-                warn " " x 4, "Find no align in $db_name, jump to next\n";
-                next SEG;
-            }
-            elsif ( defined $dummy ) {
-                warn " " x 4, "Overlapped alignment in $db_name!\n";
-            }
-            $db_info_of->{$db_name}{align_id} = $align_id;
-        }
-
-        #----------------------------#
-        # get seq, use align coordinates
-        #----------------------------#
-        for my $db_name (@all_dbs) {
-            print " " x 4, "build $db_name seqs\n";
-            my $align_id = $db_info_of->{$db_name}{align_id};
-
-            my $error
-                = build_seq( $db_info_of->{$db_name}, $seg_start, $seg_end );
-            if ($error) {
-                warn $error . " in $db_name $align_id\n";
-                next SEG;
-            }
-        }
-
-        #----------------------------#
-        # start peusdo-alignment, according to common sequences
-        #----------------------------#
-        {
-            print " " x 4, "start peusdo-alignment\n";
-            my $error = pseudo_align( $db_info_of, \@all_dbs );
-            if ($error) {
-                warn $error, "\n";
-                next SEG;
-            }
-        }
-
-        #----------------------------#
-        # build %info_of all_names hash
-        #----------------------------#
-        my %info_of;
-        for my $name (@all_names) {
-            $name =~ /^(\d+)(.+)/;
-            my $db_name_idx = $1;
-            my $torq        = $2;
-            if ( not( $torq =~ /^t/i or $torq =~ /^q/i ) ) {
-                die "$torq is not equal to target or query\n";
-            }
-            my $db_name = $all_dbs[$db_name_idx];
-            $info_of{$name} = $db_info_of->{$db_name}{$torq};
-        }
-
-        #----------------------------#
-        # output peusdo-aligned fasta, need be refined later
-        # skip all processing thereafter
-        #----------------------------#
-        if ($crude_only) {
-            my $goal_db_crude = "$goal_db.crude";
-            unless ( -e $goal_db_crude ) {
-                mkdir $goal_db_crude, 0777
-                    or die "Cannot create [$goal_db_crude] directory: $!";
-            }
-
-            if ( !$block ) {
-                my $target_taxon_id = $info_of{$target}->{taxon_id};
-                my $outfile
-                    = "./$goal_db_crude/"
-                    . "id$target_taxon_id"
-                    . "_$chr_name"
-                    . "_$seg_start"
-                    . "_$seg_end" . ".fas";
-                print " " x 4, "$outfile\n";
-                open my $out_fh, '>', $outfile;
-                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
-                    $out_fh, $simple_header );
-                close $out_fh;
-            }
-            else {
-                my $outfile = "./$goal_db_crude/" . $chr_name . ".fas";
-                print " " x 4, "$outfile\n";
-                open my $out_fh, '>>', $outfile;
-                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
-                    $out_fh, 1 );
-                print {$out_fh} "\n";
-                close $out_fh;
-            }
-
-            next SEG;
-        }
-
-        #----------------------------#
-        # clustalw realign indel_flank region
-        #----------------------------#
-        {
-            print " " x 4, "start finding realign region\n";
-            realign( \%info_of, \@all_names, $indel_expand, $indel_join );
-        }
-
-        #----------------------------#
-        # trim outgroup only sequence
-        #----------------------------#
-        # if intersect is superset of union
-        #   ref    GAAAAC
-        #   target G----C
-        #   query  G----C
-        {
-            trim_outgroup( \%info_of, \@all_names, \@ingroup_names, $outgroup );
-        }
-
-        #----------------------------#
-        # trim header and footer indels
-        #----------------------------#
-        {
-            trim_hf( \%info_of, \@all_names );
-        }
-
-        #----------------------------#
-        # record complex indels and ingroup indels
-        #----------------------------#
-        # if intersect is subset of union
-        #   ref GGAGAC
-        #   tar G-A-AC
-        #   que G----C
-        {
-            record_complex_indel( \%info_of, \@all_names, \@ingroup_names,
-                $outgroup );
-        }
-
-        #----------------------------#
-        # output a fasta alignment for further use
-        #----------------------------#
-        if ($trimmed_fasta) {
-            unless ( -e $goal_db ) {
-                mkdir $goal_db, 0777
-                    or die "Cannot create [$goal_db] directory: $!";
-            }
-
-            if ( !$block ) {
-                my $target_taxon_id = $info_of{$target}->{taxon_id};
-                my $outfile
-                    = "./$goal_db/"
-                    . "id$target_taxon_id"
-                    . "_$chr_name"
-                    . "_$seg_start"
-                    . "_$seg_end" . ".fas";
-                print " " x 4, "$outfile\n";
-                open my $out_fh, '>', $outfile;
-                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
-                    $out_fh, $simple_header );
-                close $out_fh;
-            }
-            else {
-                my $outfile = "./$goal_db/" . $chr_name . ".fas";
-                print " " x 4, "$outfile\n";
-                open my $out_fh, '>>', $outfile;
-                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
-                    $out_fh, 1 );
-                print {$out_fh} "\n";
-                close $out_fh;
-            }
-        }
-
-        #----------------------------#
-        # insert as a three-way alignDB
-        #----------------------------#
-        if ( !$no_insert ) {
-            my $goal_obj = AlignDB->new(
-                mysql  => "$goal_db:$server",
-                user   => $username,
-                passwd => $password,
-            );
-
-            # keep the original order of target and queries
-            my %ingroup_order;
-            for ( 0 .. @ingroup_names - 1 ) {
-                $ingroup_order{ $ingroup_names[$_] } = $_;
-            }
-            my $combinat = Math::Combinatorics->new(
-                count => 2,
-                data  => \@ingroup_names,
-            );
-            while ( my @combo = $combinat->next_combination ) {
-                @combo
-                    = sort { $ingroup_order{$a} <=> $ingroup_order{$b} } @combo;
-                my ( $tname, $qname ) = @combo;
-                print " " x 4, "insert $tname $qname\n";
-                $goal_obj->update_names(
-                    {   $info_of{$tname}->{taxon_id} =>
-                            $info_of{$tname}->{name},
-                        $info_of{$qname}->{taxon_id} =>
-                            $info_of{$qname}->{name},
-                        $info_of{$outgroup}->{taxon_id} =>
-                            $info_of{$outgroup}->{name},
-                    }
-                );
-                my $cur_align_id
-                    = $goal_obj->add_align( $info_of{$tname}, $info_of{$qname},
-                    $info_of{$outgroup}, $info_of{$outgroup}->{all_indel} );
-            }
-        }
-    }
-}
-
-if ( !$no_insert and $init_db and $goal_db ) {
-    my $cmd
-        = "perl $FindBin::Bin/../init/update_isw_indel_id.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -d=$goal_db"
-        . " -u=$username"
-        . " --password=$password";
-    print "\n", "=" x 12, "CMD", "=" x 15, "\n";
-    print $cmd , "\n";
-    print "=" x 30, "\n";
-    system($cmd);
-}
-
-$stopwatch->end_message;
-
-
-# store program running meta info to database
-END {
-    if ( !$no_insert ) {
-        AlignDB->new(
-            mysql  => "$goal_db:$server",
-            user   => $username,
-            passwd => $password,
-        )->add_meta_stopwatch($stopwatch);
-    }
-}
-exit;
 
 __END__
 
