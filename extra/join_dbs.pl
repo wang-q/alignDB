@@ -420,6 +420,16 @@ SEG: for (@segments) {
     }
 }
 
+if ( !$no_insert and $goal_db and $multi ) {
+    $stopwatch->block_message("Modify $goal_db...");
+    my $obj = AlignDB::Multi->new(
+        mysql  => "$goal_db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+    $obj->modify_misc;
+}
+
 $stopwatch->end_message;
 
 # store program running meta info to database

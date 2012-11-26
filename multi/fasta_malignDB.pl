@@ -181,16 +181,16 @@ $run->run;
 $stopwatch->block_message( "All files have been processed.", "duration" );
 
 #----------------------------------------------------------#
-# start update
+# start modify
 #----------------------------------------------------------#
 {
-    $stopwatch->block_message("Update $db...");
+    $stopwatch->block_message("Modify $db...");
     my $obj = AlignDB::Multi->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
     );
-    $obj->update_misc;
+    $obj->modify_misc;
 }
 
 $stopwatch->end_message;

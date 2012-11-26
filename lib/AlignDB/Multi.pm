@@ -495,7 +495,7 @@ sub parse_block_fasta_file {
     return;
 }
 
-sub update_misc {
+sub modify_misc {
     my $self = shift;
 
     $self->update_snp;
