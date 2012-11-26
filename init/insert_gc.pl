@@ -155,10 +155,10 @@ my $worker = sub {
 
     # alignments' chromosomal location, target_seq and query_seq
     my $align_seq_query = q{
-        SELECT a.align_length,
-               a.align_comparable_runlist
-        FROM align a
-        AND a.align_id = ?
+        SELECT  a.align_length,
+                a.align_comparable_runlist
+        FROM    align a
+        WHERE   a.align_id = ?
     };
     my $align_seq_sth = $dbh->prepare($align_seq_query);
 
