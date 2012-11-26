@@ -325,7 +325,7 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
 
     print {$fh} "# join_dbs.pl\n";
     print {$fh} "perl $FindBin::Bin/../extra/join_dbs.pl"
-        . " --no_insert 1 --trimmed_fasta 1"
+        . " --multi --trimmed_fasta 1"
         . " --length 1000"
         . " --goal_db $name_str"
         . " --outgroup 0query --target 0target"
@@ -345,11 +345,11 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
     print {$fh} "# multi-way batch\n";
     print {$fh} "perl $FindBin::Bin/../extra/multi_way_batch.pl"
         . " -d $name_str"
-        . " -f $working_dir/$name_str"
+        . " -f $working_dir/$name_str"    # will not use this
         . " --gff_file "
         . join( ",", @new_gff_files )
         . " -lt 1000 -st 0 --parallel $parallel --batch 5"
-        . " --run 1-3,10,21,30-32,40,41,43\n\n";
+        . " --run 10,21,30-32,40,41,43\n\n";
 
     print {$fh} "cd ..\n\n";
 
