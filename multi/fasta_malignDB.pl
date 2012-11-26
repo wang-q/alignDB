@@ -84,13 +84,21 @@ system "perl $FindBin::Bin/../init/init_alignDB.pl"
 
 my $id_of = {};
 {
+    my $name_of = {};
     open my $fh, '<', $file_id_of;
     while (<$fh>) {
         chomp;
         my ( $id, $name ) = split /,/;
         $id_of->{$name} = $id;
+        $name_of->{$id} = $name;
     }
     close $fh;
+
+    AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    )->update_names($name_of);
 }
 
 #----------------------------------------------------------#
