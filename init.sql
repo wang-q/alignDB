@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     11/23/2012 8:33:48 PM                        */
+/* Created on:     11/26/2012 4:59:33 PM                        */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -325,6 +325,7 @@ create table isw
    isw_id                         int                            not null AUTO_INCREMENT,
    indel_id                       int,
    prev_indel_id                  int,
+   isw_indel_id                   int,
    isw_start                      int,
    isw_end                        int,
    isw_length                     int,
