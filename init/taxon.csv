@@ -10,10 +10,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 226126,Saccharomyces,mikatae,IFO 1815,,mikatae Saccharomyces Saccharomycetaceae Saccharomycetales Saccharomycetes Saccharomycotina Ascomycota Fungi Metazoa Eukaryota
 39946,Oryza,sativa,(indica cultivar-group),Indian rice,sativa Oryza Oryzeae Ehrhartoideae Poaceae Poales commelinids Liliopsida Magnoliophyta Spermatophyta Euphyllophyta Tracheophyta Embryophyta Streptophytina Streptophyta Viridiplantae Eukaryota
 39947,Oryza,sativa,(japonica cultivar-group),Japanese rice,sativa Oryza Oryzeae Ehrhartoideae Poaceae Poales commelinids Liliopsida Magnoliophyta Spermatophyta Euphyllophyta Tracheophyta Embryophyta Streptophytina Streptophyta Viridiplantae Eukaryota
-188937,Methanosarcina,acetivorans,C2A,,acetivorans Methanosarcina Methanosarcina Methanosarcinaceae Methanosarcinales Methanomicrobia Euryarchaeota Archaea
-192952,Methanosarcina,mazei,Go1,,mazei Methanosarcina Methanosarcina Methanosarcinaceae Methanosarcinales Methanomicrobia Euryarchaeota Archaea
-155864,Escherichia,coli,O157:H7 EDL933,,coli Escherichia Enterobacteriaceae Enterobacteriales Gammaproteobacteria Proteobacteria Bacteria
-176299,Agrobacterium,tumefaciens,str. C58,,Agrobacterium Rhizobium/Agrobacterium group Rhizobiaceae Rhizobiales Alphaproteobacteria Proteobacteria Bacteria
 7227,Drosophila,melanogaster,,Fruit fly,melanogaster Drosophila Drosophilidae Ephydroidea Muscomorpha Brachycer Diptera Endopterygota Neoptera Pterygota Insecta Hexapoda Arthropoda Metazoa Eukaryota
 7244,Drosophila,virilis,,Fruit fly,virilis Drosophila Drosophilidae Ephydroidea Muscomorpha Brachycera Diptera Endopterygota Neoptera Pterygota Insecta Hexapoda Arthropoda Metazoa Eukaryota
 7240,Drosophila,simulans,,Fruit fly,simulans Drosophila Drosophilidae Ephydroidea Muscomorpha Brachycera Diptera Endopterygota Neoptera Pterygota Insecta Hexapoda Arthropoda Metazoa Eukaryota
@@ -26,8 +22,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 7260,Drosophila,willistoni,,Fruit fly,willistoni Drosophila Drosophilidae Ephydroidea Muscomorpha Brachycera Diptera Endopterygota Neoptera Pterygota Insecta Hexapoda Arthropoda Metazoa Eukaryota
 7245,Drosophila,yakuba,,Fruit fly,yakuba Drosophila Drosophilidae Ephydroidea Muscomorpha Brachycera Diptera Endopterygota Neoptera Pterygota Insecta Hexapoda Arthropoda Metazoa Eukaryota
 7217,Drosophila,ananassae,,Fruit fly,ananassae Drosophila Drosophilidae Ephydroidea Muscomorpha Brachycera Diptera Endopterygota Neoptera Pterygota Insecta Hexapoda Arthropoda Metazoa Eukaryota
-272560,Burkholderia,pseudomallei,K96243,,cellular organisms Bacteria Proteobacteria Betaproteobacteria Burkholderiales Burkholderiaceae Burkholderia pseudomallei group Burkholderia pseudomallei
-320372,Burkholderia,pseudomallei,1710b,,cellular organisms Bacteria Proteobacteria Betaproteobacteria Burkholderiales Burkholderiaceae Burkholderia pseudomallei group Burkholderia pseudomallei
 4538,Oryza,glaberrima,,African rice,
 63632,Agrostis,stolonifera,,creeping bent grass,
 112509,Hordeum,vulgare,vulgare,barley,
@@ -107,1392 +101,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 36329,Plasmodium,falciparum,Pfal,,
 5851,Plasmodium,knowlesi,Pkno,,
 5855,Plasmodium,vivax,Pviv,,
-240015,Acidobacterium,capsulatum,ATCC 51196,,
-234267,Candidatus Solibacter,usitatus,Ellin6076,,
-204669,Candidatus Koribacter,versatilis,Ellin345,,
-696844,Acidobacterium,sp. MP5ACTX9,,,
-401053,Terriglobus,saanensis,SP1PR4,,
-465515,Micrococcus,luteus,NCTC 2665,,
-478801,Kytococcus,sedentarius,DSM 20547,,
-521095,Atopobium,parvulum,DSM 20469,,
-281090,Leifsonia,xyli,subsp. xyli str. CTCB07,,
-288705,Renibacterium,salmoninarum,ATCC 33209,,
-367928,Bifidobacterium,adolescentis,ATCC 15703,,
-883062,Bifidobacterium,bifidum,S17,,
-702459,Bifidobacterium,bifidum,PRL2010,,
-401473,Bifidobacterium,dentium,Bd1,,
-590998,Cellulomonas,fimi,ATCC 484,,
-446466,Cellulomonas,flavigena,DSM 20109,,
-257309,Corynebacterium,diphtheriae,NCTC 13129,,
-340322,Corynebacterium,glutamicum,R,,
-765874,Corynebacterium,pseudotuberculosis,FRC41,,
-754252,Propionibacterium,freudenreichii,subsp. shermanii CIRM-BIA1,,
-267747,Propionibacterium,acnes,KPA171202,,
-553199,Propionibacterium,acnes,SK137,,
-262316,Mycobacterium,avium,subsp. paratuberculosis K-10,,
-243243,Mycobacterium,avium,104,,
-233413,Mycobacterium,bovis,AF2122/97,,
-410289,Mycobacterium,bovis,BCG str. Pasteur 1173P2,,
-561275,Mycobacterium,bovis,BCG str. Tokyo 172,,
-272631,Mycobacterium,leprae,TN,,
-561304,Mycobacterium,leprae,Br4923,,
-246196,Mycobacterium,smegmatis,str. MC2 155,,
-83332,Mycobacterium,tuberculosis,H37Rv,,
-83331,Mycobacterium,tuberculosis,CDC1551,,
-419947,Mycobacterium,tuberculosis,H37Ra,,
-336982,Mycobacterium,tuberculosis,F11,,
-478434,Mycobacterium,tuberculosis,KZN 1435,,
-216594,Mycobacterium,marinum,M,,
-350054,Mycobacterium,gilvum,PYR-GCK,,
-362242,Mycobacterium,ulcerans,Agy99,,
-234621,Rhodococcus,erythropolis,PR4,,
-405948,Saccharopolyspora,erythraea,NRRL 2338,,
-471857,Saccharomonospora,viridis,DSM 43017,,
-326424,Frankia,alni,ACN14a,,
-526225,Geodermatophilus,obscurus,DSM 43160,,
-100226,Streptomyces,coelicolor,A3(2),,
-455632,Streptomyces,griseus,subsp. griseus NBRC 13350,,
-680198,Streptomyces,scabiei,87.22,,
-479432,Streptosporangium,roseum,DSM 43021,,
-469371,Thermobispora,bispora,DSM 43833,,
-446468,Nocardiopsis,dassonvillei,subsp. dassonvillei DSM 43111,,
-471852,Thermomonospora,curvata,DSM 43183,,
-269800,Thermobifida,fusca,YX,,
-979556,Microbacterium,testaceum,StLB037,,
-218496,Tropheryma,whipplei,TW08/27,,
-203267,Tropheryma,whipplei,str. Twist,,
-762948,Rothia,dentocariosa,ATCC 17931,,
-548479,Mobiluncus,curtisii,ATCC 43063,,
-526226,Gordonia,bronchialis,DSM 43247,,
-521096,Tsukamurella,paurometabola,DSM 20162,,
-525284,Gardnerella,vaginalis,ATCC 14019,,
-553190,Gardnerella,vaginalis,409-05,,
-442563,Bifidobacterium,animalis,subsp. lactis AD011,,
-580050,Bifidobacterium,animalis,subsp. lactis Bl-04,,
-555970,Bifidobacterium,animalis,subsp. lactis DSM 10140,,
-351607,Acidothermus,cellulolyticus,11B,,
-644284,Arcanobacterium,haemolyticum,DSM 20595,,
-443906,Clavibacter,michiganensis,subsp. michiganensis NCPPB 382,,
-31964,Clavibacter,michiganensis,subsp. sepedonicus,,
-1032480,Microlunatus,phosphovorus,NM-1,,
-700015,Coriobacterium,glomerans,PW2,,
-572418,Mycobacterium,africanum,GM041182,,
-227882,Streptomyces,avermitilis,MA-4680,,
-749927,Amycolatopsis,mediterranei,U32,,
-561007,Mycobacterium,abscessus,ATCC 19977,,
-247156,Nocardia,farcinica,IFM 10152,,
-632772,Rhodococcus,opacus,B4,,
-306537,Corynebacterium,jeikeium,K411,,
-446462,Actinosynnema,mirum,DSM 43827,,
-290340,Arthrobacter,aurescens,TC1,,
-446465,Brachybacterium,faecium,DSM 4810,,
-471856,Jonesia,denitrificans,DSM 20603,,
-685727,Rhodococcus,equi,103S,,
-504474,Corynebacterium,urealyticum,DSM 7109,,
-644283,Micromonospora,aurantiaca,ATCC 27029,,
-266117,Rubrobacter,xylanophilus,DSM 9941,,
-710696,Intrasporangium,calvum,DSM 43043,,
-479431,Nakamurella,multipartita,DSM 44233,,
-525909,Acidimicrobium,ferrooxidans,DSM 10331,,
-446469,Sanguibacter,keddieii,DSM 10542,,
-945712,Corynebacterium,ulcerans,BR-AD22,,
-378753,Kocuria,rhizophila,DC2201,,
-471855,Slackia,heliotrinireducens,DSM 20476,,
-479437,Eggerthella,lenta,DSM 2243,,
-469378,Cryptobacterium,curtum,DSM 15641,,
-471853,Beutenbergia,cavernae,DSM 12333,,
-452863,Arthrobacter,chlorophenolicus,A6,,
-106370,Frankia,sp. CcI3,,,
-350058,Mycobacterium,vanbaalenii,PYR-1,,
-266940,Kineococcus,radiotolerans,SRS30216,,
-101510,Rhodococcus,jostii,RHA1,,
-633147,Olsenella,uli,DSM 7084,,
-743718,Isoptericola,variabilis,225,,
-196164,Corynebacterium,efficiens,YS-314,,
-645127,Corynebacterium,kroppenstedtii,DSM 44385,,
-164756,Mycobacterium,sp. MCS,,,
-164757,Mycobacterium,sp. JLS,,,
-369723,Salinispora,tropica,CNB-440,,
-391037,Salinispora,arenicola,CNS-205,,
-548476,Corynebacterium,aurimucosum,ATCC 700975,,
-479435,Kribbella,flavida,DSM 17836,,
-446471,Xylanimonas,cellulosilytica,DSM 15894,,
-189918,Mycobacterium,sp. KMS,,,
-469383,Conexibacter,woesei,DSM 14684,,
-196162,Nocardioides,sp. JS614,,,
-206672,Bifidobacterium,longum,NCC2705,,
-205913,Bifidobacterium,longum,DJO10A,,
-391904,Bifidobacterium,longum,subsp. infantis ATCC 15697,,
-759350,Bifidobacterium,longum,subsp. longum JDM301,,
-890402,Bifidobacterium,longum,subsp. longum BBMN68,,
-565040,Bifidobacterium,longum,subsp. infantis 157F,,
-565042,Bifidobacterium,longum,subsp. longum JCM 1217,,
-675635,Pseudonocardia,dioxanivorans,CB1190,,
-861360,Arthrobacter,arilaitensis,Re117,,
-662755,Corynebacterium,resistens,DSM 45100,,
-278137,Mycobacterium,sp. Spyr1,,,
-446470,Stackebrandtia,nassauensis,DSM 44728,,
-640132,Segniliparus,rotundus,DSM 44985,,
-290399,Arthrobacter,sp. FB24,,,
-298653,Frankia,sp. EAN1pec,,,
-298654,Frankia,sp. EuI1c,,,
-479433,Catenulispora,acidiphila,DSM 44928,,
-930171,Arthrobacter,phenanthrenivorans,Sphe3,,
-502558,Eggerthella,sp. YY7918,,,
-443218,Amycolicicoccus,subflavus,DQS3-9A1,,
-648999,Micromonospora,sp. L5,,,
-656024,Frankia,symbiont of Datisca glomerata,,,
-875328,Mycobacterium,sp. JDM601,,,
-263358,Verrucosispora,maris,AB-18-032,,
-438753,Azorhizobium,caulinodans,ORS 571,,
-262698,Brucella,abortus,bv. 1 str. 9-941,,
-359391,Brucella,abortus,Brucella melitensis biovar Abortus 2308,,
-430066,Brucella,abortus,S19,,
-444178,Brucella,ovis,ATCC 25840,,
-318586,Paracoccus,denitrificans,PD1222,,
-78245,Xanthobacter,autotrophicus,Py2,,
-176299,Agrobacterium,tumefaciens,str. C58,,
-311403,Agrobacterium,tumefaciens,Agrobacterium radiobacter K84,,
-311402,Agrobacterium,vitis,S4,,
-224911,Bradyrhizobium,japonicum,USDA 110,,
-394,Sinorhizobium,fredii,NGR234,,
-266835,Mesorhizobium,loti,MAFF303099,,
-266834,Sinorhizobium,meliloti,1021,,
-693982,Sinorhizobium,meliloti,AK83,,
-216596,Rhizobium,leguminosarum,bv. viciae 3841,,
-395492,Rhizobium,leguminosarum,bv. trifolii WSM2304,,
-395491,Rhizobium,leguminosarum,bv. trifolii WSM1325,,
-419610,Methylobacterium,extorquens,PA1,,
-272630,Methylobacterium,extorquens,AM1,,
-661410,Methylobacterium,extorquens,DM4,,
-634452,Acetobacter,pasteurianus,IFO 3283-01,,
-290633,Gluconobacter,oxydans,621H,,
-349163,Acidiphilium,cryptum,JF-5,,
-439375,Ochrobactrum,anthropi,ATCC 49188,,
-395963,Beijerinckia,indica,subsp. indica ATCC 9039,,
-622759,Zymomonas,mobilis,subsp. mobilis NCIMB 11163,,
-579138,Zymomonas,mobilis,subsp. pomaceae ATCC 29192,,
-574556,Anaplasma,centrale,str. Israel,,
-234826,Anaplasma,marginale,str. St. Maries,,
-320483,Anaplasma,marginale,str. Florida,,
-360095,Bartonella,bacilliformis,KC583,,
-302409,Ehrlichia,ruminantium,str. Gardel,,
-272944,Rickettsia,conorii,str. Malish 7,,
-272947,Rickettsia,prowazekii,str. Madrid E,,
-392021,Rickettsia,rickettsii,str. 'Sheila Smith',,
-452659,Rickettsia,rickettsii,str. Iowa,,
-357244,Orientia,tsutsugamushi,str. Boryong,,
-334380,Orientia,tsutsugamushi,str. Ikeda,,
-257363,Rickettsia,typhi,str. Wilmington,,
-293614,Rickettsia,akari,str. Hartford,,
-293613,Rickettsia,canadensis,str. McKiel,,
-283165,Bartonella,quintana,str. Toulouse,,
-323097,Nitrobacter,hamburgensis,X14,,
-323098,Nitrobacter,winogradskyi,Nb-255,,
-639283,Starkeya,novella,DSM 506,,
-269484,Ehrlichia,canis,str. Jake,,
-205920,Ehrlichia,chaffeensis,str. Arkansas,,
-212042,Anaplasma,phagocytophilum,HZ,,
-434131,Neorickettsia,risticii,str. Illinois,,
-222891,Neorickettsia,sennetsu,str. Miyayama,,
-272942,Rhodobacter,capsulatus,SB 1003,,
-272943,Rhodobacter,sphaeroides,2.4.1,,
-349101,Rhodobacter,sphaeroides,ATCC 17029,,
-349102,Rhodobacter,sphaeroides,ATCC 17025,,
-557760,Rhodobacter,sphaeroides,KD131,,
-648757,Rhodomicrobium,vannielii,ATCC 17100,,
-258594,Rhodopseudomonas,palustris,CGA009,,
-316058,Rhodopseudomonas,palustris,HaA2,,
-316056,Rhodopseudomonas,palustris,BisB18,,
-316057,Rhodopseudomonas,palustris,BisB5,,
-316055,Rhodopseudomonas,palustris,BisA53,,
-395960,Rhodopseudomonas,palustris,TIE-1,,
-652103,Rhodopseudomonas,palustris,DX-1,,
-269796,Rhodospirillum,rubrum,ATCC 11170,,
-375451,Roseobacter,denitrificans,OCh 114,,
-582402,Hirschia,baltica,ATCC 49814,,
-347834,Rhizobium,etli,CFN 42,,
-491916,Rhizobium,etli,CIAT 652,,
-224914,Brucella,melitensis,bv. 1 str. 16M,,
-546272,Brucella,melitensis,ATCC 23457,,
-204722,Brucella,suis,1330,,
-470137,Brucella,suis,ATCC 23445,,
-426355,Methylobacterium,radiotolerans,JCM 2831,,
-634504,Bartonella,grahamii,as4aup,,
-336407,Rickettsia,bellii,RML369-C,,
-391896,Rickettsia,bellii,OSU 85-389,,
-414684,Rhodospirillum,centenum,SW,,
-537021,Candidatus Liberibacter,asiaticus,str. psy62,,
-347255,Rickettsia,africae,ESF-5,,
-416276,Rickettsia,massiliae,MTU5,,
-483179,Brucella,canis,ATCC 23365,,
-283166,Bartonella,henselae,str. Houston-1,,
-765698,Mesorhizobium,ciceri,biovar biserrulae WSM1271,,
-314225,Erythrobacter,litoralis,HTCC2594,,
-391595,Roseobacter,litoralis,Och 149,,
-315456,Rickettsia,felis,URRWXCal2,,
-690566,Sphingobium,chlorophenolicum,L-1,,
-562019,Rickettsia,peacockii,str. Rustic,,
-279238,Novosphingobium,aromaticivorans,DSM 12444,,
-582899,Hyphomicrobium,denitrificans,ATCC 51888,,
-696125,Bartonella,clarridgeiae,73,,
-66084,Wolbachia,sp. wRi,,,
-633149,Brevundimonas,subvibrioides,ATCC 15264,,
-394221,Maricaulis,maris,MCS10,,
-573065,Asticcacaulis,excentricus,CB 48,,
-292805,Wolbachia,endosymbiont of Brugia malayi,Wolbachia endosymbiont strain TRS of Brugia malayi,,
-228405,Hyphomonas,neptunium,ATCC 15444,,
-440085,Methylobacterium,chloromethanicum,CM4,,
-342108,Magnetospirillum,magneticum,AMB-1,,
-382640,Bartonella,tribocorum,CIP 105476,,
-509190,Caulobacter,segnis,ATCC 21756,,
-246200,Ruegeria,pomeroyi,DSS-3,,
-880591,Ketogulonicigenium,vulgare,Y25,,
-366394,Sinorhizobium,medicae,WSM419,,
-114615,Bradyrhizobium,sp. ORS 278,Bradyrhizobium sp. ORS278,,
-460265,Methylobacterium,nodulans,ORS 2060,,
-317655,Sphingopyxis,alaskensis,RB2256,,
-137722,Azospirillum,sp. B510,,,
-190650,Caulobacter,vibrioides,Caulobacter crescentus CB15,,
-565050,Caulobacter,vibrioides,Caulobacter crescentus NA1000,,
-392499,Sphingomonas,wittichii,RW1,,
-163164,Wolbachia,endosymbiont of Drosophila melanogaster,,,
-335992,Candidatus Pelagibacter,ubique,HTCC1062,,
-395965,Methylocella,silvestris,BL2,,
-314260,Parvularcula,bermudensis,HTCC2503,,
-398580,Dinoroseobacter,shibae,DFL 12,,
-441620,Methylobacterium,populi,BJ001,,
-1032845,Rickettsia,heilongjiangensis,54,,
-696127,Candidatus Midichloria,mitochondrii,IricVA,,
-402881,Parvibaculum,lavamentivorans,DS-1,,
-570417,Wolbachia,endosymbiont of Culex quinquefasciatus,Pel,,
-266779,Chelativorans,sp. BNC1,,,
-450851,Phenylobacterium,zucineum,HLK1,,
-288000,Bradyrhizobium,sp. BTAi1,,,
-290400,Jannaschia,sp. CCS1,,,
-292414,Ruegeria,sp. TM1040,,,
-452662,Sphingobium,japonicum,UT26S,,
-391165,Granulibacter,bethesdensis,CGDNIH1,,
-366602,Caulobacter,sp. K31,,,
-426117,Methylobacterium,sp. 4-46,,,
-568815,Brucella,microti,CCM 4915,,
-658172,Candidatus Liberibacter,solanacearum,CLso-ZC1,,
-573234,Candidatus Hodgkinia,cicadicola,Dsem,,
-702113,Novosphingobium,sp. PP1Y,,,
-488538,Candidatus Puniceispirillum,marinum,IMCC1322,,
-861208,Agrobacterium,sp. H13-3,,,
-991905,,Polymorphum gilvum,SL003B-26A1,,
-608538,Hydrogenobacter,thermophilus,TK-6,,
-224324,Aquifex,aeolicus,VF5,,
-868864,Desulfurobacterium,thermolithotrophum,DSM 11699,,
-638303,Thermocrinis,albus,DSM 14484,,
-648996,Thermovibrio,ammonificans,HB-1,,
-123214,Persephonella,marina,EX-H1,,
-204536,Sulfurihydrogenibium,azorense,Az-Fu1,,
-380749,Hydrogenobaculum,sp. Y04AAS1,,,
-436114,Sulfurihydrogenibium,sp. YO3AOP1,,,
-880070,Cyclobacterium,marinum,DSM 745,,
-761193,Runella,slithyformis,DSM 19594,,
-504472,Spirosoma,linguale,DSM 74,,
-295405,Bacteroides,fragilis,YCH46,,
-272559,Bacteroides,fragilis,NCTC 9343,,
-226186,Bacteroides,thetaiotaomicron,VPI-5482,,
-435590,Bacteroides,vulgatus,ATCC 8482,,
-435591,Parabacteroides,distasonis,ATCC 8503,,
-242619,Porphyromonas,gingivalis,W83,,
-431947,Porphyromonas,gingivalis,ATCC 33277,,
-1030843,Porphyromonas,gingivalis,TDC60,,
-264731,Prevotella,ruminicola,23,,
-867900,Cellulophaga,lytica,DSM 7489,,
-485917,Pedobacter,heparinus,DSM 2366,,
-269798,Cytophaga,hutchinsonii,ATCC 33406,,
-376686,Flavobacterium,johnsoniae,UW101,,
-643867,Marivirga,tractuosa,DSM 4126,,
-865938,Weeksella,virosa,DSM 16922,,
-521097,Capnocytophaga,ochracea,DSM 7271,,
-290315,Chlorobium,limicola,DSM 245,,
-290318,Chlorobium,phaeovibrioides,DSM 265,,
-290317,Chlorobium,phaeobacteroides,DSM 266,,
-331678,Chlorobium,phaeobacteroides,BS1,,
-194439,Chlorobaculum,tepidum,Chlorobium tepidum TLS,,
-319225,Pelodictyon,luteolum,Chlorobium luteolum DSM 273,,
-290512,Prosthecochloris,aestuarii,DSM 271,,
-760192,Haliscomenobacter,hydrossis,DSM 1100,,
-709991,Odoribacter,splanchnicus,DSM 20712,,
-879243,Porphyromonas,asaccharolytica,DSM 20707,,
-767031,Prevotella,denticola,F0289,,
-553174,Prevotella,melaninogenica,ATCC 25845,,
-860228,Capnocytophaga,canimorsus,Cc5,,
-518766,Rhodothermus,marinus,DSM 4252,,
-693978,Riemerella,anatipestifer,DSM 15868,,
-324925,Pelodictyon,phaeoclathratiforme,BU-1,,
-688270,Cellulophaga,algicola,DSM 14237,,
-485918,Chitinophaga,pinensis,DSM 2588,,
-471854,Dyadobacter,fermentans,DSM 18053,,
-402612,Flavobacterium,psychrophilum,JIP02/86,,
-517418,Chloroherpeton,thalassium,ATCC 35110,,
-309807,Salinibacter,ruber,DSM 13855,,
-762903,Pedobacter,saltans,DSM 12145,,
-694427,Paludibacter,propionicigenes,WB4,,
-755732,Fluviicola,taffensis,DSM 16823,,
-313596,Robiginitalea,biformata,HTCC2501,,
-517417,Chlorobaculum,parvum,NCIB 8327,,
-452471,Candidatus Amoebophilus,asiaticus,5a2,,
-693979,Bacteroides,helcogenes,P 36-108,,
-216432,Croceibacter,atlanticus,HTCC2559,,
-313603,Maribacter,sp. HTCC2170,,,
-649349,Leadbetterella,byssophila,DSM 17132,,
-444179,Candidatus Sulcia,muelleri,GWSS,,
-595499,Candidatus Sulcia,muelleri,SMDSEM,,
-641892,Candidatus Sulcia,muelleri,DMIN,,
-706194,Candidatus Sulcia,muelleri,CARI,,
-340177,Chlorobium,chlorochromatii,CaD3,,
-600809,Blattabacterium,sp. (Periplaneta americana),Blattabacterium sp. (Periplaneta americana) str. BPLAN,,
-667015,Bacteroides,salanitronis,DSM 18170,,
-655815,Zunongwangia,profunda,SM-A87,,
-411154,Gramella,forsetii,KT0803,,
-511995,Candidatus Azobacteroides,pseudotrichonymphae,genomovar. CFP2,,
-531844,,Flavobacteriaceae bacterium 3519-10,,,
-331104,Blattabacterium,sp. (Blattella germanica),Blattabacterium sp. (Blattella germanica) str. Bge,,
-743722,Sphingobacterium,sp. 21,,,
-983544,Lacinutrix,sp. 5H-3-7-4,,,
-267608,Ralstonia,solanacearum,GMI1000,,
-402626,Ralstonia,pickettii,12J,,
-428406,Ralstonia,pickettii,12D,,
-626418,Burkholderia,glumae,BGR1,,
-265072,Methylobacillus,flagellatus,KT,,
-242231,Neisseria,gonorrhoeae,FA 1090,,
-521006,Neisseria,gonorrhoeae,NCCP11945,,
-489653,Neisseria,lactamica,020-06,,
-122586,Neisseria,meningitidis,MC58,,
-122587,Neisseria,meningitidis,Z2491,,
-272831,Neisseria,meningitidis,FAM18,,
-374833,Neisseria,meningitidis,53442,,
-662598,Neisseria,meningitidis,alpha14,,
-257310,Bordetella,bronchiseptica,RB50,,
-257311,Bordetella,parapertussis,12822,,
-257313,Bordetella,pertussis,Tohama I,,
-360910,Bordetella,avium,197N,,
-243365,Chromobacterium,violaceum,ATCC 12472,,
-228410,Nitrosomonas,europaea,ATCC 19718,,
-335283,Nitrosomonas,eutropha,C91,,
-75379,Thiomonas,intermedia,K12,,
-757424,Herbaspirillum,seropedicae,SmR1,,
-323848,Nitrosospira,multiformis,ATCC 25196,,
-243160,Burkholderia,mallei,ATCC 23344,,
-320388,Burkholderia,mallei,SAVP1,,
-412022,Burkholderia,mallei,NCTC 10229,,
-320389,Burkholderia,mallei,NCTC 10247,,
-999541,Burkholderia,gladioli,BSR3,,
-272560,Burkholderia,pseudomallei,K96243,,
-320372,Burkholderia,pseudomallei,1710b,,
-357348,Burkholderia,pseudomallei,1106a,,
-320373,Burkholderia,pseudomallei,668,,
-937774,Taylorella,equigenitalis,MCE9,,
-395495,Leptothrix,cholodnii,SP-6,,
-543728,Variovorax,paradoxus,S110,,
-595537,Variovorax,paradoxus,EPS,,
-292415,Thiobacillus,denitrificans,ATCC 25259,,
-266265,Burkholderia,xenovorans,LB400,,
-271848,Burkholderia,thailandensis,E264,,
-269482,Burkholderia,vietnamiensis,G4,,
-62928,Azoarcus,sp. BH72,,,
-398578,Delftia,acidovorans,SPH-1,,
-643561,Acidovorax,avenae,subsp. avenae ATCC 19860,,
-397945,Acidovorax,citrulli,AAC00-1,,
-85643,Thauera,sp. MZ1T,,,
-762376,Achromobacter,xylosoxidans,A8,,
-365046,Ramlibacter,tataouinensis,TTB310,,
-340100,Bordetella,petrii,DSM 12804,,
-331271,Burkholderia,cenocepacia,AU 1054,,
-331272,Burkholderia,cenocepacia,HI2424,,
-406425,Burkholderia,cenocepacia,MC0-3,,
-216591,Burkholderia,cenocepacia,J2315,,
-420662,Methylibium,petroleiphilum,PM1,,
-381666,Cupriavidus,necator,Ralstonia eutropha H16,,
-1042878,Cupriavidus,necator,N-1,,
-391038,Burkholderia,phymatum,STM815,,
-339670,Burkholderia,ambifaria,AMMD,,
-398577,Burkholderia,ambifaria,MC40-6,,
-153948,Nitrosomonas,sp. AL212,,,
-557598,Laribacter,hongkongensis,HLHK9,,
-596153,Alicycliphilus,denitrificans,BC,,
-596154,Alicycliphilus,denitrificans,K601,,
-891398,Candidatus Tremblaya,princeps,PCIT,,
-338969,Albidiferax,ferrireducens,Rhodoferax ferrireducens T118,,
-204773,Herminiimonas,arsenicoxydans,,,
-365044,Polaromonas,naphthalenivorans,CJ2,,
-232721,Acidovorax,sp. JS42,,,
-264198,Cupriavidus,pinatubonensis,Ralstonia eutropha JMP134,,
-159087,Dechloromonas,aromatica,RCB,,
-261292,Nitrosomonas,sp. Is79A3,,,
-398527,Burkholderia,phytofirmans,PsJN,,
-582744,Methylovorus,glucosotrophus,Methylovorus glucosetrophus SIP3-4,,
-269483,Burkholderia,sp. 383,,,
-296591,Polaromonas,sp. JS666,,,
-522306,Candidatus Accumulibacter,phosphatis,clade IIA str. UW-1,,
-583345,Methylotenera,mobilis,JLW8,,
-391735,Verminephrobacter,eiseniae,EF01-2,,
-395494,Gallionella,capsiferriformans,ES-2,,
-375286,Janthinobacterium,sp. Marseille,,,
-882378,Burkholderia,rhizoxinica,HKI 454,,
-76114,Aromatoleum,aromaticum,EbN1,,
-312153,Polynucleobacter,necessarius,subsp. asymbioticus QLW-P1DMWA-1,,
-452638,Polynucleobacter,necessarius,subsp. necessarius STIR1,,
-640510,Burkholderia,sp. CCGE1001,,,
-640511,Burkholderia,sp. CCGE1002,,,
-640512,Burkholderia,sp. CCGE1003,,,
-535289,Acidovorax,ebreus,TPSY,,
-742013,Delftia,sp. Cs1-4,,,
-871271,Candidatus Zinderia,insecticola,CARI,,
-887061,Methylovorus,sp. MP688,,,
-1007105,Pusillimonas,sp. T7-7,,,
-666681,Methylotenera,versatilis,301,,
-272561,Chlamydia,trachomatis,D/UW-3/CX,,
-315277,Chlamydia,trachomatis,A/HAR-13,,
-471472,Chlamydia,trachomatis,434/Bu,,
-471473,Chlamydia,trachomatis,L2b/UCH-1/proctitis,,
-672161,Chlamydia,trachomatis,B/TZ1A828/OT,,
-887712,Chlamydia,trachomatis,L2c,,
-716544,Waddlia,chondrophila,WSU 86-1044,,
-765952,Parachlamydia,acanthamoebae,UV7,,
-218497,Chlamydophila,abortus,S26/3,,
-264202,Chlamydophila,felis,Fe/C-56,,
-227941,Chlamydophila,caviae,GPIC,,
-115713,Chlamydophila,pneumoniae,CWL029,,
-138677,Chlamydophila,pneumoniae,J138,,
-182082,Chlamydophila,pneumoniae,TW-183,,
-243161,Chlamydia,muridarum,Nigg,,
-331113,Simkania,negevensis,Z,,
-331635,Chlamydophila,pecorum,E58,,
-264201,Candidatus Protochlamydia,amoebophila,UWE25,,
-316274,Herpetosiphon,aurantiacus,DSM 785,,
-309801,Thermomicrobium,roseum,DSM 5159,,
-324602,Chloroflexus,aurantiacus,J-10-fl,,
-479434,Sphaerobacter,thermophilus,DSM 20745,,
-243164,Dehalococcoides,ethenogenes,195,,
-383372,Roseiflexus,castenholzii,DSM 13941,,
-326427,Chloroflexus,aggregans,DSM 9485,,
-926569,Anaerolinea,thermophila,UNI-1,,
-216389,Dehalococcoides,sp. BAV1,,,
-255470,Dehalococcoides,sp. CBDB1,,,
-311424,Dehalococcoides,sp. VS,,,
-357808,Roseiflexus,sp. RS-1,,,
-480224,Chloroflexus,sp. Y-400-fl,,,
-552811,Dehalogenimonas,lykanthroporepellens,BL-DC-9,,
-633145,Dehalococcoides,sp. GT,,,
-368408,Thermofilum,pendens,Hrk 5,,
-765177,Desulfurococcus,mucosus,DSM 2162,,
-384616,Pyrobaculum,islandicum,DSM 4184,,
-399550,Staphylothermus,marinus,F1,,
-330779,Sulfolobus,acidocaldarius,DSM 639,,
-273057,Sulfolobus,solfataricus,P2,,
-178306,Pyrobaculum,aerophilum,str. IM2,,
-429572,Sulfolobus,islandicus,L.S.2.15,,
-427317,Sulfolobus,islandicus,M.14.25,,
-427318,Sulfolobus,islandicus,M.16.27,,
-439386,Sulfolobus,islandicus,Y.G.57.14,,
-419942,Sulfolobus,islandicus,Y.N.15.51,,
-426118,Sulfolobus,islandicus,M.16.4,,
-425944,Sulfolobus,islandicus,L.D.8.5,,
-399549,Metallosphaera,sedula,DSM 5348,,
-415426,Hyperthermus,butylicus,DSM 5456,,
-633148,Thermosphaera,aggregans,DSM 11486,,
-272557,Aeropyrum,pernix,K1,,
-444157,Thermoproteus,neutrophilus,V24Sta,,
-397948,Caldivirga,maquilingensis,IC-167,,
-591019,Staphylothermus,hellenicus,DSM 12710,,
-273063,Sulfolobus,tokodaii,str. 7,,
-340102,Pyrobaculum,arsenaticum,DSM 13514,,
-453591,Ignicoccus,hospitalis,KIN4/I,,
-572478,Vulcanisaeta,distributa,DSM 14429,,
-410359,Pyrobaculum,calidifontis,JCM 11548,,
-999630,Thermoproteus,uzoniensis,768-20,,
-666510,Acidilobus,saccharovorans,345-15,,
-583356,Ignisphaera,aggregans,DSM 17230,,
-436308,Nitrosopumilus,maritimus,SCM1,,
-490899,Desulfurococcus,kamchatkensis,1221n,,
-933801,Acidianus,hospitalis,W1,,
-985053,Vulcanisaeta,moutnovskia,768-28,,
-1006006,Metallosphaera,cuprina,Ar-4,,
-449447,Microcystis,aeruginosa,NIES-843,,
-1148,Synechocystis,sp. PCC 6803,,,
-551115,Trichormus,azollae,'Nostoc azollae' 0708,,
-240292,Anabaena,variabilis,ATCC 29413,,
-203124,Trichodesmium,erythraeum,IMS101,,
-74547,Prochlorococcus,marinus,str. MIT 9313,,
-167539,Prochlorococcus,marinus,subsp. marinus str. CCMP1375,,
-59919,Prochlorococcus,marinus,subsp. pastoris str. CCMP1986,,
-59920,Prochlorococcus,marinus,str. NATL2A,,
-74546,Prochlorococcus,marinus,str. MIT 9312,,
-146891,Prochlorococcus,marinus,str. AS9601,,
-167542,Prochlorococcus,marinus,str. MIT 9515,,
-59922,Prochlorococcus,marinus,str. MIT 9303,,
-167555,Prochlorococcus,marinus,str. NATL1A,,
-167546,Prochlorococcus,marinus,str. MIT 9301,,
-93060,Prochlorococcus,marinus,str. MIT 9215,,
-93059,Prochlorococcus,marinus,str. MIT 9211,,
-1140,Synechococcus,elongatus,PCC 7942,,
-269084,Synechococcus,elongatus,PCC 6301,,
-32049,Synechococcus,sp. PCC 7002,,,
-32051,Synechococcus,sp. WH 7803,,,
-251221,Gloeobacter,violaceus,PCC 7421,,
-41431,Cyanothece,sp. PCC 8801,,,
-43989,Cyanothece,sp. ATCC 51142,,,
-64471,Synechococcus,sp. CC9311,,,
-65393,Cyanothece,sp. PCC 7424,,,
-84588,Synechococcus,sp. WH 8102,,,
-103690,Nostoc,sp. PCC 7120,,,
-110662,Synechococcus,sp. CC9605,,,
-197221,Thermosynechococcus,elongatus,BP-1,,
-329726,Acaryochloris,marina,MBIC11017,,
-63737,Nostoc,punctiforme,PCC 73102,,
-316278,Synechococcus,sp. RCC307,,,
-316279,Synechococcus,sp. CC9902,,,
-321327,Synechococcus,sp. JA-3-3Ab,,,
-321332,Synechococcus,sp. JA-2-3B'a(2-13),Synechococcus sp. JA-2-3B'a(2-13),,
-395961,Cyanothece,sp. PCC 7425,,,
-395962,Cyanothece,sp. PCC 8802,,,
-497965,Cyanothece,sp. PCC 7822,,,
-713887,,cyanobacterium UCYN-A,,,
-300852,Thermus,thermophilus,HB8,,
-262724,Thermus,thermophilus,HB27,,
-504728,Meiothermus,ruber,DSM 1279,,
-243230,Deinococcus,radiodurans,R1,,
-743525,Thermus,scotoductus,SA-01,,
-526227,Meiothermus,silvanus,DSM 9946,,
-693977,Deinococcus,proteolyticus,MRP,,
-319795,Deinococcus,geothermalis,DSM 11300,,
-869210,Marinithermus,hydrothermalis,DSM 14884,,
-670487,Oceanithermus,profundus,DSM 14977,,
-709986,Deinococcus,maricopensis,DSM 21211,,
-546414,Deinococcus,deserti,VCD115,,
-649638,Truepera,radiovictrix,DSM 17093,,
-338963,Pelobacter,carbinolicus,DSM 2380,,
-483219,Myxococcus,fulvus,HW-1,,
-246197,Myxococcus,xanthus,DK 1622,,
-378806,Stigmatella,aurantiaca,DW4/3-1,,
-448385,Sorangium,cellulosum,'So ce 56',,
-525146,Desulfovibrio,desulfuricans,subsp. desulfuricans str. ATCC 27774,,
-526222,Desulfovibrio,salexigens,DSM 2638,,
-882,Desulfovibrio,vulgaris,str. Hildenborough,,
-391774,Desulfovibrio,vulgaris,DP4,,
-883,Desulfovibrio,vulgaris,str. 'Miyazaki F',,
-577650,Desulfobulbus,propionicus,DSM 2032,,
-525897,Desulfomicrobium,baculatum,DSM 4028,,
-264462,Bdellovibrio,bacteriovorus,HD100,,
-177437,Desulfobacterium,autotrophicum,HRM2,,
-269799,Geobacter,metallireducens,GS-15,,
-338966,Pelobacter,propionicus,DSM 2379,,
-363253,Lawsonia,intracellularis,PHE/MN1-00,,
-243231,Geobacter,sulfurreducens,PCA,,
-485915,Desulfohalobium,retbaense,DSM 5692,,
-207559,Desulfovibrio,alaskensis,G20,,
-880072,Desulfobacca,acetoxidans,DSM 11109,,
-502025,Haliangium,ochraceum,DSM 14365,,
-760142,Hippea,maritima,DSM 10411,,
-177439,Desulfotalea,psychrophila,LSv54,,
-335543,Syntrophobacter,fumaroxidans,MPOB,,
-290397,Anaeromyxobacter,dehalogenans,2CP-C,,
-455488,Anaeromyxobacter,dehalogenans,2CP-1,,
-96561,Desulfococcus,oleovorans,Hxd3,,
-643562,Desulfovibrio,aespoeensis,Aspo-2,,
-573370,Desulfovibrio,magneticus,RS-1,,
-404380,Geobacter,bemidjiensis,Bem,,
-439235,Desulfatibacillum,alkenivorans,AK-01,,
-398767,Geobacter,lovleyi,SZ,,
-316067,Geobacter,sp. FRC-32,,,
-56780,Syntrophus,aciditrophicus,SB,,
-351605,Geobacter,uraniireducens,Rf4,,
-404589,Anaeromyxobacter,sp. Fw109-5,,,
-589865,Desulfurivibrio,alkaliphilus,AHT2,,
-443143,Geobacter,sp. M18,,,
-443144,Geobacter,sp. M21,,,
-447217,Anaeromyxobacter,sp. K,,,
-644282,Desulfarculus,baarsii,DSM 2075,,
-360106,Campylobacter,fetus,subsp. fetus 82-40,,
-192222,Campylobacter,jejuni,subsp. jejuni NCTC 11168,,
-195099,Campylobacter,jejuni,RM1221,,
-354242,Campylobacter,jejuni,subsp. jejuni 81-176,,
-360109,Campylobacter,jejuni,subsp. doylei 269.97,,
-407148,Campylobacter,jejuni,subsp. jejuni 81116,,
-757425,Campylobacter,jejuni,subsp. jejuni ICDCCJ07001,,
-360104,Campylobacter,concisus,13826,,
-360105,Campylobacter,curvus,525.92,,
-306263,Campylobacter,lari,RM2100,,
-85962,Helicobacter,pylori,26695,,
-85963,Helicobacter,pylori,J99,,
-357544,Helicobacter,pylori,HPAG1,,
-512562,Helicobacter,pylori,Shi470,,
-563041,Helicobacter,pylori,G27,,
-570508,Helicobacter,pylori,P12,,
-592205,Helicobacter,pylori,B38,,
-765963,Helicobacter,pylori,PeCan4,,
-765962,Helicobacter,pylori,SJM180,,
-382638,Helicobacter,acinonychis,str. Sheeba,,
-936155,Helicobacter,felis,ATCC 49179,,
-679897,Helicobacter,mustelae,12198,,
-273121,Wolinella,succinogenes,DSM 1740,,
-367737,Arcobacter,butzleri,RM4018,,
-572480,Arcobacter,nitrofigilis,DSM 7299,,
-235279,Helicobacter,hepaticus,ATCC 51449,,
-326298,Sulfurimonas,denitrificans,DSM 1251,,
-1002804,Helicobacter,bizzozeronii,CIII-1,,
-525898,Sulfurospirillum,deleyianum,DSM 6946,,
-360107,Campylobacter,hominis,ATCC BAA-381,,
-709032,Sulfuricurvum,kujiense,DSM 16994,,
-563040,Sulfurimonas,autotrophica,DSM 16294,,
-598659,Nautilia,profundicola,AmH,,
-749222,Nitratifractor,salsuginis,DSM 16511,,
-387092,Nitratiruptor,sp. SB155-2,,,
-387093,Sulfurovum,sp. NBC37-1,,,
-420247,Methanobrevibacter,smithii,ATCC 35061,,
-547558,Methanohalophilus,mahii,DSM 5219,,
-523846,Methanothermus,fervidus,DSM 2088,,
-406327,Methanococcus,vannielii,SB,,
-456320,Methanococcus,voltae,A3,,
-880724,Methanotorris,igneus,Kol 5,,
-243232,Methanocaldococcus,jannaschii,DSM 2661,,
-368407,Methanoculleus,marisnigri,JR1,,
-323259,Methanospirillum,hungatei,JF-1,,
-269797,Methanosarcina,barkeri,str. Fusaro,,
-192952,Methanosarcina,mazei,Go1,,
-188937,Methanosarcina,acetivorans,C2A,,
-990316,Methanosaeta,concilii,GP6,,
-349307,Methanosaeta,thermophila,PT,,
-224325,Archaeoglobus,fulgidus,DSM 4304,,
-272569,Haloarcula,marismortui,ATCC 43049,,
-64091,Halobacterium,salinarum,Halobacterium sp. NRC-1,,
-478009,Halobacterium,salinarum,R1,,
-309800,Haloferax,volcanii,DS2,,
-416348,Halorubrum,lacusprofundi,ATCC 49239,,
-348780,Natronomonas,pharaonis,DSM 2160,,
-186497,Pyrococcus,furiosus,DSM 3638,,
-273075,Thermoplasma,acidophilum,DSM 1728,,
-339860,Methanosphaera,stadtmanae,DSM 3091,,
-190192,Methanopyrus,kandleri,AV19,,
-644295,Methanohalobium,evestigatum,Z-7303,,
-547559,Natrialba,magadii,ATCC 43099,,
-259564,Methanococcoides,burtonii,DSM 6242,,
-272844,Pyrococcus,abyssi,GE5,,
-267377,Methanococcus,maripaludis,S2,,
-402880,Methanococcus,maripaludis,C5,,
-426368,Methanococcus,maripaludis,C7,,
-444158,Methanococcus,maripaludis,C6,,
-679901,Methanosalsum,zhilinae,DSM 4017,,
-419665,Methanococcus,aeolicus,Nankai-3,,
-273116,Thermoplasma,volcanium,GSS1,,
-70601,Pyrococcus,horikoshii,OT3,,
-679926,Methanoplanus,petrolearius,DSM 11571,,
-589924,Ferroglobus,placidus,DSM 10642,,
-391623,Thermococcus,barophilus,MP,,
-485914,Halomicrobium,mukohataei,DSM 12286,,
-693661,Archaeoglobus,veneficus,SNP6,,
-469382,Halogeometricum,borinquense,DSM 11551,,
-543526,Haloterrigena,turkmenica,DSM 5511,,
-573063,Methanocaldococcus,infernus,ME,,
-579137,Methanocaldococcus,vulcanius,M7,,
-263820,Picrophilus,torridus,DSM 9790,,
-573064,Methanocaldococcus,fervens,AG86,,
-634498,Methanobrevibacter,ruminantium,M1,,
-410358,Methanocorpusculum,labreanum,Z,,
-572546,Archaeoglobus,profundus,DSM 5631,,
-187420,Methanothermobacter,thermautotrophicus,str. Delta H,,
-79929,Methanothermobacter,marburgensis,str. Marburg,,
-519442,Halorhabdus,utahensis,DSM 12940,,
-647113,Methanothermococcus,okinawensis,IH1,,
-604354,Thermococcus,sibiricus,MM 739,,
-593117,Thermococcus,gammatolerans,EJ3,,
-362976,Haloquadratum,walsbyi,DSM 16790,,
-69014,Thermococcus,kodakarensis,KOD1,,
-523850,Thermococcus,onnurineus,NA1,,
-342949,Pyrococcus,sp. NA2,,,
-351160,,uncultured methanogenic archaeon RC-I,,,
-456442,Methanoregula,boonei,6A8,,
-439481,Aciduliprofundum,boonei,T469,,
-797210,Halopiger,xanaduensis,SH-6,,
-795797,Halalkalicoccus,jeotgali,B3,,
-521011,Methanosphaerula,palustris,E1-9c,,
-304371,Methanocella,paludicola,SANAE,,
-644281,Methanocaldococcus,sp. FS406-22,,,
-868131,Methanobacterium,sp. SWAN-1,,,
-868132,Methanobacterium,sp. AL-21,,,
-529709,Pyrococcus,yayanosii,CH1,,
-1042877,Thermococcus,sp. 4557,,,
-591001,Acidaminococcus,fermentans,DSM 20731,,
-203120,Leuconostoc,mesenteroides,subsp. mesenteroides ATCC 8293,,
-203123,Oenococcus,oeni,PSU-1,,
-278197,Pediococcus,pentosaceus,ATCC 25745,,
-334413,Finegoldia,magna,ATCC 29328,,
-697329,Ruminococcus,albus,7,,
-158878,Staphylococcus,aureus,subsp. aureus Mu50,,
-158879,Staphylococcus,aureus,subsp. aureus N315,,
-196620,Staphylococcus,aureus,subsp. aureus MW2,,
-282458,Staphylococcus,aureus,subsp. aureus MRSA252,,
-282459,Staphylococcus,aureus,subsp. aureus MSSA476,,
-93062,Staphylococcus,aureus,subsp. aureus COL,,
-273036,Staphylococcus,aureus,RF122,,
-451515,Staphylococcus,aureus,subsp. aureus USA300_FPR3757,,
-93061,Staphylococcus,aureus,subsp. aureus NCTC 8325,,
-359786,Staphylococcus,aureus,subsp. aureus JH9,,
-359787,Staphylococcus,aureus,subsp. aureus JH1,,
-426430,Staphylococcus,aureus,subsp. aureus str. Newman,,
-418127,Staphylococcus,aureus,subsp. aureus Mu3,,
-451516,Staphylococcus,aureus,subsp. aureus USA300_TCH1516,,
-681288,Staphylococcus,aureus,subsp. aureus ED98,,
-396513,Staphylococcus,carnosus,subsp. carnosus TM300,,
-176280,Staphylococcus,epidermidis,ATCC 12228,,
-176279,Staphylococcus,epidermidis,RP62A,,
-279808,Staphylococcus,haemolyticus,JCSC1435,,
-467705,Streptococcus,gordonii,str. Challis substr. CH1,,
-927666,Streptococcus,oralis,Uo5,,
-388919,Streptococcus,sanguinis,SK36,,
-391295,Streptococcus,suis,05ZYH33,,
-391296,Streptococcus,suis,98HAH33,,
-568814,Streptococcus,suis,BM407,,
-218494,Streptococcus,suis,P1/7,,
-568813,Streptococcus,suis,SC84,,
-1007064,Streptococcus,suis,ST3,,
-264199,Streptococcus,thermophilus,LMG 18311,,
-299768,Streptococcus,thermophilus,CNRZ1066,,
-322159,Streptococcus,thermophilus,LMD-9,,
-210007,Streptococcus,mutans,UA159,,
-511691,Streptococcus,mutans,NN2025,,
-208435,Streptococcus,agalactiae,2603V/R,,
-211110,Streptococcus,agalactiae,NEM316,,
-205921,Streptococcus,agalactiae,A909,,
-170187,Streptococcus,pneumoniae,TIGR4,,
-171101,Streptococcus,pneumoniae,R6,,
-373153,Streptococcus,pneumoniae,D39,,
-487214,Streptococcus,pneumoniae,Hungary19A-6,,
-516950,Streptococcus,pneumoniae,CGSP14,,
-512566,Streptococcus,pneumoniae,G54,,
-561276,Streptococcus,pneumoniae,ATCC 700669,,
-525381,Streptococcus,pneumoniae,TCH8431/19A,,
-488221,Streptococcus,pneumoniae,70585,,
-488222,Streptococcus,pneumoniae,JJA,,
-488223,Streptococcus,pneumoniae,P1031,,
-487213,Streptococcus,pneumoniae,Taiwan19F-14,,
-574093,Streptococcus,pneumoniae,AP200,,
-189423,Streptococcus,pneumoniae,670-6B,,
-160490,Streptococcus,pyogenes,M1 GAS,,
-186103,Streptococcus,pyogenes,MGAS8232,,
-198466,Streptococcus,pyogenes,MGAS315,,
-193567,Streptococcus,pyogenes,SSI-1,,
-286636,Streptococcus,pyogenes,MGAS10394,,
-319701,Streptococcus,pyogenes,MGAS6180,,
-293653,Streptococcus,pyogenes,MGAS5005,,
-370552,Streptococcus,pyogenes,MGAS10270,,
-370554,Streptococcus,pyogenes,MGAS10750,,
-370553,Streptococcus,pyogenes,MGAS2096,,
-370551,Streptococcus,pyogenes,MGAS9429,,
-160491,Streptococcus,pyogenes,str. Manfredo,,
-471876,Streptococcus,pyogenes,NZ131,,
-486410,Streptococcus,dysgalactiae,subsp. equisimilis GGS_124,,
-552526,Streptococcus,equi,subsp. zooepidemicus MGCS10565,,
-553482,Streptococcus,equi,subsp. equi 4047,,
-40041,Streptococcus,equi,subsp. zooepidemicus,,
-936154,Streptococcus,parauberis,KCTC 11537,,
-218495,Streptococcus,uberis,0140J,,
-226185,Enterococcus,faecalis,V583,,
-272623,Lactococcus,lactis,subsp. lactis Il1403,,
-272622,Lactococcus,lactis,subsp. cremoris SK11,,
-416870,Lactococcus,lactis,subsp. cremoris MG1363,,
-684738,Lactococcus,lactis,subsp. lactis KF147,,
-866775,Aerococcus,urinae,ACS-120-V-Col10a,,
-326423,Bacillus,amyloliquefaciens,FZB42,,
-692420,Bacillus,amyloliquefaciens,DSM 7,,
-198094,Bacillus,anthracis,str. Ames,,
-261594,Bacillus,anthracis,str. 'Ames Ancestor',,
-260799,Bacillus,anthracis,str. Sterne,,
-568206,Bacillus,anthracis,str. CDC 684,,
-592021,Bacillus,anthracis,str. A0248,,
-358681,Brevibacillus,brevis,NBRC 100599,,
-226900,Bacillus,cereus,ATCC 14579,,
-222523,Bacillus,cereus,ATCC 10987,,
-288681,Bacillus,cereus,E33L,,
-405534,Bacillus,cereus,AH187,,
-405532,Bacillus,cereus,B4264,,
-405535,Bacillus,cereus,AH820,,
-405531,Bacillus,cereus,G9842,,
-361100,Bacillus,cereus,Q1,,
-572264,Bacillus,cereus,03BB102,,
-637380,Bacillus,cereus,biovar anthracis str. CI,,
-941639,Bacillus,coagulans,2月6日,,
-545693,Bacillus,megaterium,QM B1551,,
-592022,Bacillus,megaterium,DSM 319,,
-349520,Paenibacillus,polymyxa,E681,,
-886882,Paenibacillus,polymyxa,SC2,,
-315750,Bacillus,pumilus,SAFR-032,,
-649639,Bacillus,cellulosilyticus,DSM 2522,,
-444177,Lysinibacillus,sphaericus,C3-41,,
-224308,Bacillus,subtilis,subsp. subtilis str. 168,,
-655816,Bacillus,subtilis,subsp. spizizenii str. W23,,
-936156,Bacillus,subtilis,BSn5,,
-281309,Bacillus,thuringiensis,serovar konkukian str. 97-27,,
-412694,Bacillus,thuringiensis,str. Al Hakam,,
-714359,Bacillus,thuringiensis,BMB171,,
-720555,Bacillus,atrophaeus,1942,,
-235909,Geobacillus,kaustophilus,HTA426,,
-272562,Clostridium,acetobutylicum,ATCC 824,,
-991791,Clostridium,acetobutylicum,DSM 1731,,
-413999,Clostridium,botulinum,A str. ATCC 3502,,
-441770,Clostridium,botulinum,A str. ATCC 19397,,
-441771,Clostridium,botulinum,A str. Hall,,
-441772,Clostridium,botulinum,F str. Langeland,,
-498213,Clostridium,botulinum,B1 str. Okra,,
-498214,Clostridium,botulinum,A3 str. Loch Maree,,
-508765,Clostridium,botulinum,B str. Eklund 17B,,
-508767,Clostridium,botulinum,E3 str. Alaska E43,,
-536232,Clostridium,botulinum,A2 str. Kyoto,,
-515621,Clostridium,botulinum,Ba4 str. 657,,
-929506,Clostridium,botulinum,BKT015925,,
-573061,Clostridium,cellulovorans,743B,,
-272563,Clostridium,difficile,630,,
-645462,Clostridium,difficile,CD196,,
-645463,Clostridium,difficile,R20291,,
-195102,Clostridium,perfringens,str. 13,,
-195103,Clostridium,perfringens,ATCC 13124,,
-499177,Clostridium,sticklandii,DSM 519,,
-212717,Clostridium,tetani,E88,,
-203119,Clostridium,thermocellum,ATCC 27405,,
-580327,Thermoanaerobacterium,thermosaccharolyticum,DSM 571,,
-290402,Clostridium,beijerinckii,NCIMB 8052,,
-394503,Clostridium,cellulolyticum,H10,,
-264732,Moorella,thermoacetica,ATCC 39073,,
-431943,Clostridium,kluyveri,DSM 555,,
-583346,Clostridium,kluyveri,NBRC 12016,,
-748727,Clostridium,ljungdahlii,DSM 13528,,
-386415,Clostridium,novyi,NT,,
-696281,Desulfotomaculum,ruminis,DSM 2154,,
-272621,Lactobacillus,acidophilus,NCFM,,
-891391,Lactobacillus,acidophilus,30SC,,
-387344,Lactobacillus,brevis,ATCC 367,,
-511437,Lactobacillus,buchneri,NRRL B-30929,,
-321967,Lactobacillus,casei,ATCC 334,,
-543734,Lactobacillus,casei,BL23,,
-498216,Lactobacillus,casei,str. Zhang,,
-390333,Lactobacillus,delbrueckii,subsp. bulgaricus ATCC 11842,,
-321956,Lactobacillus,delbrueckii,subsp. bulgaricus ATCC BAA-365,,
-767455,Lactobacillus,delbrueckii,subsp. bulgaricus ND02,,
-405566,Lactobacillus,helveticus,DPC 4571,,
-220668,Lactobacillus,plantarum,WCFS1,,
-644042,Lactobacillus,plantarum,JDM1,,
-889932,Lactobacillus,plantarum,subsp. plantarum ST-III,,
-324831,Lactobacillus,gasseri,ATCC 33323,,
-557436,Lactobacillus,reuteri,DSM 20016,,
-557433,Lactobacillus,reuteri,JCM 1112,,
-314315,Lactobacillus,sakei,subsp. sakei 23K,,
-695560,Lactobacillus,amylovorus,GRL 1112,,
-334390,Lactobacillus,fermentum,IFO 3956,,
-362948,Lactobacillus,salivarius,UCC118,,
-169963,Listeria,monocytogenes,EGD-e,,
-265669,Listeria,monocytogenes,serotype 4b str. F2365,,
-552536,Listeria,monocytogenes,HCC23,,
-568819,Listeria,monocytogenes,serotype 4b str. CLIP 80459,,
-637381,Listeria,monocytogenes,23-Aug,,
-683837,Listeria,seeligeri,serovar 1/2b str. SLCC3954,,
-272626,Listeria,innocua,Clip11262,,
-386043,Listeria,welshimeri,serovar 6b str. SLCC5334,,
-903814,Eubacterium,limosum,KIST612,,
-340047,Mycoplasma,capricolum,subsp. capricolum ATCC 27343,,
-243273,Mycoplasma,genitalium,G37,,
-295358,Mycoplasma,hyopneumoniae,232,,
-262719,Mycoplasma,hyopneumoniae,J,,
-262722,Mycoplasma,hyopneumoniae,7448,,
-272632,Mycoplasma,mycoides,subsp. mycoides SC str. PG1,,
-272634,Mycoplasma,pneumoniae,M129,,
-272635,Mycoplasma,pulmonis,UAB CTIP,,
-262723,Mycoplasma,synoviae,53,,
-347257,Mycoplasma,agalactiae,PG2,,
-243272,Mycoplasma,arthritidis,158L3-1,,
-267748,Mycoplasma,mobile,163K,,
-441768,Acholeplasma,laidlawii,PG-8A,,
-265311,Mesoplasma,florum,L1,,
-292459,Symbiobacterium,thermophilum,IAM 14863,,
-698737,Staphylococcus,lugdunensis,HKU09-01,,
-365659,Streptococcus,mitis,B6,,
-574087,Acetohalobium,arabaticum,DSM 5501,,
-272633,Mycoplasma,penetrans,HF-2,,
-289397,Mycoplasma,bovis,PG45,,
-509193,Thermoanaerobacter,brockii,subsp. finnii Ako-1,,
-858215,Thermoanaerobacterium,xylanolyticum,LX-11,,
-642492,Cellulosilyticum,Clostridium lentocellum,DSM 5427,,
-342451,Staphylococcus,saprophyticus,subsp. saprophyticus ATCC 15305,,
-479436,Veillonella,parvula,DSM 2008,,
-521460,Caldicellulosiruptor,bescii,DSM 6725,,
-373903,Halothermothrix,orenii,H 168,,
-525919,Anaerococcus,prevotii,DSM 20548,,
-491915,Anoxybacillus,flavithermus,WK1,,
-420246,Geobacillus,thermodenitrificans,NG80-2,,
-562970,,Bacillus tusciae,DSM 2912,,
-257314,Lactobacillus,johnsonii,NCC 533,,
-633699,Lactobacillus,johnsonii,FI9785,,
-349519,Leuconostoc,citreum,KM20,,
-940190,Melissococcus,plutonius,ATCC 35311,,
-498761,Heliobacterium,modesticaldum,Ice1,,
-309798,Coprothermobacter,proteolyticus,DSM 5265,,
-515620,Eubacterium,eligens,ATCC 27750,,
-515619,Eubacterium,rectale,ATCC 33656,,
-429009,Ammonifex,degensii,KC4,,
-515622,Butyrivibrio,Clostridium proteoclasticum,Butyrivibrio proteoclasticus B316,,
-568703,Lactobacillus,rhamnosus,GG,,
-568704,Lactobacillus,rhamnosus,Lc 705,,
-748671,Lactobacillus,crispatus,ST1,,
-1029718,Candidatus Arthromitus,sp. SFB-mouse,#NAME?,,
-138119,Desulfitobacterium,hafniense,Y51,,
-272564,Desulfitobacterium,hafniense,DCB-2,,
-512564,Mycoplasma,crocodyli,MP145,,
-645991,Syntrophobotulus,glycolicus,DSM 8271,,
-632335,Caldicellulosiruptor,kristjanssonii,177R1B,,
-632518,Caldicellulosiruptor,owensensis,OL,,
-760568,Desulfotomaculum,kuznetsovii,DSM 6115,,
-485916,Desulfotomaculum,acetoxidans,DSM 771,,
-349161,Desulfotomaculum,reducens,MI-1,,
-59748,Candidatus Phytoplasma,australiense,,,
-1036673,Paenibacillus,mucilaginosus,KNP414,,
-357809,Clostridium,phytofermentans,ISDg,,
-546271,Selenomonas,sputigena,ATCC 35185,,
-458233,Macrococcus,caseolyticus,JCSC5402,,
-644966,Thermaerobacter,marianensis,DSM 12885,,
-66692,Bacillus,clausii,KSM-K16,,
-398511,Bacillus,pseudofirmus,OF4,,
-610130,Clostridium,saccharolyticum,WM1,,
-439292,Bacillus,selenitireducens,MLS10,,
-643648,Syntrophothermus,lipocalidus,DSM 12680,,
-315730,Bacillus,weihenstephanensis,KBAB4,,
-272558,Bacillus,halodurans,C-125,,
-262768,Candidatus Phytoplasma,Onion yellows phytoplasma,OY-M,,
-580331,Thermoanaerobacter,italicus,Ab9,,
-370438,Pelotomaculum,thermopropionicum,SI,,
-762550,Leuconostoc,gasicomitatum,LMG 18811,,
-246194,Carboxydothermus,hydrogenoformans,Z-2901,,
-273119,Ureaplasma,parvum,serovar 3 str. ATCC 700970,,
-505682,Ureaplasma,parvum,serovar 3 str. ATCC 27815,,
-762051,Leuconostoc,kimchii,IMSNU 11154,,
-1045854,Weissella,koreensis,KACC 15510,,
-221109,Oceanobacillus,iheyensis,HTE831,,
-747365,Thermodesulfobium,narugense,DSM 14796,,
-981540,Streptococcus,pasteurianus,ATCC 43144,,
-293826,Alkaliphilus,metalliredigens,QYMF,,
-208596,Carnobacterium,sp. 17-4,,,
-322098,Candidatus Phytoplasma,Aster yellows witches'-broom phytoplasma,AYWB,,
-697281,Mahella,australiensis,50-1 BON,,
-663278,Ethanoligenens,harbinense,YUAN-3,,
-1033837,Lactobacillus,kefiranofaciens,ZW3,,
-937773,Staphylococcus,pseudintermedius,HKU10-03,,
-555079,Thermosediminibacter,oceani,DSM 16646,,
-637909,Streptococcus,gallolyticus,UCN34,,
-990317,Streptococcus,gallolyticus,subsp. gallolyticus ATCC BAA-2069,,
-324057,Paenibacillus,sp. JDR-2,,,
-868595,Desulfotomaculum,carboxydivorans,CO-1-SRB,,
-262543,Exiguobacterium,sibiricum,255-15,,
-360911,Exiguobacterium,sp. AT1b,,,
-457570,Natranaerobius,thermophilus,JW/NM-WN-LF,,
-399726,Thermoanaerobacter,sp. X514,,,
-521098,Alicyclobacillus,acidocaldarius,subsp. acidocaldarius DSM 446,,
-632292,Caldicellulosiruptor,hydrothermalis,108,,
-632348,Caldicellulosiruptor,kronotskyensis,2002,,
-350688,Alkaliphilus,oremlandii,OhILAs,,
-471223,Geobacillus,sp. WCH70,,,
-477974,Candidatus Desulforudis,audaxviator,MP104C,,
-481743,Paenibacillus,sp. Y412MC10,,,
-340099,Thermoanaerobacter,pseudethanolicus,ATCC 33223,,
-499229,Tepidanaerobacter,sp. Re1,,,
-544556,Geobacillus,sp. Y412MC61,,,
-550542,Geobacillus,sp. Y412MC52,,,
-573062,Thermoanaerobacter,sp. X513,,,
-315749,Bacillus,cytotoxicus,NVH 391-98,,
-581103,Geobacillus,sp. Y4.1MC1,,,
-583358,Thermoanaerobacter,mathranii,subsp. mathranii str. A3,,
-656519,Halanaerobium,hydrogeniformans,,,
-691437,Geobacillus,sp. C56-T3,,,
-699246,,Clostridiales genomosp. BVAB3,str. UPII9-5,,
-608506,Caldicellulosiruptor,obsidiansis,OB47,,
-635013,Thermincola,potens,JR,,
-273068,Caldanaerobacter,subterraneus,Thermoanaerobacter tengcongensis MB4,,
-979982,Leuconostoc,sp. C2,,,
-1042156,Clostridium,sp. SY8519,,,
-526218,Sebaldella,termitidis,ATCC 33386,,
-190304,Fusobacterium,nucleatum,subsp. nucleatum ATCC 25586,,
-519441,Streptobacillus,moniliformis,DSM 12112,,
-523794,Leptotrichia,buccalis,C-1013-b,,
-572544,Ilyobacter,polytropus,DSM 2926,,
-107806,Buchnera,aphidicola,str. APS (Acyrthosiphon pisum),,
-198804,Buchnera,aphidicola,str. Sg (Schizaphis graminum),,
-224915,Buchnera,aphidicola,str. Bp (Baizongia pistaciae),,
-563178,Buchnera,aphidicola,str. 5A (Acyrthosiphon pisum),,
-561501,Buchnera,aphidicola,str. Tuc7 (Acyrthosiphon pisum),,
-261317,Buchnera,aphidicola,(Cinara tujafilina),,
-593907,Cellvibrio,gilvus,ATCC 13127,,
-319224,Shewanella,putrefaciens,CN-32,,
-326442,Pseudoalteromonas,haloplanktis,TAC125,,
-177416,Francisella,tularensis,subsp. tularensis SCHU S4,,
-376619,Francisella,tularensis,subsp. holarctica LVS,,
-393115,Francisella,tularensis,subsp. tularensis FSC198,,
-393011,Francisella,tularensis,subsp. holarctica OSU18,,
-418136,Francisella,tularensis,subsp. tularensis WY96-3418,,
-458234,Francisella,tularensis,subsp. holarctica FTNF002-00,,
-441952,Francisella,tularensis,subsp. mediasiatica FSC147,,
-401614,Francisella,novicida,U112,,
-208964,Pseudomonas,aeruginosa,PAO1,,
-208963,Pseudomonas,aeruginosa,UCBPP-PA14,,
-381754,Pseudomonas,aeruginosa,PA7,,
-557722,Pseudomonas,aeruginosa,LESB58,,
-342610,Pseudoalteromonas,atlantica,T6c,,
-220664,Pseudomonas,fluorescens,Pf-5,,
-205922,Pseudomonas,fluorescens,Pf0-1,,
-216595,Pseudomonas,fluorescens,SBW25,,
-399739,Pseudomonas,mendocina,ymp,,
-1001585,Pseudomonas,mendocina,NK-01,,
-160488,Pseudomonas,putida,KT2440,,
-351746,Pseudomonas,putida,F1,,
-76869,Pseudomonas,putida,GB-1,,
-390235,Pseudomonas,putida,W619,,
-1042876,Pseudomonas,putida,S16,,
-379731,Pseudomonas,stutzeri,A1501,,
-96563,Pseudomonas,stutzeri,ATCC 17588 = LMG 11199,,
-205918,Pseudomonas,syringae,pv. syringae B728a,,
-190485,Xanthomonas,campestris,pv. campestris str. ATCC 33913,,
-314565,Xanthomonas,campestris,pv. campestris str. 8004,,
-509169,Xanthomonas,campestris,pv. campestris str. B100,,
-291331,Xanthomonas,oryzae,pv. oryzae KACC10331,,
-342109,Xanthomonas,oryzae,pv. oryzae MAFF 311018,,
-360094,Xanthomonas,oryzae,pv. oryzae PXO99A,,
-322710,Azotobacter,vinelandii,DJ,,
-243233,Methylococcus,capsulatus,str. Bath,,
-857087,Methylomonas,methanica,MC09,,
-272624,Legionella,pneumophila,subsp. pneumophila str. Philadelphia 1,,
-297245,Legionella,pneumophila,str. Lens,,
-297246,Legionella,pneumophila,str. Paris,,
-400673,Legionella,pneumophila,str. Corby,,
-423212,Legionella,pneumophila,2300/99 Alcoy,,
-661367,Legionella,longbeachae,NSW150,,
-400667,Acinetobacter,baumannii,ATCC 17978,,
-509173,Acinetobacter,baumannii,AYE,,
-509170,Acinetobacter,baumannii,SDF,,
-405416,Acinetobacter,baumannii,ACICU,,
-480119,Acinetobacter,baumannii,AB0057,,
-557600,Acinetobacter,baumannii,AB307-0294,,
-749219,Moraxella,catarrhalis,RH4,,
-290338,Citrobacter,koseri,ATCC BAA-895,,
-1028307,Enterobacter,aerogenes,KCTC 2190,,
-716541,Enterobacter,cloacae,subsp. cloacae ATCC 13047,,
-701347,Enterobacter,cloacae,SCF1,,
-716540,Erwinia,amylovora,ATCC 49946,,
-665029,Erwinia,amylovora,CFBP1430,,
-706191,Pantoea,ananatis,LMG 20103,,
-561230,Pectobacterium,carotovorum,subsp. carotovorum PC1,,
-511145,Escherichia,coli,str. K-12 substr. MG1655,,
-386585,Escherichia,coli,O157:H7 str. Sakai,,
-155864,Escherichia,coli,O157:H7 str. EDL933,,
-199310,Escherichia,coli,CFT073,,
-364106,Escherichia,coli,UTI89,,
-362663,Escherichia,coli,536,,
-405955,Escherichia,coli,APEC O1,,
-331112,Escherichia,coli,HS,,
-331111,Escherichia,coli,E24377A,,
-481805,Escherichia,coli,ATCC 8739,,
-316385,Escherichia,coli,str. K-12 substr. DH10B,,
-439855,Escherichia,coli,SMS-3-5,,
-444450,Escherichia,coli,O157:H7 str. EC4115,,
-409438,Escherichia,coli,SE11,,
-574521,Escherichia,coli,O127:H6 str. E2348/69,,
-585055,Escherichia,coli,55989,,
-585397,Escherichia,coli,ED1a,,
-585034,Escherichia,coli,IAI1,,
-585057,Escherichia,coli,IAI39,,
-585035,Escherichia,coli,S88,,
-585056,Escherichia,coli,UMN026,,
-866768,Escherichia,coli,'BL21-Gold(DE3)pLysS AG',,
-595496,Escherichia,coli,BW2952,,
-413997,Escherichia,coli,B str. REL606,,
-544404,Escherichia,coli,O157:H7 str. TW14359,,
-585395,Escherichia,coli,O103:H2 str. 12009,,
-585396,Escherichia,coli,O111:H- str. 11128,,
-573235,Escherichia,coli,O26:H11 str. 11368,,
-701177,Escherichia,coli,O55:H7 str. CB9615,,
-585054,Escherichia,fergusonii,ATCC 35469,,
-484021,Klebsiella,pneumoniae,subsp. pneumoniae NTUH-K2044,,
-272620,Klebsiella,pneumoniae,subsp. pneumoniae MGH 78578,,
-507522,Klebsiella,pneumoniae,342,,
-529507,Proteus,mirabilis,HI4320,,
-300268,Shigella,boydii,Sb227,,
-344609,Shigella,boydii,CDC 3083-94,,
-300267,Shigella,dysenteriae,Sd197,,
-198214,Shigella,flexneri,2a str. 301,,
-198215,Shigella,flexneri,2a str. 2457T,,
-373384,Shigella,flexneri,5 str. 8401,,
-300269,Shigella,sonnei,Ss046,,
-406817,Xenorhabdus,nematophila,ATCC 19061,,
-393305,Yersinia,enterocolitica,subsp. enterocolitica 8081,,
-994476,Yersinia,enterocolitica,subsp. palearctica 105.5R(r),,
-214092,Yersinia,pestis,CO92,,
-187410,Yersinia,pestis,KIM 10,,
-229193,Yersinia,pestis,biovar Microtus str. 91001,,
-360102,Yersinia,pestis,Antiqua,,
-377628,Yersinia,pestis,Nepal516,,
-386656,Yersinia,pestis,Pestoides F,,
-349746,Yersinia,pestis,Angola,,
-637386,Yersinia,pestis,Z176003,,
-273123,Yersinia,pseudotuberculosis,IP 32953,,
-349747,Yersinia,pseudotuberculosis,IP 31758,,
-502800,Yersinia,pseudotuberculosis,YPIII,,
-502801,Yersinia,pseudotuberculosis,PB1/+,,
-498217,Edwardsiella,tarda,EIB202,,
-380703,Aeromonas,hydrophila,subsp. hydrophila ATCC 7966,,
-382245,Aeromonas,salmonicida,subsp. salmonicida A449,,
-998088,Aeromonas,veronii,B565,,
-243277,Vibrio,cholerae,O1 biovar El Tor str. N16961,,
-345073,Vibrio,cholerae,O395,,
-579112,Vibrio,cholerae,M66-2,,
-593588,Vibrio,cholerae,MJ-1236,,
-312309,Aliivibrio,fischeri,Vibrio fischeri ES114,,
-388396,Aliivibrio,fischeri,Vibrio fischeri MJ11,,
-338187,Vibrio,harveyi,ATCC BAA-1116,,
-223926,Vibrio,parahaemolyticus,RIMD 2210633,,
-216895,Vibrio,vulnificus,CMCP6,,
-196600,Vibrio,vulnificus,YJ016,,
-914127,Vibrio,vulnificus,MO6-24/O,,
-416269,Actinobacillus,pleuropneumoniae,serovar 5b str. L20,,
-434271,Actinobacillus,pleuropneumoniae,serovar 3 str. JL03,,
-537457,Actinobacillus,pleuropneumoniae,serovar 7 str. AP76,,
-71421,Haemophilus,influenzae,Rd KW20,,
-281310,Haemophilus,influenzae,86-028NP,,
-374930,Haemophilus,influenzae,PittEE,,
-374931,Haemophilus,influenzae,PittGG,,
-866630,Haemophilus,influenzae,F3031,,
-935897,Haemophilus,influenzae,F3047,,
-233412,Haemophilus,ducreyi,35000HP,,
-205914,Histophilus,somni,Haemophilus somnus 129PT,,
-228400,Histophilus,somni,Haemophilus somnus 2336,,
-634176,Aggregatibacter,aphrophilus,NJ8700,,
-557723,Haemophilus,parasuis,SH0165,,
-272843,Pasteurella,multocida,subsp. multocida str. Pm70,,
-1005058,Gallibacterium,anatis,UMN179,,
-227377,Coxiella,burnetii,RSA 493,,
-434922,Coxiella,burnetii,Dugway 5J108-111,,
-360115,Coxiella,burnetii,RSA 331,,
-434923,Coxiella,burnetii,CbuG_Q212,,
-434924,Coxiella,burnetii,CbuK_Q154,,
-246195,Dichelobacter,nodosus,VCS1703A,,
-243159,Acidithiobacillus,ferrooxidans,ATCC 23270,,
-555778,Halothiobacillus,neapolitanus,c2,,
-572477,Allochromatium,vinosum,DSM 180,,
-349124,Halorhodospira,halophila,SL1,,
-323261,Nitrosococcus,oceani,ATCC 19707,,
-160492,Xylella,fastidiosa,9a5c,,
-183190,Xylella,fastidiosa,Temecula1,,
-405440,Xylella,fastidiosa,M12,,
-405441,Xylella,fastidiosa,M23,,
-377629,Teredinibacter,turnerae,T7901,,
-351348,Marinobacter,hydrocarbonoclasticus,Marinobacter aquaeolei VT8,,
-768066,Halomonas,elongata,DSM 2581,,
-314275,Alteromonas,macleodii,str. 'Deep ecotype',,
-484022,Francisella,philomiragia,subsp. philomiragia ATCC 25017,,
-290339,Cronobacter,sakazakii,ATCC BAA-894,,
-399741,Serratia,proteamaculans,568,,
-167879,Colwellia,psychrerythraea,34H,,
-220341,Salmonella,enterica,subsp. enterica serovar Typhi str. CT18,,
-99287,Salmonella,enterica,subsp. enterica serovar Typhimurium str. LT2,,
-209261,Salmonella,enterica,subsp. enterica serovar Typhi str. Ty2,,
-295319,Salmonella,enterica,subsp. enterica serovar Paratyphi A str. ATCC 9150,,
-321314,Salmonella,enterica,subsp. enterica serovar Choleraesuis str. SC-B67,,
-882884,Salmonella,enterica,subsp. arizonae serovar 62:z4,z23:-- str. RSK2980,
-454169,Salmonella,enterica,subsp. enterica serovar Heidelberg str. SL476,,
-423368,Salmonella,enterica,subsp. enterica serovar Newport str. SL254,,
-439843,Salmonella,enterica,subsp. enterica serovar Schwarzengrund str. CVM19633,,
-554290,Salmonella,enterica,subsp. enterica serovar Paratyphi A str. AKU_12601,,
-454166,Salmonella,enterica,subsp. enterica serovar Agona str. SL483,,
-439851,Salmonella,enterica,subsp. enterica serovar Dublin str. CT_02021853,,
-550538,Salmonella,enterica,subsp. enterica serovar Gallinarum str. 287/91,,
-550537,Salmonella,enterica,subsp. enterica serovar Enteritidis str. P125109,,
-476213,Salmonella,enterica,subsp. enterica serovar Paratyphi C strain RKS4594,,
-264730,Pseudomonas,savastanoi,Pseudomonas syringae pv. phaseolicola 1448A,,
-218491,Pectobacterium,atrosepticum,SCRI1043,,
-243265,Photorhabdus,luminescens,subsp. laumondii TTO1,,
-575788,Vibrio,splendidus,LGP32,,
-990288,Acidithiobacillus,caldus,SM-1,,
-317025,Thiomicrospira,crunogena,XCL-2,,
-316275,Aliivibrio,salmonicida,LFI1238,,
-522373,Stenotrophomonas,maltophilia,K279a,,
-391008,Stenotrophomonas,maltophilia,R551-3,,
-406818,Xenorhabdus,bovienii,SS-2004,,
-595494,Tolumonas,auensis,DSM 9187,,
-550540,Ferrimonas,balearica,DSM 9799,,
-743720,Pseudomonas,fulva,12-X,,
-36870,Wigglesworthia,glossinidia,endosymbiont of Glossina brevipalpis,,
-190486,Xanthomonas,axonopodis,pv. citri str. 306,,
-218493,Salmonella,bongori,NCTC 12419,,
-561231,Pectobacterium,wasabiae,WPP163,,
-882102,Listonella,anguillarum,Vibrio anguillarum 775,,
-318167,Shewanella,frigidimarina,NCIMB 400,,
-393595,Alcanivorax,borkumensis,SK2,,
-637905,Shewanella,violacea,DSS12,,
-326297,Shewanella,amazonensis,SB2B,,
-60480,Shewanella,sp. MR-4,,,
-60481,Shewanella,sp. MR-7,,,
-392500,Shewanella,woodyi,ATCC 51908,,
-325240,Shewanella,baltica,OS155,,
-402882,Shewanella,baltica,OS185,,
-399599,Shewanella,baltica,OS195,,
-407976,Shewanella,baltica,OS223,,
-62977,Acinetobacter,sp. ADP1,,,
-343509,Sodalis,glossinidius,str. 'morsitans',,
-580332,Sideroxydans,lithotrophicus,ES-1,,
-634503,Edwardsiella,ictaluri,93-146,,
-637910,Citrobacter,rodentium,ICC168,,
-339671,Actinobacillus,succinogenes,130Z,,
-211586,Shewanella,oneidensis,MR-1,,
-398579,Shewanella,pealeana,ATCC 700345,,
-298386,Photobacterium,profundum,SS9,,
-634499,Erwinia,pyrifoliae,Ep1/96,,
-203122,Saccharophagus,degradans,Feb-40,,
-94122,Shewanella,sp. ANA-3,,,
-291272,Candidatus Blochmannia,pennsylvanicus,str. BPEN,,
-387662,Candidatus Carsonella,ruddii,PV,,
-717774,Marinomonas,mediterranea,MMB-1,,
-472759,Nitrosococcus,halophilus,Nc4,,
-283942,Idiomarina,loihiensis,L2TR,,
-572265,Candidatus Hamiltonella,defensa,5AT (Acyrthosiphon pisum),,
-717773,Thioalkalimicrobium,cyclicum,ALM1,,
-150340,Vibrio,sp. Ex25,,,
-498211,Cellvibrio,japonicus,Ueda107,,
-221988,Basfia,Mannheimia succiniciproducens,MBEL55E,,
-290398,Chromohalobacter,salexigens,DSM 3043,,
-349521,Hahella,chejuensis,KCTC 2396,,
-634500,Erwinia,billingiae,Eb661,,
-374463,,Candidatus Baumannia cicadellinicola,Baumannia cicadellinicola str. Hc (Homalodisca coagulata),,
-318161,Shewanella,denitrificans,OS217,,
-203907,Candidatus Blochmannia,floridanus,,,
-579405,Dickeya,dadantii,Ech703,,
-590409,Dickeya,dadantii,Ech586,,
-198628,Dickeya,dadantii,3937,,
-561229,Dickeya,zeae,Ech1591,,
-234831,Pseudoalteromonas,sp. SM9913,,,
-640131,Klebsiella,variicola,At-22,,
-859654,Candidatus Blochmannia,vafer,str. BVAF,,
-223283,Pseudomonas,syringae group genomosp. 3,Pseudomonas syringae pv. tomato str. DC3000,,
-523791,Kangiella,koreensis,DSM 16069,,
-425104,Shewanella,sediminis,HAW-EB3,,
-458817,Shewanella,halifaxensis,HAW-EB4,,
-384676,Pseudomonas,entomophila,L48,,
-743721,Pseudoxanthomonas,suwonensis,11月1日,,
-335284,Psychrobacter,cryohalolentis,K5,,
-259536,Psychrobacter,arcticus,273-4,,
-465817,Erwinia,tasmaniensis,Et1/99,,
-349106,Psychrobacter,sp. PRwf-1,,,
-187272,Alkalilimnicola,ehrlichii,MLHE-1,,
-351745,Shewanella,sp. W3-18-1,,,
-357804,Psychromonas,ingrahamii,37,,
-323850,Shewanella,loihica,PV-4,,
-413404,,Candidatus Ruthia magnifica,str. Cm (Calyptogena magnifica),,
-396595,Thioalkalivibrio,sp. K90mix,,,
-399742,Enterobacter,sp. 638,,,
-400668,Marinomonas,sp. MWYL1,,,
-515618,Candidatus Riesia,pediculicola,USDA,,
-225849,Shewanella,piezotolerans,WP3,,
-412965,,Calyptogena okutanii thioautotrophic gill symbiont,Candidatus Vesicomyosocius okutanii HA,,
-693216,Cronobacter,turicensis,z3032,,
-436717,Acinetobacter,sp. DR1,,,
-316273,Xanthomonas,euvesicatoria,Xanthomonas campestris pv. vesicatoria str. 85-10,,
-712898,Pantoea,vagans,C9-1,,
-105559,Nitrosococcus,watsonii,C-113,,
-573569,Francisella,sp. TX077308,,,
-592316,Pantoea,sp. At-9b,,,
-715451,Alteromonas,sp. SN2,,,
-741091,Rahnella,sp. Y9602,,,
-768490,Serratia,sp. AS12,,,
-768492,Serratia,sp. AS9,,,
-994484,Pseudomonas,brassicacearum,subsp. brassicacearum NFM421,,
-491952,Marinomonas,posidonica,IVIA-Po-181,,
-396588,Thioalkalivibrio,sulfidophilus,HL-EbGr7,,
-903503,Candidatus Moranella,endobia,PCIT,,
-228908,Nanoarchaeum,equitans,Kin4-M,,
-374847,Candidatus Korarchaeum,cryptofilum,OPF8,,
-309799,Dictyoglomus,thermophilum,H-6-12,,
-335541,Syntrophomonas,wolfei,subsp. wolfei str. Goettingen,,
-380394,Acidithiobacillus,ferrooxidans,ATCC 53993,,
-710127,Mycoplasma,gallisepticum,str. R(low),,
-872331,Mycoplasma,hyorhinis,HUB-1,,
-862259,Mycoplasma,mycoides,subsp. capri LC str. 95010,,
-880447,Mycoplasma,leachii,PG50,,
-637387,Mycoplasma,fermentans,JER,,
-943945,Mycoplasma,fermentans,M64,,
-565575,Ureaplasma,urealyticum,serovar 10 str. ATCC 33699,,
-717231,Flexistipes,sinusarabici,DSM 4947,,
-289376,Thermodesulfovibrio,yellowstonii,DSM 11347,,
-956483,Mycoplasma,bovis,Hubei-1,,
-941640,Mycoplasma,haemofelis,str. Langford 1,,
-37692,Candidatus Phytoplasma,mali,,,
-351627,Caldicellulosiruptor,saccharolyticus,DSM 8903,,
-572263,Mycoplasma,conjunctivae,HRC/581,,
-768700,Mycoplasma,suis,str. Illinois,,
-525903,Thermanaerovibrio,acidaminovorans,DSM 6589,,
-572547,Aminobacterium,colombiense,DSM 12261,,
-452637,Opitutus,terrae,PB90-1,,
-522772,Denitrovibrio,acetiphilus,DSM 12809,,
-156889,Magnetococcus,sp. MC-1,,,
-525904,Thermobaculum,terrenum,ATCC BAA-798,,
-471821,,uncultured Termite group 1 bacterium,phylotype Rs-D17,,
-667014,Thermodesulfatator,indicus,DSM 15286,,
-379066,Gemmatimonas,aurantiaca,T-27,,
-639282,Deferribacter,desulfuricans,SSM1,,
-349741,Akkermansia,muciniphila,ATCC BAA-835,,
-330214,Nitrospira,Candidatus Nitrospira defluvii,,,
-583355,Coraliomargarita,akajimensis,DSM 45221,,
-445932,Elusimicrobium,minutum,Pei191,,
-768670,Calditerrivibrio,nitroreducens,DSM 19672,,
-481448,Methylacidiphilum,infernorum,V4,,
-515635,Dictyoglomus,turgidum,DSM 6724,,
-795359,Thermodesulfobacterium,sp. OPB45,,,
-653733,Desulfurispirillum,indicum,S5,,
-756272,Planctomyces,brasiliensis,DSM 5305,,
-521674,Planctomyces,limnophilus,DSM 3776,,
-530564,Pirellula,staleyi,DSM 6068,,
-575540,Isosphaera,pallida,ATCC 43644,,
-243090,Rhodopirellula,baltica,SH 1,,
-224326,Borrelia,burgdorferi,B31,,
-445985,Borrelia,burgdorferi,ZS7,,
-314723,Borrelia,hermsii,DAH,,
-314724,Borrelia,turicatae,9.10E+136,,
-665571,Spirochaeta,thermophila,DSM 6192,,
-243275,Treponema,denticola,ATCC 35405,,
-565034,Brachyspira,hyodysenteriae,WA1,,
-243276,Treponema,pallidum,subsp. pallidum str. Nichols,,
-455434,Treponema,pallidum,subsp. pallidum SS14,,
-869209,Treponema,succinifaciens,DSM 2489,,
-355278,Leptospira,biflexa,serovar Patoc strain 'Patoc 1 (Ames)',,
-456481,Leptospira,biflexa,serovar Patoc strain 'Patoc 1 (Paris)',,
-189518,Leptospira,interrogans,serovar Lai str. 56601,,
-267671,Leptospira,interrogans,serovar Copenhageni str. Fiocruz L1-130,,
-355277,Leptospira,borgpetersenii,serovar Hardjo-bovis JB197,,
-355276,Leptospira,borgpetersenii,serovar Hardjo-bovis L550,,
-412419,Borrelia,duttonii,Ly,,
-412418,Borrelia,recurrentis,A1,,
-759914,Brachyspira,pilosicoli,95/1000,,
-545776,Treponema,paraluiscuniculi,Cuniculi A,,
-573413,Spirochaeta,smaragdinae,DSM 11293,,
-521010,Borrelia,bissettii,DN127,,
-906968,Treponema,brennaborense,DSM 12168,,
-526224,Brachyspira,murdochii,DSM 12563,,
-545694,Treponema,primitia,ZAS-2,,
-545695,Treponema,azotonutricium,ZAS-9,,
-158189,Spirochaeta,sp. Buddy,,,
-744872,Spirochaeta,caldaria,DSM 7334,,
-760011,Spirochaeta,coccoides,DSM 17374,,
-243274,Thermotoga,maritima,MSB8,,
-309803,Thermotoga,neapolitana,DSM 4359,,
-484019,Thermosipho,africanus,TCF52B,,
-381764,Fervidobacterium,nodosum,Rt17-B1,,
-391009,Thermosipho,melanesiensis,BI429,,
-403833,Petrotoga,mobilis,SJ95,,
-390874,Thermotoga,petrophila,RKU-1,,
-590168,Thermotoga,naphthophila,RKU-10,,
-688269,Thermotoga,thermarum,DSM 5069,,
-126740,Thermotoga,sp. RQ2,,,
-416591,Thermotoga,lettingae,TMO,,
-521045,Kosmotoga,olearia,TBF 19.5.1,,
 226125,Saccharomyces,cerevisiae,Spar,Spar,
 285006,Saccharomyces,cerevisiae,RM11,RM11,
 307796,Saccharomyces,cerevisiae,YJM789,YJM789,
@@ -1598,3 +206,1389 @@ taxon_id,genus,species,sub_species,common_name,classification
 900921,Oryza,sativa,IRGC9062,IRGC9062,
 900922,Oryza,sativa,RA4952,RA4952,
 900923,Oryza,sativa,IRGC31856,IRGC31856,
+240015,Acidobacterium,capsulatum,ATCC 51196
+234267,Candidatus Solibacter,usitatus,Ellin6076
+204669,Candidatus Koribacter,versatilis,Ellin345
+696844,Acidobacterium,sp. MP5ACTX9,
+401053,Terriglobus,saanensis,SP1PR4
+465515,Micrococcus,luteus,NCTC 2665
+478801,Kytococcus,sedentarius,DSM 20547
+521095,Atopobium,parvulum,DSM 20469
+281090,Leifsonia,xyli,subsp. xyli str. CTCB07
+288705,Renibacterium,salmoninarum,ATCC 33209
+367928,Bifidobacterium,adolescentis,ATCC 15703
+883062,Bifidobacterium,bifidum,S17
+702459,Bifidobacterium,bifidum,PRL2010
+401473,Bifidobacterium,dentium,Bd1
+590998,Cellulomonas,fimi,ATCC 484
+446466,Cellulomonas,flavigena,DSM 20109
+257309,Corynebacterium,diphtheriae,NCTC 13129
+340322,Corynebacterium,glutamicum,R
+765874,Corynebacterium,pseudotuberculosis,FRC41
+754252,Propionibacterium,freudenreichii,subsp. shermanii CIRM-BIA1
+267747,Propionibacterium,acnes,KPA171202
+553199,Propionibacterium,acnes,SK137
+262316,Mycobacterium,avium,subsp. paratuberculosis K-10
+243243,Mycobacterium,avium,104
+233413,Mycobacterium,bovis,AF2122/97
+410289,Mycobacterium,bovis,BCG str. Pasteur 1173P2
+561275,Mycobacterium,bovis,BCG str. Tokyo 172
+272631,Mycobacterium,leprae,TN
+561304,Mycobacterium,leprae,Br4923
+246196,Mycobacterium,smegmatis,str. MC2 155
+83332,Mycobacterium,tuberculosis,H37Rv
+83331,Mycobacterium,tuberculosis,CDC1551
+419947,Mycobacterium,tuberculosis,H37Ra
+336982,Mycobacterium,tuberculosis,F11
+478434,Mycobacterium,tuberculosis,KZN 1435
+216594,Mycobacterium,marinum,M
+350054,Mycobacterium,gilvum,PYR-GCK
+362242,Mycobacterium,ulcerans,Agy99
+234621,Rhodococcus,erythropolis,PR4
+405948,Saccharopolyspora,erythraea,NRRL 2338
+471857,Saccharomonospora,viridis,DSM 43017
+326424,Frankia,alni,ACN14a
+526225,Geodermatophilus,obscurus,DSM 43160
+100226,Streptomyces,coelicolor,A3(2)
+455632,Streptomyces,griseus,subsp. griseus NBRC 13350
+680198,Streptomyces,scabiei,87.22
+479432,Streptosporangium,roseum,DSM 43021
+469371,Thermobispora,bispora,DSM 43833
+446468,Nocardiopsis,dassonvillei,subsp. dassonvillei DSM 43111
+471852,Thermomonospora,curvata,DSM 43183
+269800,Thermobifida,fusca,YX
+979556,Microbacterium,testaceum,StLB037
+218496,Tropheryma,whipplei,TW08/27
+203267,Tropheryma,whipplei,str. Twist
+762948,Rothia,dentocariosa,ATCC 17931
+548479,Mobiluncus,curtisii,ATCC 43063
+526226,Gordonia,bronchialis,DSM 43247
+521096,Tsukamurella,paurometabola,DSM 20162
+525284,Gardnerella,vaginalis,ATCC 14019
+553190,Gardnerella,vaginalis,409-05
+442563,Bifidobacterium,animalis,subsp. lactis AD011
+580050,Bifidobacterium,animalis,subsp. lactis Bl-04
+555970,Bifidobacterium,animalis,subsp. lactis DSM 10140
+351607,Acidothermus,cellulolyticus,11B
+644284,Arcanobacterium,haemolyticum,DSM 20595
+443906,Clavibacter,michiganensis,subsp. michiganensis NCPPB 382
+31964,Clavibacter,michiganensis,subsp. sepedonicus
+1032480,Microlunatus,phosphovorus,NM-1
+700015,Coriobacterium,glomerans,PW2
+572418,Mycobacterium,africanum,GM041182
+227882,Streptomyces,avermitilis,MA-4680
+749927,Amycolatopsis,mediterranei,U32
+561007,Mycobacterium,abscessus,ATCC 19977
+247156,Nocardia,farcinica,IFM 10152
+632772,Rhodococcus,opacus,B4
+306537,Corynebacterium,jeikeium,K411
+446462,Actinosynnema,mirum,DSM 43827
+290340,Arthrobacter,aurescens,TC1
+446465,Brachybacterium,faecium,DSM 4810
+471856,Jonesia,denitrificans,DSM 20603
+685727,Rhodococcus,equi,103S
+504474,Corynebacterium,urealyticum,DSM 7109
+644283,Micromonospora,aurantiaca,ATCC 27029
+266117,Rubrobacter,xylanophilus,DSM 9941
+710696,Intrasporangium,calvum,DSM 43043
+479431,Nakamurella,multipartita,DSM 44233
+525909,Acidimicrobium,ferrooxidans,DSM 10331
+446469,Sanguibacter,keddieii,DSM 10542
+945712,Corynebacterium,ulcerans,BR-AD22
+378753,Kocuria,rhizophila,DC2201
+471855,Slackia,heliotrinireducens,DSM 20476
+479437,Eggerthella,lenta,DSM 2243
+469378,Cryptobacterium,curtum,DSM 15641
+471853,Beutenbergia,cavernae,DSM 12333
+452863,Arthrobacter,chlorophenolicus,A6
+106370,Frankia,sp. CcI3,
+350058,Mycobacterium,vanbaalenii,PYR-1
+266940,Kineococcus,radiotolerans,SRS30216
+101510,Rhodococcus,jostii,RHA1
+633147,Olsenella,uli,DSM 7084
+743718,Isoptericola,variabilis,225
+196164,Corynebacterium,efficiens,YS-314
+645127,Corynebacterium,kroppenstedtii,DSM 44385
+164756,Mycobacterium,sp. MCS,
+164757,Mycobacterium,sp. JLS,
+369723,Salinispora,tropica,CNB-440
+391037,Salinispora,arenicola,CNS-205
+548476,Corynebacterium,aurimucosum,ATCC 700975
+479435,Kribbella,flavida,DSM 17836
+446471,Xylanimonas,cellulosilytica,DSM 15894
+189918,Mycobacterium,sp. KMS,
+469383,Conexibacter,woesei,DSM 14684
+196162,Nocardioides,sp. JS614,
+206672,Bifidobacterium,longum,NCC2705
+205913,Bifidobacterium,longum,DJO10A
+391904,Bifidobacterium,longum,subsp. infantis ATCC 15697
+759350,Bifidobacterium,longum,subsp. longum JDM301
+890402,Bifidobacterium,longum,subsp. longum BBMN68
+565040,Bifidobacterium,longum,subsp. infantis 157F
+565042,Bifidobacterium,longum,subsp. longum JCM 1217
+675635,Pseudonocardia,dioxanivorans,CB1190
+861360,Arthrobacter,arilaitensis,Re117
+662755,Corynebacterium,resistens,DSM 45100
+278137,Mycobacterium,sp. Spyr1,
+446470,Stackebrandtia,nassauensis,DSM 44728
+640132,Segniliparus,rotundus,DSM 44985
+290399,Arthrobacter,sp. FB24,
+298653,Frankia,sp. EAN1pec,
+298654,Frankia,sp. EuI1c,
+479433,Catenulispora,acidiphila,DSM 44928
+930171,Arthrobacter,phenanthrenivorans,Sphe3
+502558,Eggerthella,sp. YY7918,
+443218,Amycolicicoccus,subflavus,DQS3-9A1
+648999,Micromonospora,sp. L5,
+656024,Frankia,symbiont of Datisca glomerata,
+875328,Mycobacterium,sp. JDM601,
+263358,Verrucosispora,maris,AB-18-032
+438753,Azorhizobium,caulinodans,ORS 571
+262698,Brucella,abortus,bv. 1 str. 9-941
+359391,Brucella,abortus,Brucella melitensis biovar Abortus 2308
+430066,Brucella,abortus,S19
+444178,Brucella,ovis,ATCC 25840
+318586,Paracoccus,denitrificans,PD1222
+78245,Xanthobacter,autotrophicus,Py2
+176299,Agrobacterium,tumefaciens,str. C58
+311403,Agrobacterium,tumefaciens,Agrobacterium radiobacter K84
+311402,Agrobacterium,vitis,S4
+224911,Bradyrhizobium,japonicum,USDA 110
+394,Sinorhizobium,fredii,NGR234
+266835,Mesorhizobium,loti,MAFF303099
+266834,Sinorhizobium,meliloti,1021
+693982,Sinorhizobium,meliloti,AK83
+216596,Rhizobium,leguminosarum,bv. viciae 3841
+395492,Rhizobium,leguminosarum,bv. trifolii WSM2304
+395491,Rhizobium,leguminosarum,bv. trifolii WSM1325
+419610,Methylobacterium,extorquens,PA1
+272630,Methylobacterium,extorquens,AM1
+661410,Methylobacterium,extorquens,DM4
+634452,Acetobacter,pasteurianus,IFO 3283-01
+290633,Gluconobacter,oxydans,621H
+349163,Acidiphilium,cryptum,JF-5
+439375,Ochrobactrum,anthropi,ATCC 49188
+395963,Beijerinckia,indica,subsp. indica ATCC 9039
+622759,Zymomonas,mobilis,subsp. mobilis NCIMB 11163
+579138,Zymomonas,mobilis,subsp. pomaceae ATCC 29192
+574556,Anaplasma,centrale,str. Israel
+234826,Anaplasma,marginale,str. St. Maries
+320483,Anaplasma,marginale,str. Florida
+360095,Bartonella,bacilliformis,KC583
+302409,Ehrlichia,ruminantium,str. Gardel
+272944,Rickettsia,conorii,str. Malish 7
+272947,Rickettsia,prowazekii,str. Madrid E
+392021,Rickettsia,rickettsii,str. 'Sheila Smith'
+452659,Rickettsia,rickettsii,str. Iowa
+357244,Orientia,tsutsugamushi,str. Boryong
+334380,Orientia,tsutsugamushi,str. Ikeda
+257363,Rickettsia,typhi,str. Wilmington
+293614,Rickettsia,akari,str. Hartford
+293613,Rickettsia,canadensis,str. McKiel
+283165,Bartonella,quintana,str. Toulouse
+323097,Nitrobacter,hamburgensis,X14
+323098,Nitrobacter,winogradskyi,Nb-255
+639283,Starkeya,novella,DSM 506
+269484,Ehrlichia,canis,str. Jake
+205920,Ehrlichia,chaffeensis,str. Arkansas
+212042,Anaplasma,phagocytophilum,HZ
+434131,Neorickettsia,risticii,str. Illinois
+222891,Neorickettsia,sennetsu,str. Miyayama
+272942,Rhodobacter,capsulatus,SB 1003
+272943,Rhodobacter,sphaeroides,2.4.1
+349101,Rhodobacter,sphaeroides,ATCC 17029
+349102,Rhodobacter,sphaeroides,ATCC 17025
+557760,Rhodobacter,sphaeroides,KD131
+648757,Rhodomicrobium,vannielii,ATCC 17100
+258594,Rhodopseudomonas,palustris,CGA009
+316058,Rhodopseudomonas,palustris,HaA2
+316056,Rhodopseudomonas,palustris,BisB18
+316057,Rhodopseudomonas,palustris,BisB5
+316055,Rhodopseudomonas,palustris,BisA53
+395960,Rhodopseudomonas,palustris,TIE-1
+652103,Rhodopseudomonas,palustris,DX-1
+269796,Rhodospirillum,rubrum,ATCC 11170
+375451,Roseobacter,denitrificans,OCh 114
+582402,Hirschia,baltica,ATCC 49814
+347834,Rhizobium,etli,CFN 42
+491916,Rhizobium,etli,CIAT 652
+224914,Brucella,melitensis,bv. 1 str. 16M
+546272,Brucella,melitensis,ATCC 23457
+204722,Brucella,suis,1330
+470137,Brucella,suis,ATCC 23445
+426355,Methylobacterium,radiotolerans,JCM 2831
+634504,Bartonella,grahamii,as4aup
+336407,Rickettsia,bellii,RML369-C
+391896,Rickettsia,bellii,OSU 85-389
+414684,Rhodospirillum,centenum,SW
+537021,Candidatus Liberibacter,asiaticus,str. psy62
+347255,Rickettsia,africae,ESF-5
+416276,Rickettsia,massiliae,MTU5
+483179,Brucella,canis,ATCC 23365
+283166,Bartonella,henselae,str. Houston-1
+765698,Mesorhizobium,ciceri,biovar biserrulae WSM1271
+314225,Erythrobacter,litoralis,HTCC2594
+391595,Roseobacter,litoralis,Och 149
+315456,Rickettsia,felis,URRWXCal2
+690566,Sphingobium,chlorophenolicum,L-1
+562019,Rickettsia,peacockii,str. Rustic
+279238,Novosphingobium,aromaticivorans,DSM 12444
+582899,Hyphomicrobium,denitrificans,ATCC 51888
+696125,Bartonella,clarridgeiae,73
+66084,Wolbachia,sp. wRi,
+633149,Brevundimonas,subvibrioides,ATCC 15264
+394221,Maricaulis,maris,MCS10
+573065,Asticcacaulis,excentricus,CB 48
+292805,Wolbachia,endosymbiont of Brugia malayi,Wolbachia endosymbiont strain TRS of Brugia malayi
+228405,Hyphomonas,neptunium,ATCC 15444
+440085,Methylobacterium,chloromethanicum,CM4
+342108,Magnetospirillum,magneticum,AMB-1
+382640,Bartonella,tribocorum,CIP 105476
+509190,Caulobacter,segnis,ATCC 21756
+246200,Ruegeria,pomeroyi,DSS-3
+880591,Ketogulonicigenium,vulgare,Y25
+366394,Sinorhizobium,medicae,WSM419
+114615,Bradyrhizobium,sp. ORS 278,Bradyrhizobium sp. ORS278
+460265,Methylobacterium,nodulans,ORS 2060
+317655,Sphingopyxis,alaskensis,RB2256
+137722,Azospirillum,sp. B510,
+190650,Caulobacter,vibrioides,Caulobacter crescentus CB15
+565050,Caulobacter,vibrioides,Caulobacter crescentus NA1000
+392499,Sphingomonas,wittichii,RW1
+163164,Wolbachia,endosymbiont of Drosophila melanogaster,
+335992,Candidatus Pelagibacter,ubique,HTCC1062
+395965,Methylocella,silvestris,BL2
+314260,Parvularcula,bermudensis,HTCC2503
+398580,Dinoroseobacter,shibae,DFL 12
+441620,Methylobacterium,populi,BJ001
+1032845,Rickettsia,heilongjiangensis,054
+696127,Candidatus Midichloria,mitochondrii,IricVA
+402881,Parvibaculum,lavamentivorans,DS-1
+570417,Wolbachia,endosymbiont of Culex quinquefasciatus,Pel
+266779,Chelativorans,sp. BNC1,
+450851,Phenylobacterium,zucineum,HLK1
+288000,Bradyrhizobium,sp. BTAi1,
+290400,Jannaschia,sp. CCS1,
+292414,Ruegeria,sp. TM1040,
+452662,Sphingobium,japonicum,UT26S
+391165,Granulibacter,bethesdensis,CGDNIH1
+366602,Caulobacter,sp. K31,
+426117,Methylobacterium,sp. 4-46,
+568815,Brucella,microti,CCM 4915
+658172,Candidatus Liberibacter,solanacearum,CLso-ZC1
+573234,Candidatus Hodgkinia,cicadicola,Dsem
+702113,Novosphingobium,sp. PP1Y,
+488538,Candidatus Puniceispirillum,marinum,IMCC1322
+861208,Agrobacterium,sp. H13-3,
+991905,,Polymorphum gilvum,SL003B-26A1
+608538,Hydrogenobacter,thermophilus,TK-6
+224324,Aquifex,aeolicus,VF5
+868864,Desulfurobacterium,thermolithotrophum,DSM 11699
+638303,Thermocrinis,albus,DSM 14484
+648996,Thermovibrio,ammonificans,HB-1
+123214,Persephonella,marina,EX-H1
+204536,Sulfurihydrogenibium,azorense,Az-Fu1
+380749,Hydrogenobaculum,sp. Y04AAS1,
+436114,Sulfurihydrogenibium,sp. YO3AOP1,
+880070,Cyclobacterium,marinum,DSM 745
+761193,Runella,slithyformis,DSM 19594
+504472,Spirosoma,linguale,DSM 74
+295405,Bacteroides,fragilis,YCH46
+272559,Bacteroides,fragilis,NCTC 9343
+226186,Bacteroides,thetaiotaomicron,VPI-5482
+435590,Bacteroides,vulgatus,ATCC 8482
+435591,Parabacteroides,distasonis,ATCC 8503
+242619,Porphyromonas,gingivalis,W83
+431947,Porphyromonas,gingivalis,ATCC 33277
+1030843,Porphyromonas,gingivalis,TDC60
+264731,Prevotella,ruminicola,23
+867900,Cellulophaga,lytica,DSM 7489
+485917,Pedobacter,heparinus,DSM 2366
+269798,Cytophaga,hutchinsonii,ATCC 33406
+376686,Flavobacterium,johnsoniae,UW101
+643867,Marivirga,tractuosa,DSM 4126
+865938,Weeksella,virosa,DSM 16922
+521097,Capnocytophaga,ochracea,DSM 7271
+290315,Chlorobium,limicola,DSM 245
+290318,Chlorobium,phaeovibrioides,DSM 265
+290317,Chlorobium,phaeobacteroides,DSM 266
+331678,Chlorobium,phaeobacteroides,BS1
+194439,Chlorobaculum,tepidum,Chlorobium tepidum TLS
+319225,Pelodictyon,luteolum,Chlorobium luteolum DSM 273
+290512,Prosthecochloris,aestuarii,DSM 271
+760192,Haliscomenobacter,hydrossis,DSM 1100
+709991,Odoribacter,splanchnicus,DSM 20712
+879243,Porphyromonas,asaccharolytica,DSM 20707
+767031,Prevotella,denticola,F0289
+553174,Prevotella,melaninogenica,ATCC 25845
+860228,Capnocytophaga,canimorsus,Cc5
+518766,Rhodothermus,marinus,DSM 4252
+693978,Riemerella,anatipestifer,DSM 15868
+324925,Pelodictyon,phaeoclathratiforme,BU-1
+688270,Cellulophaga,algicola,DSM 14237
+485918,Chitinophaga,pinensis,DSM 2588
+471854,Dyadobacter,fermentans,DSM 18053
+402612,Flavobacterium,psychrophilum,JIP02/86
+517418,Chloroherpeton,thalassium,ATCC 35110
+309807,Salinibacter,ruber,DSM 13855
+762903,Pedobacter,saltans,DSM 12145
+694427,Paludibacter,propionicigenes,WB4
+755732,Fluviicola,taffensis,DSM 16823
+313596,Robiginitalea,biformata,HTCC2501
+517417,Chlorobaculum,parvum,NCIB 8327
+452471,Candidatus Amoebophilus,asiaticus,5a2
+693979,Bacteroides,helcogenes,P 36-108
+216432,Croceibacter,atlanticus,HTCC2559
+313603,Maribacter,sp. HTCC2170,
+649349,Leadbetterella,byssophila,DSM 17132
+444179,Candidatus Sulcia,muelleri,GWSS
+595499,Candidatus Sulcia,muelleri,SMDSEM
+641892,Candidatus Sulcia,muelleri,DMIN
+706194,Candidatus Sulcia,muelleri,CARI
+340177,Chlorobium,chlorochromatii,CaD3
+600809,Blattabacterium,sp. (Periplaneta americana),Blattabacterium sp. (Periplaneta americana) str. BPLAN
+667015,Bacteroides,salanitronis,DSM 18170
+655815,Zunongwangia,profunda,SM-A87
+411154,Gramella,forsetii,KT0803
+511995,Candidatus Azobacteroides,pseudotrichonymphae,genomovar. CFP2
+531844,,Flavobacteriaceae bacterium 3519-10,
+331104,Blattabacterium,sp. (Blattella germanica),Blattabacterium sp. (Blattella germanica) str. Bge
+743722,Sphingobacterium,sp. 21,
+983544,Lacinutrix,sp. 5H-3-7-4,
+267608,Ralstonia,solanacearum,GMI1000
+402626,Ralstonia,pickettii,12J
+428406,Ralstonia,pickettii,12D
+626418,Burkholderia,glumae,BGR1
+265072,Methylobacillus,flagellatus,KT
+242231,Neisseria,gonorrhoeae,FA 1090
+521006,Neisseria,gonorrhoeae,NCCP11945
+489653,Neisseria,lactamica,020-06
+122586,Neisseria,meningitidis,MC58
+122587,Neisseria,meningitidis,Z2491
+272831,Neisseria,meningitidis,FAM18
+374833,Neisseria,meningitidis,053442
+662598,Neisseria,meningitidis,alpha14
+257310,Bordetella,bronchiseptica,RB50
+257311,Bordetella,parapertussis,12822
+257313,Bordetella,pertussis,Tohama I
+360910,Bordetella,avium,197N
+243365,Chromobacterium,violaceum,ATCC 12472
+228410,Nitrosomonas,europaea,ATCC 19718
+335283,Nitrosomonas,eutropha,C91
+75379,Thiomonas,intermedia,K12
+757424,Herbaspirillum,seropedicae,SmR1
+323848,Nitrosospira,multiformis,ATCC 25196
+243160,Burkholderia,mallei,ATCC 23344
+320388,Burkholderia,mallei,SAVP1
+412022,Burkholderia,mallei,NCTC 10229
+320389,Burkholderia,mallei,NCTC 10247
+999541,Burkholderia,gladioli,BSR3
+272560,Burkholderia,pseudomallei,K96243
+320372,Burkholderia,pseudomallei,1710b
+357348,Burkholderia,pseudomallei,1106a
+320373,Burkholderia,pseudomallei,668
+937774,Taylorella,equigenitalis,MCE9
+395495,Leptothrix,cholodnii,SP-6
+543728,Variovorax,paradoxus,S110
+595537,Variovorax,paradoxus,EPS
+292415,Thiobacillus,denitrificans,ATCC 25259
+266265,Burkholderia,xenovorans,LB400
+271848,Burkholderia,thailandensis,E264
+269482,Burkholderia,vietnamiensis,G4
+62928,Azoarcus,sp. BH72,
+398578,Delftia,acidovorans,SPH-1
+643561,Acidovorax,avenae,subsp. avenae ATCC 19860
+397945,Acidovorax,citrulli,AAC00-1
+85643,Thauera,sp. MZ1T,
+762376,Achromobacter,xylosoxidans,A8
+365046,Ramlibacter,tataouinensis,TTB310
+340100,Bordetella,petrii,DSM 12804
+331271,Burkholderia,cenocepacia,AU 1054
+331272,Burkholderia,cenocepacia,HI2424
+406425,Burkholderia,cenocepacia,MC0-3
+216591,Burkholderia,cenocepacia,J2315
+420662,Methylibium,petroleiphilum,PM1
+381666,Cupriavidus,necator,Ralstonia eutropha H16
+1042878,Cupriavidus,necator,N-1
+391038,Burkholderia,phymatum,STM815
+339670,Burkholderia,ambifaria,AMMD
+398577,Burkholderia,ambifaria,MC40-6
+153948,Nitrosomonas,sp. AL212,
+557598,Laribacter,hongkongensis,HLHK9
+596153,Alicycliphilus,denitrificans,BC
+596154,Alicycliphilus,denitrificans,K601
+891398,Candidatus Tremblaya,princeps,PCIT
+338969,Albidiferax,ferrireducens,Rhodoferax ferrireducens T118
+204773,Herminiimonas,arsenicoxydans,
+365044,Polaromonas,naphthalenivorans,CJ2
+232721,Acidovorax,sp. JS42,
+264198,Cupriavidus,pinatubonensis,Ralstonia eutropha JMP134
+159087,Dechloromonas,aromatica,RCB
+261292,Nitrosomonas,sp. Is79A3,
+398527,Burkholderia,phytofirmans,PsJN
+582744,Methylovorus,glucosotrophus,Methylovorus glucosetrophus SIP3-4
+269483,Burkholderia,sp. 383,
+296591,Polaromonas,sp. JS666,
+522306,Candidatus Accumulibacter,phosphatis,clade IIA str. UW-1
+583345,Methylotenera,mobilis,JLW8
+391735,Verminephrobacter,eiseniae,EF01-2
+395494,Gallionella,capsiferriformans,ES-2
+375286,Janthinobacterium,sp. Marseille,
+882378,Burkholderia,rhizoxinica,HKI 454
+76114,Aromatoleum,aromaticum,EbN1
+312153,Polynucleobacter,necessarius,subsp. asymbioticus QLW-P1DMWA-1
+452638,Polynucleobacter,necessarius,subsp. necessarius STIR1
+640510,Burkholderia,sp. CCGE1001,
+640511,Burkholderia,sp. CCGE1002,
+640512,Burkholderia,sp. CCGE1003,
+535289,Acidovorax,ebreus,TPSY
+742013,Delftia,sp. Cs1-4,
+871271,Candidatus Zinderia,insecticola,CARI
+887061,Methylovorus,sp. MP688,
+1007105,Pusillimonas,sp. T7-7,
+666681,Methylotenera,versatilis,301
+272561,Chlamydia,trachomatis,D/UW-3/CX
+315277,Chlamydia,trachomatis,A/HAR-13
+471472,Chlamydia,trachomatis,434/Bu
+471473,Chlamydia,trachomatis,L2b/UCH-1/proctitis
+672161,Chlamydia,trachomatis,B/TZ1A828/OT
+887712,Chlamydia,trachomatis,L2c
+716544,Waddlia,chondrophila,WSU 86-1044
+765952,Parachlamydia,acanthamoebae,UV7
+218497,Chlamydophila,abortus,S26/3
+264202,Chlamydophila,felis,Fe/C-56
+227941,Chlamydophila,caviae,GPIC
+115713,Chlamydophila,pneumoniae,CWL029
+138677,Chlamydophila,pneumoniae,J138
+182082,Chlamydophila,pneumoniae,TW-183
+243161,Chlamydia,muridarum,Nigg
+331113,Simkania,negevensis,Z
+331635,Chlamydophila,pecorum,E58
+264201,Candidatus Protochlamydia,amoebophila,UWE25
+316274,Herpetosiphon,aurantiacus,DSM 785
+309801,Thermomicrobium,roseum,DSM 5159
+324602,Chloroflexus,aurantiacus,J-10-fl
+479434,Sphaerobacter,thermophilus,DSM 20745
+243164,Dehalococcoides,ethenogenes,195
+383372,Roseiflexus,castenholzii,DSM 13941
+326427,Chloroflexus,aggregans,DSM 9485
+926569,Anaerolinea,thermophila,UNI-1
+216389,Dehalococcoides,sp. BAV1,
+255470,Dehalococcoides,sp. CBDB1,
+311424,Dehalococcoides,sp. VS,
+357808,Roseiflexus,sp. RS-1,
+480224,Chloroflexus,sp. Y-400-fl,
+552811,Dehalogenimonas,lykanthroporepellens,BL-DC-9
+633145,Dehalococcoides,sp. GT,
+368408,Thermofilum,pendens,Hrk 5
+765177,Desulfurococcus,mucosus,DSM 2162
+384616,Pyrobaculum,islandicum,DSM 4184
+399550,Staphylothermus,marinus,F1
+330779,Sulfolobus,acidocaldarius,DSM 639
+273057,Sulfolobus,solfataricus,P2
+178306,Pyrobaculum,aerophilum,str. IM2
+429572,Sulfolobus,islandicus,L.S.2.15
+427317,Sulfolobus,islandicus,M.14.25
+427318,Sulfolobus,islandicus,M.16.27
+439386,Sulfolobus,islandicus,Y.G.57.14
+419942,Sulfolobus,islandicus,Y.N.15.51
+426118,Sulfolobus,islandicus,M.16.4
+425944,Sulfolobus,islandicus,L.D.8.5
+399549,Metallosphaera,sedula,DSM 5348
+415426,Hyperthermus,butylicus,DSM 5456
+633148,Thermosphaera,aggregans,DSM 11486
+272557,Aeropyrum,pernix,K1
+444157,Thermoproteus,neutrophilus,V24Sta
+397948,Caldivirga,maquilingensis,IC-167
+591019,Staphylothermus,hellenicus,DSM 12710
+273063,Sulfolobus,tokodaii,str. 7
+340102,Pyrobaculum,arsenaticum,DSM 13514
+453591,Ignicoccus,hospitalis,KIN4/I
+572478,Vulcanisaeta,distributa,DSM 14429
+410359,Pyrobaculum,calidifontis,JCM 11548
+999630,Thermoproteus,uzoniensis,768-20
+666510,Acidilobus,saccharovorans,345-15
+583356,Ignisphaera,aggregans,DSM 17230
+436308,Nitrosopumilus,maritimus,SCM1
+490899,Desulfurococcus,kamchatkensis,1221n
+933801,Acidianus,hospitalis,W1
+985053,Vulcanisaeta,moutnovskia,768-28
+1006006,Metallosphaera,cuprina,Ar-4
+449447,Microcystis,aeruginosa,NIES-843
+1148,Synechocystis,sp. PCC 6803,
+551115,Trichormus,azollae,'Nostoc azollae' 0708
+240292,Anabaena,variabilis,ATCC 29413
+203124,Trichodesmium,erythraeum,IMS101
+74547,Prochlorococcus,marinus,str. MIT 9313
+167539,Prochlorococcus,marinus,subsp. marinus str. CCMP1375
+59919,Prochlorococcus,marinus,subsp. pastoris str. CCMP1986
+59920,Prochlorococcus,marinus,str. NATL2A
+74546,Prochlorococcus,marinus,str. MIT 9312
+146891,Prochlorococcus,marinus,str. AS9601
+167542,Prochlorococcus,marinus,str. MIT 9515
+59922,Prochlorococcus,marinus,str. MIT 9303
+167555,Prochlorococcus,marinus,str. NATL1A
+167546,Prochlorococcus,marinus,str. MIT 9301
+93060,Prochlorococcus,marinus,str. MIT 9215
+93059,Prochlorococcus,marinus,str. MIT 9211
+1140,Synechococcus,elongatus,PCC 7942
+269084,Synechococcus,elongatus,PCC 6301
+32049,Synechococcus,sp. PCC 7002,
+32051,Synechococcus,sp. WH 7803,
+251221,Gloeobacter,violaceus,PCC 7421
+41431,Cyanothece,sp. PCC 8801,
+43989,Cyanothece,sp. ATCC 51142,
+64471,Synechococcus,sp. CC9311,
+65393,Cyanothece,sp. PCC 7424,
+84588,Synechococcus,sp. WH 8102,
+103690,Nostoc,sp. PCC 7120,
+110662,Synechococcus,sp. CC9605,
+197221,Thermosynechococcus,elongatus,BP-1
+329726,Acaryochloris,marina,MBIC11017
+63737,Nostoc,punctiforme,PCC 73102
+316278,Synechococcus,sp. RCC307,
+316279,Synechococcus,sp. CC9902,
+321327,Synechococcus,sp. JA-3-3Ab,
+321332,Synechococcus,sp. JA-2-3B'a(2-13),Synechococcus sp. JA-2-3B'a(2-13)
+395961,Cyanothece,sp. PCC 7425,
+395962,Cyanothece,sp. PCC 8802,
+497965,Cyanothece,sp. PCC 7822,
+713887,,cyanobacterium UCYN-A,
+300852,Thermus,thermophilus,HB8
+262724,Thermus,thermophilus,HB27
+504728,Meiothermus,ruber,DSM 1279
+243230,Deinococcus,radiodurans,R1
+743525,Thermus,scotoductus,SA-01
+526227,Meiothermus,silvanus,DSM 9946
+693977,Deinococcus,proteolyticus,MRP
+319795,Deinococcus,geothermalis,DSM 11300
+869210,Marinithermus,hydrothermalis,DSM 14884
+670487,Oceanithermus,profundus,DSM 14977
+709986,Deinococcus,maricopensis,DSM 21211
+546414,Deinococcus,deserti,VCD115
+649638,Truepera,radiovictrix,DSM 17093
+338963,Pelobacter,carbinolicus,DSM 2380
+483219,Myxococcus,fulvus,HW-1
+246197,Myxococcus,xanthus,DK 1622
+378806,Stigmatella,aurantiaca,DW4/3-1
+448385,Sorangium,cellulosum,'So ce 56'
+525146,Desulfovibrio,desulfuricans,subsp. desulfuricans str. ATCC 27774
+526222,Desulfovibrio,salexigens,DSM 2638
+882,Desulfovibrio,vulgaris,str. Hildenborough
+391774,Desulfovibrio,vulgaris,DP4
+883,Desulfovibrio,vulgaris,str. 'Miyazaki F'
+577650,Desulfobulbus,propionicus,DSM 2032
+525897,Desulfomicrobium,baculatum,DSM 4028
+264462,Bdellovibrio,bacteriovorus,HD100
+177437,Desulfobacterium,autotrophicum,HRM2
+269799,Geobacter,metallireducens,GS-15
+338966,Pelobacter,propionicus,DSM 2379
+363253,Lawsonia,intracellularis,PHE/MN1-00
+243231,Geobacter,sulfurreducens,PCA
+485915,Desulfohalobium,retbaense,DSM 5692
+207559,Desulfovibrio,alaskensis,G20
+880072,Desulfobacca,acetoxidans,DSM 11109
+502025,Haliangium,ochraceum,DSM 14365
+760142,Hippea,maritima,DSM 10411
+177439,Desulfotalea,psychrophila,LSv54
+335543,Syntrophobacter,fumaroxidans,MPOB
+290397,Anaeromyxobacter,dehalogenans,2CP-C
+455488,Anaeromyxobacter,dehalogenans,2CP-1
+96561,Desulfococcus,oleovorans,Hxd3
+643562,Desulfovibrio,aespoeensis,Aspo-2
+573370,Desulfovibrio,magneticus,RS-1
+404380,Geobacter,bemidjiensis,Bem
+439235,Desulfatibacillum,alkenivorans,AK-01
+398767,Geobacter,lovleyi,SZ
+316067,Geobacter,sp. FRC-32,
+56780,Syntrophus,aciditrophicus,SB
+351605,Geobacter,uraniireducens,Rf4
+404589,Anaeromyxobacter,sp. Fw109-5,
+589865,Desulfurivibrio,alkaliphilus,AHT2
+443143,Geobacter,sp. M18,
+443144,Geobacter,sp. M21,
+447217,Anaeromyxobacter,sp. K,
+644282,Desulfarculus,baarsii,DSM 2075
+360106,Campylobacter,fetus,subsp. fetus 82-40
+192222,Campylobacter,jejuni,subsp. jejuni NCTC 11168
+195099,Campylobacter,jejuni,RM1221
+354242,Campylobacter,jejuni,subsp. jejuni 81-176
+360109,Campylobacter,jejuni,subsp. doylei 269.97
+407148,Campylobacter,jejuni,subsp. jejuni 81116
+757425,Campylobacter,jejuni,subsp. jejuni ICDCCJ07001
+360104,Campylobacter,concisus,13826
+360105,Campylobacter,curvus,525.92
+306263,Campylobacter,lari,RM2100
+85962,Helicobacter,pylori,26695
+85963,Helicobacter,pylori,J99
+357544,Helicobacter,pylori,HPAG1
+512562,Helicobacter,pylori,Shi470
+563041,Helicobacter,pylori,G27
+570508,Helicobacter,pylori,P12
+592205,Helicobacter,pylori,B38
+765963,Helicobacter,pylori,PeCan4
+765962,Helicobacter,pylori,SJM180
+382638,Helicobacter,acinonychis,str. Sheeba
+936155,Helicobacter,felis,ATCC 49179
+679897,Helicobacter,mustelae,12198
+273121,Wolinella,succinogenes,DSM 1740
+367737,Arcobacter,butzleri,RM4018
+572480,Arcobacter,nitrofigilis,DSM 7299
+235279,Helicobacter,hepaticus,ATCC 51449
+326298,Sulfurimonas,denitrificans,DSM 1251
+1002804,Helicobacter,bizzozeronii,CIII-1
+525898,Sulfurospirillum,deleyianum,DSM 6946
+360107,Campylobacter,hominis,ATCC BAA-381
+709032,Sulfuricurvum,kujiense,DSM 16994
+563040,Sulfurimonas,autotrophica,DSM 16294
+598659,Nautilia,profundicola,AmH
+749222,Nitratifractor,salsuginis,DSM 16511
+387092,Nitratiruptor,sp. SB155-2,
+387093,Sulfurovum,sp. NBC37-1,
+420247,Methanobrevibacter,smithii,ATCC 35061
+547558,Methanohalophilus,mahii,DSM 5219
+523846,Methanothermus,fervidus,DSM 2088
+406327,Methanococcus,vannielii,SB
+456320,Methanococcus,voltae,A3
+880724,Methanotorris,igneus,Kol 5
+243232,Methanocaldococcus,jannaschii,DSM 2661
+368407,Methanoculleus,marisnigri,JR1
+323259,Methanospirillum,hungatei,JF-1
+269797,Methanosarcina,barkeri,str. Fusaro
+192952,Methanosarcina,mazei,Go1
+188937,Methanosarcina,acetivorans,C2A
+990316,Methanosaeta,concilii,GP6
+349307,Methanosaeta,thermophila,PT
+224325,Archaeoglobus,fulgidus,DSM 4304
+272569,Haloarcula,marismortui,ATCC 43049
+64091,Halobacterium,salinarum,Halobacterium sp. NRC-1
+478009,Halobacterium,salinarum,R1
+309800,Haloferax,volcanii,DS2
+416348,Halorubrum,lacusprofundi,ATCC 49239
+348780,Natronomonas,pharaonis,DSM 2160
+186497,Pyrococcus,furiosus,DSM 3638
+273075,Thermoplasma,acidophilum,DSM 1728
+339860,Methanosphaera,stadtmanae,DSM 3091
+190192,Methanopyrus,kandleri,AV19
+644295,Methanohalobium,evestigatum,Z-7303
+547559,Natrialba,magadii,ATCC 43099
+259564,Methanococcoides,burtonii,DSM 6242
+272844,Pyrococcus,abyssi,GE5
+267377,Methanococcus,maripaludis,S2
+402880,Methanococcus,maripaludis,C5
+426368,Methanococcus,maripaludis,C7
+444158,Methanococcus,maripaludis,C6
+679901,Methanosalsum,zhilinae,DSM 4017
+419665,Methanococcus,aeolicus,Nankai-3
+273116,Thermoplasma,volcanium,GSS1
+70601,Pyrococcus,horikoshii,OT3
+679926,Methanoplanus,petrolearius,DSM 11571
+589924,Ferroglobus,placidus,DSM 10642
+391623,Thermococcus,barophilus,MP
+485914,Halomicrobium,mukohataei,DSM 12286
+693661,Archaeoglobus,veneficus,SNP6
+469382,Halogeometricum,borinquense,DSM 11551
+543526,Haloterrigena,turkmenica,DSM 5511
+573063,Methanocaldococcus,infernus,ME
+579137,Methanocaldococcus,vulcanius,M7
+263820,Picrophilus,torridus,DSM 9790
+573064,Methanocaldococcus,fervens,AG86
+634498,Methanobrevibacter,ruminantium,M1
+410358,Methanocorpusculum,labreanum,Z
+572546,Archaeoglobus,profundus,DSM 5631
+187420,Methanothermobacter,thermautotrophicus,str. Delta H
+79929,Methanothermobacter,marburgensis,str. Marburg
+519442,Halorhabdus,utahensis,DSM 12940
+647113,Methanothermococcus,okinawensis,IH1
+604354,Thermococcus,sibiricus,MM 739
+593117,Thermococcus,gammatolerans,EJ3
+362976,Haloquadratum,walsbyi,DSM 16790
+69014,Thermococcus,kodakarensis,KOD1
+523850,Thermococcus,onnurineus,NA1
+342949,Pyrococcus,sp. NA2,
+351160,,uncultured methanogenic archaeon RC-I,
+456442,Methanoregula,boonei,6A8
+439481,Aciduliprofundum,boonei,T469
+797210,Halopiger,xanaduensis,SH-6
+795797,Halalkalicoccus,jeotgali,B3
+521011,Methanosphaerula,palustris,E1-9c
+304371,Methanocella,paludicola,SANAE
+644281,Methanocaldococcus,sp. FS406-22,
+868131,Methanobacterium,sp. SWAN-1,
+868132,Methanobacterium,sp. AL-21,
+529709,Pyrococcus,yayanosii,CH1
+1042877,Thermococcus,sp. 4557,
+591001,Acidaminococcus,fermentans,DSM 20731
+203120,Leuconostoc,mesenteroides,subsp. mesenteroides ATCC 8293
+203123,Oenococcus,oeni,PSU-1
+278197,Pediococcus,pentosaceus,ATCC 25745
+334413,Finegoldia,magna,ATCC 29328
+697329,Ruminococcus,albus,7
+158878,Staphylococcus,aureus,subsp. aureus Mu50
+158879,Staphylococcus,aureus,subsp. aureus N315
+196620,Staphylococcus,aureus,subsp. aureus MW2
+282458,Staphylococcus,aureus,subsp. aureus MRSA252
+282459,Staphylococcus,aureus,subsp. aureus MSSA476
+93062,Staphylococcus,aureus,subsp. aureus COL
+273036,Staphylococcus,aureus,RF122
+451515,Staphylococcus,aureus,subsp. aureus USA300_FPR3757
+93061,Staphylococcus,aureus,subsp. aureus NCTC 8325
+359786,Staphylococcus,aureus,subsp. aureus JH9
+359787,Staphylococcus,aureus,subsp. aureus JH1
+426430,Staphylococcus,aureus,subsp. aureus str. Newman
+418127,Staphylococcus,aureus,subsp. aureus Mu3
+451516,Staphylococcus,aureus,subsp. aureus USA300_TCH1516
+681288,Staphylococcus,aureus,subsp. aureus ED98
+396513,Staphylococcus,carnosus,subsp. carnosus TM300
+176280,Staphylococcus,epidermidis,ATCC 12228
+176279,Staphylococcus,epidermidis,RP62A
+279808,Staphylococcus,haemolyticus,JCSC1435
+467705,Streptococcus,gordonii,str. Challis substr. CH1
+927666,Streptococcus,oralis,Uo5
+388919,Streptococcus,sanguinis,SK36
+391295,Streptococcus,suis,05ZYH33
+391296,Streptococcus,suis,98HAH33
+568814,Streptococcus,suis,BM407
+218494,Streptococcus,suis,P1/7
+568813,Streptococcus,suis,SC84
+1007064,Streptococcus,suis,ST3
+264199,Streptococcus,thermophilus,LMG 18311
+299768,Streptococcus,thermophilus,CNRZ1066
+322159,Streptococcus,thermophilus,LMD-9
+210007,Streptococcus,mutans,UA159
+511691,Streptococcus,mutans,NN2025
+208435,Streptococcus,agalactiae,2603V/R
+211110,Streptococcus,agalactiae,NEM316
+205921,Streptococcus,agalactiae,A909
+170187,Streptococcus,pneumoniae,TIGR4
+171101,Streptococcus,pneumoniae,R6
+373153,Streptococcus,pneumoniae,D39
+487214,Streptococcus,pneumoniae,Hungary19A-6
+516950,Streptococcus,pneumoniae,CGSP14
+512566,Streptococcus,pneumoniae,G54
+561276,Streptococcus,pneumoniae,ATCC 700669
+525381,Streptococcus,pneumoniae,TCH8431/19A
+488221,Streptococcus,pneumoniae,70585
+488222,Streptococcus,pneumoniae,JJA
+488223,Streptococcus,pneumoniae,P1031
+487213,Streptococcus,pneumoniae,Taiwan19F-14
+574093,Streptococcus,pneumoniae,AP200
+189423,Streptococcus,pneumoniae,670-6B
+160490,Streptococcus,pyogenes,M1 GAS
+186103,Streptococcus,pyogenes,MGAS8232
+198466,Streptococcus,pyogenes,MGAS315
+193567,Streptococcus,pyogenes,SSI-1
+286636,Streptococcus,pyogenes,MGAS10394
+319701,Streptococcus,pyogenes,MGAS6180
+293653,Streptococcus,pyogenes,MGAS5005
+370552,Streptococcus,pyogenes,MGAS10270
+370554,Streptococcus,pyogenes,MGAS10750
+370553,Streptococcus,pyogenes,MGAS2096
+370551,Streptococcus,pyogenes,MGAS9429
+160491,Streptococcus,pyogenes,str. Manfredo
+471876,Streptococcus,pyogenes,NZ131
+486410,Streptococcus,dysgalactiae,subsp. equisimilis GGS_124
+552526,Streptococcus,equi,subsp. zooepidemicus MGCS10565
+553482,Streptococcus,equi,subsp. equi 4047
+40041,Streptococcus,equi,subsp. zooepidemicus
+936154,Streptococcus,parauberis,KCTC 11537
+218495,Streptococcus,uberis,0140J
+226185,Enterococcus,faecalis,V583
+272623,Lactococcus,lactis,subsp. lactis Il1403
+272622,Lactococcus,lactis,subsp. cremoris SK11
+416870,Lactococcus,lactis,subsp. cremoris MG1363
+684738,Lactococcus,lactis,subsp. lactis KF147
+866775,Aerococcus,urinae,ACS-120-V-Col10a
+326423,Bacillus,amyloliquefaciens,FZB42
+692420,Bacillus,amyloliquefaciens,DSM 7
+198094,Bacillus,anthracis,str. Ames
+261594,Bacillus,anthracis,str. 'Ames Ancestor'
+260799,Bacillus,anthracis,str. Sterne
+568206,Bacillus,anthracis,str. CDC 684
+592021,Bacillus,anthracis,str. A0248
+358681,Brevibacillus,brevis,NBRC 100599
+226900,Bacillus,cereus,ATCC 14579
+222523,Bacillus,cereus,ATCC 10987
+288681,Bacillus,cereus,E33L
+405534,Bacillus,cereus,AH187
+405532,Bacillus,cereus,B4264
+405535,Bacillus,cereus,AH820
+405531,Bacillus,cereus,G9842
+361100,Bacillus,cereus,Q1
+572264,Bacillus,cereus,03BB102
+637380,Bacillus,cereus,biovar anthracis str. CI
+941639,Bacillus,coagulans,2-6
+545693,Bacillus,megaterium,QM B1551
+592022,Bacillus,megaterium,DSM 319
+349520,Paenibacillus,polymyxa,E681
+886882,Paenibacillus,polymyxa,SC2
+315750,Bacillus,pumilus,SAFR-032
+649639,Bacillus,cellulosilyticus,DSM 2522
+444177,Lysinibacillus,sphaericus,C3-41
+224308,Bacillus,subtilis,subsp. subtilis str. 168
+655816,Bacillus,subtilis,subsp. spizizenii str. W23
+936156,Bacillus,subtilis,BSn5
+281309,Bacillus,thuringiensis,serovar konkukian str. 97-27
+412694,Bacillus,thuringiensis,str. Al Hakam
+714359,Bacillus,thuringiensis,BMB171
+720555,Bacillus,atrophaeus,1942
+235909,Geobacillus,kaustophilus,HTA426
+272562,Clostridium,acetobutylicum,ATCC 824
+991791,Clostridium,acetobutylicum,DSM 1731
+413999,Clostridium,botulinum,A str. ATCC 3502
+441770,Clostridium,botulinum,A str. ATCC 19397
+441771,Clostridium,botulinum,A str. Hall
+441772,Clostridium,botulinum,F str. Langeland
+498213,Clostridium,botulinum,B1 str. Okra
+498214,Clostridium,botulinum,A3 str. Loch Maree
+508765,Clostridium,botulinum,B str. Eklund 17B
+508767,Clostridium,botulinum,E3 str. Alaska E43
+536232,Clostridium,botulinum,A2 str. Kyoto
+515621,Clostridium,botulinum,Ba4 str. 657
+929506,Clostridium,botulinum,BKT015925
+573061,Clostridium,cellulovorans,743B
+272563,Clostridium,difficile,630
+645462,Clostridium,difficile,CD196
+645463,Clostridium,difficile,R20291
+195102,Clostridium,perfringens,str. 13
+195103,Clostridium,perfringens,ATCC 13124
+499177,Clostridium,sticklandii,DSM 519
+212717,Clostridium,tetani,E88
+203119,Clostridium,thermocellum,ATCC 27405
+580327,Thermoanaerobacterium,thermosaccharolyticum,DSM 571
+290402,Clostridium,beijerinckii,NCIMB 8052
+394503,Clostridium,cellulolyticum,H10
+264732,Moorella,thermoacetica,ATCC 39073
+431943,Clostridium,kluyveri,DSM 555
+583346,Clostridium,kluyveri,NBRC 12016
+748727,Clostridium,ljungdahlii,DSM 13528
+386415,Clostridium,novyi,NT
+696281,Desulfotomaculum,ruminis,DSM 2154
+272621,Lactobacillus,acidophilus,NCFM
+891391,Lactobacillus,acidophilus,30SC
+387344,Lactobacillus,brevis,ATCC 367
+511437,Lactobacillus,buchneri,NRRL B-30929
+321967,Lactobacillus,casei,ATCC 334
+543734,Lactobacillus,casei,BL23
+498216,Lactobacillus,casei,str. Zhang
+390333,Lactobacillus,delbrueckii,subsp. bulgaricus ATCC 11842
+321956,Lactobacillus,delbrueckii,subsp. bulgaricus ATCC BAA-365
+767455,Lactobacillus,delbrueckii,subsp. bulgaricus ND02
+405566,Lactobacillus,helveticus,DPC 4571
+220668,Lactobacillus,plantarum,WCFS1
+644042,Lactobacillus,plantarum,JDM1
+889932,Lactobacillus,plantarum,subsp. plantarum ST-III
+324831,Lactobacillus,gasseri,ATCC 33323
+557436,Lactobacillus,reuteri,DSM 20016
+557433,Lactobacillus,reuteri,JCM 1112
+314315,Lactobacillus,sakei,subsp. sakei 23K
+695560,Lactobacillus,amylovorus,GRL 1112
+334390,Lactobacillus,fermentum,IFO 3956
+362948,Lactobacillus,salivarius,UCC118
+169963,Listeria,monocytogenes,EGD-e
+265669,Listeria,monocytogenes,serotype 4b str. F2365
+552536,Listeria,monocytogenes,HCC23
+568819,Listeria,monocytogenes,serotype 4b str. CLIP 80459
+637381,Listeria,monocytogenes,08-5923
+683837,Listeria,seeligeri,serovar 1/2b str. SLCC3954
+272626,Listeria,innocua,Clip11262
+386043,Listeria,welshimeri,serovar 6b str. SLCC5334
+903814,Eubacterium,limosum,KIST612
+340047,Mycoplasma,capricolum,subsp. capricolum ATCC 27343
+243273,Mycoplasma,genitalium,G37
+295358,Mycoplasma,hyopneumoniae,232
+262719,Mycoplasma,hyopneumoniae,J
+262722,Mycoplasma,hyopneumoniae,7448
+272632,Mycoplasma,mycoides,subsp. mycoides SC str. PG1
+272634,Mycoplasma,pneumoniae,M129
+272635,Mycoplasma,pulmonis,UAB CTIP
+262723,Mycoplasma,synoviae,53
+347257,Mycoplasma,agalactiae,PG2
+243272,Mycoplasma,arthritidis,158L3-1
+267748,Mycoplasma,mobile,163K
+441768,Acholeplasma,laidlawii,PG-8A
+265311,Mesoplasma,florum,L1
+292459,Symbiobacterium,thermophilum,IAM 14863
+698737,Staphylococcus,lugdunensis,HKU09-01
+365659,Streptococcus,mitis,B6
+574087,Acetohalobium,arabaticum,DSM 5501
+272633,Mycoplasma,penetrans,HF-2
+289397,Mycoplasma,bovis,PG45
+509193,Thermoanaerobacter,brockii,subsp. finnii Ako-1
+858215,Thermoanaerobacterium,xylanolyticum,LX-11
+642492,Cellulosilyticum,Clostridium lentocellum,DSM 5427
+342451,Staphylococcus,saprophyticus,subsp. saprophyticus ATCC 15305
+479436,Veillonella,parvula,DSM 2008
+521460,Caldicellulosiruptor,bescii,DSM 6725
+373903,Halothermothrix,orenii,H 168
+525919,Anaerococcus,prevotii,DSM 20548
+491915,Anoxybacillus,flavithermus,WK1
+420246,Geobacillus,thermodenitrificans,NG80-2
+562970,,Bacillus tusciae,DSM 2912
+257314,Lactobacillus,johnsonii,NCC 533
+633699,Lactobacillus,johnsonii,FI9785
+349519,Leuconostoc,citreum,KM20
+940190,Melissococcus,plutonius,ATCC 35311
+498761,Heliobacterium,modesticaldum,Ice1
+309798,Coprothermobacter,proteolyticus,DSM 5265
+515620,Eubacterium,eligens,ATCC 27750
+515619,Eubacterium,rectale,ATCC 33656
+429009,Ammonifex,degensii,KC4
+515622,Butyrivibrio,Clostridium proteoclasticum,Butyrivibrio proteoclasticus B316
+568703,Lactobacillus,rhamnosus,GG
+568704,Lactobacillus,rhamnosus,Lc 705
+748671,Lactobacillus,crispatus,ST1
+1029718,Candidatus Arthromitus,sp. SFB-mouse,-Japan
+138119,Desulfitobacterium,hafniense,Y51
+272564,Desulfitobacterium,hafniense,DCB-2
+512564,Mycoplasma,crocodyli,MP145
+645991,Syntrophobotulus,glycolicus,DSM 8271
+632335,Caldicellulosiruptor,kristjanssonii,177R1B
+632518,Caldicellulosiruptor,owensensis,OL
+760568,Desulfotomaculum,kuznetsovii,DSM 6115
+485916,Desulfotomaculum,acetoxidans,DSM 771
+349161,Desulfotomaculum,reducens,MI-1
+59748,Candidatus Phytoplasma,australiense,
+1036673,Paenibacillus,mucilaginosus,KNP414
+357809,Clostridium,phytofermentans,ISDg
+546271,Selenomonas,sputigena,ATCC 35185
+458233,Macrococcus,caseolyticus,JCSC5402
+644966,Thermaerobacter,marianensis,DSM 12885
+66692,Bacillus,clausii,KSM-K16
+398511,Bacillus,pseudofirmus,OF4
+610130,Clostridium,saccharolyticum,WM1
+439292,Bacillus,selenitireducens,MLS10
+643648,Syntrophothermus,lipocalidus,DSM 12680
+315730,Bacillus,weihenstephanensis,KBAB4
+272558,Bacillus,halodurans,C-125
+262768,Candidatus Phytoplasma,Onion yellows phytoplasma,OY-M
+580331,Thermoanaerobacter,italicus,Ab9
+370438,Pelotomaculum,thermopropionicum,SI
+762550,Leuconostoc,gasicomitatum,LMG 18811
+246194,Carboxydothermus,hydrogenoformans,Z-2901
+273119,Ureaplasma,parvum,serovar 3 str. ATCC 700970
+505682,Ureaplasma,parvum,serovar 3 str. ATCC 27815
+762051,Leuconostoc,kimchii,IMSNU 11154
+1045854,Weissella,koreensis,KACC 15510
+221109,Oceanobacillus,iheyensis,HTE831
+747365,Thermodesulfobium,narugense,DSM 14796
+981540,Streptococcus,pasteurianus,ATCC 43144
+293826,Alkaliphilus,metalliredigens,QYMF
+208596,Carnobacterium,sp. 17-4,
+322098,Candidatus Phytoplasma,Aster yellows witches'-broom phytoplasma,AYWB
+697281,Mahella,australiensis,50-1 BON
+663278,Ethanoligenens,harbinense,YUAN-3
+1033837,Lactobacillus,kefiranofaciens,ZW3
+937773,Staphylococcus,pseudintermedius,HKU10-03
+555079,Thermosediminibacter,oceani,DSM 16646
+637909,Streptococcus,gallolyticus,UCN34
+990317,Streptococcus,gallolyticus,subsp. gallolyticus ATCC BAA-2069
+324057,Paenibacillus,sp. JDR-2,
+868595,Desulfotomaculum,carboxydivorans,CO-1-SRB
+262543,Exiguobacterium,sibiricum,255-15
+360911,Exiguobacterium,sp. AT1b,
+457570,Natranaerobius,thermophilus,JW/NM-WN-LF
+399726,Thermoanaerobacter,sp. X514,
+521098,Alicyclobacillus,acidocaldarius,subsp. acidocaldarius DSM 446
+632292,Caldicellulosiruptor,hydrothermalis,108
+632348,Caldicellulosiruptor,kronotskyensis,2002
+350688,Alkaliphilus,oremlandii,OhILAs
+471223,Geobacillus,sp. WCH70,
+477974,Candidatus Desulforudis,audaxviator,MP104C
+481743,Paenibacillus,sp. Y412MC10,
+340099,Thermoanaerobacter,pseudethanolicus,ATCC 33223
+499229,Tepidanaerobacter,sp. Re1,
+544556,Geobacillus,sp. Y412MC61,
+550542,Geobacillus,sp. Y412MC52,
+573062,Thermoanaerobacter,sp. X513,
+315749,Bacillus,cytotoxicus,NVH 391-98
+581103,Geobacillus,sp. Y4.1MC1,
+583358,Thermoanaerobacter,mathranii,subsp. mathranii str. A3
+656519,Halanaerobium,hydrogeniformans,
+691437,Geobacillus,sp. C56-T3,
+699246,,Clostridiales genomosp. BVAB3,str. UPII9-5
+608506,Caldicellulosiruptor,obsidiansis,OB47
+635013,Thermincola,potens,JR
+273068,Caldanaerobacter,subterraneus,Thermoanaerobacter tengcongensis MB4
+979982,Leuconostoc,sp. C2,
+1042156,Clostridium,sp. SY8519,
+526218,Sebaldella,termitidis,ATCC 33386
+190304,Fusobacterium,nucleatum,subsp. nucleatum ATCC 25586
+519441,Streptobacillus,moniliformis,DSM 12112
+523794,Leptotrichia,buccalis,C-1013-b
+572544,Ilyobacter,polytropus,DSM 2926
+107806,Buchnera,aphidicola,str. APS (Acyrthosiphon pisum)
+198804,Buchnera,aphidicola,str. Sg (Schizaphis graminum)
+224915,Buchnera,aphidicola,str. Bp (Baizongia pistaciae)
+563178,Buchnera,aphidicola,str. 5A (Acyrthosiphon pisum)
+561501,Buchnera,aphidicola,str. Tuc7 (Acyrthosiphon pisum)
+261317,Buchnera,aphidicola,(Cinara tujafilina)
+593907,Cellvibrio,gilvus,ATCC 13127
+319224,Shewanella,putrefaciens,CN-32
+326442,Pseudoalteromonas,haloplanktis,TAC125
+177416,Francisella,tularensis,subsp. tularensis SCHU S4
+376619,Francisella,tularensis,subsp. holarctica LVS
+393115,Francisella,tularensis,subsp. tularensis FSC198
+393011,Francisella,tularensis,subsp. holarctica OSU18
+418136,Francisella,tularensis,subsp. tularensis WY96-3418
+458234,Francisella,tularensis,subsp. holarctica FTNF002-00
+441952,Francisella,tularensis,subsp. mediasiatica FSC147
+401614,Francisella,novicida,U112
+208964,Pseudomonas,aeruginosa,PAO1
+208963,Pseudomonas,aeruginosa,UCBPP-PA14
+381754,Pseudomonas,aeruginosa,PA7
+557722,Pseudomonas,aeruginosa,LESB58
+342610,Pseudoalteromonas,atlantica,T6c
+220664,Pseudomonas,fluorescens,Pf-5
+205922,Pseudomonas,fluorescens,Pf0-1
+216595,Pseudomonas,fluorescens,SBW25
+399739,Pseudomonas,mendocina,ymp
+1001585,Pseudomonas,mendocina,NK-01
+160488,Pseudomonas,putida,KT2440
+351746,Pseudomonas,putida,F1
+76869,Pseudomonas,putida,GB-1
+390235,Pseudomonas,putida,W619
+1042876,Pseudomonas,putida,S16
+379731,Pseudomonas,stutzeri,A1501
+96563,Pseudomonas,stutzeri,ATCC 17588 = LMG 11199
+205918,Pseudomonas,syringae,pv. syringae B728a
+190485,Xanthomonas,campestris,pv. campestris str. ATCC 33913
+314565,Xanthomonas,campestris,pv. campestris str. 8004
+509169,Xanthomonas,campestris,pv. campestris str. B100
+291331,Xanthomonas,oryzae,pv. oryzae KACC10331
+342109,Xanthomonas,oryzae,pv. oryzae MAFF 311018
+360094,Xanthomonas,oryzae,pv. oryzae PXO99A
+322710,Azotobacter,vinelandii,DJ
+243233,Methylococcus,capsulatus,str. Bath
+857087,Methylomonas,methanica,MC09
+272624,Legionella,pneumophila,subsp. pneumophila str. Philadelphia 1
+297245,Legionella,pneumophila,str. Lens
+297246,Legionella,pneumophila,str. Paris
+400673,Legionella,pneumophila,str. Corby
+423212,Legionella,pneumophila,2300/99 Alcoy
+661367,Legionella,longbeachae,NSW150
+400667,Acinetobacter,baumannii,ATCC 17978
+509173,Acinetobacter,baumannii,AYE
+509170,Acinetobacter,baumannii,SDF
+405416,Acinetobacter,baumannii,ACICU
+480119,Acinetobacter,baumannii,AB0057
+557600,Acinetobacter,baumannii,AB307-0294
+749219,Moraxella,catarrhalis,RH4
+290338,Citrobacter,koseri,ATCC BAA-895
+1028307,Enterobacter,aerogenes,KCTC 2190
+716541,Enterobacter,cloacae,subsp. cloacae ATCC 13047
+701347,Enterobacter,cloacae,SCF1
+716540,Erwinia,amylovora,ATCC 49946
+665029,Erwinia,amylovora,CFBP1430
+706191,Pantoea,ananatis,LMG 20103
+561230,Pectobacterium,carotovorum,subsp. carotovorum PC1
+511145,Escherichia,coli,str. K-12 substr. MG1655
+386585,Escherichia,coli,O157:H7 str. Sakai
+155864,Escherichia,coli,O157:H7 str. EDL933
+199310,Escherichia,coli,CFT073
+364106,Escherichia,coli,UTI89
+362663,Escherichia,coli,536
+405955,Escherichia,coli,APEC O1
+331112,Escherichia,coli,HS
+331111,Escherichia,coli,E24377A
+481805,Escherichia,coli,ATCC 8739
+316385,Escherichia,coli,str. K-12 substr. DH10B
+439855,Escherichia,coli,SMS-3-5
+444450,Escherichia,coli,O157:H7 str. EC4115
+409438,Escherichia,coli,SE11
+574521,Escherichia,coli,O127:H6 str. E2348/69
+585055,Escherichia,coli,55989
+585397,Escherichia,coli,ED1a
+585034,Escherichia,coli,IAI1
+585057,Escherichia,coli,IAI39
+585035,Escherichia,coli,S88
+585056,Escherichia,coli,UMN026
+866768,Escherichia,coli,'BL21-Gold(DE3)pLysS AG'
+595496,Escherichia,coli,BW2952
+413997,Escherichia,coli,B str. REL606
+544404,Escherichia,coli,O157:H7 str. TW14359
+585395,Escherichia,coli,O103:H2 str. 12009
+585396,Escherichia,coli,O111:H- str. 11128
+573235,Escherichia,coli,O26:H11 str. 11368
+701177,Escherichia,coli,O55:H7 str. CB9615
+585054,Escherichia,fergusonii,ATCC 35469
+484021,Klebsiella,pneumoniae,subsp. pneumoniae NTUH-K2044
+272620,Klebsiella,pneumoniae,subsp. pneumoniae MGH 78578
+507522,Klebsiella,pneumoniae,342
+529507,Proteus,mirabilis,HI4320
+300268,Shigella,boydii,Sb227
+344609,Shigella,boydii,CDC 3083-94
+300267,Shigella,dysenteriae,Sd197
+198214,Shigella,flexneri,2a str. 301
+198215,Shigella,flexneri,2a str. 2457T
+373384,Shigella,flexneri,5 str. 8401
+300269,Shigella,sonnei,Ss046
+406817,Xenorhabdus,nematophila,ATCC 19061
+393305,Yersinia,enterocolitica,subsp. enterocolitica 8081
+994476,Yersinia,enterocolitica,subsp. palearctica 105.5R(r)
+214092,Yersinia,pestis,CO92
+187410,Yersinia,pestis,KIM 10
+229193,Yersinia,pestis,biovar Microtus str. 91001
+360102,Yersinia,pestis,Antiqua
+377628,Yersinia,pestis,Nepal516
+386656,Yersinia,pestis,Pestoides F
+349746,Yersinia,pestis,Angola
+637386,Yersinia,pestis,Z176003
+273123,Yersinia,pseudotuberculosis,IP 32953
+349747,Yersinia,pseudotuberculosis,IP 31758
+502800,Yersinia,pseudotuberculosis,YPIII
+502801,Yersinia,pseudotuberculosis,PB1/+
+498217,Edwardsiella,tarda,EIB202
+380703,Aeromonas,hydrophila,subsp. hydrophila ATCC 7966
+382245,Aeromonas,salmonicida,subsp. salmonicida A449
+998088,Aeromonas,veronii,B565
+243277,Vibrio,cholerae,O1 biovar El Tor str. N16961
+345073,Vibrio,cholerae,O395
+579112,Vibrio,cholerae,M66-2
+593588,Vibrio,cholerae,MJ-1236
+312309,Aliivibrio,fischeri,Vibrio fischeri ES114
+388396,Aliivibrio,fischeri,Vibrio fischeri MJ11
+338187,Vibrio,harveyi,ATCC BAA-1116
+223926,Vibrio,parahaemolyticus,RIMD 2210633
+216895,Vibrio,vulnificus,CMCP6
+196600,Vibrio,vulnificus,YJ016
+914127,Vibrio,vulnificus,MO6-24/O
+416269,Actinobacillus,pleuropneumoniae,serovar 5b str. L20
+434271,Actinobacillus,pleuropneumoniae,serovar 3 str. JL03
+537457,Actinobacillus,pleuropneumoniae,serovar 7 str. AP76
+71421,Haemophilus,influenzae,Rd KW20
+281310,Haemophilus,influenzae,86-028NP
+374930,Haemophilus,influenzae,PittEE
+374931,Haemophilus,influenzae,PittGG
+866630,Haemophilus,influenzae,F3031
+935897,Haemophilus,influenzae,F3047
+233412,Haemophilus,ducreyi,35000HP
+205914,Histophilus,somni,Haemophilus somnus 129PT
+228400,Histophilus,somni,Haemophilus somnus 2336
+634176,Aggregatibacter,aphrophilus,NJ8700
+557723,Haemophilus,parasuis,SH0165
+272843,Pasteurella,multocida,subsp. multocida str. Pm70
+1005058,Gallibacterium,anatis,UMN179
+227377,Coxiella,burnetii,RSA 493
+434922,Coxiella,burnetii,Dugway 5J108-111
+360115,Coxiella,burnetii,RSA 331
+434923,Coxiella,burnetii,CbuG_Q212
+434924,Coxiella,burnetii,CbuK_Q154
+246195,Dichelobacter,nodosus,VCS1703A
+243159,Acidithiobacillus,ferrooxidans,ATCC 23270
+555778,Halothiobacillus,neapolitanus,c2
+572477,Allochromatium,vinosum,DSM 180
+349124,Halorhodospira,halophila,SL1
+323261,Nitrosococcus,oceani,ATCC 19707
+160492,Xylella,fastidiosa,9a5c
+183190,Xylella,fastidiosa,Temecula1
+405440,Xylella,fastidiosa,M12
+405441,Xylella,fastidiosa,M23
+377629,Teredinibacter,turnerae,T7901
+351348,Marinobacter,hydrocarbonoclasticus,Marinobacter aquaeolei VT8
+768066,Halomonas,elongata,DSM 2581
+314275,Alteromonas,macleodii,str. 'Deep ecotype'
+484022,Francisella,philomiragia,subsp. philomiragia ATCC 25017
+290339,Cronobacter,sakazakii,ATCC BAA-894
+399741,Serratia,proteamaculans,568
+167879,Colwellia,psychrerythraea,34H
+220341,Salmonella,enterica,subsp. enterica serovar Typhi str. CT18
+99287,Salmonella,enterica,subsp. enterica serovar Typhimurium str. LT2
+209261,Salmonella,enterica,subsp. enterica serovar Typhi str. Ty2
+295319,Salmonella,enterica,subsp. enterica serovar Paratyphi A str. ATCC 9150
+321314,Salmonella,enterica,subsp. enterica serovar Choleraesuis str. SC-B67
+882884,Salmonella,enterica,subsp. arizonae serovar 62:z4,z23:-- str. RSK2980
+454169,Salmonella,enterica,subsp. enterica serovar Heidelberg str. SL476
+423368,Salmonella,enterica,subsp. enterica serovar Newport str. SL254
+439843,Salmonella,enterica,subsp. enterica serovar Schwarzengrund str. CVM19633
+554290,Salmonella,enterica,subsp. enterica serovar Paratyphi A str. AKU_12601
+454166,Salmonella,enterica,subsp. enterica serovar Agona str. SL483
+439851,Salmonella,enterica,subsp. enterica serovar Dublin str. CT_02021853
+550538,Salmonella,enterica,subsp. enterica serovar Gallinarum str. 287/91
+550537,Salmonella,enterica,subsp. enterica serovar Enteritidis str. P125109
+476213,Salmonella,enterica,subsp. enterica serovar Paratyphi C strain RKS4594
+264730,Pseudomonas,savastanoi,Pseudomonas syringae pv. phaseolicola 1448A
+218491,Pectobacterium,atrosepticum,SCRI1043
+243265,Photorhabdus,luminescens,subsp. laumondii TTO1
+575788,Vibrio,splendidus,LGP32
+990288,Acidithiobacillus,caldus,SM-1
+317025,Thiomicrospira,crunogena,XCL-2
+316275,Aliivibrio,salmonicida,LFI1238
+522373,Stenotrophomonas,maltophilia,K279a
+391008,Stenotrophomonas,maltophilia,R551-3
+406818,Xenorhabdus,bovienii,SS-2004
+595494,Tolumonas,auensis,DSM 9187
+550540,Ferrimonas,balearica,DSM 9799
+743720,Pseudomonas,fulva,12-X
+36870,Wigglesworthia,glossinidia,endosymbiont of Glossina brevipalpis
+190486,Xanthomonas,axonopodis,pv. citri str. 306
+218493,Salmonella,bongori,NCTC 12419
+561231,Pectobacterium,wasabiae,WPP163
+882102,Listonella,anguillarum,Vibrio anguillarum 775
+318167,Shewanella,frigidimarina,NCIMB 400
+393595,Alcanivorax,borkumensis,SK2
+637905,Shewanella,violacea,DSS12
+326297,Shewanella,amazonensis,SB2B
+60480,Shewanella,sp. MR-4,
+60481,Shewanella,sp. MR-7,
+392500,Shewanella,woodyi,ATCC 51908
+325240,Shewanella,baltica,OS155
+402882,Shewanella,baltica,OS185
+399599,Shewanella,baltica,OS195
+407976,Shewanella,baltica,OS223
+62977,Acinetobacter,sp. ADP1,
+343509,Sodalis,glossinidius,str. 'morsitans'
+580332,Sideroxydans,lithotrophicus,ES-1
+634503,Edwardsiella,ictaluri,93-146
+637910,Citrobacter,rodentium,ICC168
+339671,Actinobacillus,succinogenes,130Z
+211586,Shewanella,oneidensis,MR-1
+398579,Shewanella,pealeana,ATCC 700345
+298386,Photobacterium,profundum,SS9
+634499,Erwinia,pyrifoliae,Ep1/96
+203122,Saccharophagus,degradans,2-40
+94122,Shewanella,sp. ANA-3,
+291272,Candidatus Blochmannia,pennsylvanicus,str. BPEN
+387662,Candidatus Carsonella,ruddii,PV
+717774,Marinomonas,mediterranea,MMB-1
+472759,Nitrosococcus,halophilus,Nc4
+283942,Idiomarina,loihiensis,L2TR
+572265,Candidatus Hamiltonella,defensa,5AT (Acyrthosiphon pisum)
+717773,Thioalkalimicrobium,cyclicum,ALM1
+150340,Vibrio,sp. Ex25,
+498211,Cellvibrio,japonicus,Ueda107
+221988,Basfia,Mannheimia succiniciproducens,MBEL55E
+290398,Chromohalobacter,salexigens,DSM 3043
+349521,Hahella,chejuensis,KCTC 2396
+634500,Erwinia,billingiae,Eb661
+374463,,Candidatus Baumannia cicadellinicola,Baumannia cicadellinicola str. Hc (Homalodisca coagulata)
+318161,Shewanella,denitrificans,OS217
+203907,Candidatus Blochmannia,floridanus,
+579405,Dickeya,dadantii,Ech703
+590409,Dickeya,dadantii,Ech586
+198628,Dickeya,dadantii,3937
+561229,Dickeya,zeae,Ech1591
+234831,Pseudoalteromonas,sp. SM9913,
+640131,Klebsiella,variicola,At-22
+859654,Candidatus Blochmannia,vafer,str. BVAF
+223283,Pseudomonas,syringae group genomosp. 3,Pseudomonas syringae pv. tomato str. DC3000
+523791,Kangiella,koreensis,DSM 16069
+425104,Shewanella,sediminis,HAW-EB3
+458817,Shewanella,halifaxensis,HAW-EB4
+384676,Pseudomonas,entomophila,L48
+743721,Pseudoxanthomonas,suwonensis,11-1
+335284,Psychrobacter,cryohalolentis,K5
+259536,Psychrobacter,arcticus,273-4
+465817,Erwinia,tasmaniensis,Et1/99
+349106,Psychrobacter,sp. PRwf-1,
+187272,Alkalilimnicola,ehrlichii,MLHE-1
+351745,Shewanella,sp. W3-18-1,
+357804,Psychromonas,ingrahamii,37
+323850,Shewanella,loihica,PV-4
+413404,,Candidatus Ruthia magnifica,str. Cm (Calyptogena magnifica)
+396595,Thioalkalivibrio,sp. K90mix,
+399742,Enterobacter,sp. 638,
+400668,Marinomonas,sp. MWYL1,
+515618,Candidatus Riesia,pediculicola,USDA
+225849,Shewanella,piezotolerans,WP3
+412965,,Calyptogena okutanii thioautotrophic gill symbiont,Candidatus Vesicomyosocius okutanii HA
+693216,Cronobacter,turicensis,z3032
+436717,Acinetobacter,sp. DR1,
+316273,Xanthomonas,euvesicatoria,Xanthomonas campestris pv. vesicatoria str. 85-10
+712898,Pantoea,vagans,C9-1
+105559,Nitrosococcus,watsonii,C-113
+573569,Francisella,sp. TX077308,
+592316,Pantoea,sp. At-9b,
+715451,Alteromonas,sp. SN2,
+741091,Rahnella,sp. Y9602,
+768490,Serratia,sp. AS12,
+768492,Serratia,sp. AS9,
+994484,Pseudomonas,brassicacearum,subsp. brassicacearum NFM421
+491952,Marinomonas,posidonica,IVIA-Po-181
+396588,Thioalkalivibrio,sulfidophilus,HL-EbGr7
+903503,Candidatus Moranella,endobia,PCIT
+228908,Nanoarchaeum,equitans,Kin4-M
+374847,Candidatus Korarchaeum,cryptofilum,OPF8
+309799,Dictyoglomus,thermophilum,H-6-12
+335541,Syntrophomonas,wolfei,subsp. wolfei str. Goettingen
+380394,Acidithiobacillus,ferrooxidans,ATCC 53993
+710127,Mycoplasma,gallisepticum,str. R(low)
+872331,Mycoplasma,hyorhinis,HUB-1
+862259,Mycoplasma,mycoides,subsp. capri LC str. 95010
+880447,Mycoplasma,leachii,PG50
+637387,Mycoplasma,fermentans,JER
+943945,Mycoplasma,fermentans,M64
+565575,Ureaplasma,urealyticum,serovar 10 str. ATCC 33699
+717231,Flexistipes,sinusarabici,DSM 4947
+289376,Thermodesulfovibrio,yellowstonii,DSM 11347
+956483,Mycoplasma,bovis,Hubei-1
+941640,Mycoplasma,haemofelis,str. Langford 1
+37692,Candidatus Phytoplasma,mali,
+351627,Caldicellulosiruptor,saccharolyticus,DSM 8903
+572263,Mycoplasma,conjunctivae,HRC/581
+768700,Mycoplasma,suis,str. Illinois
+525903,Thermanaerovibrio,acidaminovorans,DSM 6589
+572547,Aminobacterium,colombiense,DSM 12261
+452637,Opitutus,terrae,PB90-1
+522772,Denitrovibrio,acetiphilus,DSM 12809
+156889,Magnetococcus,sp. MC-1,
+525904,Thermobaculum,terrenum,ATCC BAA-798
+471821,,uncultured Termite group 1 bacterium,phylotype Rs-D17
+667014,Thermodesulfatator,indicus,DSM 15286
+379066,Gemmatimonas,aurantiaca,T-27
+639282,Deferribacter,desulfuricans,SSM1
+349741,Akkermansia,muciniphila,ATCC BAA-835
+330214,Nitrospira,Candidatus Nitrospira defluvii,
+583355,Coraliomargarita,akajimensis,DSM 45221
+445932,Elusimicrobium,minutum,Pei191
+768670,Calditerrivibrio,nitroreducens,DSM 19672
+481448,Methylacidiphilum,infernorum,V4
+515635,Dictyoglomus,turgidum,DSM 6724
+795359,Thermodesulfobacterium,sp. OPB45,
+653733,Desulfurispirillum,indicum,S5
+756272,Planctomyces,brasiliensis,DSM 5305
+521674,Planctomyces,limnophilus,DSM 3776
+530564,Pirellula,staleyi,DSM 6068
+575540,Isosphaera,pallida,ATCC 43644
+243090,Rhodopirellula,baltica,SH 1
+224326,Borrelia,burgdorferi,B31
+445985,Borrelia,burgdorferi,ZS7
+314723,Borrelia,hermsii,DAH
+314724,Borrelia,turicatae,91E135
+665571,Spirochaeta,thermophila,DSM 6192
+243275,Treponema,denticola,ATCC 35405
+565034,Brachyspira,hyodysenteriae,WA1
+243276,Treponema,pallidum,subsp. pallidum str. Nichols
+455434,Treponema,pallidum,subsp. pallidum SS14
+869209,Treponema,succinifaciens,DSM 2489
+355278,Leptospira,biflexa,serovar Patoc strain 'Patoc 1 (Ames)'
+456481,Leptospira,biflexa,serovar Patoc strain 'Patoc 1 (Paris)'
+189518,Leptospira,interrogans,serovar Lai str. 56601
+267671,Leptospira,interrogans,serovar Copenhageni str. Fiocruz L1-130
+355277,Leptospira,borgpetersenii,serovar Hardjo-bovis JB197
+355276,Leptospira,borgpetersenii,serovar Hardjo-bovis L550
+412419,Borrelia,duttonii,Ly
+412418,Borrelia,recurrentis,A1
+759914,Brachyspira,pilosicoli,95/1000
+545776,Treponema,paraluiscuniculi,Cuniculi A
+573413,Spirochaeta,smaragdinae,DSM 11293
+521010,Borrelia,bissettii,DN127
+906968,Treponema,brennaborense,DSM 12168
+526224,Brachyspira,murdochii,DSM 12563
+545694,Treponema,primitia,ZAS-2
+545695,Treponema,azotonutricium,ZAS-9
+158189,Spirochaeta,sp. Buddy,
+744872,Spirochaeta,caldaria,DSM 7334
+760011,Spirochaeta,coccoides,DSM 17374
+243274,Thermotoga,maritima,MSB8
+309803,Thermotoga,neapolitana,DSM 4359
+484019,Thermosipho,africanus,TCF52B
+381764,Fervidobacterium,nodosum,Rt17-B1
+391009,Thermosipho,melanesiensis,BI429
+403833,Petrotoga,mobilis,SJ95
+390874,Thermotoga,petrophila,RKU-1
+590168,Thermotoga,naphthophila,RKU-10
+688269,Thermotoga,thermarum,DSM 5069
+126740,Thermotoga,sp. RQ2,
+416591,Thermotoga,lettingae,TMO
+521045,Kosmotoga,olearia,TBF 19.5.1

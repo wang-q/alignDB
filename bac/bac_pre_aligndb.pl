@@ -76,9 +76,8 @@ my @taxon_ids;
     );
     $sth->execute;
 
+    # "taxon_id,genus,species,sub_species,common_name,classification\n";
     open my $fh, '>', "taxon.csv";
-    print {$fh}
-        "taxon_id,genus,species,sub_species,common_name,classification\n";
     while ( my @row = $sth->fetchrow_array ) {
         my $taxon_id = $row[0];
         my $genus = $row[1];
@@ -100,8 +99,8 @@ my @taxon_ids;
 
 {    # chr_length.csv
 
+    # "taxon_id,chr,length,name,assembly\n";
     open my $fh, '>', "chr_length.csv";
-    print {$fh} "taxon_id,chr,length,name,assembly\n";
     
     for my $taxon_id ( @taxon_ids ) {
 
