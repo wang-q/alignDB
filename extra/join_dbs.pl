@@ -268,7 +268,7 @@ SEG: for (@segments) {
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>>', $outfile;
                 write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
-                    $out_fh, 1 );
+                    $out_fh, 0 );
                 print {$out_fh} "\n";
                 close $out_fh;
             }
@@ -340,7 +340,7 @@ SEG: for (@segments) {
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>>', $outfile;
                 write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
-                    $out_fh, 1 );
+                    $out_fh, 0 );
                 print {$out_fh} "\n";
                 close $out_fh;
             }
