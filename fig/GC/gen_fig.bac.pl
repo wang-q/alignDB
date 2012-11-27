@@ -23,7 +23,6 @@ my @names = qw{
     Lactococcus_lactis
     Legionella_pneumophila
     Listeria_monocytogenes
-    Methanococcus_maripaludis
     Neisseria_meningitidis
     Prochlorococcus_marinus
     Pseudomonas_putida
@@ -36,18 +35,40 @@ my @names = qw{
     Streptococcus_pyogenes
     Streptococcus_suis
     Streptococcus_thermophilus
-    Sulfolobus_islandicus
     Xylella_fastidiosa
     Yersinia_pestis
     Yersinia_pseudotuberculosis
+    Methanococcus_maripaludis
+    Sulfolobus_islandicus
+
+    Bacillus_anthracis
+    Burkholderia_mallei
+    Mycobacterium_tuberculosis
+    Pseudomonas_aeruginosa
+    Streptococcus_agalactiae
+    Vibrio_cholerae
+    Xanthomonas_campestris
+    Xanthomonas_oryzae
 };
+
+my @unused = qw{
+    Bacillus_anthracis
+    Burkholderia_mallei
+    Mycobacterium_tuberculosis
+    Pseudomonas_aeruginosa
+    Streptococcus_agalactiae
+    Vibrio_cholerae
+    Xanthomonas_campestris
+    Xanthomonas_oryzae
+};
+my %filter = map { $_ => 1 } @unused;
 
 my @data;
 for my $i ( 0 .. $#names ) {
     my $name = $names[$i];
     my $item = {
         name       => $name,
-        text    => join( " ", split /_/, $name ),
+        text       => join( " ", split /_/, $name ),
         tag        => 'multi',
         inter      => 0,
         multi_file => "$name.multi.chart.xls",
@@ -128,7 +149,8 @@ texts:
 [% END -%]
 EOF
 
-$tt->process( \$text, { data => \@data, }, 'Fig_bac_d1_gc_cv.yml' )
+$tt->process( \$text, { data => [ grep { !$filter{ $_->{name} } } @data ], },
+    'Fig_bac_d1_gc_cv.yml' )
     or die Template->error;
 
 __END__
