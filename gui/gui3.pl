@@ -189,7 +189,7 @@ sub read_config {
     $self->set_value( "entry_password", $Config->{database}{password} );
 
     # target, query init values
-    $self->set_value( "entry_target_id", $Config->{taxon}{target_taxon_id} );
+    $self->set_value( "entry_target_id",   $Config->{taxon}{target_taxon_id} );
     $self->set_value( "entry_target_name", $Config->{taxon}{target_name} );
     $self->set_value( "entry_query_id",    $Config->{taxon}{query_taxon_id} );
     $self->set_value( "entry_query_name",  $Config->{taxon}{query_name} );
@@ -214,12 +214,10 @@ sub read_config {
         $Config->{gene}{insert_codingsw} );
 
     # update feature
-    $self->set_value( "checkbutton_process_align",
-        $Config->{feature}{align} );
-    $self->set_value( "checkbutton_process_indel",
-        $Config->{feature}{indel} );
-    $self->set_value( "checkbutton_process_isw", $Config->{feature}{isw} );
-    $self->set_value( "checkbutton_process_snp", $Config->{feature}{snp} );
+    $self->set_value( "checkbutton_process_align", $Config->{feature}{align} );
+    $self->set_value( "checkbutton_process_indel", $Config->{feature}{indel} );
+    $self->set_value( "checkbutton_process_isw",   $Config->{feature}{isw} );
+    $self->set_value( "checkbutton_process_snp",   $Config->{feature}{snp} );
     $self->set_value( "checkbutton_process_window",
         $Config->{feature}{window} );
 
@@ -232,29 +230,24 @@ sub read_config {
     $self->set_value( "entry_common_run", $Config->{stat}{run} );
     $self->set_value( "entry_common_threshold",
         $Config->{stat}{sum_threshold} );
-    $self->set_value( "checkbutton_common_jc",
-        $Config->{stat}{jc_correction} );
-    $self->set_value( "checkbutton_common_stamp",
-        $Config->{stat}{time_stamp} );
+    $self->set_value( "checkbutton_common_jc", $Config->{stat}{jc_correction} );
+    $self->set_value( "checkbutton_common_stamp", $Config->{stat}{time_stamp} );
     $self->set_value( "checkbutton_common_add_index",
         $Config->{stat}{add_index_sheet} );
 
     # gc stat parameter
-    $self->set_value( "entry_gc_run",       $Config->{stat}{run} );
-    $self->set_value( "entry_gc_threshold", $Config->{stat}{sum_threshold} );
-    $self->set_value( "checkbutton_gc_jc",  $Config->{stat}{jc_correction} );
+    $self->set_value( "entry_gc_run",         $Config->{stat}{run} );
+    $self->set_value( "entry_gc_threshold",   $Config->{stat}{sum_threshold} );
+    $self->set_value( "checkbutton_gc_jc",    $Config->{stat}{jc_correction} );
     $self->set_value( "checkbutton_gc_stamp", $Config->{stat}{time_stamp} );
     $self->set_value( "checkbutton_gc_add_index",
         $Config->{stat}{add_index_sheet} );
 
     # three stat parameter
-    $self->set_value( "entry_three_run", $Config->{stat}{run} );
-    $self->set_value( "entry_three_threshold",
-        $Config->{stat}{sum_threshold} );
-    $self->set_value( "checkbutton_three_jc",
-        $Config->{stat}{jc_correction} );
-    $self->set_value( "checkbutton_three_stamp",
-        $Config->{stat}{time_stamp} );
+    $self->set_value( "entry_three_run",       $Config->{stat}{run} );
+    $self->set_value( "entry_three_threshold", $Config->{stat}{sum_threshold} );
+    $self->set_value( "checkbutton_three_jc",  $Config->{stat}{jc_correction} );
+    $self->set_value( "checkbutton_three_stamp", $Config->{stat}{time_stamp} );
     $self->set_value( "checkbutton_three_add_index",
         $Config->{stat}{add_index_sheet} );
 
@@ -304,16 +297,13 @@ sub on_imagemenuitem_about_activate {
         Gtk2::Window->new,
         program_name => 'AlignDB GUI3',
         version      => '0.7',
-        copyright    => "(C) 2004-2010 Wang Qiang",
-        authors      => [
-            'Wang Qiang <wangq@nju.edu.cn>',
-            'Zhu Liucun <zhuliucun@gmail.com>'
-        ],
-        documenters  => ['Wang Qiang <wangq@nju.edu.cn>'],
-        artists      => ['Wang Qiang <wangq@nju.edu.cn>'],
+        copyright    => "(C) 2004-2012 WANG, Qiang",
+        authors      => ['WANG, Qiang <wangq@nju.edu.cn>'],
+        documenters  => ['WANG, Qiang <wangq@nju.edu.cn>'],
+        artists      => ['WANG, Qiang <wangq@nju.edu.cn>'],
         comments     => "The third generation of GUI interface for AlignDB",
         title        => "About AlignDB GUI3",
-        website      => "http://gattaca.nju.edu.cn",
+        website      => "http://chenlab.nju.edu.cn",
         wrap_license => TRUE,
         license =>
             "This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.\n",
@@ -595,8 +585,7 @@ sub on_button_auto_db_name_clicked {
 
     my $target_name = $self->get_value("entry_target_name");
     my $query_name  = $self->get_value("entry_query_name");
-    $self->set_value( "entry_db_name",
-        "$target_name" . "vs" . "$query_name" );
+    $self->set_value( "entry_db_name", "$target_name" . "vs" . "$query_name" );
 
     return;
 }
