@@ -41,6 +41,9 @@ my $port     = $Config->{database}{port};
 my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 
+# ref parameter
+my $length_threshold = $Config->{ref}{length_threshold};
+
 # Database info
 # Normal order: TvsR, TvsQ1, TvsQ2
 my $dbs;
@@ -49,13 +52,9 @@ my $target;
 my $queries;
 my $goal_db;
 
-# ref parameter
-my $length_threshold = $Config->{ref}{length_threshold};
-my $trimmed_fasta    = $Config->{ref}{trimmed_fasta};
-
-my $no_insert = 0;
-
-my $crude_only = 0;
+my $trimmed_fasta = 0;
+my $no_insert     = 0;
+my $crude_only    = 0;
 
 my $block         = 0;    # output blocked fasta
 my $simple_header = 0;    # output simple header
@@ -72,26 +71,26 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'          => \$help,
-    'man'             => \$man,
-    's|server=s'      => \$server,
-    'P|port=i'        => \$port,
-    'u|username=s'    => \$username,
-    'p|password=s'    => \$password,
-    'dbs=s'           => \$dbs,
-    'goal_db=s'       => \$goal_db,
-    'outgroup=s'      => \$outgroup,
-    'target=s'        => \$target,
-    'queries=s'       => \$queries,
-    'length=i'        => \$length_threshold,
-    'block'           => \$block,
-    'simple_header'   => \$simple_header,
-    'crude_only'      => \$crude_only,
-    'trimmed_fasta=s' => \$trimmed_fasta,
-    'no_insert=s'     => \$no_insert,
-    'indel_expand=i'  => \$indel_expand,
-    'indel_join=i'    => \$indel_join,
-    'multi'           => \$multi,
+    'help|?'         => \$help,
+    'man'            => \$man,
+    's|server=s'     => \$server,
+    'P|port=i'       => \$port,
+    'u|username=s'   => \$username,
+    'p|password=s'   => \$password,
+    'dbs=s'          => \$dbs,
+    'goal_db=s'      => \$goal_db,
+    'outgroup=s'     => \$outgroup,
+    'target=s'       => \$target,
+    'queries=s'      => \$queries,
+    'length=i'       => \$length_threshold,
+    'block'          => \$block,
+    'simple_header'  => \$simple_header,
+    'crude_only'     => \$crude_only,
+    'trimmed_fasta'  => \$trimmed_fasta,
+    'no_insert'      => \$no_insert,
+    'indel_expand=i' => \$indel_expand,
+    'indel_join=i'   => \$indel_join,
+    'multi'          => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -255,8 +254,8 @@ SEG: for (@segments) {
                 my $target_taxon_id = $info_of{$target}->{taxon_id};
                 my $outfile
                     = "./$goal_db_crude/"
-                    . "$chr_name(+):"
-                    . "$seg_start"
+                    . "$chr_name"
+                    . "-$seg_start"
                     . "-$seg_end" . ".fas";
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>', $outfile;
@@ -327,8 +326,8 @@ SEG: for (@segments) {
             if ( !$block ) {
                 my $outfile
                     = "./$goal_db/"
-                    . "$chr_name(+):"
-                    . "$seg_start"
+                    . "$chr_name"
+                    . "-$seg_start"
                     . "-$seg_end" . ".fas";
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>', $outfile;
@@ -971,7 +970,8 @@ __END__
         --indel_join
 
 $ perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11,S288CvsYJM789 \
---goal_db S288CvsThree --no_insert=1 --trimmed_fasta=1 \
---outgroup 0query --target 0target --queries 1query,2query
+    --goal_db S288CvsThree --no_insert --trimmed_fasta \
+    --outgroup 0query --target 0target --queries 1query,2query
 
-$ perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar --outgroup 0query --target 0target --queries 1query --length 5000
+$ perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar \
+    --outgroup 0query --target 0target --queries 1query --length 5000
