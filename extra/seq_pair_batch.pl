@@ -14,6 +14,7 @@ use Template;
 
 use AlignDB::Run;
 use AlignDB::Stopwatch;
+use AlignDB::IntSpan;
 
 use FindBin;
 
@@ -32,12 +33,6 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# run in parallel mode
-my $parallel = 1;
-
-# number of alignments process in one child process
-my $batch_number = 5;
-
 my $axt_threshold = $Config->{generate}{axt_threshold};
 my $sum_threshold = $Config->{stat}{sum_threshold};
 
@@ -46,6 +41,15 @@ my $bz = "$FindBin::Bin/../../blastz/bz.pl";
 my $pair_file;
 
 my $dir_as_taxon;
+
+# running tasks
+my $task = "0-2,21,40";
+
+# run in parallel mode
+my $parallel = 1;
+
+# number of alignments process in one child process
+my $batch_number = 5;
 
 my $man  = 0;
 my $help = 0;
@@ -60,10 +64,23 @@ GetOptions(
     'st|sum_threshold=i' => \$sum_threshold,
     'f|pair_file=s'      => \$pair_file,
     'd|dir_as_taxon=s'   => \$dir_as_taxon,
+    'r|run=s'            => \$task,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+
+my @tasks;
+{
+    $task =~ s/\"\'//s;
+    if ( AlignDB::IntSpan->valid($task) ) {
+        my $set = AlignDB::IntSpan->new($task);
+        @tasks = $set->elements;
+    }
+    else {
+        @tasks = grep {/\d/} split /\s/, $task;
+    }
+}
 
 #----------------------------------------------------------#
 # init
@@ -119,7 +136,7 @@ my $worker = sub {
     };
 
     # use the dispatch template to generate $cmd
-    for my $step ( 0 .. 2, 21, 40 ) {
+    for my $step (@tasks) {
 
         my $cmd;
         $tt->process(

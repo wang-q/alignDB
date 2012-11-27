@@ -255,10 +255,9 @@ SEG: for (@segments) {
                 my $target_taxon_id = $info_of{$target}->{taxon_id};
                 my $outfile
                     = "./$goal_db_crude/"
-                    . "id$target_taxon_id"
-                    . "_$chr_name"
-                    . "_$seg_start"
-                    . "_$seg_end" . ".fas";
+                    . "$chr_name(+):"
+                    . "$seg_start"
+                    . "-$seg_end" . ".fas";
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>', $outfile;
                 write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
@@ -326,13 +325,11 @@ SEG: for (@segments) {
             }
 
             if ( !$block ) {
-                my $target_taxon_id = $info_of{$target}->{taxon_id};
                 my $outfile
                     = "./$goal_db/"
-                    . "id$target_taxon_id"
-                    . "_$chr_name"
-                    . "_$seg_start"
-                    . "_$seg_end" . ".fas";
+                    . "$chr_name(+):"
+                    . "$seg_start"
+                    . "-$seg_end" . ".fas";
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>', $outfile;
                 write_fasta( \%info_of, [ $outgroup, @ingroup_names ],

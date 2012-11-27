@@ -316,12 +316,20 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
 
     print {$fh} "cd $working_dir\n\n";
 
-    print {$fh} "# seq_pair_batch.pl\n";
+    print {$fh} "# seq_pair_batch.pl blastz\n";
     print {$fh} "perl $FindBin::Bin/../extra/seq_pair_batch.pl"
         . " -d 1 --parallel $parallel"
         . " -f $seq_pair_file"
         . " -at 1000"
-        . " -st 0" . "\n\n";
+        . " -st 0" . " -r 0" . "\n\n";
+
+    print {$fh} "# seq_pair_batch.pl stat\n";
+    print {$fh} "perl $FindBin::Bin/../extra/seq_pair_batch.pl"
+        . " -d 1 --parallel $parallel"
+        . " -f $seq_pair_file"
+        . " -at 1000"
+        . " -st 0"
+        . " -r 1,2,21,40" . "\n\n";
 
     print {$fh} "# join_dbs.pl\n";
     print {$fh} "perl $FindBin::Bin/../extra/join_dbs.pl"
@@ -334,14 +342,6 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
         . " --dbs "
         . ( join ",", map { $target_id . "vs" . $_ } @query_ids ) . "\n\n";
 
-    print {$fh} "# drop temp databases\n";
-    my $sql_cmd = "mysql -h$server -P$port -u$username -p$password ";
-    for (@query_ids) {
-        my $tempdb = $target_id . "vs" . $_;
-        print {$fh} $sql_cmd . " -e \"DROP DATABASE IF EXISTS $tempdb;\"\n";
-    }
-    print {$fh} "\n";
-
     print {$fh} "# multi-way batch\n";
     print {$fh} "perl $FindBin::Bin/../extra/multi_way_batch.pl"
         . " -d $name_str"
@@ -352,6 +352,14 @@ my $seq_pair_file = File::Spec->catfile( $working_dir, "seq_pair.csv" );
         . " --run 10,21,30-32,40,41,43\n\n";
 
     print {$fh} "cd ..\n\n";
+
+    print {$fh} "# drop temp databases\n";
+    my $sql_cmd = "mysql -h$server -P$port -u$username -p$password ";
+    for (@query_ids) {
+        my $tempdb = $target_id . "vs" . $_;
+        print {$fh} $sql_cmd . " -e \"DROP DATABASE IF EXISTS $tempdb;\"\n";
+    }
+    print {$fh} "\n";
 
     close $fh;
 }
