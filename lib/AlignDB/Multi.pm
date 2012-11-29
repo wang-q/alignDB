@@ -66,7 +66,7 @@ sub add_align {
     # check align length
     my $align_length = length $seqs[0];
     for (@seqs) {
-        if ( ( length $_ ) ne $align_length ) {
+        if ( ( length $_ ) != $align_length ) {
             croak "Sequences should have the same length!\n";
         }
     }
