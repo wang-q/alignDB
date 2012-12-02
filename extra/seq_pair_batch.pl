@@ -37,7 +37,7 @@ my $axt_threshold = $Config->{generate}{axt_threshold};
 my $sum_threshold = $Config->{stat}{sum_threshold};
 
 # running options
-my $bz = "$FindBin::Bin/../../blastz/bz.pl";
+my $bz_path = "$FindBin::Bin/../../blastz";
 my $pair_file;
 
 my $dir_as_taxon;
@@ -57,7 +57,7 @@ my $help = 0;
 GetOptions(
     'help|?'             => \$help,
     'man'                => \$man,
-    'b|bz=s'             => \$bz,
+    'b|bz=s'             => \$bz_path,
     'p|parallel=i'       => \$parallel,
     'batch=i'            => \$batch_number,
     'at|axt_threshold=i' => \$axt_threshold,
@@ -116,7 +116,7 @@ my $worker = sub {
     my $tt = Template->new;
 
     my $dispatch = {
-        0 => "perl $bz"
+        0 => "perl $bz_path/bz.pl"
             . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
             . " -s set01 --parallel [% parallel %] -pb lastz --lastz",
         1 => "perl $FindBin::Bin/../init/init_alignDB.pl" . " --db [% db %] ",
@@ -133,6 +133,15 @@ my $worker = sub {
             . " --db [% db %]"
             . " -o [% common_file %]"
             . " --threshold [% st %]",
+        100 => "perl $bz_path/bz.pl"
+            . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
+            . " -s set01 --parallel [% parallel %] --noaxt -pb lastz --lastz",
+        101 => "perl $bz_path/lpcna.pl"
+            . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
+            . " --parallel [% parallel %]",
+        102 => "perl $bz_path/amp.pl"
+            . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
+            . " -syn --parallel [% parallel %]",
     };
 
     # use the dispatch template to generate $cmd
