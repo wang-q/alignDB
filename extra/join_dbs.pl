@@ -125,8 +125,8 @@ if ( !$no_insert and $goal_db ) {
 #----------------------------------------------------------#
 my ( @all_dbs, @all_names, @ingroup_names, $target_db );
 {
-    @all_dbs = split ",", $dbs;
-    my @queries = split ",", $queries;
+    @all_dbs = grep {defined} split ",", $dbs;
+    my @queries = grep {defined} split ",", $queries;
     if ( scalar @all_dbs != scalar @queries + 1 ) {
         printf "DB %d\tQueries %d\n", scalar @all_dbs, scalar @queries;
         die "DB number doesn't match with species number\n";
