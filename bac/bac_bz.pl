@@ -462,13 +462,17 @@ EOF
 #!/bin/bash
 
 cd [% working_dir %]
+if [ ! -d [% round2_dir %] ]
+then
+    mkdir [% round2_dir %]
+fi
 
-[% ids = query_ids; ids.unshift(target_id) -%]
-[% FOREACH item IN ids -%]
-cp -R [% working_dir %]/[% item %] [% round2_dir %]
+cp -R [% working_dir %]/[% target_id %] [% round2_dir %]
+[% FOREACH id IN query_ids -%]
+cp -R [% working_dir %]/[% id %] [% round2_dir %]
 [% END -%]
 
-cd [% working_dir %]/round2
+cd [% round2_dir %]
 #----------------------------#
 # repeatmasker on all fasta
 #----------------------------#
