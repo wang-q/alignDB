@@ -342,7 +342,6 @@ perl [% findbin %]/../extra/seq_pair_batch.pl \
 #    -lt 1000 -st 0 --parallel [% parallel %] --batch 5 \
 #    --run 10,21,30-32,40,41,43
 
-
 # join_dbs.pl
 perl [% findbin %]/../extra/join_dbs.pl \
     --no_insert --block --trimmed_fasta --length 1000 \
@@ -368,11 +367,15 @@ perl [% findbin %]/../../blastz/concat_fasta.pl \
 
 rm [% working_dir %]/rawphylo/RAxML*
 
+[% IF query_ids.size > 2 -%]
 raxml -T 2 -f a -m GTRGAMMA -p $RANDOM -N 100 -x $RANDOM \
     -o [% query_ids.0 %] -n [% name_str %] \
     -s [% working_dir %]/rawphylo/[% name_str %].phy
 
 cp [% working_dir %]/rawphylo/RAxML_best* [% working_dir %]/rawphylo/[% name_str %].nwk
+[% ELSE -%]
+echo "(([% target_id %],[% query_ids.1 %]),[% query_ids.0 %]);" > [% working_dir %]/rawphylo/[% name_str %].nwk
+[% END -%]
 
 cd [% working_dir %]/..
 
