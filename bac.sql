@@ -61,3 +61,29 @@ create table segment
     index(accession)
 )
 ENGINE = MyISAM;
+
+create table gr
+(
+    taxonomy_id                     int,
+    organism_name                   text,
+    bioproject                      text,
+    `group`                         text,
+    subgroup                        text,
+    genome_size                     double,
+    gc_content                      double,
+    chr_refseq                      text,
+    plasmid_refseq                  text,
+    wgs                             text,
+    scaffolds                       int,
+    released_date                   date,
+    status                          text,
+    species                         text,
+    species_id                      int,
+    genus                           text,
+    genus_id                        int,
+    species_member                  int,
+    genus_species_member            int,
+    genus_strain_member             int,
+    primary key (taxonomy_id)
+)
+ENGINE = MyISAM;
