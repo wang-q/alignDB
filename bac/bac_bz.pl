@@ -46,7 +46,7 @@ my $working_dir = ".";
 
 my $parent_id = "562,585054";    # E.coli and E. fergusonii
 my $target_id;
-my $ref_id;
+my $outgroup_id;
 my $exclude_ids = '0';
 
 # use custom name_str
@@ -86,7 +86,7 @@ GetOptions(
     'w|working_dir=s' => \$working_dir,
     'p|parent_id=s'   => \$parent_id,
     't|target_id=i'   => \$target_id,
-    'r|ref_id=i'      => \$ref_id,
+    'o|r=i'           => \$outgroup_id,
     'e|exclude=s'     => \$exclude_ids,
     'n|name_str=s'    => \$name_str,
     'gr'              => \$gr,
@@ -225,20 +225,23 @@ my @query_ids;
 
     @query_ids = map { $_->[0] == $target_id ? () : $_->[0] } @strains;
 
-    if ($ref_id) {
-        my ($exist) = grep { $_ == $ref_id } @query_ids;
+    if ($outgroup_id) {
+        my ($exist) = grep { $_ == $outgroup_id } @query_ids;
         if ( defined $exist ) {
             my $message = "Use [$exist] as reference, as you wish.\n";
             print {$fh} $message;
             print $message;
 
-            @query_ids = map { $_ == $ref_id ? () : $_ } @query_ids;
-            unshift @query_ids, $ref_id;
+            @query_ids = map { $_ == $outgroup_id ? () : $_ } @query_ids;
+            unshift @query_ids, $outgroup_id;
         }
         else {
-            print "Taxon $ref_id doesn't exist, please check.\n";
+            print "Taxon $outgroup_id doesn't exist, please check.\n";
         }
     }
+
+    print "\n";
+    print {$fh} "perl " . $stopwatch->cmd_line, "\n";
 
     close $fh;
 }
@@ -302,10 +305,7 @@ my @new_gff_files;
         }
 
         if ($scaffold) {
-            my $query = qq{ SELECT wgs FROM gr WHERE taxonomy_id = ? };
-            my $sth   = $dbh->prepare($query);
-            $sth->execute($taxon_id);
-            my ($wgs) = $sth->fetchrow_array;
+            my ($wgs) = get_taxon_wgs( $dbh, $taxon_id );
 
             next unless $wgs;
 
@@ -343,6 +343,18 @@ sub prep_fa {
     close $in_fh;
 
     return;
+}
+
+sub get_taxon_wgs {
+    my $dbh      = shift;
+    my $taxon_id = shift;
+
+    my $query = qq{ SELECT wgs FROM gr WHERE taxonomy_id = ? };
+    my $sth   = $dbh->prepare($query);
+    $sth->execute($taxon_id);
+    my ($wgs) = $sth->fetchrow_array;
+
+    return $wgs;
 }
 
 sub prep_wgs {
