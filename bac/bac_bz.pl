@@ -387,10 +387,40 @@ sub prep_wgs {
         close $out_fh;
         close $in_fh;
     }
-    
+
     unlink $_ for @files;
 
     return;
+}
+
+sub taxon_info {
+    my $dbh      = shift;
+    my $taxon_id = shift;
+    my $dir      = shift;
+    my $gr       = shift;
+
+    my $table = $gr ? 'gr' : 'strain';
+    my $query
+        = qq{ SELECT taxonomy_id, organism_name, genus, species FROM $table WHERE taxonomy_id = ? };
+    my $sth = $dbh->prepare($query);
+    $sth->execute($taxon_id);
+    my ( $taxonomy_id, $organism_name, $genus, $species )
+        = $sth->fetchrow_array;
+    $species =~ s/^$genus\s+//;
+    my $sub_name = $organism_name;
+    $sub_name      =~ s/^$genus\s+//;
+    $sub_name      =~ s/^$species\s+//;
+    $organism_name =~ s/\W/_/g;
+    $organism_name =~ s/_+/_/g;
+
+    return {
+        taxon   => $taxonomy_id,
+        name    => $organism_name,
+        genus   => $genus,
+        species => $species,
+        subname => $sub_name,
+        dir     => File::Spec->catdir( $working_dir, $taxon_id ),
+    };
 }
 
 {
@@ -405,8 +435,68 @@ sub prep_wgs {
     }
 
     my $tt = Template->new;
+    my $text;
+    my @data = map { taxon_info( $dbh, $_, $working_dir, $gr ) }
+        ( $target_id, @query_ids );
 
-    my $text = <<'EOF';
+    # taxon.csv
+    $text = <<'EOF';
+[% FOREACH item IN data -%]
+[% item.taxon %],[% item.genus %],[% item.species %],[% item.subname %],[% item.name %],
+[% END -%]
+EOF
+    $tt->process(
+        \$text,
+        { data => \@data, },
+        File::Spec->catfile( $working_dir, "taxon.csv" )
+    ) or die Template->error;
+
+    # chr_length.csv
+    $text = <<'EOF';
+[% FOREACH item IN data -%]
+[% item.taxon %],chrUn,999999999,[% item.name %]
+[% END -%]
+EOF
+    $tt->process(
+        \$text,
+        { data => \@data, },
+        File::Spec->catfile( $working_dir, "chr_length_chrUn.csv" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
+#!/bin/bash
+cd [% working_dir %]
+
+if [ -f real_chr.csv ]; then
+    rm real_chr.csv;
+fi;
+
+[% FOREACH item IN data -%]
+faSize -detailed [% item.dir%]/*.fa > [% item.dir%]/chr.sizes
+perl -aln -F"\t" -e 'print qq{[% item.taxon %],$F[0],$F[1],[% item.name %]}' [% item.dir %]/chr.sizes >> real_chr.csv
+[% END -%]
+
+cat chr_length_chrUn.csv real_chr.csv > chr_length.csv
+rm real_chr.csv
+
+echo '# Run the following cmds to merge csv files'
+echo
+echo perl [% findbin %]/../util/merge_csv.pl -t [% findbin %]/../init/taxon.csv -m [% working_dir %]/taxon.csv
+echo
+echo perl [% findbin %]/../util/merge_csv.pl -t [% findbin %]/../init/chr_length.csv -m [% working_dir %]/chr_length.csv
+echo
+
+EOF
+    $tt->process(
+        \$text,
+        {   data        => \@data,
+            working_dir => $working_dir,
+            findbin     => $FindBin::Bin,
+        },
+        File::Spec->catfile( $working_dir, "real_chr.sh" )
+    ) or die Template->error;
+
+    $text = <<'EOF';
 #!/bin/bash
 # bac_bz.pl
 # perl [% stopwatch.cmd_line %]
@@ -532,177 +622,177 @@ EOF
     ) or die Template->error;
 }
 
-#{
-#    my $round2_dir = File::Spec->catdir( $working_dir, 'round2' );
-#    mkdir $round2_dir unless -e $round2_dir;
-#    my $seq_pair_file = File::Spec->catfile( $round2_dir, "seq_pair.csv" );
-#    {    # write seq_pair.csv and left seq_pair_batch.pl to handle other things
-#        open my $fh, '>', $seq_pair_file;
-#        for my $query_id (@query_ids) {
-#            print {$fh} File::Spec->catdir( $round2_dir, $target_id ), ",",
-#                File::Spec->catdir( $round2_dir, $query_id ), "\n";
-#        }
-#        close $fh;
-#    }
-#
-#    {
-#        open my $fh, '>', File::Spec->catfile( $round2_dir, "id2name.csv" );
-#        for my $id ( $target_id, @query_ids ) {
-#            print {$fh} "$id,$id\n";
-#        }
-#        close $fh;
-#    }
-#
-#    my $tt = Template->new;
-#
-#    # rm.sh
-#    my $text = <<'EOF';
-##!/bin/bash
-#
-#cd [% working_dir %]
-#if [ ! -d [% round2_dir %] ]
-#then
-#    mkdir [% round2_dir %]
-#fi
-#
-#cp -R [% working_dir %]/[% target_id %] [% round2_dir %]
-#[% FOREACH id IN query_ids -%]
-#cp -R [% working_dir %]/[% id %] [% round2_dir %]
-#[% END -%]
-#
-#cd [% round2_dir %]
-##----------------------------#
-## repeatmasker on all fasta
-##----------------------------#
-#for f in `find . -name "*.fa"` ; do
-#    rename 's/fa$/fasta/' $f ;
-#done
-#
-#for f in `find . -name "*.fasta"` ; do
-#    RepeatMasker $f -xsmall --parallel [% parallel %] ;
-#done
-#
-#for f in `find . -name "*.fasta.out"` ; do
-#    rmOutToGFF3.pl $f > `dirname $f`/`basename $f .fasta.out`.rm.gff;
-#done
-#
-#for f in `find . -name "*.fasta"` ; do
-#    if [ -f $f.masked ];
-#    then
-#        rename 's/fasta.masked$/fa/' $f.masked;
-#        find . -type f -name "`basename $f`*" | xargs rm;
-#    fi;
-#done;
-#
-#echo Please check the following files
-#find [% round2_dir %] -name "*.fasta"
-#
-#EOF
-#    $tt->process(
-#        \$text,
-#        {   stopwatch   => $stopwatch,
-#            parallel    => $parallel,
-#            working_dir => $working_dir,
-#            round2_dir  => $round2_dir,
-#            target_id   => $target_id,
-#            query_ids   => \@query_ids,
-#        },
-#        File::Spec->catfile( $round2_dir, "file-rm.sh" )
-#    ) or die Template->error;
-#
-#    # pair.sh
-#    $text = <<'EOF';
-##!/bin/bash
-#
-#cd [% round2_dir %]
-#
-##----------------------------#
-## seq_pair
-##----------------------------#
+{
+    my $round2_dir = File::Spec->catdir( $working_dir, 'round2' );
+    mkdir $round2_dir unless -e $round2_dir;
+    my $seq_pair_file = File::Spec->catfile( $round2_dir, "seq_pair.csv" );
+    {    # write seq_pair.csv and left seq_pair_batch.pl to handle other things
+        open my $fh, '>', $seq_pair_file;
+        for my $query_id (@query_ids) {
+            print {$fh} File::Spec->catdir( $round2_dir, $target_id ), ",",
+                File::Spec->catdir( $round2_dir, $query_id ), "\n";
+        }
+        close $fh;
+    }
+
+    {
+        open my $fh, '>', File::Spec->catfile( $round2_dir, "id2name.csv" );
+        for my $id ( $target_id, @query_ids ) {
+            print {$fh} "$id,$id\n";
+        }
+        close $fh;
+    }
+
+    my $tt = Template->new;
+
+    # rm.sh
+    my $text = <<'EOF';
+#!/bin/bash
+
+cd [% working_dir %]
+if [ ! -d [% round2_dir %] ]
+then
+    mkdir [% round2_dir %]
+fi
+
+cp -R [% working_dir %]/[% target_id %] [% round2_dir %]
+[% FOREACH id IN query_ids -%]
+cp -R [% working_dir %]/[% id %] [% round2_dir %]
+[% END -%]
+
+cd [% round2_dir %]
+#----------------------------#
+# repeatmasker on all fasta
+#----------------------------#
+for f in `find . -name "*.fa"` ; do
+    rename 's/fa$/fasta/' $f ;
+done
+
+for f in `find . -name "*.fasta"` ; do
+    RepeatMasker $f -xsmall --parallel [% parallel %] ;
+done
+
+for f in `find . -name "*.fasta.out"` ; do
+    rmOutToGFF3.pl $f > `dirname $f`/`basename $f .fasta.out`.rm.gff;
+done
+
+for f in `find . -name "*.fasta"` ; do
+    if [ -f $f.masked ];
+    then
+        rename 's/fasta.masked$/fa/' $f.masked;
+        find . -type f -name "`basename $f`*" | xargs rm;
+    fi;
+done;
+
+echo Please check the following files
+find [% round2_dir %] -name "*.fasta"
+
+EOF
+    $tt->process(
+        \$text,
+        {   stopwatch   => $stopwatch,
+            parallel    => $parallel,
+            working_dir => $working_dir,
+            round2_dir  => $round2_dir,
+            target_id   => $target_id,
+            query_ids   => \@query_ids,
+        },
+        File::Spec->catfile( $round2_dir, "file-rm.sh" )
+    ) or die Template->error;
+
+    # pair.sh
+    $text = <<'EOF';
+#!/bin/bash
+
+cd [% round2_dir %]
+
+#----------------------------#
+# seq_pair
+#----------------------------#
+perl [% findbin %]/../extra/seq_pair_batch.pl -d 1 --parallel [% parallel %] \
+    -f [% seq_pair_file %]  -at 1000 -st 0 -r 100-102
+
 #perl [% findbin %]/../extra/seq_pair_batch.pl -d 1 --parallel [% parallel %] \
-#    -f [% seq_pair_file %]  -at 1000 -st 0 -r 100-102
-#
-##perl [% findbin %]/../extra/seq_pair_batch.pl -d 1 --parallel [% parallel %] \
-##    -f [% seq_pair_file %]  -at 1000 -st 0 -r 1,2,21,40
-#
-##----------------------------#
-## mz
-##----------------------------#
-#perl [% findbin %]/../../blastz/mz.pl \
-#    [% FOREACH id IN query_ids -%]
-#    -d [% round2_dir %]/[% target_id %]vs[% id %] \
-#    [% END -%]
-#    --tree [% working_dir %]/rawphylo/[% name_str %].nwk \
-#    --out [% round2_dir %]/[% name_str %] \
-#    -syn -p [% parallel %]
-#
-##----------------------------#
-## maf2fasta
-##----------------------------#
-#perl [% findbin %]/../../blastz/maf2fasta.pl \
-#    --has_outgroup -p [% parallel %] --block \
-#    -i [% round2_dir %]/[% name_str %] \
-#    -o [% round2_dir %]/[% name_str %]_fasta
-#
-##----------------------------#
-## mafft
-##----------------------------#
-#perl [% findbin %]/../../blastz/refine_fasta.pl \
-#    --msa mafft --block -p [% parallel %] \
-#    -i [% round2_dir %]/[% name_str %]_fasta \
-#    -o [% round2_dir %]/[% name_str %]_mft
-#
-##----------------------------#
-## multi_way_batch
-##----------------------------#
-#perl [% findbin %]/../extra/multi_way_batch.pl \
-#    -d [% name_str %] \
-#    -f [% round2_dir %]/[% name_str %]_mft \
-#    --gff_file [% gff_files.join(',') %] \
-#    --block --id [% round2_dir %]/id2name.csv \
-#    -lt 1000 -st 0 -ct 0 --parallel [% parallel %] --batch 5 \
-#    --run 1,10,21,30-32,40,41,43
-#
-##----------------------------#
-## RAxML
-##----------------------------#
-## raw phylo guiding tree
-#if [ ! -d [% working_dir %]/phylo ]
-#then
-#    mkdir [% working_dir %]/phylo
-#fi
-#
-#cd [% working_dir %]/phylo
-#
-#perl [% findbin %]/../../blastz/concat_fasta.pl \
-#    -i [% round2_dir %]/[% name_str %]_mft  \
-#    -o [% working_dir %]/phylo/[% name_str %].phy \
-#    -p
-#
-#rm [% working_dir %]/phylo/RAxML*
-#
-#raxml -T 2 -f a -m GTRGAMMA -p $RANDOM -N 100 -x $RANDOM \
-#    -o [% query_ids.0 %] -n [% name_str %] \
-#    -s [% working_dir %]/phylo/[% name_str %].phy
-#
-#EOF
-#    $tt->process(
-#        \$text,
-#        {   stopwatch     => $stopwatch,
-#            parallel      => $parallel,
-#            working_dir   => $working_dir,
-#            round2_dir    => $round2_dir,
-#            findbin       => $FindBin::Bin,
-#            seq_pair_file => $seq_pair_file,
-#            name_str      => $name_str,
-#            target_id     => $target_id,
-#            query_ids     => \@query_ids,
-#            gff_files     => \@new_gff_files,
-#        },
-#        File::Spec->catfile( $round2_dir, "pair-multi.sh" )
-#    ) or die Template->error;
-#
-#}
+#    -f [% seq_pair_file %]  -at 1000 -st 0 -r 1,2,21,40
+
+#----------------------------#
+# mz
+#----------------------------#
+perl [% findbin %]/../../blastz/mz.pl \
+    [% FOREACH id IN query_ids -%]
+    -d [% round2_dir %]/[% target_id %]vs[% id %] \
+    [% END -%]
+    --tree [% working_dir %]/rawphylo/[% name_str %].nwk \
+    --out [% round2_dir %]/[% name_str %] \
+    -syn -p [% parallel %]
+
+#----------------------------#
+# maf2fasta
+#----------------------------#
+perl [% findbin %]/../../blastz/maf2fasta.pl \
+    --has_outgroup -p [% parallel %] --block \
+    -i [% round2_dir %]/[% name_str %] \
+    -o [% round2_dir %]/[% name_str %]_fasta
+
+#----------------------------#
+# mafft
+#----------------------------#
+perl [% findbin %]/../../blastz/refine_fasta.pl \
+    --msa mafft --block -p [% parallel %] \
+    -i [% round2_dir %]/[% name_str %]_fasta \
+    -o [% round2_dir %]/[% name_str %]_mft
+
+#----------------------------#
+# multi_way_batch
+#----------------------------#
+perl [% findbin %]/../extra/multi_way_batch.pl \
+    -d [% name_str %] \
+    -f [% round2_dir %]/[% name_str %]_mft \
+    --gff_file [% gff_files.join(',') %] \
+    --block --id [% round2_dir %]/id2name.csv \
+    -lt 1000 -st 0 -ct 0 --parallel [% parallel %] --batch 5 \
+    --run 1,10,21,30-32,40,41,43
+
+#----------------------------#
+# RAxML
+#----------------------------#
+# raw phylo guiding tree
+if [ ! -d [% working_dir %]/phylo ]
+then
+    mkdir [% working_dir %]/phylo
+fi
+
+cd [% working_dir %]/phylo
+
+perl [% findbin %]/../../blastz/concat_fasta.pl \
+    -i [% round2_dir %]/[% name_str %]_mft  \
+    -o [% working_dir %]/phylo/[% name_str %].phy \
+    -p
+
+rm [% working_dir %]/phylo/RAxML*
+
+raxml -T 2 -f a -m GTRGAMMA -p $RANDOM -N 100 -x $RANDOM \
+    -o [% query_ids.0 %] -n [% name_str %] \
+    -s [% working_dir %]/phylo/[% name_str %].phy
+
+EOF
+    $tt->process(
+        \$text,
+        {   stopwatch     => $stopwatch,
+            parallel      => $parallel,
+            working_dir   => $working_dir,
+            round2_dir    => $round2_dir,
+            findbin       => $FindBin::Bin,
+            seq_pair_file => $seq_pair_file,
+            name_str      => $name_str,
+            target_id     => $target_id,
+            query_ids     => \@query_ids,
+            gff_files     => \@new_gff_files,
+        },
+        File::Spec->catfile( $round2_dir, "pair-multi.sh" )
+    ) or die Template->error;
+
+}
 
 $stopwatch->end_message;
 exit;
