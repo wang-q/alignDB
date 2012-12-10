@@ -1267,12 +1267,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 400673,Legionella,pneumophila,str. Corby
 423212,Legionella,pneumophila,2300/99 Alcoy
 661367,Legionella,longbeachae,NSW150
-400667,Acinetobacter,baumannii,ATCC 17978
-509173,Acinetobacter,baumannii,AYE
-509170,Acinetobacter,baumannii,SDF
-405416,Acinetobacter,baumannii,ACICU
-480119,Acinetobacter,baumannii,AB0057
-557600,Acinetobacter,baumannii,AB307-0294
 749219,Moraxella,catarrhalis,RH4
 290338,Citrobacter,koseri,ATCC BAA-895
 1028307,Enterobacter,aerogenes,KCTC 2190
@@ -1353,9 +1347,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 216895,Vibrio,vulnificus,CMCP6
 196600,Vibrio,vulnificus,YJ016
 914127,Vibrio,vulnificus,MO6-24/O
-416269,Actinobacillus,pleuropneumoniae,serovar 5b str. L20
-434271,Actinobacillus,pleuropneumoniae,serovar 3 str. JL03
-537457,Actinobacillus,pleuropneumoniae,serovar 7 str. AP76
 71421,Haemophilus,influenzae,Rd KW20
 281310,Haemophilus,influenzae,86-028NP
 374930,Haemophilus,influenzae,PittEE
@@ -1441,7 +1432,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 580332,Sideroxydans,lithotrophicus,ES-1
 634503,Edwardsiella,ictaluri,93-146
 637910,Citrobacter,rodentium,ICC168
-339671,Actinobacillus,succinogenes,130Z
 211586,Shewanella,oneidensis,MR-1
 398579,Shewanella,pealeana,ATCC 700345
 298386,Photobacterium,profundum,SS9
@@ -1493,7 +1483,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 225849,Shewanella,piezotolerans,WP3
 412965,,Calyptogena okutanii thioautotrophic gill symbiont,Candidatus Vesicomyosocius okutanii HA
 693216,Cronobacter,turicensis,z3032
-436717,Acinetobacter,sp. DR1,
 316273,Xanthomonas,euvesicatoria,Xanthomonas campestris pv. vesicatoria str. 85-10
 712898,Pantoea,vagans,C9-1
 105559,Nitrosococcus,watsonii,C-113
@@ -1592,3 +1581,43 @@ taxon_id,genus,species,sub_species,common_name,classification
 126740,Thermotoga,sp. RQ2,
 416591,Thermotoga,lettingae,TMO
 521045,Kosmotoga,olearia,TBF 19.5.1
+903890,Acinetobacter,baumannii,OIFC032,903890,
+903897,Acinetobacter,baumannii,Naval-18,903897,
+903898,Acinetobacter,baumannii,Naval-81,903898,
+903889,Acinetobacter,baumannii,OIFC137,903889,
+903892,Acinetobacter,baumannii,OIFC109,903892,
+903893,Acinetobacter,baumannii,OIFC143,903893,
+903894,Acinetobacter,baumannii,OIFC189,903894,
+903896,Acinetobacter,baumannii,Naval-17,903896,
+903895,Acinetobacter,baumannii,Canada BC-5,903895,
+903899,Acinetobacter,baumannii,IS-123,903899,
+400667,Acinetobacter,baumannii,ATCC 17978,400667,
+436717,Acinetobacter,oleivorans,DR1,436717,
+509170,Acinetobacter,baumannii,SDF,509170,
+509173,Acinetobacter,baumannii,AYE,509173,
+405416,Acinetobacter,baumannii,ACICU,405416,
+480119,Acinetobacter,baumannii,AB0057,480119,
+557600,Acinetobacter,baumannii,AB307-0294,557600,
+575584,Acinetobacter,baumannii,ATCC 19606 = CIP 70.34,575584,
+696749,Acinetobacter,baumannii,1656-2,696749,
+980514,Acinetobacter,baumannii,TCDC-AB0715,980514,
+497978,Acinetobacter,baumannii,MDR-ZJ06,497978,
+889738,Acinetobacter,baumannii,MDR-TJ,889738,
+903912,Acinetobacter,baumannii,IS-116,903912,
+1168588,Acinetobacter,baumannii,Ab11111,1168588,
+1168590,Acinetobacter,baumannii,Ab33333,1168590,
+1168591,Acinetobacter,baumannii,Ab44444,1168591,
+1100841,Acinetobacter,baumannii,TYTH-1,1100841,
+903935,Acinetobacter,baumannii,OIFC111,903935,
+903926,Acinetobacter,baumannii,OIFC035,903926,
+416269,Actinobacillus,pleuropneumoniae,serovar 5b str. L20,Actinobacillus_pleuropneumoniae_serovar_5b_str_L20,
+339671,Actinobacillus,succinogenes,130Z,Actinobacillus_succinogenes_130Z,
+434271,Actinobacillus,pleuropneumoniae,serovar 3 str. JL03,Actinobacillus_pleuropneumoniae_serovar_3_str_JL03,
+537457,Actinobacillus,pleuropneumoniae,serovar 7 str. AP76,Actinobacillus_pleuropneumoniae_serovar_7_str_AP76,
+754254,Actinobacillus,pleuropneumoniae,serovar 2 str. 4226,Actinobacillus_pleuropneumoniae_serovar_2_str_4226,
+754256,Actinobacillus,pleuropneumoniae,serovar 6 str. Femo,Actinobacillus_pleuropneumoniae_serovar_6_str_Femo,
+228399,Actinobacillus,pleuropneumoniae,serovar 1 str. 4074,Actinobacillus_pleuropneumoniae_serovar_1_str_4074,
+754259,Actinobacillus,pleuropneumoniae,serovar 10 str. D13039,Actinobacillus_pleuropneumoniae_serovar_10_str_D13039,
+754260,Actinobacillus,pleuropneumoniae,serovar 11 str. 56153,Actinobacillus_pleuropneumoniae_serovar_11_str_56153,
+887324,Actinobacillus,ureae,ATCC 25976,Actinobacillus_ureae_ATCC_25976,
+696748,Actinobacillus,suis,H91-0380,Actinobacillus_suis_H91_0380,
