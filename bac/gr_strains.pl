@@ -114,9 +114,9 @@ $dbh->{csv_tables}->{t1} = {
             t0.Status
         FROM   t0, t1
         WHERE 1 = 1
-        AND t0.Organism_Name = t1.Organism_Name
         AND t0.BioProject_Accession = t1.Project_Accession
     };
+        #AND t0.Organism_Name = t1.Organism_Name
     my $header_sth = $dbh->prepare($query);
     $header_sth->execute;
     $header_sth->finish;
@@ -145,7 +145,7 @@ $dbh->{csv_tables}->{t1} = {
             AND t0.Scaffolds <> ''
             AND t0.Scaffolds > 0
             AND t0.Scaffolds < 51
-            ORDER BY t0.Release_Date }
+            ORDER BY t0.Release_Date },
     );
     my @taxon_ids;
     for my $str (@strs) {

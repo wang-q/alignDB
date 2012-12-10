@@ -37,13 +37,13 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'          => \$help,
-    'man'             => \$man,
-    'server=s'        => \$server,
-    'port=i'          => \$port,
-    'db=s'            => \$db,
-    'username=s'      => \$username,
-    'password=s'      => \$password,
+    'help|?'     => \$help,
+    'man'        => \$man,
+    'server=s'   => \$server,
+    'port=i'     => \$port,
+    'db=s'       => \$db,
+    'username=s' => \$username,
+    'password=s' => \$password,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -79,19 +79,19 @@ my @taxon_ids;
     # "taxon_id,genus,species,sub_species,common_name,classification\n";
     open my $fh, '>', "taxon.csv";
     while ( my @row = $sth->fetchrow_array ) {
-        my $taxon_id = $row[0];
-        my $genus = $row[1];
-        my $species = $row[2];
+        my $taxon_id    = $row[0];
+        my $genus       = $row[1];
+        my $species     = $row[2];
         my $sub_species = $row[3];
-        
+
         $sub_species =~ s/^$species//;
         $sub_species =~ s/^\s+//;
-        
+
         $species =~ s/^$genus//;
         $species =~ s/^\s+//;
-        
+
         print {$fh} "$taxon_id,$genus,$species,$sub_species\n";
-        
+
         push @taxon_ids, $taxon_id;
     }
     close $fh;
@@ -101,8 +101,8 @@ my @taxon_ids;
 
     # "taxon_id,chr,length,name,assembly\n";
     open my $fh, '>', "chr_length.csv";
-    
-    for my $taxon_id ( @taxon_ids ) {
+
+    for my $taxon_id (@taxon_ids) {
 
         my $sth = $dbh->prepare(
             qq{
@@ -122,12 +122,12 @@ my @taxon_ids;
             # taxon id as strain name
             # replicon as assembly name
             $name =~ s/\W/_/g;
-            $rep =~ s/^chromosome/chr/;
-            $rep =~ s/^plasmid p/p/;
-            $rep =~ s/^plasmid/p/;
-            $rep =~ s/\s+//g;
-            print {$fh}
-                "$taxon_id,$acc,$length,${name}_${taxon_id},$rep\n";
+            $name =~ s/_+/_/g;
+            $rep  =~ s/^chromosome/chr/;
+            $rep  =~ s/^plasmid p/p/;
+            $rep  =~ s/^plasmid/p/;
+            $rep  =~ s/\s+//g;
+            print {$fh} "$taxon_id,$acc,$length,${name}_${taxon_id},$rep\n";
         }
     }
     close $fh;
