@@ -287,6 +287,8 @@ my @new_gff_files;
                 ( map { s/\.\d+$//; $_ } grep {defined} ( split /,/, $acc ) );
         }
 
+        # for NZ_CM*** accessions, the following prep_fa() will find nothing
+        # AND is $scaffold, prep_wgs() will find the scaffolds
         for my $acc ( grep {defined} @accs ) {
             my $rc = prep_fa( \@fna_files, $acc, $id_dir );
             if ($rc) {

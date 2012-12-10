@@ -93,6 +93,30 @@ $dbh->{csv_tables}->{t1} = {
     ],
 };
 
+#{
+#    my $query = qq{
+#        SELECT 
+#            t0.Status,
+#            t0.Scaffolds,
+#            count(*)
+#        FROM   t0
+#        WHERE 1 = 1
+#        group by t0.Status, t0.Scaffolds
+#        order by t0.Status, t0.Scaffolds
+#    };
+#    my $sth = $dbh->prepare($query);
+#    $sth->execute;
+#    my $count;
+#    while ( my @row = $sth->fetchrow_array ) {
+#        print join("\t", @row, "\n");
+#        $count++;
+#    }
+#    print "count $count\n";
+#    
+#    exit;
+#    1;
+#}
+
 #----------------------------#
 # join t0 and t1
 #----------------------------#
