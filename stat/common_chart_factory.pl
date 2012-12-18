@@ -87,8 +87,8 @@ $excel_obj->jc_correction if $jc_correction;
             x_column     => 1,
             y_column     => 2,
             first_row    => 3,
-            last_row     => 23,
-            x_max_scale  => 20,
+            last_row     => 18,
+            x_max_scale  => 15,
             x_title      => "Distance to indels (d1)",
             y_title      => "Nucleotide diversity",
             Height       => 200,
@@ -98,8 +98,8 @@ $excel_obj->jc_correction if $jc_correction;
         );
         if ( $sheet_name =~ /density/ ) {
             $option{x_title}     = "Reciprocal of indel density (d2)";
-            $option{last_row}    = 43;
-            $option{x_max_scale} = 40;
+            $option{last_row}    = 33;
+            $option{x_max_scale} = 30;
         }
         $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -139,8 +139,8 @@ $excel_obj->jc_correction if $jc_correction;
         x_column     => 1,
         y_column     => 2,
         first_row    => 3,
-        last_row     => 23,
-        x_max_scale  => 20,
+        last_row     => 18,
+        x_max_scale  => 15,
         x_title      => "Distance to indels (D1)",
         y_title      => "Nucleotide diversity",
         Height       => 200,
@@ -241,8 +241,8 @@ $excel_obj->jc_correction if $jc_correction;
         x_column     => 1,
         y_column     => 2,
         first_row    => 3,
-        last_row     => 43,
-        x_max_scale  => 20,
+        last_row     => 33,
+        x_max_scale  => 30,
         x_title      => "Indel density (d2)",
         y_title      => "Nucleotide diversity",
         Height       => 200,
@@ -508,8 +508,8 @@ $excel_obj->jc_correction if $jc_correction;
         y_column      => 2,
         y_last_column => 7,
         first_row     => 3,
-        last_row      => 43,
-        x_max_scale   => 40,
+        last_row      => 33,
+        x_max_scale   => 30,
         x_title       => "Indel density (d2)",
         y_title       => "Proportion of substitutions",
         Height        => 300,
@@ -524,8 +524,8 @@ $excel_obj->jc_correction if $jc_correction;
     # worksheet -- distance_snp
     #----------------------------#
     $sheet_name          = 'distance_snp';
-    $option{last_row}    = 23;
-    $option{x_max_scale} = 20;
+    $option{last_row}    = 18;
+    $option{x_max_scale} = 15;
     $option{x_title}     = "Distance to indels (d1)";
 
     $excel_obj->draw_y( $sheet_name, \%option );
