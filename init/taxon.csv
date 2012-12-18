@@ -350,9 +350,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 444178,Brucella,ovis,ATCC 25840
 318586,Paracoccus,denitrificans,PD1222
 78245,Xanthobacter,autotrophicus,Py2
-176299,Agrobacterium,tumefaciens,str. C58
-311403,Agrobacterium,tumefaciens,Agrobacterium radiobacter K84
-311402,Agrobacterium,vitis,S4
 224911,Bradyrhizobium,japonicum,USDA 110
 394,Sinorhizobium,fredii,NGR234
 266835,Mesorhizobium,loti,MAFF303099
@@ -364,7 +361,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 419610,Methylobacterium,extorquens,PA1
 272630,Methylobacterium,extorquens,AM1
 661410,Methylobacterium,extorquens,DM4
-634452,Acetobacter,pasteurianus,IFO 3283-01
 290633,Gluconobacter,oxydans,621H
 349163,Acidiphilium,cryptum,JF-5
 439375,Ochrobactrum,anthropi,ATCC 49188
@@ -479,7 +475,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 573234,Candidatus Hodgkinia,cicadicola,Dsem
 702113,Novosphingobium,sp. PP1Y,
 488538,Candidatus Puniceispirillum,marinum,IMCC1322
-861208,Agrobacterium,sp. H13-3,
 991905,,Polymorphum gilvum,SL003B-26A1
 608538,Hydrogenobacter,thermophilus,TK-6
 224324,Aquifex,aeolicus,VF5
@@ -832,8 +827,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 936155,Helicobacter,felis,ATCC 49179
 679897,Helicobacter,mustelae,12198
 273121,Wolinella,succinogenes,DSM 1740
-367737,Arcobacter,butzleri,RM4018
-572480,Arcobacter,nitrofigilis,DSM 7299
 235279,Helicobacter,hepaticus,ATCC 51449
 326298,Sulfurimonas,denitrificans,DSM 1251
 1002804,Helicobacter,bizzozeronii,CIII-1
@@ -1007,16 +1000,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 568206,Bacillus,anthracis,str. CDC 684
 592021,Bacillus,anthracis,str. A0248
 358681,Brevibacillus,brevis,NBRC 100599
-226900,Bacillus,cereus,ATCC 14579
-222523,Bacillus,cereus,ATCC 10987
-288681,Bacillus,cereus,E33L
-405534,Bacillus,cereus,AH187
-405532,Bacillus,cereus,B4264
-405535,Bacillus,cereus,AH820
-405531,Bacillus,cereus,G9842
-361100,Bacillus,cereus,Q1
-572264,Bacillus,cereus,03BB102
-637380,Bacillus,cereus,biovar anthracis str. CI
 941639,Bacillus,coagulans,2-6
 545693,Bacillus,megaterium,QM B1551
 592022,Bacillus,megaterium,DSM 319
@@ -1025,9 +1008,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 315750,Bacillus,pumilus,SAFR-032
 649639,Bacillus,cellulosilyticus,DSM 2522
 444177,Lysinibacillus,sphaericus,C3-41
-224308,Bacillus,subtilis,subsp. subtilis str. 168
-655816,Bacillus,subtilis,subsp. spizizenii str. W23
-936156,Bacillus,subtilis,BSn5
 281309,Bacillus,thuringiensis,serovar konkukian str. 97-27
 412694,Bacillus,thuringiensis,str. Al Hakam
 714359,Bacillus,thuringiensis,BMB171
@@ -1356,7 +1336,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 233412,Haemophilus,ducreyi,35000HP
 205914,Histophilus,somni,Haemophilus somnus 129PT
 228400,Histophilus,somni,Haemophilus somnus 2336
-634176,Aggregatibacter,aphrophilus,NJ8700
 557723,Haemophilus,parasuis,SH0165
 272843,Pasteurella,multocida,subsp. multocida str. Pm70
 1005058,Gallibacterium,anatis,UMN179
@@ -1621,3 +1600,137 @@ taxon_id,genus,species,sub_species,common_name,classification
 754260,Actinobacillus,pleuropneumoniae,serovar 11 str. 56153,Actinobacillus_pleuropneumoniae_serovar_11_str_56153,
 887324,Actinobacillus,ureae,ATCC 25976,Actinobacillus_ureae_ATCC_25976,
 696748,Actinobacillus,suis,H91-0380,Actinobacillus_suis_H91_0380,
+634452,Acetobacter,pasteurianus,IFO 3283-01,Acetobacter_pasteurianus_IFO_3283_01,
+634453,Acetobacter,pasteurianus,IFO 3283-03,Acetobacter_pasteurianus_IFO_3283_03,
+634457,Acetobacter,pasteurianus,IFO 3283-32,Acetobacter_pasteurianus_IFO_3283_32,
+634458,Acetobacter,pasteurianus,IFO 3283-01-42C,Acetobacter_pasteurianus_IFO_3283_01_42C,
+634459,Acetobacter,pasteurianus,IFO 3283-12,Acetobacter_pasteurianus_IFO_3283_12,
+634454,Acetobacter,pasteurianus,IFO 3283-07,Acetobacter_pasteurianus_IFO_3283_07,
+634455,Acetobacter,pasteurianus,IFO 3283-22,Acetobacter_pasteurianus_IFO_3283_22,
+634456,Acetobacter,pasteurianus,IFO 3283-26,Acetobacter_pasteurianus_IFO_3283_26,
+634176,Aggregatibacter,aphrophilus,NJ8700,Aggregatibacter_aphrophilus_NJ8700,
+668336,Aggregatibacter,actinomycetemcomitans,D11S-1,Aggregatibacter_actinomycetemcomitans_D11S_1,
+888057,Aggregatibacter,segnis,ATCC 33393,Aggregatibacter_segnis_ATCC_33393,
+985008,Aggregatibacter,aphrophilus,ATCC 33389,Aggregatibacter_aphrophilus_ATCC_33389,
+679198,Aggregatibacter,aphrophilus,F0387,Aggregatibacter_aphrophilus_F0387,
+1089447,Aggregatibacter,actinomycetemcomitans,RhAA1,Aggregatibacter_actinomycetemcomitans_RhAA1,
+754507,Aggregatibacter,actinomycetemcomitans,ANH9381,Aggregatibacter_actinomycetemcomitans_ANH9381,
+694569,Aggregatibacter,actinomycetemcomitans,D7S-1,Aggregatibacter_actinomycetemcomitans_D7S_1,
+572480,Arcobacter,nitrofigilis,DSM 7299,Arcobacter_nitrofigilis_DSM_7299,
+367737,Arcobacter,butzleri,RM4018,Arcobacter_butzleri_RM4018,
+944547,Arcobacter,sp. L,sp. L,Arcobacter_sp_L,
+888827,Arcobacter,butzleri,JV22,Arcobacter_butzleri_JV22,
+944546,Arcobacter,butzleri,ED-1,Arcobacter_butzleri_ED_1,
+311403,Agrobacterium,tumefaciens,radiobacter K84,Agrobacterium_radiobacter_K84,
+176299,Agrobacterium,fabrum,str. C58,Agrobacterium_fabrum_str_C58,
+311402,Agrobacterium,vitis,S4,Agrobacterium_vitis_S4,
+861208,Agrobacterium,sp. H13-3,sp. H13-3,Agrobacterium_sp_H13_3,
+1082932,Agrobacterium,tumefaciens,CCNWGS0286,Agrobacterium_tumefaciens_CCNWGS0286,
+358,Agrobacterium,tumefaciens,tumefaciens,Agrobacterium_tumefaciens,
+222523,Bacillus,cereus,ATCC 10987,Bacillus_cereus_ATCC_10987,
+226900,Bacillus,cereus,ATCC 14579,Bacillus_cereus_ATCC_14579,
+288681,Bacillus,cereus,E33L,Bacillus_cereus_E33L,
+405533,Bacillus,cereus,AH1134,Bacillus_cereus_AH1134,
+405534,Bacillus,cereus,AH187,Bacillus_cereus_AH187,
+405532,Bacillus,cereus,B4264,Bacillus_cereus_B4264,
+405535,Bacillus,cereus,AH820,Bacillus_cereus_AH820,
+405531,Bacillus,cereus,G9842,Bacillus_cereus_G9842,
+361100,Bacillus,cereus,Q1,Bacillus_cereus_Q1,
+572264,Bacillus,cereus,03BB102,Bacillus_cereus_03BB102,
+526967,Bacillus,cereus,172560W,Bacillus_cereus_172560W,
+526968,Bacillus,cereus,R309803,Bacillus_cereus_R309803,
+526969,Bacillus,cereus,m1550,Bacillus_cereus_m1550,
+526970,Bacillus,cereus,BGSC 6E1,Bacillus_cereus_BGSC_6E1,
+526971,Bacillus,cereus,MM3,Bacillus_cereus_MM3,
+526972,Bacillus,cereus,AH621,Bacillus_cereus_AH621,
+526973,Bacillus,cereus,m1293,Bacillus_cereus_m1293,
+526974,Bacillus,cereus,BDRD-ST24,Bacillus_cereus_BDRD_ST24,
+526975,Bacillus,cereus,BDRD-ST26,Bacillus_cereus_BDRD_ST26,
+526976,Bacillus,cereus,BDRD-ST196,Bacillus_cereus_BDRD_ST196,
+526977,Bacillus,cereus,ATCC 4342,Bacillus_cereus_ATCC_4342,
+526978,Bacillus,cereus,BDRD-Cer4,Bacillus_cereus_BDRD_Cer4,
+526979,Bacillus,cereus,95/8201,Bacillus_cereus_95_8201,
+526980,Bacillus,cereus,ATCC 10876,Bacillus_cereus_ATCC_10876,
+526981,Bacillus,cereus,Rock1-3,Bacillus_cereus_Rock1_3,
+526982,Bacillus,cereus,Rock1-15,Bacillus_cereus_Rock1_15,
+526983,Bacillus,cereus,Rock3-28,Bacillus_cereus_Rock3_28,
+526984,Bacillus,cereus,Rock3-29,Bacillus_cereus_Rock3_29,
+526985,Bacillus,cereus,Rock3-42,Bacillus_cereus_Rock3_42,
+526986,Bacillus,cereus,Rock3-44,Bacillus_cereus_Rock3_44,
+526987,Bacillus,cereus,Rock4-2,Bacillus_cereus_Rock4_2,
+526988,Bacillus,cereus,Rock4-18,Bacillus_cereus_Rock4_18,
+526989,Bacillus,cereus,F65185,Bacillus_cereus_F65185,
+526990,Bacillus,cereus,AH603,Bacillus_cereus_AH603,
+526991,Bacillus,cereus,AH676,Bacillus_cereus_AH676,
+526992,Bacillus,cereus,AH1271,Bacillus_cereus_AH1271,
+526993,Bacillus,cereus,AH1272,Bacillus_cereus_AH1272,
+526994,Bacillus,cereus,AH1273,Bacillus_cereus_AH1273,
+637380,Bacillus,cereus,biovar anthracis str. CI,Bacillus_cereus_biovar_anthracis_str_CI,
+334406,Bacillus,cereus,NC7401,Bacillus_cereus_NC7401,
+347495,Bacillus,cereus,F837/76,Bacillus_cereus_F837_76,
+718220,Bacillus,cereus,IS075,Bacillus_cereus_IS075,
+718223,Bacillus,cereus,VD022,Bacillus_cereus_VD022,
+718224,Bacillus,cereus,VD142,Bacillus_cereus_VD142,
+1053166,Bacillus,cereus,AND1407,Bacillus_cereus_AND1407,
+1053182,Bacillus,cereus,BAG3O-2,Bacillus_cereus_BAG3O_2,
+1053183,Bacillus,cereus,BAG3X2-1,Bacillus_cereus_BAG3X2_1,
+1053184,Bacillus,cereus,BAG3X2-2,Bacillus_cereus_BAG3X2_2,
+1053185,Bacillus,cereus,BAG4O-1,Bacillus_cereus_BAG4O_1,
+1053186,Bacillus,cereus,BAG4X12-1,Bacillus_cereus_BAG4X12_1,
+1053188,Bacillus,cereus,BAG5O-1,Bacillus_cereus_BAG5O_1,
+1053189,Bacillus,cereus,BAG5X1-1,Bacillus_cereus_BAG5X1_1,
+1053191,Bacillus,cereus,BAG5X2-1,Bacillus_cereus_BAG5X2_1,
+1053195,Bacillus,cereus,BAG6X1-2,Bacillus_cereus_BAG6X1_2,
+1053198,Bacillus,cereus,CER057,Bacillus_cereus_CER057,
+1053199,Bacillus,cereus,CER074,Bacillus_cereus_CER074,
+1053203,Bacillus,cereus,HuA2-4,Bacillus_cereus_HuA2_4,
+1053206,Bacillus,cereus,HuA4-10,Bacillus_cereus_HuA4_10,
+1053210,Bacillus,cereus,HuB4-10,Bacillus_cereus_HuB4_10,
+1053212,Bacillus,cereus,HuB5-5,Bacillus_cereus_HuB5_5,
+1053216,Bacillus,cereus,ISP3191,Bacillus_cereus_ISP3191,
+1053219,Bacillus,cereus,MC67,Bacillus_cereus_MC67,
+1053220,Bacillus,cereus,MSX-A1,Bacillus_cereus_MSX_A1,
+1053222,Bacillus,cereus,MSX-D12,Bacillus_cereus_MSX_D12,
+1053223,Bacillus,cereus,VD014,Bacillus_cereus_VD014,
+1053225,Bacillus,cereus,VD045,Bacillus_cereus_VD045,
+1053226,Bacillus,cereus,VD048,Bacillus_cereus_VD048,
+1053227,Bacillus,cereus,VD078,Bacillus_cereus_VD078,
+1053228,Bacillus,cereus,VD102,Bacillus_cereus_VD102,
+1053229,Bacillus,cereus,VD107,Bacillus_cereus_VD107,
+1053230,Bacillus,cereus,VD115,Bacillus_cereus_VD115,
+1053237,Bacillus,cereus,VD148,Bacillus_cereus_VD148,
+1053238,Bacillus,cereus,VD154,Bacillus_cereus_VD154,
+1053239,Bacillus,cereus,VD156,Bacillus_cereus_VD156,
+1053240,Bacillus,cereus,VD166,Bacillus_cereus_VD166,
+1053241,Bacillus,cereus,VD169,Bacillus_cereus_VD169,
+1053244,Bacillus,cereus,VD200,Bacillus_cereus_VD200,
+1053247,Bacillus,cereus,VDM022,Bacillus_cereus_VDM022,
+1053248,Bacillus,cereus,VDM034,Bacillus_cereus_VDM034,
+1053250,Bacillus,cereus,VDM062,Bacillus_cereus_VDM062,
+1053168,Bacillus,cereus,BAG1O-2,Bacillus_cereus_BAG1O_2,
+1053171,Bacillus,cereus,BAG1X1-2,Bacillus_cereus_BAG1X1_2,
+1053172,Bacillus,cereus,BAG1X1-3,Bacillus_cereus_BAG1X1_3,
+1053179,Bacillus,cereus,BAG2X1-1,Bacillus_cereus_BAG2X1_1,
+1053180,Bacillus,cereus,BAG2X1-2,Bacillus_cereus_BAG2X1_2,
+1053181,Bacillus,cereus,BAG2X1-3,Bacillus_cereus_BAG2X1_3,
+1217984,Bacillus,cereus,FRI-35,Bacillus_cereus_FRI_35,
+1053187,Bacillus,cereus,BAG4X2-1,Bacillus_cereus_BAG4X2_1,
+1053192,Bacillus,cereus,BAG6O-1,Bacillus_cereus_BAG6O_1,
+1053193,Bacillus,cereus,BAG6O-2,Bacillus_cereus_BAG6O_2,
+1053194,Bacillus,cereus,BAG6X1-1,Bacillus_cereus_BAG6X1_1,
+1053197,Bacillus,cereus,BtB2-4 ,Bacillus_cereus_BtB2_4_,
+1053200,Bacillus,cereus,HD73,Bacillus_cereus_HD73,
+1053201,Bacillus,cereus,HuA2-1,Bacillus_cereus_HuA2_1,
+1053207,Bacillus,cereus,HuB1-1,Bacillus_cereus_HuB1_1,
+1053209,Bacillus,cereus,HuB2-9,Bacillus_cereus_HuB2_9,
+224308,Bacillus,subtilis,subsp. subtilis str. 168,Bacillus_subtilis_subsp_subtilis_str_168,
+535025,Bacillus,subtilis,subsp. subtilis str. JH642,Bacillus_subtilis_subsp_subtilis_str_JH642,
+535024,Bacillus,subtilis,subsp. subtilis str. SMY,Bacillus_subtilis_subsp_subtilis_str_SMY,
+535026,Bacillus,subtilis,subsp. subtilis str. NCIB 3610,Bacillus_subtilis_subsp_subtilis_str_NCIB_3610,
+703612,Bacillus,subtilis,subsp. spizizenii ATCC 6633,Bacillus_subtilis_subsp_spizizenii_ATCC_6633,
+655816,Bacillus,subtilis,subsp. spizizenii str. W23,Bacillus_subtilis_subsp_spizizenii_str_W23,
+936156,Bacillus,subtilis,BSn5,Bacillus_subtilis_BSn5,
+1052585,Bacillus,subtilis,subsp. spizizenii TU-B-10,Bacillus_subtilis_subsp_spizizenii_TU_B_10,
+1052588,Bacillus,subtilis,subsp. subtilis str. RO-NN-1,Bacillus_subtilis_subsp_subtilis_str_RO_NN_1,
+1089443,Bacillus,subtilis,subsp. subtilis str. SC-8,Bacillus_subtilis_subsp_subtilis_str_SC_8,
+1220533,Bacillus,subtilis,QB928,Bacillus_subtilis_QB928,
