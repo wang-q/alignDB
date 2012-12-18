@@ -325,6 +325,16 @@ perl bac_bz.pl -p 633,214092 -t 273123 -o 214092 -n Yersinia_pseudotuberculosis
 #===================DOUBT================================
 
 #=========
+# Acetobacter pasteurianus
+#perl bac_bz.pl -p 438 -t 634452 -o 634458 -n Acetobacter_pasteurianus --gr --sca
+#real    84m8.607s
+#user    114m4.978s
+#sys     5m30.376s
+
+# genus Acetobacter
+# perl bac_bz.pl -p 434 -t 634452 -n Acetobacter --gr --sca
+
+#=========
 # Bacillus anthracis
 perl bac_bz.pl -p 1392 -t 198094 -o 568206
 
