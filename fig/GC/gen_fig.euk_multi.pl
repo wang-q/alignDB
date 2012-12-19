@@ -13,29 +13,10 @@ my @data = (
         number => 4,
         inter  => 1,
     },
-
-    # MousevsCAST_Ei got bad segment_cv_indel_3 result
-    #{   name   => "MousevsXIIC",
-    #    tag    => "multi",
-    #    text   => "12 mouse lines",
-    #    number => 12,
-    #},
-    {   name   => "MousevsXIIS",
-        tag    => "multi",
-        text   => "12 mouse lines",
-        number => 12,
-        inter  => 0,
-    },
     {   name   => "DmelvsXXII",
         tag    => "multi",
         text   => "22 Drosophila lines",
         number => 22,
-        inter  => 0,
-    },
-    {   name   => "NipvsXXIV",
-        tag    => "multi",
-        text   => "24 japonica rice lines",
-        number => 24,
         inter  => 0,
     },
     {   name   => "AthvsXIX",
@@ -85,7 +66,6 @@ perl d:/wq/Scripts/alignDB/stat/[% chart %]_stat_factory.pl -s 114.212.202.159 -
 EOF
 $tt->process( \$text, { data => \@data, }, "multi_common_stat.bat" )
     or die Template->error;
-
 
 $text = <<'EOF';
 [% FOREACH item IN data -%]

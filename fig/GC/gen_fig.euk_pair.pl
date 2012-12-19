@@ -17,6 +17,17 @@ my @data = (
         text  => "Human versus Gibbon",
         inter => 1,
     },
+    {   name   => "MousevsXIIS",
+        tag    => "multi",
+        text   => "12 mouse lines",
+        number => 12,
+        inter  => 0,
+    },
+    {   name  => "MousevsSpretus_Ei",
+        tag   => "pair",
+        text  => "Mouse versus M. spretus",
+        inter => 1,
+    },
     {   name  => "DsimvsDsec",
         tag   => "pair",
         text  => "D. simulans versus D. sechellia",
@@ -26,6 +37,12 @@ my @data = (
         tag   => "pair",
         text  => "D. yakuba versus D. erecta",
         inter => 1,
+    },
+    {   name   => "NipvsXXIV",
+        tag    => "multi",
+        text   => "24 japonica rice lines",
+        number => 24,
+        inter  => 0,
     },
     {   name  => "Nipvs9311",
         tag   => "pair",
@@ -52,20 +69,19 @@ my @data = (
         text  => "A. oryzae versus A. flavus",
         inter => 1,
     },
-    
+
+    # MousevsCAST_Ei got bad segment_cv_indel_3 result
+    #{   name   => "MousevsXIIC",
+    #    tag    => "multi",
+    #    text   => "12 mouse lines",
+    #    number => 12,
+    #},
     # bad combined_distance
     #{   name  => "PbervsPcha",
     #    tag   => "pair",
     #    text  => "P. berghei versus P. chabaudi",
     #    inter => 1,
     #},
-    
-    {   name  => "MousevsSpretus_Ei",
-        tag   => "pair",
-        text  => "Mouse versus M. spretus",
-        inter => 1,
-    },
-    
     # bad segment_cv_indel_3
     #{   name  => "MousevsRat",
     #    tag   => "pair",
@@ -107,7 +123,6 @@ perl d:/wq/Scripts/alignDB/stat/[% chart %]_stat_factory.pl -s 114.212.202.159 -
 EOF
 $tt->process( \$text, { data => \@data, }, "pair_common_stat.bat" )
     or die Template->error;
-
 
 $text = <<'EOF';
 [% FOREACH item IN data -%]
