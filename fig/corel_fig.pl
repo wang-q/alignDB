@@ -16,7 +16,7 @@ use Win32::OLE::Const 'Corel - CorelDRAW 15.0 Type Library';
 
 use Path::Class;
 
-$Win32::OLE::Warn = 3;    # die on errors...
+$Win32::OLE::Warn = 2;    # die on errors...
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -106,6 +106,9 @@ for my $filename ( sort keys %{$charts} ) {
         my $sheet = $workbook->Worksheets($sheetname);
         for my $chart_serial ( keys %{ $charts->{$filename}{$sheetname} } ) {
             printf "[chart: %s]\n", $chart_serial;
+
+            # Must do this for unknown reasons
+            $sheet->ChartObjects($chart_serial)->Activate;
 
             # copy & paste
             $sheet->ChartObjects($chart_serial)->Copy;
