@@ -98,7 +98,7 @@ $text = <<'EOF';
 REM [% item.name %]
 if not exist [% item.name %].[% chart %].xlsx goto skip[% item.name %]
 perl d:/wq/Scripts/alignDB/stat/[% chart %]_chart_factory.pl [% replace %] -i [% item.name %].[% chart %].xlsx
-perl d:/wq/Scripts/alignDB/fig/xlsx2xls.pl -d [% item.name %].[% chart %].chart.xlsx
+REM perl d:/wq/Scripts/alignDB/fig/xlsx2xls.pl -d [% item.name %].[% chart %].chart.xlsx
 :skip[% item.name %]
 
 [% END -%]
@@ -118,7 +118,7 @@ $text = <<'EOF';
 REM [% item.name %]
 if not exist [% item.name %].[% chart %].xlsx goto skip[% item.name %]
 perl d:/wq/Scripts/alignDB/stat/[% chart %]_chart_factory.pl [% replace %] --add_trend 1 -i [% item.name %].[% chart %].xlsx
-perl d:/wq/Scripts/alignDB/fig/xlsx2xls.pl -d [% item.name %].[% chart %].chart.xlsx
+REM perl d:/wq/Scripts/alignDB/fig/xlsx2xls.pl -d [% item.name %].[% chart %].chart.xlsx
 :skip[% item.name %]
 
 [% END -%]

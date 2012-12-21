@@ -124,19 +124,16 @@ my @data = ( @data_main, @data_supp );
 for my $i ( 0 .. $#data ) {
     my $name = $data[$i]->{name};
     if ( $data[$i]->{tag} eq "pair" ) {
-        $data[$i]->{common_file} = "$name.common.chart.xls";
+        $data[$i]->{common_file} = "$name.common.chart.xlsx";
         $data[$i]->{d1_sheet}    = "combined_distance";
-        $data[$i]->{table_file} = "$name.common.chart.xlsx";
     }
     else {
-        $data[$i]->{common_file} = "$name.multi.chart.xls";
+        $data[$i]->{common_file} = "$name.multi.chart.xlsx";
         $data[$i]->{d1_sheet}    = "combined_pigccv";
-        $data[$i]->{table_file} = "$name.multi.chart.xlsx";
     }
-    $data[$i]->{gc_file}      = "$name.gc.chart.xls";
-    $data[$i]->{gene_file}    = "$name.gene.chart.xls";
+    $data[$i]->{gc_file}      = "$name.gc.chart.xlsx";
+    $data[$i]->{gene_file}    = "$name.gene.chart.xlsx";
     $data[$i]->{coding_sheet} = "coding_all";
-    $data[$i]->{table_gc_file}      = "$name.gc.chart.xlsx";
 }
 
 my $tt = Template->new;
@@ -175,7 +172,7 @@ $text = <<'EOF';
 REM [% item.name %]
 if not exist [% item.name %].[% chart %].xlsx goto skip[% item.name %]
 perl d:/wq/Scripts/alignDB/stat/[% chart %]_chart_factory.pl [% replace %] -i [% item.name %].[% chart %].xlsx
-perl d:/wq/Scripts/alignDB/fig/xlsx2xls.pl -d [% item.name %].[% chart %].chart.xlsx
+REM perl d:/wq/Scripts/alignDB/fig/xlsx2xls.pl -d [% item.name %].[% chart %].chart.xlsx
 :skip[% item.name %]
 
 [% END -%]
@@ -195,7 +192,7 @@ $text = <<'EOF';
 REM [% item.name %]
 if not exist [% item.name %].[% chart %].xlsx goto skip[% item.name %]
 perl d:/wq/Scripts/alignDB/stat/[% chart %]_chart_factory.pl [% replace %] -i [% item.name %].[% chart %].xlsx
-perl d:/wq/Scripts/alignDB/fig/xlsx2xls.pl -d [% item.name %].[% chart %].chart.xlsx
+REM perl d:/wq/Scripts/alignDB/fig/xlsx2xls.pl -d [% item.name %].[% chart %].chart.xlsx
 :skip[% item.name %]
 
 [% END -%]
@@ -215,7 +212,7 @@ $text = <<'EOF';
 REM [% item.name %]
 if not exist [% item.name %].[% chart %].xlsx goto skip[% item.name %]
 perl d:/wq/Scripts/alignDB/stat/[% chart %]_chart_factory.pl [% replace %] -i [% item.name %].[% chart %].xlsx
-perl d:/wq/Scripts/alignDB/fig/xlsx2xls.pl -d [% item.name %].[% chart %].chart.xlsx
+REM perl d:/wq/Scripts/alignDB/fig/xlsx2xls.pl -d [% item.name %].[% chart %].chart.xlsx
 :skip[% item.name %]
 
 [% END -%]
@@ -353,6 +350,85 @@ texts:
 EOF
 $tt->process( \$text, { data => \@data_main, lables => [ 'a' .. 'z' ], },
     "Fig_gc_freq.yml" )
+    or die Template->error;
+
+$text = <<'EOF';
+[% USE Math -%]
+---
+charts:
+[% FOREACH item IN data -%]
+  [% item.common_file %]:
+    [% item.d1_sheet %]:
+      4:
+        - 0
+        - [% loop.index %]
+  [% item.gc_file %]:
+    segment_cv_indel_3:
+      2:
+        - 1
+        - [% loop.index %]
+[% END -%]
+texts:
+[% FOREACH i IN [0, 1] -%]
+  - text: [% lables.shift %]
+    size: 12
+    bold: 1
+    pos:
+      - [% i %]
+      - -0.05
+[% END -%]
+[% FOREACH item IN data -%]
+  - text: [% item.text %]
+    size: 6
+    bold: 1
+    pos:
+      - 0.1
+      - [% loop.index - 0.05 %]
+  - text: [% item.text %]
+    size: 6
+    bold: 1
+    pos:
+      - 1.1
+      - [% loop.index - 0.05 %]
+[% END -%]
+
+EOF
+$tt->process( \$text, { data => \@data_main, lables => [ 'a' .. 'z' ], },
+    "Fig_3_d1_gc_cv.yml" )
+    or die Template->error;
+    
+$text = <<'EOF';
+[% USE Math -%]
+---
+charts:
+[% FOREACH item IN data -%]
+  [% item.gc_file %]:
+    combined_distance:
+      2:
+        - [% loop.index % 2 %]
+        - [% Math.int(loop.index / 2) %]
+[% END -%]
+texts:
+[% FOREACH i IN data -%]
+  - text: [% lables.shift %]
+    size: 12
+    bold: 1
+    pos:
+      - [% loop.index % 2 %]
+      - [% Math.int(loop.index / 2) - 0.05 %]
+[% END -%]
+[% FOREACH item IN data -%]
+  - text: [% item.text %]
+    size: 6
+    bold: 1
+    pos:
+      - [% loop.index % 2 + 0.1 %]
+      - [% Math.int(loop.index / 2) - 0.05 %]
+[% END -%]
+
+EOF
+$tt->process( \$text, { data => \@data_main, lables => [ 'a' .. 'z' ], },
+    "Fig_4_gc_trough.yml" )
     or die Template->error;
 
 $text = <<'EOF';
@@ -515,7 +591,7 @@ borders:
     bottom: 1
 ranges:
 [% FOREACH item IN data -%]
-  [% item.table_file %]:
+  [% item.common_file %]:
     basic:
       - copy: B2
         paste: B[% loop.index + 4 %]
@@ -527,7 +603,7 @@ ranges:
         paste: E[% loop.index + 4 %]
       - copy: B6
         paste: F[% loop.index + 4 %]
-  [% item.table_gc_file %]:
+  [% item.gc_file %]:
     segment_gc_indel_3:
       - copy: Q3
         paste: K[% loop.index + 4 %]

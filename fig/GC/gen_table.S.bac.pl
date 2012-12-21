@@ -23,7 +23,6 @@ my @names = qw{
     Lactococcus_lactis
     Legionella_pneumophila
     Listeria_monocytogenes
-    Methanococcus_maripaludis
     Neisseria_meningitidis
     Prochlorococcus_marinus
     Pseudomonas_putida
@@ -36,10 +35,11 @@ my @names = qw{
     Streptococcus_pyogenes
     Streptococcus_suis
     Streptococcus_thermophilus
-    Sulfolobus_islandicus
     Xylella_fastidiosa
     Yersinia_pestis
     Yersinia_pseudotuberculosis
+    Methanococcus_maripaludis
+    Sulfolobus_islandicus
 
     FILTERED
     Bacillus_anthracis
