@@ -29,6 +29,8 @@ my $add_index_sheet = $Config->{stat}{add_index_sheet};
 my $infile  = '';
 my $outfile = '';
 
+my %replace;
+
 my $man  = 0;
 my $help = 0;
 
@@ -40,6 +42,7 @@ GetOptions(
     'jc=s'              => \$jc_correction,
     'time_stamp=s'      => \$time_stamp,
     'add_index_sheet=s' => \$add_index_sheet,
+    'replace=s'         => \%replace,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -56,10 +59,14 @@ if ($outfile) {
     $excel_obj = AlignDB::Excel->new(
         infile  => $infile,
         outfile => $outfile,
+        replace => \%replace,
     );
 }
 else {
-    $excel_obj = AlignDB::Excel->new( infile => $infile, );
+    $excel_obj = AlignDB::Excel->new(
+        infile  => $infile,
+        replace => \%replace,
+    );
     $outfile = $excel_obj->outfile;
 }
 
@@ -80,7 +87,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
     #----------------------------#
     my @sheets = grep {/^ofg/} @sheet_names;
 
-    foreach (@sheets) {
+    for (@sheets) {
         my $sheet_name = $_;
 
         my $x_column = 1;
@@ -99,25 +106,25 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         if ( $set->has(-10) ) {
             my $idx = first_index { $_ == -10 } @{$values};
             $option{first_row}   = $idx + 2;
-            $option{last_row}    = $idx + 32;
+            $option{last_row}    = $idx + 27;
             $option{x_min_scale} = -10;
-            $option{x_max_scale} = 20;
+            $option{x_max_scale} = 15;
             $option{cross}       = 0;
         }
         elsif ( $set->has(0) ) {
             my $idx = first_index { $_ == 0 } @{$values};
             $option{first_row}   = $idx + 2;
-            $option{last_row}    = $idx + 32;
+            $option{last_row}    = $idx + 17;
             $option{x_min_scale} = 0;
-            $option{x_max_scale} = 20;
+            $option{x_max_scale} = 15;
             $option{cross}       = 0;
         }
         elsif ( $set->has(1) ) {
             my $idx = first_index { $_ == 1 } @{$values};
             $option{first_row}   = $idx + 2;
-            $option{last_row}    = $idx + 32;
+            $option{last_row}    = $idx + 17;
             $option{x_min_scale} = 0;
-            $option{x_max_scale} = 10;
+            $option{x_max_scale} = 15;
         }
         else {
             print "X column errors\n";
@@ -157,15 +164,24 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
 
+        # chart 6
+        $option{chart_serial}++;
+        $option{y_column}  = 6;
+        $option{y_title}   = "GC proportion";
+        $option{y2_column} = 8;
+        $option{y2_title}  = "Window CV";
+        $option{Top} += $option{Height} + 14.25;
+        $excel_obj->draw_2y( $sheet_name, \%option );
+
         if ( $set->has(-90) ) {
             my $idx = first_index { $_ == -90 } @{$values};
             $option{first_row}   = $idx + 2;
-            $option{last_row}    = $idx + 22;
+            $option{last_row}    = $idx + 17;
             $option{x_min_scale} = -90;
-            $option{x_max_scale} = -70;
+            $option{x_max_scale} = -75;
             $option{cross}       = -90;
 
-            # chart 6
+            # chart 7
             $option{chart_serial}++;
             $option{y_column} = 2;
             $option{x_title}  = "Distance to ofg";
@@ -174,28 +190,28 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             $option{Left}     = 1100;
             $excel_obj->draw_y( $sheet_name, \%option );
 
-            # chart 7
+            # chart 8
             $option{chart_serial}++;
             $option{y_column} = 4;
             $option{y_title}  = "Indel per 100 bp";
             $option{Top} += $option{Height} + 12.75;
             $excel_obj->draw_y( $sheet_name, \%option );
 
-            # chart 8
+            # chart 9
             $option{chart_serial}++;
             $option{y_column} = 6;
             $option{y_title}  = "GC proportion";
             $option{Top} += $option{Height} + 12.75;
             $excel_obj->draw_y( $sheet_name, \%option );
 
-            # chart 9
+            # chart 10
             $option{chart_serial}++;
             $option{y_column} = 8;
             $option{y_title}  = "Window CV";
             $option{Top} += $option{Height} + 12.75;
             $excel_obj->draw_y( $sheet_name, \%option );
 
-            # chart 10
+            # chart 11
             $option{chart_serial}++;
             $option{y_column} = 10;
             $option{y_title}  = "Repeats proportion";
@@ -223,11 +239,11 @@ __END__
     
 =head1 NAME
 
-    gene_chart_factory.pl - Use Win32::OLE to automate Excel chart
+    ofg_chart_factory.pl - Use Win32::OLE to automate Excel chart
 
 =head1 SYNOPSIS
 
-    gene_chart_factory.pl [options]
+    ofg_chart_factory.pl [options]
       Options:
         --help              brief help message
         --man               full documentation
