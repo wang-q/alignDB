@@ -71,8 +71,8 @@ for my $i ( 0 .. $#names ) {
         text       => join( " ", split /_/, $name ),
         tag        => 'multi',
         inter      => 0,
-        multi_file => "$name.multi.chart.xls",
-        gc_file    => "$name.gc.chart.xls",
+        multi_file => "$name.multi.chart.xlsx",
+        gc_file    => "$name.gc.chart.xlsx",
     };
 
     push @data, $item;
@@ -98,7 +98,6 @@ $text = <<'EOF';
 REM [% item.name %]
 if not exist [% item.name %].[% chart %].xlsx goto skip[% item.name %]
 perl d:/wq/Scripts/alignDB/stat/[% chart %]_chart_factory.pl [% replace %] -i [% item.name %].[% chart %].xlsx
-REM perl d:/wq/Scripts/alignDB/fig/xlsx2xls.pl -d [% item.name %].[% chart %].chart.xlsx
 :skip[% item.name %]
 
 [% END -%]
@@ -118,7 +117,6 @@ $text = <<'EOF';
 REM [% item.name %]
 if not exist [% item.name %].[% chart %].xlsx goto skip[% item.name %]
 perl d:/wq/Scripts/alignDB/stat/[% chart %]_chart_factory.pl [% replace %] --add_trend 1 -i [% item.name %].[% chart %].xlsx
-REM perl d:/wq/Scripts/alignDB/fig/xlsx2xls.pl -d [% item.name %].[% chart %].chart.xlsx
 :skip[% item.name %]
 
 [% END -%]

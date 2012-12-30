@@ -94,8 +94,8 @@ for my $i ( 0 .. scalar @{$names} - 1 ) {
             name       => $name,
             species    => join( " ", split /_/, $name ),
             idx        => $j,
-            multi_file => "$name.multi.chart.xls",
-            mgc_file   => "$name.gc.chart.xls",
+            multi_file => "$name.multi.chart.xlsx",
+            mgc_file   => "$name.gc.chart.xlsx",
         };
 
         push @data, $item;

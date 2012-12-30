@@ -29,7 +29,7 @@ my $text;
 $text = <<'EOF';
 ---
 charts:
-  HumanvsCGOR_alt_level.gc.chart.xls:
+  HumanvsCGOR_alt_level.gc.chart.xlsx:
 [% FOREACH i IN orders -%]
     segment_gc_indel_[% i %]:
       1:
