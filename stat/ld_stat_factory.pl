@@ -169,7 +169,7 @@ else {
 my $indel_ld = sub {
 
     {
-        my $sheet_name = 'indel_ld';
+        my $sheet_name = 'd1_indel_ld';
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
@@ -199,14 +199,45 @@ my $indel_ld = sub {
         print "Sheet \"$sheet_name\" has been generated.\n";
     }
 
+    {
+        my $sheet_name = 'd2_indel_ld';
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-indel_ld-0');
+        $thaw_sql->replace( { distance => 'density' } );
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            my %option = (
+                sql_query => $thaw_sql->as_sql,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    }
 };
 
 my $indel_ld_insdel = sub {
     my @type_levels = ( [ 'ins', 'I' ], [ 'del', 'D' ], );
 
-    my $write_sheet = sub {
+    my $write_sheet_d1 = sub {
         my ($level) = @_;
-        my $sheet_name = 'indel_ld_' . $level->[0];
+        my $sheet_name = 'd1_indel_ld_' . $level->[0];
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
@@ -238,53 +269,90 @@ my $indel_ld_insdel = sub {
         print "Sheet \"$sheet_name\" has been generated.\n";
     };
 
+    my $write_sheet_d2 = sub {
+        my ($level) = @_;
+        my $sheet_name = 'd2_indel_ld_' . $level->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-indel_ld-0');
+        $thaw_sql->replace( { distance => 'density' } );
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            $thaw_sql->add_where( 'indel.indel_type' => \'= ?' );
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
     for (@type_levels) {
-        &$write_sheet($_);
+        $write_sheet_d1->($_);
+    }
+
+    for (@type_levels) {
+        $write_sheet_d2->($_);
     }
 };
-
-#my $snp_ld = sub {
-#
-#    {
-#        my $sheet_name = 'snp_ld';
-#        my $sheet;
-#        my ( $sheet_row, $sheet_col );
-#
-#        my $thaw_sql = $sql_file->retrieve('ld-snp_ld-0');
-#
-#        {    # write header
-#            my @headers = $thaw_sql->as_header;
-#            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-#            my %option = (
-#                sheet_row => $sheet_row,
-#                sheet_col => $sheet_col,
-#                header    => \@headers,
-#            );
-#            ( $sheet, $sheet_row )
-#                = $write_obj->write_header_direct( $sheet_name, \%option );
-#        }
-#
-#        {    # write contents
-#            my %option = (
-#                sql_query => $thaw_sql->as_sql,
-#                sheet_row => $sheet_row,
-#                sheet_col => $sheet_col,
-#            );
-#            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-#        }
-#
-#        print "Sheet \"$sheet_name\" has been generated.\n";
-#    }
-#};
 
 my $snps_ld = sub {
 
     {
-        my $sheet_name = 'snps_ld';
+        my $sheet_name = 'd1_snps_ld';
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
         my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            my %option = (
+                sql_query => $thaw_sql->as_sql,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    }
+
+    {
+        my $sheet_name = 'd2_snps_ld';
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
+        $thaw_sql->replace( { distance => 'density' } );
 
         {    # write header
             my @headers = $thaw_sql->as_header;
@@ -314,9 +382,9 @@ my $snps_ld = sub {
 my $snps_ld_insdel = sub {
     my @type_levels = ( [ 'ins', 'I' ], [ 'del', 'D' ], );
 
-    my $write_sheet = sub {
+    my $write_sheet_d1 = sub {
         my ($level) = @_;
-        my $sheet_name = 'snps_ld_' . $level->[0];
+        my $sheet_name = 'd1_snps_ld_' . $level->[0];
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
@@ -348,17 +416,56 @@ my $snps_ld_insdel = sub {
         print "Sheet \"$sheet_name\" has been generated.\n";
     };
 
+    my $write_sheet_d2 = sub {
+        my ($level) = @_;
+        my $sheet_name = 'd2_snps_ld_' . $level->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
+        $thaw_sql->replace( { distance => 'density' } );
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            $thaw_sql->add_where( 'indel.indel_type' => \'= ?' );
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
     for (@type_levels) {
-        &$write_sheet($_);
+        $write_sheet_d1->($_);
+    }
+
+    for (@type_levels) {
+        $write_sheet_d2->($_);
     }
 };
 
 my $snps_ld_freq = sub {
     my @freq_levels = @freqs;
 
-    my $write_sheet = sub {
+    my $write_sheet_d1 = sub {
         my ($level) = @_;
-        my $sheet_name = 'snps_ld_freq_' . $level->[0];
+        my $sheet_name = 'd1_snps_ld_freq_' . $level->[0];
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
@@ -391,8 +498,48 @@ my $snps_ld_freq = sub {
         print "Sheet \"$sheet_name\" has been generated.\n";
     };
 
+    my $write_sheet_d2 = sub {
+        my ($level) = @_;
+        my $sheet_name = 'd2_snps_ld_freq_' . $level->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
+        $thaw_sql->replace( { distance => 'density' } );
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            $thaw_sql->add_where( 'indel.indel_freq' => \'>= ?' );
+            $thaw_sql->add_where( 'indel.indel_freq' => \'<= ?' );
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1], $level->[2] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
     for (@freq_levels) {
-        &$write_sheet($_);
+        $write_sheet_d1->($_);
+    }
+
+    for (@freq_levels) {
+        $write_sheet_d2->($_);
     }
 };
 
@@ -400,9 +547,9 @@ my $snps_ld_insdel_freq = sub {
     my @type_levels = ( [ 'ins', 'I' ], [ 'del', 'D' ], );
     my @freq_levels = @freqs;
 
-    my $write_sheet = sub {
+    my $write_sheet_d1 = sub {
         my ( $type, $freq ) = @_;
-        my $sheet_name = 'snps_ld_' . $type->[0] . '_' . $freq->[0];
+        my $sheet_name = 'd1_snps_ld_' . $type->[0] . '_' . $freq->[0];
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
@@ -436,9 +583,52 @@ my $snps_ld_insdel_freq = sub {
         print "Sheet \"$sheet_name\" has been generated.\n";
     };
 
+    my $write_sheet_d2 = sub {
+        my ( $type, $freq ) = @_;
+        my $sheet_name = 'd2_snps_ld_' . $type->[0] . '_' . $freq->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
+        $thaw_sql->replace( { distance => 'density' } );
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            $thaw_sql->add_where( 'indel.indel_type' => \'= ?' );
+            $thaw_sql->add_where( 'indel.indel_freq' => \'>= ?' );
+            $thaw_sql->add_where( 'indel.indel_freq' => \'<= ?' );
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $type->[1], $freq->[1], $freq->[2] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
     for my $type (@type_levels) {
         for my $freq (@freq_levels) {
-            &$write_sheet( $type, $freq );
+            $write_sheet_d1->( $type, $freq );
+        }
+    }
+
+    for my $type (@type_levels) {
+        for my $freq (@freq_levels) {
+            $write_sheet_d2->( $type, $freq );
         }
     }
 };
@@ -556,7 +746,7 @@ my $segment_gc_indel = sub {
 };
 my $segment_cv_indel = sub {
 
-    my @segment_levels = ( 3 );
+    my @segment_levels = (3);
 
     my $write_sheet = sub {
         my ($segment_type) = @_;
@@ -668,13 +858,11 @@ for my $n (@tasks) {
     if ( $n == 1 ) { &$indel_ld;        next; }
     if ( $n == 2 ) { &$indel_ld_insdel; next; }
 
-    #if ( $n == 11 ) { &$snp_ld;             next; }
-
     if ( $n == 11 ) { &$snps_ld;             next; }
     if ( $n == 12 ) { &$snps_ld_insdel;      next; }
     if ( $n == 13 ) { &$snps_ld_freq;        next; }
-    if ( $n == 14 ) { &$snps_ld_insdel_freq; next; }
-    
+    #if ( $n == 14 ) { &$snps_ld_insdel_freq; next; }
+
     if ( $n == 21 ) { &$segment_gc_indel; next; }
     if ( $n == 22 ) { &$segment_cv_indel; next; }
 }
