@@ -63,9 +63,10 @@ my $db       = $Config->{bac}{db};
 
 my $gr;
 my $scaffold;
-my $td_dir  = $Config->{bac}{td_dir};
-my $nb_dir  = $Config->{bac}{nb_dir};
-my $nbd_dir = $Config->{bac}{nbd_dir};
+my $td_dir   = $Config->{bac}{td_dir};      # taxdmp
+my $nb_dir   = $Config->{bac}{nb_dir};      # NCBI genomes bac
+my $nbd_dir  = $Config->{bac}{nbd_dir};     # NCBI genomes bac draft
+my $ngbd_dir = $Config->{bac}{ngbd_dir};    # NCBI genbank genomes bac draft
 
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
@@ -255,10 +256,12 @@ my @new_gff_files;
     print "Reading file list\n";
     my @fna_files = File::Find::Rule->file->name('*.fna')->in($base_dir);
     my @gff_files = File::Find::Rule->file->name('*.gff')->in($base_dir);
-    my @wgs_files;
+    my ( @scaff_files, @contig_files );
     if ( $gr and $scaffold ) {
-        @wgs_files
+        @scaff_files
             = File::Find::Rule->file->name('*.scaffold.fna.tgz')->in($nbd_dir);
+        @contig_files
+            = File::Find::Rule->file->name('*.contig.fna.tgz')->in($ngbd_dir);
     }
 
     print "Rewrite seqs for every strains\n";
@@ -288,11 +291,11 @@ my @new_gff_files;
         }
 
         # for NZ_CM*** accessions, the following prep_fa() will find nothing
-        # AND is $scaffold, prep_wgs() will find the scaffolds
+        # AND is $scaffold, prep_scaff() will find the scaffolds
         for my $acc ( grep {defined} @accs ) {
             my $rc = prep_fa( \@fna_files, $acc, $id_dir );
             if ($rc) {
-                warn $rc;
+                warn " " x 4, $rc;
                 next;
             }
 
@@ -312,129 +315,15 @@ my @new_gff_files;
             next unless $wgs;
 
             $wgs =~ s/\d+$//;
-            my $rc = prep_wgs( \@wgs_files, $wgs, $id_dir );
+            my $rc = prep_scaff( \@scaff_files, "NZ_$wgs", $id_dir );
             if ($rc) {
-                warn $rc;
+                warn " " x 4, $rc;
+                print " " x 4, "Try contig files\n";
+                my $rc2 = prep_scaff( \@contig_files, $wgs, $id_dir );
+                warn " " x 4, $rc2 if $rc2;
             }
         }
     }
-}
-
-sub prep_fa {
-    my $all_files = shift;
-    my $acc       = shift;
-    my $dir       = shift;
-
-    my ($fna_file) = grep {/$acc/} @{$all_files};
-    if ( !$fna_file ) {
-        return "Can't find fasta file for $acc\n";
-    }
-
-    my $fa_file = File::Spec->catfile( $dir, "$acc.fa" );
-    open my $in_fh,  '<', $fna_file;
-    open my $out_fh, '>', $fa_file;
-    while (<$in_fh>) {
-        if (/>/) {
-            print {$out_fh} ">$acc\n";
-        }
-        else {
-            print {$out_fh} $_;
-        }
-    }
-    close $out_fh;
-    close $in_fh;
-
-    return;
-}
-
-sub get_taxon_wgs {
-    my $dbh      = shift;
-    my $taxon_id = shift;
-
-    my $query = qq{ SELECT wgs FROM gr WHERE taxonomy_id = ? };
-    my $sth   = $dbh->prepare($query);
-    $sth->execute($taxon_id);
-    my ($wgs) = $sth->fetchrow_array;
-
-    return $wgs;
-}
-
-sub prep_wgs {
-    my $all_files = shift;
-    my $wgs       = shift;
-    my $dir       = shift;
-
-    my ($wgs_file) = grep {/NZ_$wgs/} @{$all_files};
-    if ( !$wgs_file ) {
-        return "Can't find fasta file for $wgs\n";
-    }
-
-    my $ae = Archive::Extract->new( archive => $wgs_file );
-    my $ok = $ae->extract( to => $dir );
-
-    if ( !$ok ) {
-        return $ae->error;
-    }
-
-    my (@files) = map { File::Spec->rel2abs( $_, $dir ) } @{ $ae->files };
-
-    for my $file (@files) {
-        unless ( -e $file ) {
-            return "$file not exists!\n";
-        }
-        if ( ( stat($file) )[7] < 1024 ) {
-            next;
-        }
-        open my $in_fh, '<', $file;
-
-        my $basename = basename( $file, ".fna" );
-        my $fa_file = File::Spec->catfile( $dir, "$basename.fa" );
-        open my $out_fh, '>', $fa_file;
-        while (<$in_fh>) {
-            if (/>/) {
-                print {$out_fh} ">$basename\n";
-            }
-            else {
-                print {$out_fh} $_;
-            }
-        }
-        close $out_fh;
-        close $in_fh;
-    }
-
-    unlink $_ for @files;
-
-    return;
-}
-
-sub taxon_info {
-    my $dbh      = shift;
-    my $taxon_id = shift;
-    my $dir      = shift;
-    my $gr       = shift;
-
-    my $table = $gr ? 'gr' : 'strain';
-    my $query
-        = qq{ SELECT taxonomy_id, organism_name, genus, species FROM $table WHERE taxonomy_id = ? };
-    my $sth = $dbh->prepare($query);
-    $sth->execute($taxon_id);
-    my ( $taxonomy_id, $organism_name, $genus, $species )
-        = $sth->fetchrow_array;
-    $species =~ s/^$genus\s+//;
-    my $sub_name = $organism_name;
-    $sub_name      =~ s/^$genus\s+//;
-    $sub_name      =~ s/^$species\s+//;
-    $organism_name =~ s/\W/_/g;
-    $organism_name =~ s/_+/_/g;
-
-    return {
-        taxon   => $taxonomy_id,
-        name    => $organism_name,
-        genus   => $genus,
-        species => $species,
-        subname => $sub_name,
-        dir     => File::Spec->catdir( $working_dir, $taxon_id ),
-    };
 }
 
 {
@@ -810,6 +699,123 @@ EOF
 
 $stopwatch->end_message;
 exit;
+
+sub prep_fa {
+    my $all_files = shift;
+    my $acc       = shift;
+    my $dir       = shift;
+
+    my ($fna_file) = grep {/$acc/} @{$all_files};
+    if ( !$fna_file ) {
+        return "Can't find fasta file for $acc\n";
+    }
+
+    my $fa_file = File::Spec->catfile( $dir, "$acc.fa" );
+    open my $in_fh,  '<', $fna_file;
+    open my $out_fh, '>', $fa_file;
+    while (<$in_fh>) {
+        if (/>/) {
+            print {$out_fh} ">$acc\n";
+        }
+        else {
+            print {$out_fh} $_;
+        }
+    }
+    close $out_fh;
+    close $in_fh;
+
+    return;
+}
+
+sub get_taxon_wgs {
+    my $dbh      = shift;
+    my $taxon_id = shift;
+
+    my $query = qq{ SELECT wgs FROM gr WHERE taxonomy_id = ? };
+    my $sth   = $dbh->prepare($query);
+    $sth->execute($taxon_id);
+    my ($wgs) = $sth->fetchrow_array;
+
+    return $wgs;
+}
+
+sub prep_scaff {
+    my $all_files = shift;
+    my $wgs       = shift;
+    my $dir       = shift;
+
+    my ($wgs_file) = grep {/$wgs/} @{$all_files};
+    if ( !$wgs_file ) {
+        return "Can't find fasta file for $wgs\n";
+    }
+
+    my $ae = Archive::Extract->new( archive => $wgs_file );
+    my $ok = $ae->extract( to => $dir );
+
+    if ( !$ok ) {
+        return $ae->error;
+    }
+
+    my (@files) = map { File::Spec->rel2abs( $_, $dir ) } @{ $ae->files };
+
+    for my $file (@files) {
+        unless ( -e $file ) {
+            return "$file not exists!\n";
+        }
+        if ( ( stat($file) )[7] < 1024 ) {
+            next;
+        }
+        open my $in_fh, '<', $file;
+
+        my $basename = basename( $file, ".fna" );
+        my $fa_file = File::Spec->catfile( $dir, "$basename.fa" );
+        open my $out_fh, '>', $fa_file;
+        while (<$in_fh>) {
+            if (/>/) {
+                print {$out_fh} ">$basename\n";
+            }
+            else {
+                print {$out_fh} $_;
+            }
+        }
+        close $out_fh;
+        close $in_fh;
+    }
+
+    unlink $_ for @files;
+
+    return;
+}
+
+sub taxon_info {
+    my $dbh      = shift;
+    my $taxon_id = shift;
+    my $dir      = shift;
+    my $gr       = shift;
+
+    my $table = $gr ? 'gr' : 'strain';
+    my $query
+        = qq{ SELECT taxonomy_id, organism_name, genus, species FROM $table WHERE taxonomy_id = ? };
+    my $sth = $dbh->prepare($query);
+    $sth->execute($taxon_id);
+    my ( $taxonomy_id, $organism_name, $genus, $species )
+        = $sth->fetchrow_array;
+    $species =~ s/^$genus\s+//;
+    my $sub_name = $organism_name;
+    $sub_name =~ s/^$genus\s+//;
+    $sub_name =~ s/^$species\s+//;
+    $organism_name =~ s/\W/_/g;
+    $organism_name =~ s/_+/_/g;
+
+    return {
+        taxon   => $taxonomy_id,
+        name    => $organism_name,
+        genus   => $genus,
+        species => $species,
+        subname => $sub_name,
+        dir     => File::Spec->catdir( $working_dir, $taxon_id ),
+    };
+}
 
 __END__
 
