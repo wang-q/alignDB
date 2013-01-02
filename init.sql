@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     11/26/2012 9:56:15 PM                        */
+/* Created on:     1/3/2013 4:44:05 AM                          */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -295,11 +295,11 @@ create table indel
    indel_end                      int,
    indel_length                   int,
    indel_seq                      longtext,
-   indel_insert                   char(8),
    left_extand                    int,
    right_extand                   int,
    indel_gc                       double,
-   indel_occured                  char(8),
+   indel_freq                     int,
+   indel_occured                  char(128),
    indel_type                     char(8),
    indel_slippage                 double,
    indel_coding                   double,

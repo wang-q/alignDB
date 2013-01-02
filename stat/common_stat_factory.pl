@@ -1482,18 +1482,16 @@ my $indel_coding_group = sub {
     }
 
     my @indel_group
-        = ( [ 'D', 0, 0 ], [ 'I', 0, 0 ], [ 'D', 1, 1 ], [ 'I', 1, 1 ], );
+        = ( [ 0, 0 ], [ 1, 1 ], );
 
     {    # write contents
         my $thaw_sql_R = $sql_file->retrieve('common-indel_feature_r-0');
-        $thaw_sql_R->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_R->add_where(
             'indel.indel_coding' => { op => '>=', value => '0' } );
         $thaw_sql_R->add_where(
             'indel.indel_coding' => { op => '<=', value => '0' } );
 
         my $thaw_sql_L = $sql_file->retrieve('common-indel_feature_l-0');
-        $thaw_sql_L->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_L->add_where(
             'indel.indel_coding' => { op => '>=', value => '0' } );
         $thaw_sql_L->add_where(
@@ -1541,18 +1539,16 @@ my $indel_repeat_group = sub {
     }
 
     my @indel_group
-        = ( [ 'D', 0, 0 ], [ 'I', 0, 0 ], [ 'D', 1, 1 ], [ 'I', 1, 1 ], );
+        = ( [ 0, 0 ], [ 1, 1 ], );
 
     {    # write contents
         my $thaw_sql_R = $sql_file->retrieve('common-indel_feature_r-0');
-        $thaw_sql_R->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_R->add_where(
             'indel.indel_repeats' => { op => '>=', value => '0' } );
         $thaw_sql_R->add_where(
             'indel.indel_repeats' => { op => '<=', value => '0' } );
 
         my $thaw_sql_L = $sql_file->retrieve('common-indel_feature_l-0');
-        $thaw_sql_L->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_L->add_where(
             'indel.indel_repeats' => { op => '>=', value => '0' } );
         $thaw_sql_L->add_where(
@@ -1600,18 +1596,16 @@ my $indel_slip_group = sub {
     }
 
     my @indel_group
-        = ( [ 'D', 0, 0 ], [ 'I', 0, 0 ], [ 'D', 1, 1 ], [ 'I', 1, 1 ], );
+        = ( [ 0, 0 ], [ 1, 1 ], );
 
     {    # write contents
         my $thaw_sql_R = $sql_file->retrieve('common-indel_feature_r-0');
-        $thaw_sql_R->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_R->add_where(
             'indel.indel_slippage' => { op => '>=', value => '0' } );
         $thaw_sql_R->add_where(
             'indel.indel_slippage' => { op => '<=', value => '0' } );
 
         my $thaw_sql_L = $sql_file->retrieve('common-indel_feature_l-0');
-        $thaw_sql_L->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_L->add_where(
             'indel.indel_slippage' => { op => '>=', value => '0' } );
         $thaw_sql_L->add_where(
@@ -1652,18 +1646,14 @@ my $indel_gc_group = sub {
     }
 
     my @indel_group = (
-        [ 'D', 0,   0.2999 ],
-        [ 'I', 0,   0.2999 ],
-        [ 'D', 0.3, 0.4999 ],
-        [ 'I', 0.3, 0.4999 ],
-        [ 'D', 0.5, 1 ],
-        [ 'I', 0.5, 1 ],
+        [ 0,   0.2999 ],
+        [ 0.3, 0.4999 ],
+        [ 0.5, 1 ],
     );
 
     {    # write contents
         my $thaw_sql_R = $sql_file->retrieve('common-indel_size_r-0');
         $thaw_sql_R->add_where( 'indel.indel_length' => \'>= 10' );
-        $thaw_sql_R->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_R->add_where(
             'indel.indel_gc' => { op => '>=', value => '0' } );
         $thaw_sql_R->add_where(
@@ -1671,7 +1661,6 @@ my $indel_gc_group = sub {
 
         my $thaw_sql_L = $sql_file->retrieve('common-indel_size_l-0');
         $thaw_sql_L->add_where( 'indel.indel_length' => \'>= 10' );
-        $thaw_sql_L->add_where( 'indel.indel_insert' => 'I' );
         $thaw_sql_L->add_where(
             'indel.indel_gc' => { op => '>=', value => '0' } );
         $thaw_sql_L->add_where(
@@ -1928,136 +1917,6 @@ my $snp_base_change = sub {
                      COUNT(snp_id) snp_number
              FROM snp
              GROUP BY CONCAT(query_base, "->",target_base ) ) s
-        };
-        my %option = (
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            query_name => $query_name,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    {
-        $sheet_row++;
-        my $query_name = 'Deletion';
-        my $sql_query  = q{
-            SELECT r.base_change,
-                   (r.snp_number + l.snp_number) / (total_r.total + total_l.total) * 100
-            FROM   (SELECT COUNT(*) total
-                    FROM   indel,
-                           isw,
-                           snp
-                    WHERE  isw.isw_type = 'R'
-                    AND isw.indel_id = indel.indel_id
-                    AND indel.indel_insert = 'D'
-                    AND indel.indel_seq NOT LIKE "%N%"
-                    AND isw.isw_density > 9
-                    AND isw.isw_distance <= 5
-                    AND snp.isw_id = isw.isw_id) total_r,
-                   (SELECT COUNT(*) total
-                    FROM   indel,
-                           isw,
-                           snp
-                    WHERE  isw.isw_type = 'L'
-                    AND isw.prev_indel_id = indel.indel_id
-                    AND indel.indel_insert = 'D'
-                    AND indel.indel_seq NOT LIKE "%N%"
-                    AND isw.isw_density > 9
-                    AND isw.isw_distance <= 5
-                    AND snp.isw_id = isw.isw_id) total_l,
-                   (SELECT CONCAT(target_base,"->",query_base) base_change,
-                           COUNT(*) snp_number
-                    FROM   indel,
-                           isw,
-                           snp
-                    WHERE  isw.isw_type = 'R'
-                    AND isw.indel_id = indel.indel_id
-                    AND indel.indel_insert = 'D'
-                    AND indel.indel_seq NOT LIKE "%N%"
-                    AND isw.isw_density > 9
-                    AND isw.isw_distance <= 5
-                    AND snp.isw_id = isw.isw_id
-                    GROUP BY CONCAT(target_base,"->",query_base)) r,
-                   (SELECT CONCAT(target_base,"->",query_base) base_change,
-                           COUNT(*) snp_number
-                    FROM   indel,
-                           isw,
-                           snp
-                    WHERE  isw.isw_type = 'L'
-                    AND isw.prev_indel_id = indel.indel_id
-                    AND indel.indel_insert = 'D'
-                    AND indel.indel_seq NOT LIKE "%N%"
-                    AND isw.isw_density > 9
-                    AND isw.isw_distance <= 5
-                    AND snp.isw_id = isw.isw_id
-                    GROUP BY CONCAT(target_base,"->",query_base)) l
-            WHERE  r.base_change = l.base_change
-        };
-        my %option = (
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            query_name => $query_name,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    {
-        $sheet_row++;
-        my $query_name = 'Insertion';
-        my $sql_query  = q{
-            SELECT  r.base_change,
-                    (r.snp_number + l.snp_number) / (total_r.total + total_l.total) * 100
-            FROM    (SELECT COUNT(*) total
-                    FROM   indel,
-                           isw,
-                           snp
-                    WHERE  isw.isw_type = 'R'
-                    AND isw.indel_id = indel.indel_id
-                    AND indel.indel_insert = 'D'
-                    AND indel.indel_seq NOT LIKE "%N%"
-                    AND isw.isw_density > 9
-                    AND isw.isw_distance <= 5
-                    AND snp.isw_id = isw.isw_id) total_r,
-                    (SELECT COUNT(*) total
-                    FROM   indel,
-                           isw,
-                           snp
-                    WHERE  isw.isw_type = 'L'
-                    AND isw.prev_indel_id = indel.indel_id
-                    AND indel.indel_insert = 'D'
-                    AND indel.indel_seq NOT LIKE "%N%"
-                    AND isw.isw_density > 9
-                    AND isw.isw_distance <= 5
-                    AND snp.isw_id = isw.isw_id) total_l,
-                    (SELECT CONCAT(query_base,"->",target_base) base_change,
-                           COUNT(*) snp_number
-                    FROM   indel,
-                           isw,
-                           snp
-                    WHERE  isw.isw_type = 'R'
-                    AND isw.indel_id = indel.indel_id
-                    AND indel.indel_insert = 'D'
-                    AND indel.indel_seq NOT LIKE "%N%"
-                    AND isw.isw_density > 9
-                    AND isw.isw_distance <= 5
-                    AND snp.isw_id = isw.isw_id
-                    GROUP BY CONCAT(query_base,"->",target_base)) r,
-                    (SELECT CONCAT(query_base,"->",target_base) base_change,
-                           COUNT(*) snp_number
-                    FROM   indel,
-                           isw,
-                           snp
-                    WHERE  isw.isw_type = 'L'
-                    AND isw.prev_indel_id = indel.indel_id
-                    AND indel.indel_insert = 'D'
-                    AND indel.indel_seq NOT LIKE "%N%"
-                    AND isw.isw_density > 9
-                    AND isw.isw_distance <= 5
-                    AND snp.isw_id = isw.isw_id
-                    GROUP BY CONCAT(query_base,"->",target_base)) l
-            WHERE  r.base_change = l.base_change
         };
         my %option = (
             sql_query  => $sql_query,

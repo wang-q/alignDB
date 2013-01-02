@@ -854,18 +854,16 @@ sub add_align {
             'INSERT INTO indel (
                 indel_id, prev_indel_id, align_id,
                 indel_start, indel_end, indel_length,
-                indel_seq, indel_insert, left_extand, right_extand,
-                indel_gc, indel_occured, indel_type
+                indel_seq, left_extand, right_extand,
+                indel_gc, indel_freq, indel_occured, indel_type
             )
             VALUES (
                 NULL, ?, ?,
                 ?, ?, ?,
-                ?, ?, ?, ?,
-                ?, ?, ?
+                ?, ?, ?,
+                ?, ?, ?, ?
             )'
         );
-        my $indel_regex = qr{^\-+$};
-        my $base_regex  = qr{^\w+$};
 
         my @indel_site
             = @{ pair_indel_sites( $target_seq, $query_seq, $all_indel ) };
@@ -888,16 +886,18 @@ sub add_align {
             #   'D': deletion
             #   'I': insertion
             #   'N': noindel
-            my $indel_occured = undef;
-            my $indel_type    = undef;
+            my $indel_occured   = undef;
+            my $indel_type      = undef;
+            my $indel_frequency = undef;
             if ( defined $ref_info->{seq} ) {
                 my $start  = $_->{start};
                 my $end    = $_->{end};
                 my $length = $_->{length};
 
                 if ( $complex_set->superset("$start-$end") ) {
-                    $indel_occured = "C";
-                    $indel_type    = "C";
+                    $indel_occured   = "C";
+                    $indel_type      = "C";
+                    $indel_frequency = -1;
                 }
                 else {
                     my $r_str = substr( $ref_seq,    $start - 1, $length );
@@ -905,13 +905,14 @@ sub add_align {
                     my $q_str = substr( $query_seq,  $start - 1, $length );
                     ( $indel_occured, $indel_type )
                         = ref_indel_type( $r_str, $t_str, $q_str );
+                    $indel_frequency = 1;
                 }
             }
             $indel_insert->execute(
-                $prev_indel_id, $align_id,         $_->{start},
-                $_->{end},      $_->{length},      $_->{seq},
-                $_->{insert},   $_->{left_extand}, $_->{right_extand},
-                $_->{gc},       $indel_occured,    $indel_type,
+                $prev_indel_id,    $align_id,          $_->{start},
+                $_->{end},         $_->{length},       $_->{seq},
+                $_->{left_extand}, $_->{right_extand}, $_->{gc},
+                $indel_frequency,  $indel_occured,     $indel_type,
             );
             ($prev_indel_id) = $self->last_insert_id;
         }

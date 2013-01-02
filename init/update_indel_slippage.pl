@@ -77,7 +77,7 @@ my $dbh = $obj->dbh;
     # select all indels in this alignment
     my $indel_query = q{
         SELECT indel_id, indel_start, indel_end, indel_length,
-               indel_seq, indel_insert, left_extand, right_extand
+               indel_seq,  left_extand, right_extand
         FROM indel
         WHERE align_id = ?
     };
@@ -125,17 +125,9 @@ my $dbh = $obj->dbh;
 
         $indel_sth->execute($align_id);
         while ( my @row = $indel_sth->fetchrow_array ) {
-            my ($indel_id,  $indel_start,  $indel_end,   $indel_length,
-                $indel_seq, $indel_insert, $left_extand, $right_extand
+            my ($indel_id,  $indel_start, $indel_end, $indel_length,
+                $indel_seq, $left_extand, $right_extand
             ) = @row;
-
-            my $insert_host;
-            if ( $indel_insert eq 'D' ) {
-                $insert_host = \$target_seq;
-            }
-            else {
-                $insert_host = \$query_seq;
-            }
 
             my $indel_slippage = 0;
 
@@ -146,15 +138,14 @@ my $dbh = $obj->dbh;
                 my $left_flank = " ";    # avoid warning from $flank
                 if ( $fland_length <= $left_extand ) {
                     $left_flank
-                        = substr( $$insert_host,
-                        $indel_start - $fland_length - 1,
+                        = substr( $target_seq, $indel_start - $fland_length - 1,
                         $fland_length );
                 }
 
                 my $right_flank = " ";
                 if ( $fland_length <= $right_extand ) {
                     $right_flank
-                        = substr( $$insert_host, $indel_end, $fland_length );
+                        = substr( $target_seq, $indel_end, $fland_length );
                 }
 
                 my $flank = $left_flank . $indel_seq . $right_flank;
@@ -172,8 +163,7 @@ my $dbh = $obj->dbh;
                 my $left_flank;
                 if ( $indel_length <= $left_extand ) {
                     $left_flank
-                        = substr( $$insert_host,
-                        $indel_start - $indel_length - 1,
+                        = substr( $target_seq, $indel_start - $indel_length - 1,
                         $indel_length );
                 }
 
@@ -182,7 +172,7 @@ my $dbh = $obj->dbh;
                 my $right_flank;
                 if ( $indel_length <= $right_extand ) {
                     $right_flank
-                        = substr( $$insert_host, $indel_end, $indel_length );
+                        = substr( $target_seq, $indel_end, $indel_length );
                 }
 
                 if ( $left_flank and $indel_seq eq $left_flank ) {

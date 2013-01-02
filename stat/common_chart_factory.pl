@@ -344,13 +344,8 @@ $excel_obj->jc_correction if $jc_correction;
     #----------------------------#
     # worksheet -- indel_coding_group
     #----------------------------#
-    $sheet_name = 'indel_coding_group';
-    @group_name = (
-        "Deletion & non-coding",
-        "Insertion & non-coding",
-        "Deletion & coding",
-        "Insertion & coding",
-    );
+    $sheet_name         = 'indel_coding_group';
+    @group_name         = ( "non-coding", "coding", );
     $option{group_name} = \@group_name;
 
     $excel_obj->draw_dd( $sheet_name, \%option );
@@ -358,13 +353,8 @@ $excel_obj->jc_correction if $jc_correction;
     #----------------------------#
     # worksheet -- indel_repeat_group
     #----------------------------#
-    $sheet_name = 'indel_repeat_group';
-    @group_name = (
-        "Deletion & non-repeat",
-        "Insertion & non-repeat",
-        "Deletion & repeat",
-        "Insertion & repeat",
-    );
+    $sheet_name         = 'indel_repeat_group';
+    @group_name         = ( "non-repeat", "repeat", );
     $option{group_name} = \@group_name;
 
     $excel_obj->draw_dd( $sheet_name, \%option );
@@ -372,13 +362,8 @@ $excel_obj->jc_correction if $jc_correction;
     #----------------------------#
     # worksheet -- indel_slip_group
     #----------------------------#
-    $sheet_name = 'indel_slip_group';
-    @group_name = (
-        "Deletion & non-slip",
-        "Insertion & non-slip",
-        "Deletion & slip",
-        "Insertion & slip",
-    );
+    $sheet_name         = 'indel_slip_group';
+    @group_name         = ( "non-slip", "slip", );
     $option{group_name} = \@group_name;
 
     $excel_obj->draw_dd( $sheet_name, \%option );
@@ -387,14 +372,7 @@ $excel_obj->jc_correction if $jc_correction;
     # worksheet -- indel_gc_group
     #----------------------------#
     $sheet_name = 'indel_gc_group';
-    @group_name = (
-        "Deletion & 0 <= gc < 0.3",
-        "Insertion & 0 <= gc < 0.3",
-        "Deletion & 0.3 <= gc < 0.5",
-        "Insertion & 0.3 <= gc < 0.5",
-        "Deletion & 0.5 <= gc <= 1",
-        "Insertion & 0.5 <= gc <= 1",
-    );
+    @group_name = ( "0 <= gc < 0.3", "0.3 <= gc < 0.5", "0.5 <= gc <= 1", );
     $option{group_name} = \@group_name;
 
     $excel_obj->draw_dd( $sheet_name, \%option );
@@ -476,7 +454,7 @@ $excel_obj->jc_correction if $jc_correction;
     # worksheet -- snp_base_change
     #----------------------------#
     my $sheet_name = 'snp_base_change';
-    my @group_name = qw/T2Q Q2T Deletion Insertion/;
+    my @group_name = qw/T2Q Q2T/;
     my %option     = (
         chart_serial   => 1,
         y_scale_unit   => 2,

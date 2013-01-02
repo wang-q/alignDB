@@ -219,11 +219,12 @@ sub ns { return AlignDB::SQL->new; }
 
     my $sql_R = $sql->copy;
     $sql_R->add_join(
-        indel => {
-            type      => 'inner',
-            table     => 'isw',
-            condition => 'indel.indel_id = isw.indel_id',
-        }
+        indel => [
+            {   type      => 'inner',
+                table     => 'isw',
+                condition => 'indel.indel_id = isw.indel_id',
+            },
+        ]
     );
     $sql_R->add_where( 'isw.isw_type' => \'= \'R\'' );
     $sql_R->group(
@@ -234,17 +235,18 @@ sub ns { return AlignDB::SQL->new; }
 
     my $sql_L = $sql->copy;
     $sql_L->add_join(
-        indel => {
-            type      => 'inner',
-            table     => 'isw',
-            condition => 'indel.indel_id = isw.prev_indel_id',
-        }
+        indel => [
+            {   type      => 'inner',
+                table     => 'isw',
+                condition => 'indel.indel_id = isw.prev_indel_id',
+            },
+        ]
     );
     $sql_L->add_where( 'isw.isw_type' => \'= \'L\'' );
     $sql_L->group( { column => 'CONCAT(isw.isw_type, isw.isw_distance)' } );
 
-    $sql_file->set( 'common-indel_size_r-0', $sql_R->freeze );
-    $sql_file->set( 'common-indel_size_l-0', $sql_L->freeze );
+    $sql_file->set( 'common-indel_size_r-0', $sql_R );
+    $sql_file->set( 'common-indel_size_l-0', $sql_L );
     print $sql_R->as_sql if $verbose;
     print $sql_L->as_sql if $verbose;
 }
@@ -299,8 +301,8 @@ sub ns { return AlignDB::SQL->new; }
     $sql_L->add_where( 'isw.isw_type' => \'= \'L\'' );
     $sql_L->group( { column => 'CONCAT(isw.isw_type, isw.isw_distance)' } );
 
-    $sql_file->set( 'common-indel_feature_r-0', $sql_R->freeze );
-    $sql_file->set( 'common-indel_feature_l-0', $sql_L->freeze );
+    $sql_file->set( 'common-indel_feature_r-0', $sql_R );
+    $sql_file->set( 'common-indel_feature_l-0', $sql_L );
     print $sql_R->as_sql if $verbose;
     print $sql_L->as_sql if $verbose;
 }

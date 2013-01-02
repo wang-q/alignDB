@@ -140,10 +140,6 @@ AND s.chr_id = c.chr_id
 AND c.taxon_id = t.taxon_id
 GROUP BY chr_id
 
-# indel_insert count
-SELECT indel_insert, count(indel_insert) FROM indel i
-GROUP BY indel_insert
-
 #----------------------------------------------------------#
 # CHROMOSOME                                          
 #----------------------------------------------------------#
@@ -533,20 +529,6 @@ SET isw_distance = 1
 WHERE isw_density >= 1
 AND isw_distance = 0
 AND isw_length >= 100
-
-
-# indel_insert deletion
-UPDATE indel
-SET indel_insert = 'D'
-WHERE indel_insert = 'S288C'
-# insertion
-UPDATE indel
-SET indel_insert = 'I'
-WHERE indel_insert = 'RM11'
-# check
-SELECT indel_insert, COUNT(*)
-FROM indel i
-GROUP BY indel_insert;
 
 # pick up align
 SELECT a.align_id, a.align_length, s.segment_gc_std
