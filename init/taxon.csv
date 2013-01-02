@@ -992,13 +992,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 416870,Lactococcus,lactis,subsp. cremoris MG1363
 684738,Lactococcus,lactis,subsp. lactis KF147
 866775,Aerococcus,urinae,ACS-120-V-Col10a
-326423,Bacillus,amyloliquefaciens,FZB42
-692420,Bacillus,amyloliquefaciens,DSM 7
-198094,Bacillus,anthracis,str. Ames
-261594,Bacillus,anthracis,str. 'Ames Ancestor'
-260799,Bacillus,anthracis,str. Sterne
-568206,Bacillus,anthracis,str. CDC 684
-592021,Bacillus,anthracis,str. A0248
 358681,Brevibacillus,brevis,NBRC 100599
 941639,Bacillus,coagulans,2-6
 545693,Bacillus,megaterium,QM B1551
@@ -1008,10 +1001,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 315750,Bacillus,pumilus,SAFR-032
 649639,Bacillus,cellulosilyticus,DSM 2522
 444177,Lysinibacillus,sphaericus,C3-41
-281309,Bacillus,thuringiensis,serovar konkukian str. 97-27
-412694,Bacillus,thuringiensis,str. Al Hakam
-714359,Bacillus,thuringiensis,BMB171
-720555,Bacillus,atrophaeus,1942
 235909,Geobacillus,kaustophilus,HTA426
 272562,Clostridium,acetobutylicum,ATCC 824
 991791,Clostridium,acetobutylicum,DSM 1731
@@ -1627,16 +1616,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 861208,Agrobacterium,sp. H13-3,sp. H13-3,Agrobacterium_sp_H13_3,
 1082932,Agrobacterium,tumefaciens,CCNWGS0286,Agrobacterium_tumefaciens_CCNWGS0286,
 358,Agrobacterium,tumefaciens,tumefaciens,Agrobacterium_tumefaciens,
-222523,Bacillus,cereus,ATCC 10987,Bacillus_cereus_ATCC_10987,
-226900,Bacillus,cereus,ATCC 14579,Bacillus_cereus_ATCC_14579,
-288681,Bacillus,cereus,E33L,Bacillus_cereus_E33L,
-405533,Bacillus,cereus,AH1134,Bacillus_cereus_AH1134,
-405534,Bacillus,cereus,AH187,Bacillus_cereus_AH187,
-405532,Bacillus,cereus,B4264,Bacillus_cereus_B4264,
-405535,Bacillus,cereus,AH820,Bacillus_cereus_AH820,
-405531,Bacillus,cereus,G9842,Bacillus_cereus_G9842,
-361100,Bacillus,cereus,Q1,Bacillus_cereus_Q1,
-572264,Bacillus,cereus,03BB102,Bacillus_cereus_03BB102,
 526967,Bacillus,cereus,172560W,Bacillus_cereus_172560W,
 526968,Bacillus,cereus,R309803,Bacillus_cereus_R309803,
 526969,Bacillus,cereus,m1550,Bacillus_cereus_m1550,
@@ -1665,6 +1644,27 @@ taxon_id,genus,species,sub_species,common_name,classification
 526992,Bacillus,cereus,AH1271,Bacillus_cereus_AH1271,
 526993,Bacillus,cereus,AH1272,Bacillus_cereus_AH1272,
 526994,Bacillus,cereus,AH1273,Bacillus_cereus_AH1273,
+224308,Bacillus,subtilis,subsp. subtilis str. 168,Bacillus_subtilis_subsp_subtilis_str_168,
+535025,Bacillus,subtilis,subsp. subtilis str. JH642,Bacillus_subtilis_subsp_subtilis_str_JH642,
+535024,Bacillus,subtilis,subsp. subtilis str. SMY,Bacillus_subtilis_subsp_subtilis_str_SMY,
+535026,Bacillus,subtilis,subsp. subtilis str. NCIB 3610,Bacillus_subtilis_subsp_subtilis_str_NCIB_3610,
+703612,Bacillus,subtilis,subsp. spizizenii ATCC 6633,Bacillus_subtilis_subsp_spizizenii_ATCC_6633,
+655816,Bacillus,subtilis,subsp. spizizenii str. W23,Bacillus_subtilis_subsp_spizizenii_str_W23,
+936156,Bacillus,subtilis,BSn5,Bacillus_subtilis_BSn5,
+1052585,Bacillus,subtilis,subsp. spizizenii TU-B-10,Bacillus_subtilis_subsp_spizizenii_TU_B_10,
+1052588,Bacillus,subtilis,subsp. subtilis str. RO-NN-1,Bacillus_subtilis_subsp_subtilis_str_RO_NN_1,
+1089443,Bacillus,subtilis,subsp. subtilis str. SC-8,Bacillus_subtilis_subsp_subtilis_str_SC_8,
+1220533,Bacillus,subtilis,QB928,Bacillus_subtilis_QB928,
+222523,Bacillus,cereus,ATCC 10987,Bacillus_cereus_ATCC_10987,
+226900,Bacillus,cereus,ATCC 14579,Bacillus_cereus_ATCC_14579,
+288681,Bacillus,cereus,E33L,Bacillus_cereus_E33L,
+405533,Bacillus,cereus,AH1134,Bacillus_cereus_AH1134,
+405534,Bacillus,cereus,AH187,Bacillus_cereus_AH187,
+405532,Bacillus,cereus,B4264,Bacillus_cereus_B4264,
+405535,Bacillus,cereus,AH820,Bacillus_cereus_AH820,
+405531,Bacillus,cereus,G9842,Bacillus_cereus_G9842,
+361100,Bacillus,cereus,Q1,Bacillus_cereus_Q1,
+572264,Bacillus,cereus,03BB102,Bacillus_cereus_03BB102,
 637380,Bacillus,cereus,biovar anthracis str. CI,Bacillus_cereus_biovar_anthracis_str_CI,
 334406,Bacillus,cereus,NC7401,Bacillus_cereus_NC7401,
 347495,Bacillus,cereus,F837/76,Bacillus_cereus_F837_76,
@@ -1723,14 +1723,55 @@ taxon_id,genus,species,sub_species,common_name,classification
 1053201,Bacillus,cereus,HuA2-1,Bacillus_cereus_HuA2_1,
 1053207,Bacillus,cereus,HuB1-1,Bacillus_cereus_HuB1_1,
 1053209,Bacillus,cereus,HuB2-9,Bacillus_cereus_HuB2_9,
-224308,Bacillus,subtilis,subsp. subtilis str. 168,Bacillus_subtilis_subsp_subtilis_str_168,
-535025,Bacillus,subtilis,subsp. subtilis str. JH642,Bacillus_subtilis_subsp_subtilis_str_JH642,
-535024,Bacillus,subtilis,subsp. subtilis str. SMY,Bacillus_subtilis_subsp_subtilis_str_SMY,
-535026,Bacillus,subtilis,subsp. subtilis str. NCIB 3610,Bacillus_subtilis_subsp_subtilis_str_NCIB_3610,
-703612,Bacillus,subtilis,subsp. spizizenii ATCC 6633,Bacillus_subtilis_subsp_spizizenii_ATCC_6633,
-655816,Bacillus,subtilis,subsp. spizizenii str. W23,Bacillus_subtilis_subsp_spizizenii_str_W23,
-936156,Bacillus,subtilis,BSn5,Bacillus_subtilis_BSn5,
-1052585,Bacillus,subtilis,subsp. spizizenii TU-B-10,Bacillus_subtilis_subsp_spizizenii_TU_B_10,
-1052588,Bacillus,subtilis,subsp. subtilis str. RO-NN-1,Bacillus_subtilis_subsp_subtilis_str_RO_NN_1,
-1089443,Bacillus,subtilis,subsp. subtilis str. SC-8,Bacillus_subtilis_subsp_subtilis_str_SC_8,
-1220533,Bacillus,subtilis,QB928,Bacillus_subtilis_QB928,
+326423,Bacillus,amyloliquefaciens,FZB42,Bacillus_amyloliquefaciens_FZB42,
+692420,Bacillus,amyloliquefaciens,DSM 7,Bacillus_amyloliquefaciens_DSM_7,
+999891,Bacillus,amyloliquefaciens,TA208,Bacillus_amyloliquefaciens_TA208,
+1001582,Bacillus,amyloliquefaciens,LL3,Bacillus_amyloliquefaciens_LL3,
+1034836,Bacillus,amyloliquefaciens,XH7,Bacillus_amyloliquefaciens_XH7,
+1390,Bacillus,amyloliquefaciens,amyloliquefaciens,Bacillus_amyloliquefaciens,
+1155777,Bacillus,amyloliquefaciens,subsp. plantarum YAU B9601-Y2,Bacillus_amyloliquefaciens_subsp_plantarum_YAU_B9601_Y2,
+1126211,Bacillus,amyloliquefaciens,Y2,Bacillus_amyloliquefaciens_Y2,
+1177186,Bacillus,amyloliquefaciens,subsp. plantarum M27,Bacillus_amyloliquefaciens_subsp_plantarum_M27,
+198094,Bacillus,anthracis,str. Ames,Bacillus_anthracis_str_Ames,
+568206,Bacillus,anthracis,str. CDC 684,Bacillus_anthracis_str_CDC_684,
+261594,Bacillus,anthracis,str. 'Ames Ancestor',Bacillus_anthracis_str_Ames_Ancestor_,
+280355,Bacillus,anthracis,str. A1055,Bacillus_anthracis_str_A1055,
+280354,Bacillus,anthracis,str. CNEVA-9066,Bacillus_anthracis_str_CNEVA_9066,
+212045,Bacillus,anthracis,str. Western North America USA6153,Bacillus_anthracis_str_Western_North_America_USA6153,
+280477,Bacillus,anthracis,str. Australia 94,Bacillus_anthracis_str_Australia_94,
+260799,Bacillus,anthracis,str. Sterne,Bacillus_anthracis_str_Sterne,
+486621,Bacillus,anthracis,str. A0442,Bacillus_anthracis_str_A0442,
+592021,Bacillus,anthracis,str. A0248,Bacillus_anthracis_str_A0248,
+768494,Bacillus,anthracis,str. H9401,Bacillus_anthracis_str_H9401,
+720555,Bacillus,atrophaeus,1942,Bacillus_atrophaeus_1942,
+903520,Bacillus,atrophaeus,ATCC 9372-1,Bacillus_atrophaeus_ATCC_9372_1,
+720556,Bacillus,atrophaeus,Detrick-1,Bacillus_atrophaeus_Detrick_1,
+720557,Bacillus,atrophaeus,Detrick-2,Bacillus_atrophaeus_Detrick_2,
+720558,Bacillus,atrophaeus,Detrick-3,Bacillus_atrophaeus_Detrick_3,
+723888,Bacillus,atrophaeus,1013-1,Bacillus_atrophaeus_1013_1,
+723889,Bacillus,atrophaeus,1013-2,Bacillus_atrophaeus_1013_2,
+723892,Bacillus,atrophaeus,ATCC 9372-2,Bacillus_atrophaeus_ATCC_9372_2,
+743710,Bacillus,atrophaeus,ATCC 49822-1,Bacillus_atrophaeus_ATCC_49822_1,
+743711,Bacillus,atrophaeus,ATCC 49822-2,Bacillus_atrophaeus_ATCC_49822_2,
+882455,Bacillus,atrophaeus,BACI051-E,Bacillus_atrophaeus_BACI051_E,
+527031,Bacillus,thuringiensis,serovar berliner ATCC 10792,Bacillus_thuringiensis_serovar_berliner_ATCC_10792,
+281309,Bacillus,thuringiensis,serovar konkukian str. 97-27,Bacillus_thuringiensis_serovar_konkukian_str_97_27,
+412694,Bacillus,thuringiensis,str. Al Hakam,Bacillus_thuringiensis_str_Al_Hakam,
+527022,Bacillus,thuringiensis,serovar monterrey BGSC 4AJ1,Bacillus_thuringiensis_serovar_monterrey_BGSC_4AJ1,
+527023,Bacillus,thuringiensis,serovar kurstaki str. T03a001,Bacillus_thuringiensis_serovar_kurstaki_str_T03a001,
+527024,Bacillus,thuringiensis,serovar tochigiensis BGSC 4Y1,Bacillus_thuringiensis_serovar_tochigiensis_BGSC_4Y1,
+527026,Bacillus,thuringiensis,serovar sotto str. T04001,Bacillus_thuringiensis_serovar_sotto_str_T04001,
+527021,Bacillus,thuringiensis,Bt407,Bacillus_thuringiensis_Bt407,
+527025,Bacillus,thuringiensis,serovar thuringiensis str. T01001,Bacillus_thuringiensis_serovar_thuringiensis_str_T01001,
+527027,Bacillus,thuringiensis,serovar pakistani str. T13001,Bacillus_thuringiensis_serovar_pakistani_str_T13001,
+527032,Bacillus,thuringiensis,serovar andalousiensis BGSC 4AW1,Bacillus_thuringiensis_serovar_andalousiensis_BGSC_4AW1,
+527029,Bacillus,thuringiensis,serovar pondicheriensis BGSC 4BA1,Bacillus_thuringiensis_serovar_pondicheriensis_BGSC_4BA1,
+527030,Bacillus,thuringiensis,serovar huazhongensis BGSC 4BD1,Bacillus_thuringiensis_serovar_huazhongensis_BGSC_4BD1,
+527028,Bacillus,thuringiensis,serovar pulsiensis BGSC 4CC1,Bacillus_thuringiensis_serovar_pulsiensis_BGSC_4CC1,
+527019,Bacillus,thuringiensis,IBL 200,Bacillus_thuringiensis_IBL_200,
+527020,Bacillus,thuringiensis,IBL 4222,Bacillus_thuringiensis_IBL_4222,
+714359,Bacillus,thuringiensis,BMB171,Bacillus_thuringiensis_BMB171,
+930170,Bacillus,thuringiensis,serovar finitimus YBT-020,Bacillus_thuringiensis_serovar_finitimus_YBT_020,
+541229,Bacillus,thuringiensis,serovar chinensis CT-43,Bacillus_thuringiensis_serovar_chinensis_CT_43,
+1218175,Bacillus,thuringiensis,HD-771,Bacillus_thuringiensis_HD_771,
+1195464,Bacillus,thuringiensis,MC28,Bacillus_thuringiensis_MC28,
