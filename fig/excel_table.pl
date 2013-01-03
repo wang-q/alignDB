@@ -15,7 +15,7 @@ use Win32::OLE::Const 'Microsoft Excel';
 
 use Path::Class;
 
-$Win32::OLE::Warn = 3;    # die on errors...
+$Win32::OLE::Warn = 2;    # die on errors...
 
 #----------------------------------------------------------#
 # GetOpt section
