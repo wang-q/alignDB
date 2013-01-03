@@ -70,9 +70,25 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 # Search for all files and push their paths to @axt_files
 #----------------------------------------------------------#
-my @files = sort File::Find::Rule->file->name( '*.fa', '*.fas', '*.fasta' )
-    ->in($dir);
+my @files
+    = sort File::Find::Rule->file->name( '*.fa', '*.fas', '*.fasta' )->in($dir);
 printf "\n----Total .fa Files: %4s----\n\n", scalar @files;
+
+{    # update names
+    my $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+
+    # Database handler
+    my $dbh = $obj->dbh;
+
+    my ( $target_taxon_id, $target_name ) = split ",", $target;
+    $target_name = $target_taxon_id unless $target_name;
+
+    $obj->update_names( { $target_taxon_id => $target_name } );
+}
 
 #----------------------------------------------------------#
 # worker
@@ -102,26 +118,30 @@ my $worker = sub {
     my $chr_length = length $chr_seq;
 
     my $id_hash = $obj->get_chr_id_hash($target_taxon_id);
-    my $chr_id = $id_hash->{$chr_name};
+    my $chr_id  = $id_hash->{$chr_name};
     return unless $chr_id;
 
     for ( my $pos = 0; $pos < $chr_length; $pos += $truncated_length ) {
         my $seq = substr( $chr_seq, $pos, $truncated_length );
-        
-        my $target_info = {
-            taxon_id   => $target_taxon_id,
-            name       => $target_name,
-            chr_id     => $chr_id,
-            chr_name   => $chr_name,
-            chr_start  => $pos + 1,
-            chr_end    => $pos + length($seq),
-            chr_strand => '+',
-            seq        => $seq,
-        };
-        my $query_info = $target_info;
-    
-        $obj->add_align( $target_info, $query_info );
 
+        my $info_of = {
+            $target_name => {
+                taxon_id   => $target_taxon_id,
+                name       => $target_name,
+                chr_id     => $chr_id,
+                chr_name   => $chr_name,
+                chr_start  => $pos + 1,
+                chr_end    => $pos + length($seq),
+                chr_strand => '+',
+                seq        => $seq,
+            },
+        };
+
+        $obj->add_align(
+            $info_of,
+            [ $target_name, $target_name ],
+            [ $seq,         $seq ],
+        );
     }
 
     $inner_watch->block_message( "$infile has been processed.", "duration" );
@@ -139,7 +159,7 @@ my $run = AlignDB::Run->new(
 );
 $run->run;
 
-$stopwatch->block_message( "All files have been processed.", "duration" );
+$stopwatch->end_message( "All files have been processed.", "duration" );
 
 # store program running meta info to database
 # this AlignDB object is just for storing meta info
@@ -157,7 +177,7 @@ __END__
 
 =head1 NAME
 
-    gen_alignDB_genome.pl - Generate alignDB from axt files
+    gen_alignDB_genome.pl - Generate alignDB from fasta files
 
 =head1 SYNOPSIS
 
@@ -172,8 +192,6 @@ __END__
         --password          password
         --axt_dir           .axt files' directory
         --target            "target_taxon_id,target_name"
-        --query             "query_taxon_id,query_name"
-        --length            threshold of alignment length
         --parallel          run in parallel mode
 
 =cut
