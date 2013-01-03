@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/3/2013 4:44:05 AM                          */
+/* Created on:     1/3/2013 6:13:40 AM                          */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -178,9 +178,9 @@ create table extreme
 ENGINE = MyISAM;
 
 /*==============================================================*/
-/* Index: windows_extreme_FK                                    */
+/* Index: window_extreme_FK                                     */
 /*==============================================================*/
-create index windows_extreme_FK on extreme
+create index window_extreme_FK on extreme
 (
    window_id
 );
@@ -331,12 +331,25 @@ create table isw
    isw_type                       char(8),
    isw_distance                   int,
    isw_density                    int,
+   isw_differences                int,
    isw_pi                         double,
    isw_target_gc                  double,
    isw_average_gc                 double,
    isw_d_indel                    double,
    isw_d_noindel                  double,
    isw_d_complex                  double,
+   isw_d_bii                      double,
+   isw_d_bnn                      double,
+   isw_d_indel2                   double,
+   isw_d_noindel2                 double,
+   isw_d_complex2                 double,
+   isw_d_bii2                     double,
+   isw_d_bnn2                     double,
+   isw_d_indel3                   double,
+   isw_d_noindel3                 double,
+   isw_d_complex3                 double,
+   isw_d_bii3                     double,
+   isw_d_bnn3                     double,
    isw_coding                     double,
    isw_repeats                    double,
    isw_cpg_pi                     double,
@@ -528,8 +541,11 @@ create table snp
    snp_pos                        int,
    target_base                    char(1),
    query_base                     char(1),
+   all_bases                      char(128),
    ref_base                       char(1),
-   snp_occured                    char(8),
+   mutant_to                      char(128),
+   snp_freq                       int,
+   snp_occured                    char(128),
    snp_coding                     double,
    snp_repeats                    double,
    snp_cpg                        double,

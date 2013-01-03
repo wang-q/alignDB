@@ -13,42 +13,6 @@ use AlignDB::Util qw(:all);
 
 extends qw(AlignDB);
 
-sub _insert_align {
-    my $self = shift;
-    my @seqs = @_;
-
-    my $dbh = $self->dbh;
-
-    my $align_insert = $dbh->prepare(
-        q{
-        INSERT INTO align (
-            align_id, align_length,
-            align_comparables, align_identities, align_differences,
-            align_gaps, align_ns, align_error,
-            align_pi, align_target_gc, align_average_gc
-        )
-        VALUES (
-            NULL, ?,
-            ?, ?, ?,
-            ?, ?, ?,
-            ?, ?, ?
-        )
-        }
-    );
-
-    my $result = multi_seq_stat(@seqs);
-
-    $align_insert->execute(
-        $result->[0], $result->[1], $result->[2], $result->[3], $result->[4],
-        $result->[5], $result->[6], $result->[7], $result->[8], $result->[9],
-    );
-    $align_insert->finish;
-
-    my $align_id = $self->last_insert_id;
-
-    return $align_id;
-}
-
 sub add_align {
     my $self     = shift;
     my $info_of  = shift;
@@ -877,93 +841,6 @@ ISW: for my $isw_id (@isw_ids) {
     }
 
     return;
-}
-
-sub get_slice_stat {
-    my $self     = shift;
-    my $align_id = shift;
-    my $set      = shift;
-
-    my $seqs_ref   = $self->get_seqs($align_id);
-    my @seq_slices = map { $set->substr_span($_) } @$seqs_ref;
-    my $result     = multi_seq_stat(@seq_slices);
-
-    return $result;
-}
-
-=method insert_window
-
-      Usage : $self->insert_window(
-            :     $align_id, $window_set, $internal_indel,
-            : );
-    Purpose : Add a window into malignDB4
-    Returns : Int, window_id
-            : each member is a hash_ref
- Parameters : $align_id       : align_id
-            : $window_set     : AlignDB::IntSpan object
-            : $internal_indel : count all indels in this set (flag)
-     Throws : no exceptions
-   Comments : none 
-   See Also : n/a
-
-=cut
-
-sub insert_window {
-    my $self           = shift;
-    my $align_id       = shift;
-    my $window_set     = shift;
-    my $internal_indel = shift;
-
-    # Get database handle
-    my $dbh = $self->dbh;
-
-    my $window_sql = qq{
-        INSERT INTO window (
-            window_id, align_id, window_start, window_end, window_length,
-            window_runlist, window_comparables, window_identities,
-            window_differences, window_indel, window_pi,
-            window_target_gc, window_average_gc,
-            window_coding, window_repeats
-        )
-        VALUES (
-            NULL, ?, ?, ?, ?,
-            ?, ?, ?,
-            ?, ?, ?,
-            ?, ?,
-            NULL, NULL
-        )
-    };
-    my $window_insert = $dbh->prepare($window_sql);
-
-    my $window_start   = $window_set->min;
-    my $window_end     = $window_set->max;
-    my $window_length  = $window_set->cardinality;
-    my $window_runlist = $window_set->runlist;
-
-    # do or do not count internal indels within window_set
-    # $set_indel is equal to $window_span - 1
-    my $window_indel;
-    if ($internal_indel) {
-        my ( $set_indel, $real_indel )
-            = $self->get_slice_indel( $align_id, $window_set );
-        $window_indel = $set_indel + $real_indel;
-    }
-    else {
-        $window_indel = $window_set->span_size - 1;
-    }
-
-    my $window_stat = $self->get_slice_stat( $align_id, $window_set );
-
-    $window_insert->execute(
-        $align_id,         $window_start,     $window_end,
-        $window_length,    $window_runlist,   $window_stat->[1],
-        $window_stat->[2], $window_stat->[3], $window_indel,
-        $window_stat->[7], $window_stat->[8], $window_stat->[9],
-    );
-
-    my $cur_window_id = $self->last_insert_id;
-
-    return $cur_window_id;
 }
 
 #----------------------------------------------------------#
