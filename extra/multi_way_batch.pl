@@ -88,10 +88,10 @@ if ( $run eq 'all' ) {
     @tasks = ( 1 .. 44 );
 }
 elsif ( $run eq 'basic' ) {
-    @tasks = ( 1 .. 3 );
+    @tasks = ( 1 .. 5 );
 }
 elsif ( $run eq 'common' ) {
-    @tasks = ( 1 .. 3, 21, 30, 31, 40, 43 );
+    @tasks = ( 1 .. 5, 21, 30, 31, 40 );
 }
 elsif ( $run eq 'gc' ) {
     @tasks = ( 1 .. 3, 10, 21, 30 .. 32, 40, 41 );
@@ -129,8 +129,16 @@ my $dispatch = {
         . " --batch=$batch_number"
         . " --id $file_id_of"
         . ( $block ? " --block" : "" ),
-    2  => undef,
-    3  => undef,
+    2 => undef,
+    3 => undef,
+    5 => "perl $FindBin::Bin/../init/insert_isw.pl"
+        . " -s=$server"
+        . " --port=$port"
+        . " -u=$username"
+        . " --password=$password"
+        . " -d=$db_name"
+        . " --parallel=$parallel"
+        . " --batch=$batch_number",
     10 => "perl $FindBin::Bin/../init/insert_gc.pl"
         . " -s=$server"
         . " --port=$port"
