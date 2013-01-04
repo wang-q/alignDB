@@ -416,7 +416,7 @@ perl [% findbin %]/../extra/seq_pair_batch.pl \
 perl [% findbin %]/../extra/seq_pair_batch.pl \
     -d 1 --parallel [% parallel %] \
     -f [% seq_pair_file %] \
-    -at 1000 -st 0  -r 1,2,21,40
+    -at 1000 -st 0  -r 1,2,5,21,40
 
 ## join_dbs.pl
 #perl [% findbin %]/../extra/join_dbs.pl \

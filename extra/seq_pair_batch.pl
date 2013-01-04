@@ -125,6 +125,10 @@ my $worker = sub {
             . " -a [% ldir %] [% tq %]"
             . " --length   [% at %]"
             . " --parallel [% parallel %]",
+        5 => "perl $FindBin::Bin/../init/insert_isw.pl"
+            . " --db [% db %]"
+            . " --parallel [% parallel %]"
+            . " --batch    [% batch %]",
         21 => "perl $FindBin::Bin/../init/update_sw_cv.pl"
             . " --db [% db %]"
             . " --parallel [% parallel %]"

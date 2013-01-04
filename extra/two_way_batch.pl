@@ -94,7 +94,7 @@ if ( $run eq 'all' ) {
     @tasks = ( 1 .. 44 );
 }
 elsif ( $run eq 'basic' ) {
-    @tasks = ( 1 .. 5 );
+    @tasks = ( 1 .. 5, 21, 40 );
 }
 elsif ( $run eq 'common' ) {
     @tasks = ( 1 .. 5, 21, 30, 31, 40 );
@@ -272,6 +272,8 @@ exit;
 __END__
 
 =head1 SYNOPSIS
+
+perl two_way_batch.pl -d alignDB -t "4932,S288C" -q "285006,RM11" -a d:\data\alignment\yeast_combine\S288CvsRM11\ -at 10000 -st 0 -ct 0 --parallel 4 --run basic
 
 perl two_way_batch.pl -d alignDB -e yeast_65 -t "4932,S288C" -q "285006,RM11" -a /home/wangq/data/alignment/yeast65/S288CvsRM11 -at 10000 -st 1000000 --parallel 4 --run common
 
