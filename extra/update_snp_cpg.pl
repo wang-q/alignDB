@@ -12,7 +12,6 @@ use AlignDB::Stopwatch;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
-use AlignDB::Multi;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -27,8 +26,6 @@ my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
-my $multi;
-
 my $man  = 0;
 my $help = 0;
 
@@ -40,7 +37,6 @@ GetOptions(
     'd|db=s'       => \$db,
     'u|username=s' => \$username,
     'p|password=s' => \$password,
-    'multi'        => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -52,26 +48,16 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Update CpG info of $db...");
 
-my $obj;
-if ( !$multi ) {
-    $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
+my $obj = AlignDB->new(
+    mysql  => "$db:$server",
+    user   => $username,
+    passwd => $password,
+);
 
-    # get reference names via AlignDB methods
-    my ( undef, undef, $ref_name ) = $obj->get_names;
-    if ( !$ref_name or $ref_name eq 'NULL' ) {
-        die "$db is not a three-way alignDB\n";
-    }
-}
-else {
-    $obj = AlignDB::Multi->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
+# get reference names via AlignDB methods
+my ( undef, undef, $ref_name ) = $obj->get_names;
+if ( !$ref_name or $ref_name eq 'NULL' ) {
+    die "$db has not an outgroup.\n";
 }
 
 # Database handler
@@ -80,84 +66,10 @@ my $dbh = $obj->dbh;
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
-if ( !$multi ) {
+{
     my @align_ids = @{ $obj->get_align_ids };
 
-    # select all snps in this alignment
-    my $snp_query = q{
-        SELECT  snp_id, snp_pos, target_base, query_base,
-                ref_base, snp_occured,
-                IF(snp_occured = "T", target_base, query_base) `mutated_base`
-        FROM snp
-        WHERE align_id = ?
-        AND ref_base IN ("C", "G")
-        AND snp_occured IN ("T", "Q")
-    };
-    my $snp_query_sth = $dbh->prepare($snp_query);
-
-    # update snp table in the new feature column
-    my $snp_update = q{
-        UPDATE snp
-        SET snp_cpg = ?
-        WHERE snp_id = ?
-    };
-    my $snp_update_sth = $dbh->prepare($snp_update);
-
-    for my $align_id (@align_ids) {
-        print "Processing align_id $align_id\n";
-
-        my ( $target_seq, $query_seq ) = @{ $obj->get_seqs($align_id) };
-
-        $snp_query_sth->execute($align_id);
-        while ( my @row = $snp_query_sth->fetchrow_array ) {
-            my ($snp_id,   $snp_pos,     $target_base, $query_base,
-                $ref_base, $snp_occured, $mutated_base
-            ) = @row;
-
-            my ( %left_base, %right_base );
-            $left_base{T}  = substr( $target_seq, $snp_pos - 2, 1 );
-            $right_base{T} = substr( $target_seq, $snp_pos,     1 );
-            $left_base{Q}  = substr( $query_seq,  $snp_pos - 2, 1 );
-            $right_base{Q} = substr( $query_seq,  $snp_pos,     1 );
-
-            my $snp_cpg = 0;
-
-            # CpG to TpG, C to T transition
-            # On the reverse strand, is CpG to CpA
-            if ( $ref_base eq "C" ) {    # original base is C
-                if ( $mutated_base eq "T" ) {
-                    if ( $right_base{T} eq "G" and $right_base{Q} eq "G" ) {
-                        $snp_cpg = 1;
-                    }
-                }
-            }
-            elsif ( $ref_base eq "G" ) {    # original base is G
-                if ( $mutated_base eq "A" ) {
-                    if ( $left_base{T} eq "C" and $left_base{Q} eq "C" ) {
-                        $snp_cpg = 1;
-                    }
-                }
-            }
-
-            $snp_update_sth->execute( $snp_cpg, $snp_id );
-        }
-    }
-    $snp_update_sth->finish;
-    $snp_query_sth->finish;
-
-    {    # update NULL value of snp_cpg to 0
-        my $snp_null = q{
-            UPDATE snp
-            SET snp_cpg = 0
-            WHERE snp_cpg IS NULL
-        };
-        $obj->execute_sql($snp_null);
-    }
-}
-else {
-    my @align_ids = @{ $obj->get_align_ids };
-
-    # select all snps for this indel
+    # select all snps
     my $snp_query = q{
         SELECT snp_id, snp_pos, mutant_to
         FROM snp

@@ -18,7 +18,7 @@ use AlignDB::Util qw(:all);
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use AlignDB::Multi;
+use AlignDB;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -81,7 +81,7 @@ $stopwatch->start_message("Update LD of $db...");
 my $all_freq;
 my @jobs;
 {
-    my $obj = AlignDB::Multi->new(
+    my $obj = AlignDB->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
@@ -152,7 +152,7 @@ my $worker = sub {
     my $job       = shift;
     my @align_ids = @$job;
 
-    my $obj = AlignDB::Multi->new(
+    my $obj = AlignDB->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
@@ -355,7 +355,7 @@ $stopwatch->end_message;
 # store program running meta info to database
 # this AlignDB object is just for storing meta info
 END {
-    AlignDB::Multi->new(
+    AlignDB->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,

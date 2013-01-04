@@ -7,13 +7,14 @@ use Pod::Usage;
 use Config::Tiny;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-use AlignDB::WriteExcel;
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::SQL;
 use AlignDB::SQL::Library;
+
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+use AlignDB::WriteExcel;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -113,7 +114,7 @@ if ( $combine_threshold == 0 ) {
 my $all_freq = $write_obj->get_freq;
 
 if ( $all_freq < 2 ) {
-    die "all_freq is $all_freq, are you sure this is a AlignDB::Multi DB?\n";
+    die "all_freq is $all_freq, are you sure this is an AlignDB DB?\n";
 }
 
 my @freqs;
@@ -858,9 +859,10 @@ for my $n (@tasks) {
     if ( $n == 1 ) { &$indel_ld;        next; }
     if ( $n == 2 ) { &$indel_ld_insdel; next; }
 
-    if ( $n == 11 ) { &$snps_ld;             next; }
-    if ( $n == 12 ) { &$snps_ld_insdel;      next; }
-    if ( $n == 13 ) { &$snps_ld_freq;        next; }
+    if ( $n == 11 ) { &$snps_ld;        next; }
+    if ( $n == 12 ) { &$snps_ld_insdel; next; }
+    if ( $n == 13 ) { &$snps_ld_freq;   next; }
+
     #if ( $n == 14 ) { &$snps_ld_insdel_freq; next; }
 
     if ( $n == 21 ) { &$segment_gc_indel; next; }

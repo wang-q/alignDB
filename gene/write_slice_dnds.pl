@@ -11,7 +11,7 @@ use AlignDB::IntSpan;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use AlignDB::Multi;
+use AlignDB;
 use AlignDB::Position;
 
 #----------------------------------------------------------#
@@ -49,7 +49,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 # Start
 #----------------------------------------------------------#
-my $obj = AlignDB::Multi->new(
+my $obj = AlignDB->new(
     mysql  => "$db:$server",
     user   => $username,
     passwd => $password,
@@ -66,21 +66,21 @@ my $group = {
     my $sth = $dbh->prepare(
         q{
         SELECT 
-                    c.chr_name,   w.align_id,   g.gene_tl_runlist
-            FROM
-                gene g INNER JOIN window w
-                    ON g.window_id = w.window_id
-                INNER JOIN sequence s
-                    ON s.align_id = w.align_id
-                INNER JOIN target t
-                    ON s.seq_id = t.seq_id
-                INNER JOIN chromosome c
-                    ON s.chr_id = c.chr_id
-            WHERE
-                1 = 1 
-                AND gene_nsy = 0 
-                AND gene_syn > 0 
-                AND w.window_pi > 0.001
+                c.chr_name,   w.align_id,   g.gene_tl_runlist
+        FROM
+            gene g INNER JOIN window w
+                ON g.window_id = w.window_id
+            INNER JOIN sequence s
+                ON s.align_id = w.align_id
+            INNER JOIN target t
+                ON s.seq_id = t.seq_id
+            INNER JOIN chromosome c
+                ON s.chr_id = c.chr_id
+        WHERE
+            1 = 1 
+            AND gene_nsy = 0 
+            AND gene_syn > 0 
+            AND w.window_pi > 0.001
         }
     );
     $sth->execute;
@@ -102,21 +102,21 @@ my $group = {
     my $sth = $dbh->prepare(
         q{
         SELECT 
-                    c.chr_name,   w.align_id,   g.gene_tl_runlist
-            FROM
-                gene g INNER JOIN window w
-                    ON g.window_id = w.window_id
-                INNER JOIN sequence s
-                    ON s.align_id = w.align_id
-                INNER JOIN target t
-                    ON s.seq_id = t.seq_id
-                INNER JOIN chromosome c
-                    ON s.chr_id = c.chr_id
-            WHERE
-                1 = 1 
-                AND gene_nsy > 0 
-                AND gene_syn > 0 
-                AND w.window_pi > 0.001
+                c.chr_name,   w.align_id,   g.gene_tl_runlist
+        FROM
+            gene g INNER JOIN window w
+                ON g.window_id = w.window_id
+            INNER JOIN sequence s
+                ON s.align_id = w.align_id
+            INNER JOIN target t
+                ON s.seq_id = t.seq_id
+            INNER JOIN chromosome c
+                ON s.chr_id = c.chr_id
+        WHERE
+            1 = 1 
+            AND gene_nsy > 0 
+            AND gene_syn > 0 
+            AND w.window_pi > 0.001
         }
     );
     $sth->execute;
@@ -143,23 +143,23 @@ my $group = {
         my $sth = $dbh->prepare(
             q{
             SELECT 
-                        c.chr_name,   w.align_id,   g.gene_tl_runlist
-                FROM
-                    gene g INNER JOIN window w
-                        ON g.window_id = w.window_id
-                    INNER JOIN sequence s
-                        ON s.align_id = w.align_id
-                    INNER JOIN target t
-                        ON s.seq_id = t.seq_id
-                    INNER JOIN chromosome c
-                        ON s.chr_id = c.chr_id
-                WHERE
-                    1 = 1 
-                    AND gene_nsy > 0 
-                    AND gene_syn > 0 
-                    AND w.window_pi > 0.001
-                    AND gene_nsy / gene_syn >= ?
-                    AND gene_nsy / gene_syn <= ?
+                    c.chr_name,   w.align_id,   g.gene_tl_runlist
+            FROM
+                gene g INNER JOIN window w
+                    ON g.window_id = w.window_id
+                INNER JOIN sequence s
+                    ON s.align_id = w.align_id
+                INNER JOIN target t
+                    ON s.seq_id = t.seq_id
+                INNER JOIN chromosome c
+                    ON s.chr_id = c.chr_id
+            WHERE
+                1 = 1 
+                AND gene_nsy > 0 
+                AND gene_syn > 0 
+                AND w.window_pi > 0.001
+                AND gene_nsy / gene_syn >= ?
+                AND gene_nsy / gene_syn <= ?
             }
         );
         $sth->execute( $low_border, $high_border );
