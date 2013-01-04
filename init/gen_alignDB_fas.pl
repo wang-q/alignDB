@@ -38,9 +38,12 @@ my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
+# alignments have an outgroup
+my $outgroup;
+
 # program parameters
 my $dir_fa           = '';
-my $length_thredhold = 5000;
+my $length_threshold = 5000;
 
 my $block;         # input is galaxy style blocked fasta
 my $file_id_of;    # taxon_id-name mapping file
@@ -64,7 +67,8 @@ GetOptions(
     'd|db=s'        => \$db,
     'u|username=s'  => \$username,
     'p|password=s'  => \$password,
-    'l|lt|length=i' => \$length_thredhold,
+    'o|outgroup'    => \$outgroup,
+    'l|lt|length=i' => \$length_threshold,
     'dir=s'         => \$dir_fa,
     'id|id_of=s'    => \$file_id_of,
     'block'         => \$block,
@@ -77,24 +81,8 @@ pod2usage(1) if $help;
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
 #----------------------------------------------------------#
-# call init_alignDB.pl
+# update names
 #----------------------------------------------------------#
-{
-    my $cmd
-        = "perl $FindBin::Bin/../init/init_alignDB.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -d=$db"
-        . " -u=$username"
-        . " --password=$password"
-        . " -i=$FindBin::Bin/../minit.sql";
-    print "\n", "=" x 12, "CMD", "=" x 15, "\n";
-    print $cmd , "\n";
-    print "=" x 30, "\n";
-    system($cmd);
-}
-
-
 my $id_of = {};
 {
     my $name_of = {};
@@ -150,17 +138,29 @@ my $worker = sub {
 
     my @infiles = @$job;
 
-    my $obj = AlignDB::Multi->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
+    my $obj;
+    if ( !$outgroup ) {
+        $obj = AlignDB->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+    }
+    else {
+        $obj = AlignDB::Multi->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+    }
 
     for my $infile (@infiles) {
         print "process " . basename($infile) . "\n";
         $obj->parse_block_fasta_file( $infile, $opt );
         print "Done.\n\n";
     }
+
+    return;
 };
 
 #----------------------------------------------------------#
@@ -172,28 +172,13 @@ my $run = AlignDB::Run->new(
     code     => $worker,
     opt      => {
         id_of     => $id_of,
-        threshold => $length_thredhold,
+        threshold => $length_threshold,
         gzip      => $gzip,
     },
 );
 $run->run;
 
-$stopwatch->block_message( "All files have been processed.", "duration" );
-
-#----------------------------------------------------------#
-# start modify
-#----------------------------------------------------------#
-{
-    $stopwatch->block_message("Modify $db...");
-    my $obj = AlignDB::Multi->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-    $obj->modify_misc;
-}
-
-$stopwatch->end_message;
+$stopwatch->end_message( "All files have been processed.", "duration" );
 
 # store program running meta info to database
 # this AlignDB object is just for storing meta info
@@ -205,15 +190,17 @@ END {
     )->add_meta_stopwatch($stopwatch);
 }
 
+exit;
+
 __END__
 
 =head1 NAME
 
-    fasta_malignDB.pl - Initiate, generate and update malignDB
+    gen_alignDB_fas.pl - Initiate, generate and update alignDB from fas files
 
 =head1 SYNOPSIS
 
-    fasta_malignDB.pl [options]
+    gen_alignDB_fas.pl [options]
       Options:
         --help              brief help message
         --man               full documentation
@@ -229,3 +216,8 @@ __END__
 =cut
 
 perl ~/Scripts/alignDB/multi/fasta_malignDB.pl -d S288CvsRM11Spar --block --id ~/data/alignment/yeast_combine/id2name.csv --dir ~/data/alignment/yeast_combine/S288CvsRM11Spar_mafft --length 5000 --paralle 1
+
+perl d:/wq/Scripts/alignDB/init/init_alignDB.pl -d Acetobacter_pasteurianus
+perl d:/wq/Scripts/alignDB/init/gen_alignDB_fas.pl -d Acetobacter_pasteurianus --block --id d:\data\alignment\bac_new\Acetobacter_pasteurianus\round2\id2name.csv --dir d:\data\alignment\bac_new\Acetobacter_pasteurianus\round2\Acetobacter_pasteurianus_mft\ --length 5000 --paralle 1
+
+d:\data\alignment\bac_new\Acinetobacter_baumannii\round2\Acinetobacter_baumannii_mft\

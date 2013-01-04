@@ -88,7 +88,7 @@ if ( $run eq 'all' ) {
     @tasks = ( 1 .. 44 );
 }
 elsif ( $run eq 'basic' ) {
-    @tasks = ( 1 .. 5 );
+    @tasks = ( 1 .. 5, 21, 40 );
 }
 elsif ( $run eq 'common' ) {
     @tasks = ( 1 .. 5, 21, 30, 31, 40 );
