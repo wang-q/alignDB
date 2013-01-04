@@ -113,7 +113,7 @@ if ( $combine_threshold == 0 ) {
 my $all_freq = $write_obj->get_freq;
 
 if ( $all_freq < 2 ) {
-    die "all_freq is $all_freq, are you sure this is a AlignDB::Multi DB?\n";
+    die "all_freq is $all_freq, are you sure this is a AlignDB database?\n";
 }
 
 my @freqs;

@@ -34,8 +34,8 @@ my $sum_threshold     = $Config->{stat}{sum_threshold};
 my $combine_threshold = $Config->{stat}{combine_threshold};
 my $outfile           = "";
 
-my $man  = 0;
 my $help = 0;
+my $man  = 0;
 
 GetOptions(
     'help|?'                 => \$help,
@@ -54,13 +54,12 @@ GetOptions(
 pod2usage(1) if $help;
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
-$outfile = "$db.common.xlsx" unless $outfile;
-
 # prepare to run tasks in @tasks
 my @tasks;
 
 if ( $run eq 'all' ) {
     @tasks = ( 1 .. 50 );
+    $outfile = "$db.common.xlsx" unless $outfile;
 }
 else {
     $run =~ s/\"\'//s;
@@ -74,15 +73,17 @@ else {
         $set->add(@tasks);
     }
 
-    my $runlist = $set->runlist;
-    $outfile =~ s/(\.xlsx)$/.$runlist$1/;
+    unless ($outfile) {
+        my $runlist = $set->runlist;
+        $outfile = "$db.common.$runlist.xlsx";
+    }
 }
 
 #----------------------------------------------------------#
 # Init section
 #----------------------------------------------------------#
 my $stopwatch = AlignDB::Stopwatch->new;
-$stopwatch->start_message("Do common stat for $db...");
+$stopwatch->start_message("Do stat for $db...");
 
 my $write_obj = AlignDB::WriteExcel->new(
     mysql   => "$db:$server",
@@ -101,6 +102,15 @@ if ( $sum_threshold == 0 ) {
 # auto detect combine threshold
 if ( $combine_threshold == 0 ) {
     ( undef, $combine_threshold ) = $write_obj->calc_threshold;
+}
+
+#----------------------------#
+# count freq
+#----------------------------#
+my $all_freq = $write_obj->get_freq;
+
+if ( $all_freq < 2 ) {
+    die "all_freq is $all_freq, are you sure this is a AlignDB database?\n";
 }
 
 #----------------------------------------------------------#
@@ -131,7 +141,7 @@ my $basic = sub {
             query_name => $query_name,
             sheet_row  => $sheet_row,
             sheet_col  => $sheet_col,
-            row        => [2],
+            row        => [$all_freq],
         );
         ($sheet_row) = $write_obj->write_row_direct( $sheet, \%option );
     }
@@ -170,14 +180,8 @@ my $basic = sub {
     {    # write contents
         my $query_name = 'Indels per 100 bp';
         my $sql_query  = q{
-            SELECT  SUM(i.indel) / SUM(a.align_comparables) * 100.0
-            FROM    align a,
-                    (SELECT a.align_id,
-                            COUNT(i.indel_id) indel
-                    FROM align a, indel i
-                    WHERE a.align_id = i.align_id
-                    GROUP BY a.align_id) i
-            WHERE   a.align_id = i.align_id
+            SELECT  SUM(a.align_indels) / SUM(a.align_comparables) * 100.0
+            FROM    align a
         };
         my %option = (
             query_name => $query_name,
