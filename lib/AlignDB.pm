@@ -387,20 +387,6 @@ sub _insert_snp {
 
     my $snp_site = multi_snp_site( @{$seq_refs} );
 
-    ## isw_id
-    #my $fetch_isw_id = $dbh->prepare(
-    #    q{
-    #    SELECT isw_id
-    #    FROM isw, indel
-    #    WHERE isw.indel_id = indel.indel_id
-    #    AND indel.align_id = ?
-    #    AND isw.isw_start <= ?
-    #    AND isw.isw_end >= ?
-    #    }
-    #);
-    #$fetch_isw_id->execute( $align_id, $_, $_ );
-    #my ($isw_id)    = $fetch_isw_id->fetchrow_array;
-
     # %{$snp_site} keys are snp positions
     for my $pos ( sort { $a <=> $b } keys %{$snp_site} ) {
 
@@ -578,6 +564,56 @@ sub insert_isw {
     return;
 }
 
+sub isw_snp_fk {
+    my $self     = shift;
+    my $align_id = shift;
+
+    my $dbh          = $self->dbh;
+    my $fetch_snp_id = $dbh->prepare(
+        q{
+        SELECT s.snp_id, s.snp_pos
+        FROM snp s
+        WHERE s.align_id = ?
+        }
+    );
+
+    my $fetch_isw_id = $dbh->prepare(
+        q{
+        SELECT isw_id
+        FROM isw, indel
+        WHERE isw.indel_id = indel.indel_id
+        AND indel.align_id = ?
+        AND isw.isw_start <= ?
+        AND isw.isw_end >= ?
+        }
+    );
+
+    my $snp_update = $dbh->prepare(
+        q{
+        UPDATE snp
+        SET isw_id = ?
+        WHERE snp_id = ?
+        }
+    );
+
+    # process each snp
+    $fetch_snp_id->execute($align_id);
+    while ( my ( $snp_id, $snp_pos ) = $fetch_snp_id->fetchrow_array ) {
+        $fetch_isw_id->execute( $align_id, $snp_pos, $snp_pos );
+        my ($isw_id) = $fetch_isw_id->fetchrow_array;
+
+        if ($isw_id) {
+            $snp_update->execute( $isw_id, $snp_id );
+        }
+    }
+
+    $snp_update->finish;
+    $fetch_isw_id->finish;
+    $fetch_snp_id->finish;
+
+    return;
+}
+
 sub _modify_isw {
     my $self     = shift;
     my $align_id = shift;
@@ -701,7 +737,6 @@ sub insert_ssw {
     my $ssw_max_distance = 10;
     my $ssw_size_window0 = int( $ssw_size / 2 );
 
-    # extreme_id & prev_extreme_id
     my $fetch_snp_id = $dbh->prepare(
         q{
         SELECT s.snp_id, s.snp_pos, s.snp_occured

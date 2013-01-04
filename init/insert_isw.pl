@@ -105,6 +105,7 @@ my $worker = sub {
     for my $align_id (@align_ids) {
         $obj->process_message($align_id);
         $obj->insert_isw($align_id);
+        $obj->isw_snp_fk($align_id);
     }
 
     return;
