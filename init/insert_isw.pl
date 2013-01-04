@@ -14,6 +14,7 @@ use AlignDB::Stopwatch;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
+use AlignDB::Multi;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -35,6 +36,9 @@ my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
+# alignments have an outgroup
+my $outgroup;
+
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
 
@@ -52,6 +56,7 @@ GetOptions(
     'd|db=s'       => \$db,
     'u|username=s' => \$username,
     'p|password=s' => \$password,
+    'o|outgroup'   => \$outgroup,
     'parallel=i'   => \$parallel,
     'batch=i'      => \$batch_number,
 ) or pod2usage(2);
@@ -95,17 +100,28 @@ my $worker = sub {
     my $job       = shift;
     my @align_ids = @$job;
 
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
+    my $obj;
+    if ( !$outgroup ) {
+        $obj = AlignDB->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+    }
+    else {
+        $obj = AlignDB::Multi->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+    }
 
     # for each alignment
     for my $align_id (@align_ids) {
         $obj->process_message($align_id);
         $obj->insert_isw($align_id);
         $obj->isw_snp_fk($align_id);
+        $obj->update_D_values($align_id) if $outgroup;
     }
 
     return;

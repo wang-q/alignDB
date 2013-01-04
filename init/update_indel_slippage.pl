@@ -121,7 +121,7 @@ my $dbh = $obj->dbh;
     for my $align_id (@align_ids) {
         print "Processing align_id $align_id\n";
 
-        my ( $target_seq, $query_seq ) = @{ $obj->get_seqs($align_id) };
+        my ( $target_seq, ) = @{ $obj->get_seqs($align_id) };
 
         $indel_sth->execute($align_id);
         while ( my @row = $indel_sth->fetchrow_array ) {
@@ -130,6 +130,7 @@ my $dbh = $obj->dbh;
             ) = @row;
 
             my $indel_slippage = 0;
+            next unless $indel_seq;
 
             if ( exists $min_reps->{$indel_length} ) {
                 my $reps         = $min_reps->{$indel_length};

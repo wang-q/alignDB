@@ -230,8 +230,8 @@ sub _polarize_snp {
             $snp_occured = 'unknown';
         }
 
-        $update_snp_sth->execute( $ref_base, $mutant_to, $snp_freq, $snp_occured,
-            $snp_id );
+        $update_snp_sth->execute( $ref_base, $mutant_to, $snp_freq,
+            $snp_occured, $snp_id );
     }
 
     return;
@@ -304,188 +304,35 @@ sub add_align {
     return;
 }
 
-sub modify_misc {
-    my $self = shift;
-
-    $self->update_indel;
-    $self->update_D_values;
-
-    return;
-}
-
-sub update_indel {
-    my $self = shift;
-
-    # Get database handle
-    my $dbh = $self->dbh;
-
-    my $align_info_sth = $dbh->prepare(
-        'SELECT a.align_id, a.align_length, s.seq_seq
-        FROM align a, target t, sequence s
-        WHERE a.align_id = s.align_id
-        AND s.seq_id = t.seq_id'
-    );
-    my $indel_info_sth = $dbh->prepare(
-        'SELECT indel_id, indel_start, indel_end,
-                indel_length, indel_seq
-        FROM indel
-        WHERE align_id = ?'
-    );
-    my $update_indel_sth = $dbh->prepare(
-        'UPDATE indel
-        SET left_extand = ?, right_extand = ?
-        WHERE indel_id = ?'
-    );
-    my $update_slippage_sth = $dbh->prepare(
-        'UPDATE indel
-        SET indel_slippage = ?
-        WHERE indel_id = ?'
-    );
-
-    #motif-repeat parameters
-    my $min_reps = {
-        1 => 4,    # mononucl. with >= 4 repeats
-    };
-
-    $align_info_sth->execute;
-    while ( my @row = $align_info_sth->fetchrow_array ) {
-        my ( $align_id, $align_length, $target_seq ) = @row;
-
-        my $align_start = 1;
-        my $align_end   = $align_length;
-
-        my $indel_info;
-        my @indel_ids;
-        $indel_info_sth->execute($align_id);
-        while ( my @row = $indel_info_sth->fetchrow_array ) {
-            my ( $id, $start, $end, $length, $seq ) = @row;
-            $indel_info->{$id}->{start}  = $start;
-            $indel_info->{$id}->{end}    = $end;
-            $indel_info->{$id}->{length} = $length;
-            $indel_info->{$id}->{seq}    = $seq;
-            push @indel_ids, $id;
-        }
-
-        #----------------------------#
-        # left_ and right_extand
-        #----------------------------#
-        for my $indel_id (@indel_ids) {
-            my $former_end;
-            my $latter_start;
-            if ( $indel_info->{ $indel_id - 1 }->{end} ) {
-                $former_end = $indel_info->{ $indel_id - 1 }->{end} + 1;
-            }
-            else {
-                $former_end = $align_start;
-            }
-            if ( $indel_info->{ $indel_id + 1 }->{start} ) {
-                $latter_start = $indel_info->{ $indel_id + 1 }->{start} - 1;
-            }
-            else {
-                $latter_start = $align_end;
-            }
-            my $left_extand = $indel_info->{$indel_id}->{start} - $former_end;
-            if ( $left_extand < 0 ) {
-                my $start = $indel_info->{$indel_id}->{start};
-                my $end   = $indel_info->{ $indel_id - 1 }->{end};
-                confess "$indel_id,$end,$start\n";
-            }
-            my $right_extand = $latter_start - $indel_info->{$indel_id}->{end};
-
-            $indel_info->{$indel_id}{left_extand}  = $left_extand;
-            $indel_info->{$indel_id}{right_extand} = $right_extand;
-            $update_indel_sth->execute( $left_extand, $right_extand,
-                $indel_id );
-        }
-
-        #----------------------------#
-        # indel slippage
-        #----------------------------#
-        for my $indel_id (@indel_ids) {
-            my $indel_start    = $indel_info->{$indel_id}{length};
-            my $indel_end      = $indel_info->{$indel_id}{end};
-            my $indel_length   = $indel_info->{$indel_id}{length};
-            my $indel_seq      = $indel_info->{$indel_id}{seq};
-            my $left_extand    = $indel_info->{$indel_id}{left_extand};
-            my $right_extand   = $indel_info->{$indel_id}{right_extand};
-            my $indel_slippate = 0;
-
-            next unless $indel_seq;
-
-            if ( exists $min_reps->{$indel_length} ) {
-                my $reps         = $min_reps->{$indel_length};
-                my $fland_length = $indel_length * $reps;
-
-                my $left_flank = " ";    # avoid warning from $flank
-                if ( $fland_length <= $left_extand ) {
-                    $left_flank
-                        = substr( $target_seq, $indel_start - $fland_length - 1,
-                        $fland_length );
-                }
-
-                my $right_flank = " ";
-                if ( $fland_length <= $right_extand ) {
-                    $right_flank
-                        = substr( $target_seq, $indel_end, $fland_length );
-                }
-
-                my $flank = $left_flank . $indel_seq . $right_flank;
-                my $regex = $indel_seq . "{$reps,}";
-                $regex = quotemeta $regex;
-
-                if ( $flank =~ /$regex/ ) {
-                    $indel_slippate = 1;
-                }
-            }
-            else {
-
-                # indel 23-28, length 6: substr 17-22
-                # seq start at 1 and string start at 0, so minus 1
-                # substr(..., 16, 6)
-                my $left_flank;
-                if ( $indel_length <= $left_extand ) {
-                    $left_flank
-                        = substr( $target_seq, $indel_start - $indel_length - 1,
-                        $indel_length );
-                }
-
-                # indel 23-28, length 6: substr 29-34
-                # substr(..., 28, 6)
-                my $right_flank;
-                if ( $indel_length <= $right_extand ) {
-                    $right_flank
-                        = substr( $target_seq, $indel_end, $indel_length );
-                }
-
-                if ( $left_flank and $indel_seq eq $left_flank ) {
-                    $indel_slippate = 1;
-                }
-                elsif ( $right_flank and $indel_seq eq $right_flank ) {
-                    $indel_slippate = 1;
-                }
-            }
-            $update_slippage_sth->execute( $indel_slippate, $indel_id );
-        }
-    }
-
-    return;
-}
-
 sub update_D_values {
-    my $self = shift;
+    my $self     = shift;
+    my $align_id = shift;
 
     # Get database handle
     my $dbh = $self->dbh;
 
-    my $isw_id_ref = $dbh->selectcol_arrayref('SELECT isw_id FROM isw');
-    my @isw_ids    = @{$isw_id_ref};
+    my $isw_id_ref = $dbh->selectcol_arrayref(
+        q{
+        SELECT isw_id
+        FROM isw w, indel i
+        where 1 = 1
+        AND w.isw_indel_id = i.indel_id
+        AND i.align_id = ?
+        },
+        {},
+        $align_id
+    );
 
     my $read_sql = $dbh->prepare(
-        'SELECT s.ref_base, s.all_bases, w.isw_length, i.indel_occured
+        q{
+        SELECT s.ref_base, s.all_bases, w.isw_length, i.indel_occured
         FROM snp s, isw w, indel i
-        WHERE s.isw_id = w.isw_id
+        WHERE 1 = 1
+        AND s.isw_id = w.isw_id
         AND w.isw_indel_id = i.indel_id
-        AND w.isw_id = ?'
+        AND i.indel_occured <> 'unknown'
+        AND w.isw_id = ?
+        }
     );
 
     my $update_sql = $dbh->prepare(
@@ -508,8 +355,7 @@ sub update_D_values {
         WHERE isw_id = ?'
     );
 
-ISW: for my $isw_id (@isw_ids) {
-        my $length;
+ISW: for my $isw_id (@{$isw_id_ref}) {
         my $window_length;
         my ( $d_indel,  $d_noindel,  $d_bii,  $d_bnn,  $d_complex )  = (0) x 5;
         my ( $d_indel2, $d_noindel2, $d_bii2, $d_bnn2, $d_complex2 ) = (0) x 5;
@@ -532,8 +378,6 @@ ISW: for my $isw_id (@isw_ids) {
         $read_sql->execute($isw_id);
         while ( my @row = $read_sql->fetchrow_array ) {
             $window_length = $row[2];
-            $length        = $row[1];
-            next ISW if $row[3] eq 'unknown';
             my $ref_base = $row[0];
 
             $ref_seq .= $ref_base;
