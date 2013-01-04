@@ -13,348 +13,293 @@ use AlignDB::Util qw(:all);
 
 extends qw(AlignDB);
 
+sub _insert_ref_sequences {
+    my $self     = shift;
+    my $align_id = shift;
+    my $info_of  = shift;
+    my $ref_name = shift;
+    my $ref_seq  = shift;
+
+    my $dbh = $self->dbh;
+
+    my $align_length = length $ref_seq;
+    my $align_set    = AlignDB::IntSpan->new("1-$align_length");
+
+    my $ref_index = -1;
+    {
+        $info_of->{$ref_name}{align_id} = $align_id;
+        $info_of->{$ref_name}{seq}      = $ref_seq;
+        $info_of->{$ref_name}{gc}       = calc_gc_ratio($ref_seq);
+        my $seq_indel_set = find_indel_set($ref_seq);
+        my $seq_set       = $align_set->diff($seq_indel_set);
+        $info_of->{$ref_name}{runlist} = $seq_set->runlist;
+        $info_of->{$ref_name}{length}  = $seq_set->cardinality;
+
+        # for polarize indels
+        $info_of->{$ref_name}{indel_set} = $seq_indel_set;
+    }
+
+    my $insert = $dbh->prepare(
+        q{
+        INSERT INTO reference (
+            ref_id, seq_id, ref_raw_seq, ref_complex_indel
+        )
+        VALUES (
+            NULL, ?, ?, ?
+        )
+        }
+    );
+    my $seq_id = $self->_insert_seq( $info_of->{$ref_name} );
+    $insert->execute( $seq_id, $ref_seq, '-' );
+    $insert->finish;
+
+    return;
+}
+
+sub _polarize_indel {
+    my $self          = shift;
+    my $align_id      = shift;
+    my $ref_indel_set = shift;
+
+    my $dbh = $self->dbh;
+
+    # Complex indels determined without outgroup are still complex
+    # polarize clear ones
+    my $indel_info_sth = $dbh->prepare(
+        q{
+        SELECT indel_id, indel_start, indel_end, indel_type, indel_occured
+        FROM indel
+        WHERE 1 = 1
+        AND indel_type <> 'C'
+        AND indel_occured <> 'unknown'
+        AND align_id = ?
+        }
+    );
+    my $update_indel_sth = $dbh->prepare(
+        q{
+        UPDATE indel
+        SET indel_type = ?,
+            indel_occured = ?,
+            indel_freq = ?
+        WHERE indel_id = ?
+        }
+    );
+
+    $indel_info_sth->execute($align_id);
+    while ( my @row = $indel_info_sth->fetchrow_array ) {
+        my ( $indel_id, $indel_start, $indel_end, $old_indel_type,
+            $old_indel_occured )
+            = @row;
+
+        my $indel_set = AlignDB::IntSpan->new("$indel_start-$indel_end");
+
+        my ( $indel_type, $indel_occured, $indel_freq );
+
+        if ( $ref_indel_set->intersect($indel_set)->is_empty ) {
+
+            # ref NNNN
+            #     NNNN
+            #     N--N
+            $indel_type = 'D';
+        }
+        elsif ( $ref_indel_set->superset($indel_set) ) {
+            my $island = $ref_indel_set->find_islands($indel_start);
+            if ( $island->equal($indel_set) ) {
+
+                # ref N--N
+                #     NNNN
+                #     N--N
+                $indel_type = 'I';
+            }
+            else {
+                # ref N--N
+                #     NNNN
+                #     N-NN
+                $indel_type = 'C';
+            }
+        }
+        else {
+            # ref N-NN
+            #     NNNN
+            #     N--N
+            $indel_type = 'C';
+        }
+
+        if ( $indel_type eq 'C' ) {
+            $indel_occured = 'unknown';
+            $indel_freq    = -1;
+        }
+        else {
+            #       |    I    |  D  new
+            # ------+---------+--------
+            #       |     -   |     N
+            #  I    | N x N o | N x N x
+            #       | - o - x | - o - o
+            # ------+---------+--------
+            #       |     -   |     N
+            #  D    | - x - x | - x - o
+            #  old  | N o N o | N o N x
+            $indel_occured = $old_indel_occured;
+            if ( $old_indel_type eq $indel_type ) {
+                $indel_occured =~ tr/ox/xo/;
+            }
+            $indel_freq = $indel_occured =~ tr/o/o/;
+        }
+
+        $update_indel_sth->execute( $indel_type, $indel_occured, $indel_freq,
+            $align_id );
+    }
+
+    $update_indel_sth->finish;
+    $indel_info_sth->finish;
+
+    return;
+}
+
+sub _polarize_snp {
+    my $self     = shift;
+    my $align_id = shift;
+    my $ref_seq  = shift;
+
+    my $dbh = $self->dbh;
+
+    my $snp_info_sth = $dbh->prepare(
+        q{
+        SELECT snp_id, snp_pos, all_bases
+        FROM snp
+        WHERE 1 = 1
+        AND align_id = ?
+        }
+    );
+    my $update_snp_sth = $dbh->prepare(
+        q{
+        UPDATE snp
+        SET ref_base = ?,
+            mutant_to = ?,
+            snp_freq = ?,
+            snp_occured = ?
+        WHERE snp_id = ?
+        }
+    );
+
+    $snp_info_sth->execute($align_id);
+    while ( my @row = $snp_info_sth->fetchrow_array ) {
+        my ( $snp_id, $snp_pos, $all_bases ) = @row;
+
+        my $ref_base = substr $ref_seq, $snp_pos - 1, 1;
+
+        my @nts = split '', $all_bases;
+        my @class;
+        for my $nt (@nts) {
+            my $class_bool = 0;
+            for (@class) {
+                if ( $_ eq $nt ) { $class_bool = 1; }
+            }
+            unless ($class_bool) {
+                push @class, $nt;
+            }
+        }
+
+        my ( $mutant_to, $snp_freq, $snp_occured );
+
+        if ( scalar @class < 2 ) {
+            confess "Not a real SNP\n";
+        }
+        elsif ( scalar @class == 2 ) {
+            for my $nt (@nts) {
+                if ( $nt eq $ref_base ) {
+                    $snp_occured .= 'x';
+                }
+                else {
+                    $snp_occured .= 'o';
+                    $snp_freq++;
+                    $mutant_to = "$ref_base->$nt";
+                }
+            }
+        }
+        else {
+            $snp_freq    = -1;
+            $mutant_to   = 'Complex';
+            $snp_occured = 'unknown';
+        }
+
+        # ref_base is not equal to any nts
+        if ( $snp_occured eq ( 'o' x ( length $snp_occured ) ) ) {
+            $snp_freq    = -1;
+            $mutant_to   = 'Complex';
+            $snp_occured = 'unknown';
+        }
+
+        $update_snp_sth->execute( $ref_base, $mutant_to, $snp_freq, $snp_occured,
+            $snp_id );
+    }
+
+    return;
+}
+
 sub add_align {
     my $self     = shift;
     my $info_of  = shift;
     my $names    = shift;
     my $seq_refs = shift;
 
-    # Get database handle
     my $dbh = $self->dbh;
 
-    #my @names     = @{$names};
-    my @ingroup_names = @{$names}[ 1 .. $#{$names} ];
-    my @seqs          = @{$seq_refs};
-    my $seq_count     = scalar @{$names};
-
     # check align length
-    my $align_length = length $seqs[0];
-    for (@seqs) {
+    my $align_length = length $seq_refs->[0];
+    for ( @{$seq_refs} ) {
         if ( ( length $_ ) != $align_length ) {
-            croak "Sequences should have the same length!\n";
+            confess "Sequences should have the same length!\n";
         }
     }
+
+    if ( scalar @{$names} != scalar @{$seq_refs} ) {
+        confess "Names and Sequences should have the same number!\n";
+    }
+    my $seq_count = scalar @{$seq_refs};
+    if ( $seq_count < 3 ) {
+        confess "Two few sequences [$seq_count]\n";
+    }
+
+    # appoint reference/outgroup
+    my $ref_name = $names->[0];
+    my $ref_seq  = $seq_refs->[0];
+
+    # exclude outgroup
+    my $ingroup_names = [ @{$names}[ 1 .. $seq_count - 1 ] ];
+    my $ingroup_seqs  = [ @{$seq_refs}[ 1 .. $seq_count - 1 ] ];
 
     #----------------------------#
     # INSERT INTO align
     #----------------------------#
-    my $align_id = $self->_insert_align( @seqs[ 1 .. $#seqs ] );
+    my $align_id = $self->_insert_align( @{$ingroup_seqs} );
     printf "Prosess align %s in %s %s - %s\n", $align_id,
         $info_of->{ $names->[1] }{chr_name},
         $info_of->{ $names->[1] }{chr_start},
         $info_of->{ $names->[1] }{chr_end};
 
-    #----------------------------------------------------------#
-    # INSERT INTO sequence, target, queries, ref
-    #----------------------------------------------------------#
-    {
-        my $align_set = AlignDB::IntSpan->new("1-$align_length");
-        for my $i ( 0 .. $seq_count - 1 ) {
-            my $name = $names->[$i];
-            $info_of->{$name}{align_id} = $align_id;
-            $info_of->{$name}{seq}      = $seqs[$i];
-            $info_of->{$name}{gc}       = calc_gc_ratio( $seqs[$i] );
-            my $seq_set = $align_set->diff( find_indel_set( $seqs[$i] ) );
-            $info_of->{$name}{runlist} = $seq_set->runlist;
-            $info_of->{$name}{length}  = $seq_set->cardinality;
-        }
-
-        {    # ref
-            my $insert = $dbh->prepare(
-                q{
-                INSERT INTO reference (
-                    ref_id, seq_id, ref_raw_seq, ref_complex_indel
-                )
-                VALUES (
-                    NULL, ?, ?, ?
-                )
-                }
-            );
-            my $seq_id = $self->_insert_seq( $info_of->{ $names->[0] } );
-            $insert->execute( $seq_id, $info_of->{ $names->[0] }{seq}, '-' );
-            $insert->finish;
-        }
-
-        {    # target
-            my $insert = $dbh->prepare(
-                q{
-                INSERT INTO target ( target_id, seq_id )
-                VALUES ( NULL, ? )
-                }
-            );
-            my $seq_id = $self->_insert_seq( $info_of->{ $names->[1] } );
-            $insert->execute($seq_id);
-            $insert->finish;
-        }
-
-        {    # and queries
-            my $insert = $dbh->prepare(
-                q{
-                INSERT INTO query (
-                    query_id, seq_id, query_strand, query_position
-                )
-                VALUES ( NULL, ?, ?, ? )
-                }
-            );
-            for my $i ( 2 .. $seq_count - 1 ) {
-                my $seq_id = $self->_insert_seq( $info_of->{ $names->[$i] } );
-                $insert->execute( $seq_id,
-                    $info_of->{ $names->[$i] }{chr_strand},
-                    $i - 1 );
-            }
-            $insert->finish;
-        }
-    }
+    #----------------------------#
+    # UPDATE align, INSERT INTO sequence, target, queries
+    #----------------------------#
+    $self->_insert_set_and_sequence( $align_id, $info_of, $ingroup_names,
+        $ingroup_seqs );
 
     #----------------------------#
-    # UPDATE align with runlist
+    # INSERT INTO ref
     #----------------------------#
-    my $indel_set      = AlignDB::IntSpan->new;
-    my $align_set      = AlignDB::IntSpan->new("1-$align_length");
-    my $comparable_set = AlignDB::IntSpan->new;
-    {
-        for my $name (@ingroup_names) {
-            my $seq_runlist = $info_of->{$name}{runlist};
-            $indel_set->merge( $align_set->diff($seq_runlist) );
-        }
-        $comparable_set = $align_set->diff($indel_set);
-
-        my $align_update = $dbh->prepare(
-            q{
-            UPDATE align
-            SET align_indels = ?,
-                align_comparable_runlist = ?,
-                align_indel_runlist = ?
-            WHERE align_id = ?
-            }
-        );
-        $align_update->execute( scalar $indel_set->spans,
-            $comparable_set->runlist, $indel_set->runlist, $align_id );
-    }
+    $self->_insert_ref_sequences( $align_id, $info_of, $ref_name, $ref_seq );
 
     #----------------------------#
     # INSERT INTO indel
     #----------------------------#
-    {
-        my $indel_insert_sql = $dbh->prepare(
-            q{
-            INSERT INTO indel (
-                indel_id, align_id, prev_indel_id,
-                indel_start, indel_end, indel_length,
-                indel_seq,  indel_gc, indel_freq,
-                indel_occured, indel_type
-            )
-            VALUES (
-                NULL, ?, ?,
-                ?, ?, ?,
-                ?, ?, ?,
-                ?, ?
-            )
-            }
-        );
+    $self->_insert_indel($align_id);
+    $self->_polarize_indel( $align_id, $info_of->{$ref_name}{indel_set} );
 
-        my $prev_indel_id = 0;
-        for my $cur_indel ( $indel_set->spans ) {
-            my ( $indel_start, $indel_end ) = @{$cur_indel};
-            my $indel_length = $indel_end - $indel_start + 1;
-
-            my @indel_seqs;
-            for my $cur_line (@seqs) {
-                push @indel_seqs,
-                    ( substr $cur_line, $indel_start - 1, $indel_length );
-            }
-
-            my $indel_seq = '';
-            my $indel_type;
-            my @indel_class;
-            for my $seq (@indel_seqs) {
-                unless ( $seq =~ /-/ || $seq =~ /N/i ) {
-                    if ( $indel_seq =~ /-/ ) { die "aaaa$seq\n"; }
-                    $indel_seq = $seq;
-                }
-                my $class_bool = 0;
-                for (@indel_class) {
-                    if ( $_ eq $seq ) { $class_bool = 1; }
-                }
-                unless ($class_bool) {
-                    push @indel_class, $seq;
-                }
-            }
-
-            if ( scalar @indel_class < 2 ) {
-                die "no indel!\n";
-            }
-            elsif ( scalar @indel_class > 2 ) {
-                $indel_type = 'C';
-            }
-            my $ref_seq = shift @indel_seqs;
-            unless ($indel_type) {
-                if ( $ref_seq eq ( '-' x ( length $ref_seq ) ) ) {
-                    $indel_type = 'I';
-                }
-                elsif ( !( $ref_seq =~ /-/ ) ) {
-                    $indel_type = 'D';
-                }
-                else {
-                    croak "indel error $cur_indel\n";
-                }
-            }
-            my $indel_frequency = 0;
-            my $indel_occured;
-            if ( $indel_type eq 'C' ) {
-                $indel_frequency = -1;
-                $indel_occured   = 'unknown';
-            }
-            else {
-                for (@indel_seqs) {
-                    if ( $ref_seq ne $_ ) {
-                        $indel_frequency++;
-                        $indel_occured .= 'o';
-                    }
-                    else {
-                        $indel_occured .= 'x';
-                    }
-                }
-            }
-            if ( $indel_occured eq ( 'o' x ( length $indel_occured ) ) ) {
-                my $drop_set = AlignDB::IntSpan->new("$indel_start-$indel_end");
-                $indel_set = $indel_set->diff($drop_set);
-                next;
-            }
-            my $indel_gc = calc_gc_ratio($indel_seq);
-
-            $indel_insert_sql->execute(
-                $align_id,  $prev_indel_id,   $indel_start,
-                $indel_end, $indel_length,    $indel_seq,
-                $indel_gc,  $indel_frequency, $indel_occured,
-                $indel_type,
-            );
-            ($prev_indel_id) = $self->last_insert_id;
-        }
-    }
-
-    #intevals
-    if ( scalar $indel_set->spans > 1 ) {
-        my $fetch_indel_id_sql = $dbh->prepare(
-            q{
-            SELECT indel_id, prev_indel_id
-            FROM indel
-            WHERE align_id = ?
-              AND indel_start = ?
-            }
-        );
-        my $isw_insert_sql = $dbh->prepare(
-            q{
-            INSERT INTO isw (
-                isw_id, indel_id, prev_indel_id, isw_indel_id,
-                isw_start, isw_end, isw_length, isw_type,
-                isw_distance, isw_density, isw_differences,
-                isw_pi, isw_target_gc, isw_average_gc
-            )
-            VALUES (
-                NULL, ?, ?, ?,
-                ?, ?, ?, ?,
-                ?, ?, ?,
-                ?, ?, ?
-            )
-            }
-        );
-        my $snp_insert_sql = $dbh->prepare(
-            q{
-            INSERT INTO snp (
-                snp_id, isw_id, align_id, snp_pos,
-                target_base, ref_base, all_bases
-            )
-            VALUES (
-                NULL, ?, ?, ?,
-                ?, ?, ?
-            )
-            }
-        );
-
-        my $window_maker = $self->window_maker;
-
-        my @interval_spans = $comparable_set->spans;
-        shift @interval_spans;
-        pop @interval_spans;
-
-        for my $cur_inteval (@interval_spans) {
-            my ( $interval_start, $interval_end ) = @{$cur_inteval};
-            my $indel_start = $interval_end + 1;
-
-            $fetch_indel_id_sql->execute( $align_id, $indel_start );
-            my ( $indel_id, $prev_indel_id, )
-                = $fetch_indel_id_sql->fetchrow_array;
-
-            my @isws
-                = $window_maker->interval_window( $align_set, $interval_start,
-                $interval_end );
-
-            for my $isw (@isws) {
-                my $isw_set    = $isw->{set};
-                my $isw_start  = $isw_set->min;
-                my $isw_end    = $isw_set->max;
-                my $isw_length = $isw_end - $isw_start + 1;
-
-                my $isw_distance = $isw->{distance};
-                my $isw_density  = $isw->{density};
-                my $isw_type     = $isw->{type};
-                my @isw_seq;
-
-                for my $cur_line (@seqs) {
-                    push @isw_seq,
-                        ( substr $cur_line, $isw_start - 1, $isw_length );
-                }
-                my $isw_ref_seq    = shift @isw_seq;
-                my $isw_stat       = multi_seq_stat(@isw_seq);
-                my $isw_difference = $isw_stat->[3];
-                my $isw_pi         = $isw_stat->[7];
-                my $isw_target_gc  = $isw_stat->[8];
-                my $isw_average_gc = $isw_stat->[9];
-
-                my $isw_indel_id;
-                if ( $isw_type eq 'L' ) {
-                    $isw_indel_id = $prev_indel_id;
-                }
-                elsif ( $isw_type eq 'R' ) {
-                    $isw_indel_id = $indel_id;
-                }
-                elsif ( $isw_type eq 'S' ) {
-                    $isw_indel_id = $prev_indel_id;
-                }
-
-                $isw_insert_sql->execute(
-                    $indel_id,       $prev_indel_id, $isw_indel_id,
-                    $isw_start,      $isw_end,       $isw_length,
-                    $isw_type,       $isw_distance,  $isw_density,
-                    $isw_difference, $isw_pi,        $isw_target_gc,
-                    $isw_average_gc
-                );
-                my $isw_id = $self->last_insert_id;
-
-                for my $snp_pos ( 0 .. $isw_length - 1 ) {
-                    my @bases;
-                    for my $cur_isw_seq (@isw_seq) {
-                        my $cur_nuc = substr $cur_isw_seq, $snp_pos, 1;
-                        push @bases, $cur_nuc;
-                    }
-                    next if any { $_ !~ /[agct]/i } @bases;
-                    my $class = scalar uniq(@bases);
-                    if ( $class > 1 ) {
-                        my $snp_position    = $snp_pos + $isw_start;
-                        my $snp_ref_base    = substr $isw_ref_seq, $snp_pos, 1;
-                        my $snp_target_base = substr $isw_seq[0], $snp_pos, 1;
-                        my $snp_other_base  = join '', @bases;
-
-                        $snp_insert_sql->execute(
-                            $isw_id,          $align_id,     $snp_position,
-                            $snp_target_base, $snp_ref_base, $snp_other_base
-                        );
-                    }
-                }
-            }
-        }
-    }
+    #----------------------------#
+    # INSERT INTO snp
+    #----------------------------#
+    $self->_insert_snp($align_id);
+    $self->_polarize_snp( $align_id, $ref_seq );
 
     return;
 }
@@ -362,76 +307,8 @@ sub add_align {
 sub modify_misc {
     my $self = shift;
 
-    $self->update_snp;
     $self->update_indel;
     $self->update_D_values;
-
-    return;
-}
-
-sub update_snp {
-    my $self = shift;
-
-    # Get database handle
-    my $dbh = $self->dbh;
-
-    my $snp_info_sth = $dbh->prepare(
-        'SELECT snp_id, ref_base, all_bases
-        FROM snp'
-    );
-    my $update_snp_sth = $dbh->prepare(
-        'UPDATE snp
-        SET mutant_to = ?, snp_freq = ?, snp_occured = ?
-        WHERE snp_id = ?'
-    );
-
-    $snp_info_sth->execute;
-    while ( my @row = $snp_info_sth->fetchrow_array ) {
-        my ( $snp_id, $ref_base, $all_bases ) = @row;
-
-        my @all_nucs = split '', $all_bases;
-        my @class;
-        for my $nuc (@all_nucs) {
-            my $class_null = 0;
-            for (@class) {
-                if ( $_ eq $nuc ) { $class_null = 1; }
-            }
-            unless ($class_null) {
-                push @class, $nuc;
-            }
-        }
-
-        my ( $mutant_to, $snp_freq, $snp_occured );
-
-        if ( scalar @class < 2 ) {
-            croak "Not a real SNP\n";
-        }
-        elsif ( scalar @class == 2 ) {
-            for my $nuc (@all_nucs) {
-                if ( $nuc eq $ref_base ) {
-                    $snp_occured .= 'x';
-                }
-                else {
-                    $snp_occured .= 'o';
-                    $snp_freq++;
-                    $mutant_to = "$ref_base->$nuc";
-                }
-            }
-        }
-        else {
-            $snp_freq    = -1;
-            $mutant_to   = 'C';
-            $snp_occured = 'unknown';
-        }
-        if ( $snp_occured eq ( 'o' x ( length $snp_occured ) ) ) {
-            $snp_freq    = -1;
-            $mutant_to   = 'C';
-            $snp_occured = 'unknown';
-        }
-
-        $update_snp_sth->execute( $mutant_to, $snp_freq, $snp_occured,
-            $snp_id );
-    }
 
     return;
 }
@@ -511,7 +388,7 @@ sub update_indel {
             if ( $left_extand < 0 ) {
                 my $start = $indel_info->{$indel_id}->{start};
                 my $end   = $indel_info->{ $indel_id - 1 }->{end};
-                croak "$indel_id,$end,$start\n";
+                confess "$indel_id,$end,$start\n";
             }
             my $right_extand = $latter_start - $indel_info->{$indel_id}->{end};
 

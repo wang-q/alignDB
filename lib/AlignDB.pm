@@ -99,7 +99,7 @@ sub _insert_seq {
     my $self     = shift;
     my $seq_info = shift;
 
-    croak "Pass a seq to this method!\n" if !defined $seq_info->{seq};
+    confess "Pass a seq to this method!\n" if !defined $seq_info->{seq};
 
     for my $key (qw{chr_id chr_start chr_end chr_strand length gc runlist}) {
         if ( !defined $seq_info->{$key} ) {
@@ -259,7 +259,7 @@ sub _insert_indel {
         my $indel_type;
         my @indel_class;
         for my $seq (@indel_seqs) {
-            if ( $seq !~ /-/ ) {
+            if ( $seq =~ /[agct]/i ) {
                 $indel_seq = $seq;
             }
             my $class_bool = 0;
@@ -270,17 +270,22 @@ sub _insert_indel {
                 push @indel_class, $seq;
             }
         }
-        croak "Can't determine indels\n" unless $indel_seq;
+        confess "Can't determine indels \n" unless $indel_seq;
 
         if ( scalar @indel_class < 2 ) {
-            croak "no indel!\n";
+            confess "no indel!\n";
         }
         elsif ( scalar @indel_class > 2 ) {
             $indel_type = 'C';
         }
+        elsif ( $indel_seq =~ /-/) {
+            $indel_type = 'C';
+        }
         else {
-            #   'D': means deletion relative to first seq
-            #   'I': means insertion relative to first seq
+            #   'D': means deletion relative to target/first seq
+            #        target is ----
+            #   'I': means insertion relative to target/first seq
+            #        target is NNNN
             if ( $indel_seqs[0] eq $indel_seq ) {
                 $indel_type = 'I';
             }
@@ -297,7 +302,9 @@ sub _insert_indel {
         }
         else {
             for (@indel_seqs) {
-                if ( $indel_seqs[0] ne $_ ) {
+                # same as target 'x'
+                # not 'o'
+                if ( $indel_seqs[0] eq $_ ) {
                     $indel_freq++;
                     $indel_occured .= 'o';
                 }
@@ -406,7 +413,7 @@ sub _insert_snp {
         my $snp_occured;
         my @class = uniq(@bases);
         if ( scalar @class < 2 ) {
-            croak "no snp!\n";
+            confess "no snp!\n";
         }
         elsif ( scalar @class > 2 ) {
             $snp_freq    = -1;
@@ -866,15 +873,15 @@ sub add_align {
     my $names    = shift;
     my $seq_refs = shift;
 
+    my $dbh = $self->dbh;
+
     # check align length
     my $align_length = length $seq_refs->[0];
     for ( @{$seq_refs} ) {
         if ( ( length $_ ) != $align_length ) {
-            croak "Sequences should have the same length!\n";
+            confess "Sequences should have the same length!\n";
         }
     }
-
-    my $dbh = $self->dbh;
 
     #----------------------------#
     # INSERT INTO align
@@ -899,11 +906,6 @@ sub add_align {
     # INSERT INTO snp
     #----------------------------#
     $self->_insert_snp($align_id);
-
-    #----------------------------#
-    # INSERT INTO isw
-    #----------------------------#
-    #$self->insert_isw($align_id);
 
     return $align_id;
 }
