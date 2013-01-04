@@ -69,3 +69,39 @@ Schedule Estimate, Years (Months)                         = 1.42 (16.99)
 Estimated Average Number of Developers (Effort/Schedule)  = 9.12
 Total Estimated Cost to Develop                           = $ 1,744,793
  (average salary = $56,286/year, overhead = 2.40).
+
+#----------------------------------------------------------#
+# Sat Jan  5 04:14:18 2013
+#----------------------------------------------------------#
+
+SLOC	Directory	SLOC-by-Language (Sorted)
+13174   stat            perl=13174
+6052    pop             perl=6052
+4371    lib             perl=4371
+4016    extra           perl=4016
+3826    util            perl=3815,sh=11
+2089    bac             perl=2047,sh=42
+2051    init            perl=2051
+1754    fig             perl=1754
+1369    gene            perl=1369
+1290    ofg             perl=1290
+1053    slice           perl=1053
+958     gui             perl=958
+913     multi           perl=913
+197     for_circos      perl=197
+165     top_dir         perl=165
+59      doc             sh=59
+14      schema          perl=14
+
+Totals grouped by language (dominant language first):
+perl:         43239 (99.74%)
+sh:             112 (0.26%)
+
+Total Physical Source Lines of Code (SLOC)                = 43,351
+Development Effort Estimate, Person-Years (Person-Months) = 10.47 (125.62)
+ (Basic COCOMO model, Person-Months = 2.4 * (KSLOC**1.05))
+Schedule Estimate, Years (Months)                         = 1.31 (15.69)
+ (Basic COCOMO model, Months = 2.5 * (person-months**0.38))
+Estimated Average Number of Developers (Effort/Schedule)  = 8.01
+Total Estimated Cost to Develop                           = $ 1,414,134
+ (average salary = $56,286/year, overhead = 2.40).
