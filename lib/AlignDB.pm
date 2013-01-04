@@ -908,7 +908,8 @@ sub add_align {
     return $align_id;
 }
 
-# read in alignments and chromosome position info from .axt file then pass them to add_align method
+# read in alignments and chromosome position info from .axt file then pass them
+#   to add_align method
 sub parse_axt_file {
     my $self   = shift;
     my $infile = shift;
@@ -985,6 +986,108 @@ sub parse_axt_file {
             [ $target_name, $query_name ],
             [ $first_line,  $second_line ],
         );
+    }
+
+    if ( !$gzip ) {
+        close $in_fh;
+    }
+    else {
+        $in_fh->close;
+    }
+
+    return;
+}
+
+# blocked fasta format
+sub parse_block_fasta_file {
+    my $self   = shift;
+    my $infile = shift;
+    my $opt    = shift;
+
+    my $id_of     = $opt->{id_of};
+    my $threshold = $opt->{threshold};
+    my $gzip      = $opt->{gzip};
+
+    my $in_fh;
+    if ( !$gzip ) {
+        open $in_fh, '<', $infile;
+    }
+    else {
+        $in_fh = IO::Zlib->new( $infile, "rb" );
+    }
+    my $content = '';
+    while ( my $line = <$in_fh> ) {
+        if ( $line =~ /^\s+$/ and $content =~ /\S/ ) {
+            my @lines = grep {/\S/} split /\n/, $content;
+            $content = '';
+            die "headers not equal to seqs\n" if @lines % 2;
+            die "Two few lines in block\n" if @lines < 4;
+
+            my ( @headers, @seqs );
+            while (@lines) {
+                my $header = shift @lines;
+                $header =~ s/^\>//;
+                chomp $header;
+                my $seq = shift @lines;
+                chomp $seq;
+                $seq = uc $seq;
+                push @headers, $header;
+                push @seqs,    $seq;
+            }
+
+            next if length $seqs[0] < $threshold;
+
+            # S288C.chrI(+):27070-29557|species=S288C
+            my $head_qr = qr{
+                ([\w_]+)            # name
+                [\.]                # spacer
+                ((?:chr)?[\w-]+)    # chr name
+                \((.+)\)            # strand
+                [\:]                # spacer
+                (\d+)               # chr start
+                [\_\-]              # spacer
+                (\d+)               # chr end
+            }xi;
+
+            #S288C:
+            #  chr_end: 667886
+            #  chr_id: 265
+            #  chr_name: chrIV
+            #  chr_start: 652404
+            #  chr_strand: +
+            #  name: S288C
+            #  taxon_id: 4932
+            my $info_of = {};
+            my @names;
+            for my $header (@headers) {
+                $header =~ $head_qr;
+                my $name = $1;
+                push @names, $name;
+                $info_of->{$name} = {
+                    chr_name   => $2,
+                    chr_strand => $3,
+                    chr_start  => $4,
+                    chr_end    => $5,
+                };
+                if ( $info_of->{$name}{chr_strand} eq '1' ) {
+                    $info_of->{$name}{chr_strand} = '+';
+                }
+                elsif ( $info_of->{$name}{chr_strand} eq '-1' ) {
+                    $info_of->{$name}{chr_strand} = '-';
+                }
+
+                $info_of->{$name}{name}     = $name;
+                $info_of->{$name}{taxon_id} = $id_of->{$name};
+                $info_of->{$name}{chr_id}
+                    = $self->get_chr_id_hash( $info_of->{$name}{taxon_id} )
+                    ->{ $info_of->{$name}{chr_name} };
+            }
+
+            $self->add_align( $info_of, \@names, \@seqs );
+        }
+        else {
+            $content .= $line;
+        }
     }
 
     if ( !$gzip ) {
