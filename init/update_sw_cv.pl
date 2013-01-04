@@ -15,7 +15,6 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 use AlignDB::GC;
-use AlignDB::Multi;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -47,8 +46,6 @@ my $parallel = $Config->{generate}{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{generate}{batch};
 
-my $multi;
-
 my $man  = 0;
 my $help = 0;
 
@@ -62,7 +59,6 @@ GetOptions(
     'password=s' => \$password,
     'parallel=i' => \$parallel,
     'batch=i'    => \$batch_number,
-    'multi'      => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -109,22 +105,11 @@ my $worker = sub {
     my $job       = shift;
     my @align_ids = @$job;
 
-    my $obj;
-    if ( !$multi ) {
-        $obj = AlignDB->new(
-            mysql  => "$db:$server",
-            user   => $username,
-            passwd => $password,
-        );
-    }
-    else {
-        $obj = AlignDB::Multi->new(
-            mysql  => "$db:$server",
-            user   => $username,
-            passwd => $password,
-        );
-    }
-    
+    my $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
     AlignDB::GC->meta->apply($obj);
     my %opt = (
         stat_window_size => $stat_window_size,
@@ -235,8 +220,8 @@ my $worker = sub {
         while ( my @row = $exonsw_sth->fetchrow_array ) {
             my ( $exonsw_id, $window_runlist ) = @row;
             my $window_set = AlignDB::IntSpan->new($window_runlist);
-            my $resize_set = center_resize( $window_set, $target_set,
-                $stat_segment_size );
+            my $resize_set
+                = center_resize( $window_set, $target_set, $stat_segment_size );
 
             my $seqs_ref = $obj->get_seqs($align_id);
             my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
@@ -248,8 +233,8 @@ my $worker = sub {
         while ( my @row = $codingsw_sth->fetchrow_array ) {
             my ( $codingsw_id, $window_runlist ) = @row;
             my $window_set = AlignDB::IntSpan->new($window_runlist);
-            my $resize_set = center_resize( $window_set, $target_set,
-                $stat_segment_size );
+            my $resize_set
+                = center_resize( $window_set, $target_set, $stat_segment_size );
 
             my $seqs_ref = $obj->get_seqs($align_id);
             my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
@@ -261,8 +246,8 @@ my $worker = sub {
         while ( my @row = $ofgsw_sth->fetchrow_array ) {
             my ( $ofgsw_id, $window_runlist ) = @row;
             my $window_set = AlignDB::IntSpan->new($window_runlist);
-            my $resize_set = center_resize( $window_set, $target_set,
-                $stat_segment_size );
+            my $resize_set
+                = center_resize( $window_set, $target_set, $stat_segment_size );
 
             next unless $resize_set;
 
@@ -276,8 +261,8 @@ my $worker = sub {
         while ( my @row = $isw_sth->fetchrow_array ) {
             my ( $isw_id, $start, $end ) = @row;
             my $window_set = AlignDB::IntSpan->new("$start-$end");
-            my $resize_set = center_resize( $window_set, $target_set,
-                $stat_segment_size );
+            my $resize_set
+                = center_resize( $window_set, $target_set, $stat_segment_size );
 
             next unless $resize_set;
 
@@ -291,8 +276,8 @@ my $worker = sub {
         while ( my @row = $gsw_sth->fetchrow_array ) {
             my ( $gsw_id, $window_runlist ) = @row;
             my $window_set = AlignDB::IntSpan->new($window_runlist);
-            my $resize_set = center_resize( $window_set, $target_set,
-                $stat_segment_size );
+            my $resize_set
+                = center_resize( $window_set, $target_set, $stat_segment_size );
 
             next unless $resize_set;
 
@@ -370,7 +355,6 @@ __END__
         --db                database name
         --username          username
         --password          password
-        --multi             work for AlignDB::Multi
 
 =head1 OPTIONS
 

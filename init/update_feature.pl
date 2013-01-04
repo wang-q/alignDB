@@ -14,7 +14,6 @@ use AlignDB::Stopwatch;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
-use AlignDB::Multi;
 use AlignDB::Ensembl;
 
 #----------------------------------------------------------#
@@ -44,8 +43,6 @@ my $parallel = $Config->{generate}{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{generate}{batch};
 
-my $multi;
-
 my $man  = 0;
 my $help = 0;
 
@@ -60,7 +57,6 @@ GetOptions(
     'ensembl=s'    => \$ensembl_db,
     'parallel=i'   => \$parallel,
     'batch=i'      => \$batch_number,
-    'multi'        => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -100,21 +96,11 @@ my $worker = sub {
     # Init objects
     #----------------------------#
 
-    my $obj;
-    if ( !$multi ) {
-        $obj = AlignDB->new(
-            mysql  => "$db:$server",
-            user   => $username,
-            passwd => $password,
-        );
-    }
-    else {
-        $obj = AlignDB::Multi->new(
-            mysql  => "$db:$server",
-            user   => $username,
-            passwd => $password,
-        );
-    }
+    my $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
 
     # Database handler
     my $dbh = $obj->dbh;

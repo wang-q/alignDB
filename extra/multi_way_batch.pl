@@ -33,6 +33,9 @@ my $password   = $Config->{database}{password};
 my $db_name    = $Config->{database}{db};
 my $ensembl_db = $Config->{database}{ensembl};
 
+# alignments have an outgroup
+my $outgroup;
+
 my $gff_file = '';
 
 # fa
@@ -66,6 +69,7 @@ GetOptions(
     'd|db=s'                 => \$db_name,
     'u|username=s'           => \$username,
     'p|password=s'           => \$password,
+    'o|outgroup'             => \$outgroup,
     'f|fasta_dir=s'          => \$dir_fa,
     'e|ensembl=s'            => \$ensembl_db,
     'gff_file=s'             => \$gff_file,
@@ -117,7 +121,13 @@ else {
 # dispatch table
 #----------------------------------------------------------#
 my $dispatch = {
-    1 => "perl $FindBin::Bin/../multi/fasta_malignDB.pl"
+    1 => "perl $FindBin::Bin/../init/init_alignDB.pl"
+        . " -s=$server"
+        . " --port=$port"
+        . " -u=$username"
+        . " --password=$password"
+        . " -d=$db_name",
+    2 => "perl $FindBin::Bin/../init/gen_alignDB_fas.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
@@ -128,8 +138,8 @@ my $dispatch = {
         . " --parallel=$parallel"
         . " --batch=$batch_number"
         . " --id $file_id_of"
-        . ( $block ? " --block" : "" ),
-    2 => undef,
+        . ( $outgroup ? " --outgroup" : "" )
+        . ( $block    ? " --block"    : "" ),
     3 => undef,
     5 => "perl $FindBin::Bin/../init/insert_isw.pl"
         . " -s=$server"
@@ -138,7 +148,8 @@ my $dispatch = {
         . " --password=$password"
         . " -d=$db_name"
         . " --parallel=$parallel"
-        . " --batch=$batch_number",
+        . " --batch=$batch_number"
+        . ( $outgroup ? " --outgroup" : "" ),
     10 => "perl $FindBin::Bin/../init/insert_gc.pl"
         . " -s=$server"
         . " --port=$port"
@@ -146,8 +157,7 @@ my $dispatch = {
         . " --password=$password"
         . " -d=$db_name"
         . " --parallel=$parallel"
-        . " --batch=$batch_number"
-        . " --multi",
+        . " --batch=$batch_number",
     20 => "perl $FindBin::Bin/../gene/insert_gene.pl"
         . " -s=$server"
         . " --port=$port"
@@ -155,8 +165,7 @@ my $dispatch = {
         . " --password=$password"
         . " -d=$db_name"
         . " -e=$ensembl_db"
-        . " --parallel=$parallel"
-        . " --multi",
+        . " --parallel=$parallel",
     21 => "perl $FindBin::Bin/../init/update_sw_cv.pl"
         . " -s=$server"
         . " --port=$port"
@@ -164,8 +173,7 @@ my $dispatch = {
         . " --password=$password"
         . " -d=$db_name"
         . " --parallel=$parallel"
-        . " --batch=$batch_number"
-        . " --multi",
+        . " --batch=$batch_number",
     30 => "perl $FindBin::Bin/../init/update_feature.pl"
         . " -s=$server"
         . " --port=$port"
@@ -174,8 +182,7 @@ my $dispatch = {
         . " -d=$db_name"
         . " -e=$ensembl_db"
         . " --parallel=$parallel"
-        . " --batch=$batch_number"
-        . " --multi",
+        . " --batch=$batch_number",
     '30gff' => "perl $FindBin::Bin/../init/update_feature_gff.pl"
         . " -s=$server"
         . " --port=$port"
@@ -184,17 +191,21 @@ my $dispatch = {
         . " -d=$db_name"
         . " --parallel=$parallel"
         . " --batch=$batch_number"
-        . " --gff_file=$gff_file"
-        . " --multi",
-    31 => undef,
+        . " --gff_file=$gff_file",
+    31 => "perl $FindBin::Bin/../init/update_indel_slippage.pl"
+        . " -s=$server"
+        . " --port=$port"
+        . " -u=$username"
+        . " --password=$password"
+        . " -d=$db_name"
+        . ( $outgroup ? " --outgroup" : "" ),
     32 => undef,
     33 => "perl $FindBin::Bin/../gene/update_snp_dnds.pl"
         . " -s=$server"
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
-        . " -d=$db_name"
-        . " --multi",
+        . " -d=$db_name",
     40 => "perl $FindBin::Bin/../stat/multi_stat_factory.pl"
         . " -s=$server"
         . " --port=$port"

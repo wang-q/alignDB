@@ -19,7 +19,6 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 use AlignDB::Position;
-use AlignDB::Multi;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -53,8 +52,6 @@ my $parallel = $Config->{generate}{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{generate}{batch};
 
-my $multi;
-
 my $man  = 0;
 my $help = 0;
 
@@ -72,7 +69,6 @@ GetOptions(
     'insert_codingsw=s' => \$insert_codingsw,
     'parallel=i'        => \$parallel,
     'batch=i'           => \$batch_number,
-    'multi'             => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -121,21 +117,11 @@ my $worker = sub {
     my $job       = shift;
     my @align_ids = @$job;
 
-    my $obj;
-    if ( !$multi ) {
-        $obj = AlignDB->new(
-            mysql  => "$db:$server",
-            user   => $username,
-            passwd => $password,
-        );
-    }
-    else {
-        $obj = AlignDB::Multi->new(
-            mysql  => "$db:$server",
-            user   => $username,
-            passwd => $password,
-        );
-    }
+    my $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
     my $dbh          = $obj->dbh;
     my $pos_obj      = AlignDB::Position->new( dbh => $dbh );
     my $window_maker = $obj->window_maker;
@@ -248,9 +234,8 @@ my $worker = sub {
             }
 
             # gene position set
-            my $gene_start
-                = $pos_obj->at_align( $align_id, $gene_info{start} );
-            my $gene_end = $pos_obj->at_align( $align_id, $gene_info{end} );
+            my $gene_start = $pos_obj->at_align( $align_id, $gene_info{start} );
+            my $gene_end   = $pos_obj->at_align( $align_id, $gene_info{end} );
             if ( $gene_start >= $gene_end ) {
                 print "Gene $gene_info{stable_id} wrong, start >= end\n";
                 next;
@@ -333,8 +318,7 @@ my $worker = sub {
                 # exon position set
                 my $exon_start
                     = $pos_obj->at_align( $align_id, $exon_info{start} );
-                my $exon_end
-                    = $pos_obj->at_align( $align_id, $exon_info{end} );
+                my $exon_end = $pos_obj->at_align( $align_id, $exon_info{end} );
                 if ( $exon_start >= $exon_end ) {
                     print "Exon $exon_info{stable_id} wrong, start >= end\n";
                     next;
@@ -364,8 +348,7 @@ my $worker = sub {
                             "Exon $exon_info{stable_id} coding_region wrong, start >= end\n";
                         next;
                     }
-                    $coding_set->add(
-                        "$coding_region_start-$coding_region_end");
+                    $coding_set->add("$coding_region_start-$coding_region_end");
                     $coding_set = $coding_set->intersect($target_set);
                 }
 
@@ -506,26 +489,24 @@ my $worker = sub {
 
                 for my $exonsw_type (qw/l r/) {
 
-           # $exonsw_start and $exonsw_end are both index of $working_exon_set
+             # $exonsw_start and $exonsw_end are both index of $working_exon_set
                     my ( $exonsw_start, $exonsw_end );
                     my $working_exon_set;
                     if ( $exonsw_type eq 'l' ) {
                         $working_exon_set
                             = AlignDB::IntSpan->new("$prev_exon_runlist");
-                        $exonsw_end = $working_exon_set->cardinality;
-                        $exonsw_start
-                            = $exonsw_end - $exonsw_size_window0 + 1;
+                        $exonsw_end   = $working_exon_set->cardinality;
+                        $exonsw_start = $exonsw_end - $exonsw_size_window0 + 1;
                     }
                     elsif ( $exonsw_type eq 'r' ) {
                         $working_exon_set
                             = AlignDB::IntSpan->new("$exon_runlist");
                         $exonsw_start = 1;
-                        $exonsw_end
-                            = $exonsw_start + $exonsw_size_window0 - 1;
+                        $exonsw_end = $exonsw_start + $exonsw_size_window0 - 1;
                     }
 
-                    my $available_distance = int(
-                        ( $working_exon_set->cardinality - 50 ) / 100 );
+                    my $available_distance
+                        = int( ( $working_exon_set->cardinality - 50 ) / 100 );
                     my $max_distance = min( $available_distance,
                         $exonsw_inside_max_distance );
 
@@ -534,16 +515,15 @@ my $worker = sub {
                         my $exonsw_set
                             = $working_exon_set->slice( $exonsw_start,
                             $exonsw_end );
-                        my $exonsw_set_member_number
-                            = $exonsw_set->cardinality;
-                        if ($exonsw_set_member_number < $exonsw_size_window0 )
+                        my $exonsw_set_member_number = $exonsw_set->cardinality;
+                        if ( $exonsw_set_member_number < $exonsw_size_window0 )
                         {
                             last;
                         }
 
                         my $exonsw_distance = -$i;
 
-                       # make inside windows' desity be same with previous one
+                        # make inside windows' desity be same with previous one
                         my $exonsw_density = $exonsw_windows[0]->{density};
 
                         my ($cur_window_id)
@@ -706,7 +686,6 @@ __END__
         --ensembl           ensembl database name
         --parallel          run in parallel mode
         --batch             number of alignments process in one child process
-        --multi             two-way or multi-way
 
 =head1 OPTIONS
 

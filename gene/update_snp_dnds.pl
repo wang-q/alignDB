@@ -16,7 +16,6 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 use AlignDB::Position;
-use AlignDB::Multi;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -51,7 +50,6 @@ GetOptions(
     'db=s'       => \$db,
     'username=s' => \$username,
     'password=s' => \$password,
-    'multi'      => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -62,21 +60,11 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 $stopwatch->start_message("Update dnds info of $db...");
 
-my $obj;
-if ( !$multi ) {
-    $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-}
-else {
-    $obj = AlignDB::Multi->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-}
+my $obj = AlignDB->new(
+    mysql  => "$db:$server",
+    user   => $username,
+    passwd => $password,
+);
 
 # Database handler
 my $dbh = $obj->dbh;
@@ -248,12 +236,12 @@ SNP: while ( my @row = $snp_sth->fetchrow_array ) {
 
             my $codon_start_index = $snp_tl_index - $snp_codon_pos;
             my $codon_start       = $exon_tl_set->at($codon_start_index);
-            my $codon_end = $exon_tl_set->at( $codon_start_index + 2 );
+            my $codon_end         = $exon_tl_set->at( $codon_start_index + 2 );
             if ( !defined $codon_start or !defined $codon_end ) {
                 print " " x 4, "Can't calc codon positions\n";
                 next SNP;
             }
-            elsif ( $codon_start >= $codon_end) {
+            elsif ( $codon_start >= $codon_end ) {
                 print " " x 4, "Codon start-end error\n";
                 next SNP;
             }
@@ -272,13 +260,13 @@ SNP: while ( my @row = $snp_sth->fetchrow_array ) {
             $snp_codon_pos = ( $snp_tl_backindex - $exon_frame - 1 ) % 3;
 
             my $codon_start_index = $snp_tl_index - ( 2 - $snp_codon_pos );
-            my $codon_start = $exon_tl_set->at($codon_start_index);
-            my $codon_end = $exon_tl_set->at( $codon_start_index + 2 );
+            my $codon_start       = $exon_tl_set->at($codon_start_index);
+            my $codon_end         = $exon_tl_set->at( $codon_start_index + 2 );
             if ( !defined $codon_start or !defined $codon_end ) {
                 print " " x 4, "Can't calc codon positions\n";
                 next SNP;
             }
-            elsif ( $codon_start >= $codon_end) {
+            elsif ( $codon_start >= $codon_end ) {
                 print " " x 4, "Codon start-end error\n";
                 next SNP;
             }
