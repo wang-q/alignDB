@@ -112,8 +112,7 @@ if ( !$no_insert and $goal_db ) {
         . " --port=$port"
         . " -d=$goal_db"
         . " -u=$username"
-        . " --password=$password"
-        . ( $multi ? " -i=$FindBin::Bin/../minit.sql" : "" );
+        . " --password=$password";
     print "\n", "=" x 12, "CMD", "=" x 15, "\n";
     print $cmd , "\n";
     print "=" x 30, "\n";
@@ -185,7 +184,7 @@ SEG: for (@segments) {
             my ( $align_id, $dummy ) = @{
                 $pos_obj->positioning_align_chr_id( $chr_id, $seg_start,
                     $seg_end )
-                };
+            };
 
             if ( !defined $align_id ) {
                 warn " " x 4, "Find no align in $db_name, jump to next\n";
@@ -414,16 +413,6 @@ SEG: for (@segments) {
             }
         }
     }
-}
-
-if ( !$no_insert and $goal_db and $multi ) {
-    $stopwatch->block_message("Modify $goal_db...");
-    my $obj = AlignDB::Multi->new(
-        mysql  => "$goal_db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-    $obj->modify_misc;
 }
 
 $stopwatch->end_message;
