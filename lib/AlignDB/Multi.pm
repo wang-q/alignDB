@@ -1,6 +1,5 @@
 package AlignDB::Multi;
 use Moose;
-use Carp;
 use autodie;
 
 use IO::Zlib;

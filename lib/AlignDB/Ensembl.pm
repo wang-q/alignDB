@@ -1,6 +1,5 @@
 package AlignDB::Ensembl;
 use Moose;
-use Carp;
 
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
 use Bio::EnsEMBL::DBSQL::SliceAdaptor;
@@ -45,7 +44,7 @@ sub BUILD {
         -dbname => $self->db,
         -user   => $self->user,
         -pass   => $self->passwd,
-    ) or croak "Cannot connect to EnsEMBL database\n";
+    ) or confess "Cannot connect to EnsEMBL database\n";
 
     $self->{db_adaptor} = $db_adaptor;
 
@@ -220,7 +219,7 @@ sub locate_set_position {
 
     # Check $pos_start and pos_end are in the Slice
     unless ( $pos_set->subset( $slice_hash->{_slice_set} ) ) {
-        carp "Range ", $pos_set->runlist, " is not in Slice ",
+        warn "Range ", $pos_set->runlist, " is not in Slice ",
             $slice_hash->{_start}, "-", $slice_hash->{_end}, "!\n";
     }
 

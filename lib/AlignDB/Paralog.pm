@@ -1,6 +1,5 @@
 package AlignDB::Paralog;
 use Moose;
-use Carp;
 
 use Config::Tiny;
 use Bio::SearchIO;

@@ -5,7 +5,6 @@ use warnings;
 package AlignDB::GUI;
 use Moose;
 use MooseX::AttributeHelpers;
-use Carp;
 
 use Gtk2 '-init';
 use Glib qw(TRUE FALSE);
@@ -107,8 +106,8 @@ sub set_value {
         $widget->set_active($value);
     }
     else {
-        carp "Widget type is [$class]\n";
-        carp "$name doesn't exist or bad types.\n";
+        warn "Widget type is [$class]\n";
+        warn "$name doesn't exist or bad types.\n";
     }
 
     return;
@@ -136,8 +135,8 @@ sub get_value {
         $value = $widget->get_active_text;
     }
     else {
-        carp "Widget type is [$class]\n";
-        carp "$name doesn't exist or bad types.\n";
+        warn "Widget type is [$class]\n";
+        warn "$name doesn't exist or bad types.\n";
     }
 
     return $value;

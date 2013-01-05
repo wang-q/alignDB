@@ -1,6 +1,5 @@
 package AlignDB::GC;
 use Moose::Role;
-use Carp;
 
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 use YAML qw(Dump Load DumpFile LoadFile);
@@ -182,7 +181,7 @@ sub _mdcw {
     my @array = @_;
 
     if ( @array <= 1 ) {
-        carp "There should be more than 1 elements in the array.\n";
+        warn "There should be more than 1 elements in the array.\n";
         return;
     }
 
@@ -366,7 +365,7 @@ REDO: while (1) {
                 }
             }
             else {
-                carp "high_low_flag signal errors\n";
+                warn "high_low_flag signal errors\n";
             }
         }
 
@@ -650,7 +649,7 @@ sub insert_gsw {
             $gsw_type = 'L';    # descend, left side of trough
         }
         else {
-            carp "extreme_type [$ex_type] error\n";
+            warn "extreme_type [$ex_type] error\n";
         }
 
         # bypass the first extreme
@@ -704,7 +703,7 @@ sub insert_gsw {
                 $sw_start = $sw_end - $gsw0_size + 1;
             }
             else {
-                carp "gsw_type [$gsw_type] error\n";
+                warn "gsw_type [$gsw_type] error\n";
             }
 
             for my $gsw_distance ( 0 .. $gsw_density ) {

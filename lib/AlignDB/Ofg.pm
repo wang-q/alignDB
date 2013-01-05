@@ -1,6 +1,5 @@
 package AlignDB::Ofg;
 use Moose::Role;
-use Carp;
 use Moose::Util::TypeConstraints;
 
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);

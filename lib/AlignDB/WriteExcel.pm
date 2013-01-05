@@ -1,6 +1,5 @@
 package AlignDB::WriteExcel;
 use Moose;
-use Carp;
 
 use FindBin;
 use lib "$FindBin::Bin/../";
@@ -33,7 +32,7 @@ sub BUILD {
     # Create $workbook object
     my $workbook;
     unless ( $workbook = Excel::Writer::XLSX->new( $self->outfile ) ) {
-        carp "Cannot create Excel file.\n";
+        warn "Cannot create Excel file.\n";
         return;
     }
     $self->{workbook} = $workbook;
@@ -1007,7 +1006,7 @@ sub column_ttest {
     $ttest->set_significance(95);
     eval { $ttest->load_data( \@sample1, \@sample2 ); };
 
-    carp $@ if $@;
+    warn $@ if $@;
 
     return $ttest;
 }

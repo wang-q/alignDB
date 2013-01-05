@@ -1,6 +1,5 @@
 package AlignDB::KaKs;
 use Moose;
-use Carp;
 
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 use YAML qw(Dump Load DumpFile LoadFile);

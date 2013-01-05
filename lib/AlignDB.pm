@@ -1,6 +1,5 @@
 package AlignDB;
 use Moose;
-use Carp;
 use autodie;
 use DBI;
 
@@ -20,7 +19,7 @@ has 'user'   => ( is => 'ro', isa => 'Str' );      # database username
 has 'passwd' => ( is => 'ro', isa => 'Str' );      # database password
 has 'dbh'    => ( is => 'ro', isa => 'Object' );   # store database handle here
 has 'window_maker' => ( is => 'ro', isa => 'Object' );   # sliding windows maker
-has 'threshold' => ( is => 'ro', isa => 'Int', default => 10_000 );
+has 'threshold' => ( is => 'ro', isa => 'Int', default => sub {5_000} );
 
 has 'caching_id' => ( is => 'ro', isa => 'Int' );        # caching seqs
 has 'caching_seqs' =>
@@ -278,7 +277,7 @@ sub _insert_indel {
         elsif ( scalar @indel_class > 2 ) {
             $indel_type = 'C';
         }
-        elsif ( $indel_seq =~ /-/) {
+        elsif ( $indel_seq =~ /-/ ) {
             $indel_type = 'C';
         }
         else {
@@ -302,6 +301,7 @@ sub _insert_indel {
         }
         else {
             for (@indel_seqs) {
+
                 # same as target 'x'
                 # not 'o'
                 if ( $indel_seqs[0] eq $_ ) {
@@ -2023,9 +2023,6 @@ sub add_meta_stopwatch {
 
     return;
 }
-
-no Moose;
-__PACKAGE__->meta->make_immutable;
 
 1;
 
