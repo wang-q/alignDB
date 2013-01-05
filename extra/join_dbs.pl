@@ -19,7 +19,7 @@ use AlignDB::Util qw(:all);
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
-use AlignDB::Multi;
+use AlignDB::Outgroup;
 use AlignDB::Position;
 
 #----------------------------------------------------------#
@@ -384,7 +384,7 @@ SEG: for (@segments) {
                 }
             }
             else {
-                my $goal_obj = AlignDB::Multi->new(
+                my $goal_obj = AlignDB::Outgroup->new(
                     mysql  => "$goal_db:$server",
                     user   => $username,
                     passwd => $password,

@@ -1,4 +1,4 @@
-package AlignDB::Multi;
+package AlignDB::Outgroup;
 use MooX 'late';
 use autodie;
 
@@ -10,6 +10,8 @@ use YAML qw(Dump Load DumpFile LoadFile);
 use AlignDB::IntSpan;
 use AlignDB::Util qw(:all);
 
+use FindBin;
+use lib "$FindBin::Bin/../";
 extends qw(AlignDB);
 
 sub _insert_ref_sequences {

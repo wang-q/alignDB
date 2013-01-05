@@ -14,7 +14,7 @@ use AlignDB::Stopwatch;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
-use AlignDB::Multi;
+use AlignDB::Outgroup;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -109,7 +109,7 @@ my $worker = sub {
         );
     }
     else {
-        $obj = AlignDB::Multi->new(
+        $obj = AlignDB::Outgroup->new(
             mysql  => "$db:$server",
             user   => $username,
             passwd => $password,
