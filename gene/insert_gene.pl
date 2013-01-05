@@ -95,10 +95,9 @@ my @jobs;
 
     print "Emptying tables...\n";
 
-    # empty tables: gene, exon, genesw, exonsw
+    # empty tables: gene, exon, exonsw, codingsw
     $obj->empty_table( 'gene',     'with_window' );
     $obj->empty_table( 'exon',     'with_window' );
-    $obj->empty_table( 'genesw',   'with_window' );
     $obj->empty_table( 'exonsw',   'with_window' );
     $obj->empty_table( 'codingsw', 'with_window' );
 

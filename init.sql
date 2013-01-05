@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/5/2013 2:31:49 AM                          */
+/* Created on:     1/6/2013 5:51:00 AM                          */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -220,36 +220,6 @@ create index window_gene_FK on gene
 );
 
 /*==============================================================*/
-/* Table: genesw                                                */
-/*==============================================================*/
-create table genesw
-(
-   genesw_id                      int                            not null AUTO_INCREMENT,
-   window_id                      int,
-   gene_id                        int,
-   genesw_type                    char(8),
-   genesw_distance                int,
-   primary key (genesw_id)
-)
-ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Index: gene_genesw_FK                                        */
-/*==============================================================*/
-create index gene_genesw_FK on genesw
-(
-   gene_id
-);
-
-/*==============================================================*/
-/* Index: window_genesw_FK                                      */
-/*==============================================================*/
-create index window_genesw_FK on genesw
-(
-   window_id
-);
-
-/*==============================================================*/
 /* Table: gsw                                                   */
 /*==============================================================*/
 create table gsw
@@ -267,9 +237,9 @@ create table gsw
 ENGINE = MyISAM;
 
 /*==============================================================*/
-/* Index: windows_gsw_FK                                        */
+/* Index: window_gsw_FK                                         */
 /*==============================================================*/
-create index windows_gsw_FK on gsw
+create index window_gsw_FK on gsw
 (
    window_id
 );
