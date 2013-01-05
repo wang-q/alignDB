@@ -82,8 +82,8 @@ my @jobs;
 
     print "Emptying tables...\n";
 
-    # empty tables: segment, gsw, extreme
-    $obj->empty_table( 'isw', 'with_window' );
+    # empty tables
+    $obj->empty_table( 'isw', );
 
     my @align_ids = @{ $obj->get_align_ids };
 
