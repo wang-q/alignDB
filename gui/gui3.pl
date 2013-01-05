@@ -212,14 +212,6 @@ sub read_config {
     $self->set_value( "checkbutton_insert_codingsw",
         $Config->{gene}{insert_codingsw} );
 
-    # update feature
-    $self->set_value( "checkbutton_process_align", $Config->{feature}{align} );
-    $self->set_value( "checkbutton_process_indel", $Config->{feature}{indel} );
-    $self->set_value( "checkbutton_process_isw",   $Config->{feature}{isw} );
-    $self->set_value( "checkbutton_process_snp",   $Config->{feature}{snp} );
-    $self->set_value( "checkbutton_process_window",
-        $Config->{feature}{window} );
-
     # three-way
     $self->set_value( "entry_first_db",  $Config->{ref}{first_db} );
     $self->set_value( "entry_second_db", $Config->{ref}{second_db} );
@@ -818,11 +810,11 @@ sub on_button_init_aligndb_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../init/init_alignDB.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name";
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name";
 
     $self->exec_cmd($cmd);
     return;
@@ -882,14 +874,14 @@ sub on_button_insert_gc_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../init/insert_gc.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name"
-        . " --insert_gc=$insert_gc"
-        . " --insert_segment=$insert_segment"
-        . " --parallel=$parallel";
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name"
+        . " --insert_gc $insert_gc"
+        . " --insert_segment $insert_segment"
+        . " --parallel $parallel";
 
     $self->exec_cmd($cmd);
     return;
@@ -913,15 +905,15 @@ sub on_button_insert_gene_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../gene/insert_gene.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name"
-        . " -e=$ensembl"
-        . " --insert_exonsw=$insert_exonsw"
-        . " --insert_codingsw=$insert_codingsw"
-        . " --parallel=$parallel";
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name"
+        . " -e $ensembl"
+        . " --insert_exonsw $insert_exonsw"
+        . " --insert_codingsw $insert_codingsw"
+        . " --parallel $parallel";
 
     $self->exec_cmd($cmd);
     return;
@@ -941,12 +933,12 @@ sub on_button_upd_swcv_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../init/update_sw_cv.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name"
-        . " --parallel=$parallel";
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name"
+        . " --parallel $parallel";
 
     $self->exec_cmd($cmd);
     return;
@@ -966,26 +958,15 @@ sub on_button_upd_feature_clicked {
 
     my $parallel = $self->get_value("entry_parallel");
 
-    my $process_align  = $self->get_value("checkbutton_process_align");
-    my $process_indel  = $self->get_value("checkbutton_process_indel");
-    my $process_isw    = $self->get_value("checkbutton_process_isw");
-    my $process_snp    = $self->get_value("checkbutton_process_snp");
-    my $process_window = $self->get_value("checkbutton_process_window");
-
     my $cmd
         = "perl $FindBin::Bin/../init/update_feature.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name"
-        . " -e=$ensembl"
-        . " --process_align=$process_align"
-        . " --process_indel=$process_indel"
-        . " --process_isw=$process_isw"
-        . " --process_snp=$process_snp"
-        . " --process_window=$process_window"
-        . " --parallel=$parallel";
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name"
+        . " -e $ensembl"
+        . " --parallel $parallel";
 
     $self->exec_cmd($cmd);
     return;
@@ -1003,11 +984,11 @@ sub on_button_upd_slippage_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../init/update_indel_slippage.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name";
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name";
 
     $self->exec_cmd($cmd);
     return;
@@ -1025,11 +1006,11 @@ sub on_button_upd_segment_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../init/update_segment.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name";
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name";
 
     $self->exec_cmd($cmd);
     return;
@@ -1080,11 +1061,11 @@ sub on_button_upd_cpg_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../extra/update_snp_cpg.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name";
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name";
 
     $self->exec_cmd($cmd);
     return;
@@ -1106,14 +1087,14 @@ sub on_button_common_stat_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../stat/common_stat_factory.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name"
-        . " -o=$output"
-        . " -r=$run"
-        . " -t=$threshold";
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name"
+        . " -o $output"
+        . " -r $run"
+        . " -t $threshold";
 
     $self->exec_cmd($cmd);
     return;
@@ -1133,10 +1114,10 @@ sub on_button_common_chart_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../stat/common_chart_factory.pl"
-        . " -i=$stat_file"
-        . " -j=$jc_correction"
-        . " -t=$time_stamp"
-        . " -a=$add_index_sheet";
+        . " -i $stat_file"
+        . " -j $jc_correction"
+        . " -t $time_stamp"
+        . " -a $add_index_sheet";
 
     $self->exec_cmd($cmd);
     return;
@@ -1158,14 +1139,14 @@ sub on_button_gc_stat_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name"
-        . " -o=$output"
-        . " -r=$run"
-        . " -t=$threshold";
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name"
+        . " -o $output"
+        . " -r $run"
+        . " -t $threshold";
 
     $self->exec_cmd($cmd);
     return;
@@ -1185,10 +1166,10 @@ sub on_button_gc_chart_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../stat/gc_chart_factory.pl"
-        . " -i=$stat_file"
-        . " -j=$jc_correction"
-        . " -t=$time_stamp"
-        . " -a=$add_index_sheet";
+        . " -i $stat_file"
+        . " -j $jc_correction"
+        . " -t $time_stamp"
+        . " -a $add_index_sheet";
 
     $self->exec_cmd($cmd);
     return;
@@ -1210,14 +1191,14 @@ sub on_button_three_stat_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../stat/three_stat_factory.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name"
-        . " -o=$output"
-        . " -r=$run"
-        . " -t=$threshold";
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name"
+        . " -o $output"
+        . " -r $run"
+        . " -t $threshold";
 
     $self->exec_cmd($cmd);
     return;
@@ -1237,10 +1218,10 @@ sub on_button_three_chart_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../stat/three_chart_factory.pl"
-        . " -i=$stat_file"
-        . " -j=$jc_correction"
-        . " -t=$time_stamp"
-        . " -a=$add_index_sheet";
+        . " -i $stat_file"
+        . " -j $jc_correction"
+        . " -t $time_stamp"
+        . " -a $add_index_sheet";
 
     $self->exec_cmd($cmd);
     return;
