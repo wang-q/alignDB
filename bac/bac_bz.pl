@@ -410,13 +410,13 @@ cd [% working_dir %]
 perl [% findbin %]/../extra/seq_pair_batch.pl \
     -d 1 --parallel [% parallel %] \
     -f [% seq_pair_file %] \
-    -at 1000 -st 0  -r 0
+    -lt 1000 -st 0  -r 0
 
 # seq_pair_batch.pl stat
 perl [% findbin %]/../extra/seq_pair_batch.pl \
     -d 1 --parallel [% parallel %] \
     -f [% seq_pair_file %] \
-    -at 1000 -st 0  -r 1,2,5,21,40
+    -lt 1000 -st 0  -r 1,2,5,21,40
 
 ## join_dbs.pl
 #perl [% findbin %]/../extra/join_dbs.pl \
@@ -613,10 +613,10 @@ cd [% round2_dir %]
 # seq_pair
 #----------------------------#
 perl [% findbin %]/../extra/seq_pair_batch.pl -d 1 --parallel [% parallel %] \
-    -f [% seq_pair_file %]  -at 1000 -st 0 -r 100-102
+    -f [% seq_pair_file %]  -lt 1000 -st 0 -r 100-102
 
 #perl [% findbin %]/../extra/seq_pair_batch.pl -d 1 --parallel [% parallel %] \
-#    -f [% seq_pair_file %]  -at 1000 -st 0 -r 1,2,21,40
+#    -f [% seq_pair_file %]  -lt 1000 -st 0 -r 1,2,21,40
 
 #----------------------------#
 # mz
