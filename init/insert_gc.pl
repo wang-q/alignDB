@@ -121,7 +121,7 @@ my $worker = sub {
         user   => $username,
         passwd => $password,
     );
-    AlignDB::GC->meta->apply($obj);
+    Moo::Role->apply_roles_to_object( $obj, qw{ AlignDB::GC } );
     my %opt = (
         wave_window_size => $wave_window_size,
         wave_window_step => $wave_window_step,

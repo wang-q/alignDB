@@ -1,5 +1,5 @@
 package AlignDB::Ensembl;
-use Moose;
+use MooX 'late';
 
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
 use Bio::EnsEMBL::DBSQL::SliceAdaptor;

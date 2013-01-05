@@ -110,7 +110,7 @@ my $worker = sub {
         user   => $username,
         passwd => $password,
     );
-    AlignDB::GC->meta->apply($obj);
+    Moo::Role->apply_roles_to_object( $obj, qw{ AlignDB::GC } );
     my %opt = (
         stat_window_size => $stat_window_size,
         stat_window_step => $stat_window_step,

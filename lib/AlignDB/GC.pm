@@ -1,5 +1,5 @@
 package AlignDB::GC;
-use Moose::Role;
+use MooX::Role 'late';
 
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 use YAML qw(Dump Load DumpFile LoadFile);

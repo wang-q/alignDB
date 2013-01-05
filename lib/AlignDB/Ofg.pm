@@ -1,6 +1,5 @@
 package AlignDB::Ofg;
-use Moose::Role;
-use Moose::Util::TypeConstraints;
+use MooX::Role 'late';
 
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 use YAML qw(Dump Load DumpFile LoadFile);
@@ -49,8 +48,9 @@ has 'max_in_distance' => (
 # center_intact
 # ------+-----------------+--------
 #  3 2 1        0          1 2 3 4
-enum 'Styles', [qw(edge edge_only center center_intact)];
-has 'style' => ( is => 'rw', isa => 'Styles', default => 'edge' );
+
+# edge edge_only center center_intact
+has 'style' => ( is => 'rw', isa => 'Str', default => 'center_intact' );
 
 sub insert_ofg {
     my $self        = shift;

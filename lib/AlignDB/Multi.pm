@@ -1,5 +1,5 @@
 package AlignDB::Multi;
-use Moose;
+use MooX 'late';
 use autodie;
 
 use IO::Zlib;
