@@ -1,5 +1,5 @@
 package AlignDB::Position;
-use MooX 'late';
+use Moose;
 
 use YAML qw(Dump Load DumpFile LoadFile);
 

@@ -1,5 +1,5 @@
 package AlignDB::Outgroup;
-use MooX 'late';
+use Moose;
 use autodie;
 
 use IO::Zlib;

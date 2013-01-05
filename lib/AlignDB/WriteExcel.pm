@@ -1,5 +1,5 @@
 package AlignDB::WriteExcel;
-use MooX 'late';
+use Moose;
 
 use FindBin;
 use lib "$FindBin::Bin/../";

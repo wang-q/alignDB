@@ -1,5 +1,5 @@
 package AlignDB;
-use MooX 'late';
+use Moose;
 use autodie;
 use DBI;
 

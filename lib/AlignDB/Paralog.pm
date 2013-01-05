@@ -1,5 +1,5 @@
 package AlignDB::Paralog;
-use MooX 'late';
+use Moose;
 
 use Config::Tiny;
 use Bio::SearchIO;
