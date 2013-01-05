@@ -273,8 +273,8 @@ __END__
 
 =head1 SYNOPSIS
 
-perl two_way_batch.pl -d alignDB -t "4932,S288C" -q "285006,RM11" -a d:\data\alignment\yeast_combine\S288CvsRM11\ -lt 5000 -st 0 -ct 0 --parallel 4 --run basic
+perl two_way_batch.pl -d alignDB -t "4932,S288C" -q "285006,RM11" -da d:\data\alignment\yeast_combine\S288CvsRM11\ -lt 5000 -st 0 -ct 0 --parallel 4 --run basic
 
-perl two_way_batch.pl -d alignDB -e yeast_65 -t "4932,S288C" -q "285006,RM11" -a /home/wangq/data/alignment/yeast65/S288CvsRM11 -lt 5000 -st 0 --parallel 4 --run common
+perl two_way_batch.pl -d alignDB -e yeast_65 -t "4932,S288C" -q "285006,RM11" -da /home/wangq/data/alignment/yeast65/S288CvsRM11 -lt 5000 -st 0 --parallel 8 --run common
 
-perl two_way_batch.pl -d HumanvsChimp -e human_65 -t "9606,Human" -q "9598,Chimp" -a /home/wangq/data/UCSC/Human19vsChimp2 -lt 5000 -st 0 --parallel 6 --run basic
+perl two_way_batch.pl -d HumanvsChimp -e human_65 -t "9606,Human" -q "9598,Chimp" -da /home/wangq/data/UCSC/Human19vsChimp2 -lt 5000 -st 0 --parallel 8 --run basic
