@@ -778,7 +778,7 @@ my $da2d_group = sub {
 #----------------------------------------------------------#
 my $segment_gc_indel = sub {
 
-    my @segment_levels = ( 'A', 0 .. 3 );
+    my @segment_levels = ( 'A', 1 .. 3 );
     if ($alt_level) {
         @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
@@ -891,7 +891,7 @@ my $segment_gc_indel = sub {
 #----------------------------------------------------------#
 my $segment_std_indel = sub {
 
-    my @segment_levels = ( 'A', 0 .. 3 );
+    my @segment_levels = ( 'A', 1 .. 3 );
     if ($alt_level) {
         @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
@@ -1004,7 +1004,7 @@ my $segment_std_indel = sub {
 #----------------------------------------------------------#
 my $segment_cv_indel = sub {
 
-    my @segment_levels = ( 'A', 0 .. 3 );
+    my @segment_levels = ( 'A', 1 .. 3 );
     if ($alt_level) {
         @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
@@ -1118,7 +1118,7 @@ my $segment_cv_indel = sub {
 #----------------------------------------------------------#
 my $segment_mdcw_indel = sub {
 
-    my @segment_levels = ( 'A', 0 .. 3 );
+    my @segment_levels = ( 'A', 1 .. 3 );
     if ($alt_level) {
         @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
@@ -1231,7 +1231,7 @@ my $segment_mdcw_indel = sub {
 #----------------------------------------------------------#
 my $segment_coding_indel = sub {
 
-    my @segment_levels = ( 'A', 0 .. 3 );
+    my @segment_levels = ( 'A', 1 .. 3 );
     if ($alt_level) {
         @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
@@ -1758,7 +1758,7 @@ my $segment_summary = sub {
 };
 
 foreach my $n (@tasks) {
-    if ( $n == 1 ) { &$summary;            next; }
+    if ( $n == 1 ) { &$summary; &$segment_summary; next; }
     if ( $n == 2 ) { &$combined_distance;  next; }
     if ( $n == 3 ) { &$combined_density;   next; }
     if ( $n == 4 ) { &$combined_amplitude; next; }
@@ -1771,7 +1771,6 @@ foreach my $n (@tasks) {
     if ( $n == 10 ) { &$segment_cv_indel;     next; }
     if ( $n == 11 ) { &$segment_mdcw_indel;   next; }
     if ( $n == 12 ) { &$segment_coding_indel; next; }
-    if ( $n == 13 ) { &$segment_summary;      next; }
 
     #if ($n == 8) { &$extreme_amplitude_group; next; }
     #if ($n == 24) { &$segment_extreme_indel;  next; }
