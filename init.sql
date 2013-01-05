@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/6/2013 5:51:00 AM                          */
+/* Created on:     1/6/2013 7:07:57 AM                          */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -125,39 +125,6 @@ create index window_exon_FK on exon
 create index gene_exon_FK on exon
 (
    gene_id
-);
-
-/*==============================================================*/
-/* Table: exonsw                                                */
-/*==============================================================*/
-create table exonsw
-(
-   exonsw_id                      int                            not null AUTO_INCREMENT,
-   window_id                      int,
-   exon_id                        int,
-   prev_exon_id                   int,
-   exonsw_type                    char(8),
-   exonsw_distance                int,
-   exonsw_density                 int,
-   primary key (exonsw_id)
-)
-ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Index: exon_exonsw_FK                                        */
-/*==============================================================*/
-create index exon_exonsw_FK on exonsw
-(
-   exon_id,
-   prev_exon_id
-);
-
-/*==============================================================*/
-/* Index: window_exonsw_FK                                      */
-/*==============================================================*/
-create index window_exonsw_FK on exonsw
-(
-   window_id
 );
 
 /*==============================================================*/
