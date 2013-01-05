@@ -2044,37 +2044,20 @@ __END__
         user           => $username,
         passwd         => $password,
     );
-    $obj->parse_axt_file(
-        {   axt_file        => $infile,
-            target_taxon_id => $target_taxon_id,
-            target_name     => $target_name,
-            query_taxon_id  => $query_taxon_id,
-            query_name      => $query_name,
-            threshold       => $axt_threshold,
-        }
-    );
 
 =head1 DESCRIPTION
 
 C<AlignDB> is a simple class to convert alignment files to an indel-concentrated
 RDBMS.
 
-=head1 FEEDBACK
-
-=head2 Reporting Bugs
-
-Report bugs to the Authors' emails to help us keep track of the bugs
-and their resolution. 
-
 =head1 AUTHOR
 
 B<Wang Qiang>
 
-Email: wangqiang1997{at}nju{dot}edu{dot}cn
+Email: wangq{at}nju{dot}edu{dot}cn
 
 =head1 APPENDIX
 
-The rest of the documentation details each of the object methods.
 Internal methods are usually preceded with a _
 
 

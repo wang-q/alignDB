@@ -197,9 +197,9 @@ sub read_config {
     $self->set_value( "entry_ensembl",     $Config->{database}{ensembl} );
 
     # generate
-    $self->set_value( "entry_axt_dir", $Config->{taxon}{axt_dir} );
-    $self->set_value( "entry_axt_threshold",
-        $Config->{generate}{axt_threshold} );
+    $self->set_value( "entry_dir_align", $Config->{taxon}{dir_align} );
+    $self->set_value( "entry_length_threshold",
+        $Config->{generate}{length_threshold} );
     $self->set_value( "entry_parallel", $Config->{generate}{parallel} );
 
     # insert GC
@@ -419,11 +419,14 @@ sub dialog_taxon {
 
     # Add columns
     $treeview->insert_column_with_attributes( 0, "id",
-        Gtk2::CellRendererText->new, text => 0 );
+        Gtk2::CellRendererText->new,
+        text => 0 );
     $treeview->insert_column_with_attributes( 1, "name",
-        Gtk2::CellRendererText->new, text => 1 );
+        Gtk2::CellRendererText->new,
+        text => 1 );
     $treeview->insert_column_with_attributes( 2, "species",
-        Gtk2::CellRendererText->new, text => 2 );
+        Gtk2::CellRendererText->new,
+        text => 2 );
     $treeview->get_column(0)->set_sort_column_id(0);
     $treeview->get_column(1)->set_sort_column_id(1);
     $treeview->get_column(2)->set_sort_column_id(2);
@@ -499,7 +502,8 @@ sub dialog_choose_db {
 
     # Add columns
     $treeview->insert_column_with_attributes( 0, "DB name",
-        Gtk2::CellRendererText->new, text => 0 );
+        Gtk2::CellRendererText->new,
+        text => 0 );
     $treeview->get_column(0)->set_sort_column_id(0);
 
     # get the Gtk2::TreeSelection of $treeview
@@ -606,7 +610,7 @@ sub on_button_choose_db_clicked {
     return;
 }
 
-sub on_button_open_axt_dir_clicked {
+sub on_button_open_dir_align_clicked {
     my $self   = shift;
     my $widget = shift;
 
@@ -623,7 +627,7 @@ sub on_button_open_axt_dir_clicked {
             if ( $response_id eq 'ok' ) {
                 my $dir = $dia->get_filename;
                 if ( defined $dir ) {
-                    $self->set_value( "entry_axt_dir", $dir );
+                    $self->set_value( "entry_dir_align", $dir );
                 }
             }
             $dia->destroy;
@@ -837,25 +841,25 @@ sub on_button_gen_aligndb_clicked {
 
     my $parallel = $self->get_value("entry_parallel");
 
-    my $target_id     = $self->get_value("entry_target_id");
-    my $target_name   = $self->get_value("entry_target_name");
-    my $query_id      = $self->get_value("entry_query_id");
-    my $query_name    = $self->get_value("entry_query_name");
-    my $axt_dir       = $self->get_value("entry_axt_dir");
-    my $axt_threshold = $self->get_value("entry_axt_threshold");
+    my $target_id        = $self->get_value("entry_target_id");
+    my $target_name      = $self->get_value("entry_target_name");
+    my $query_id         = $self->get_value("entry_query_id");
+    my $query_name       = $self->get_value("entry_query_name");
+    my $dir_align        = $self->get_value("entry_dir_align");
+    my $length_threshold = $self->get_value("entry_length_threshold");
 
     my $cmd
         = "perl $FindBin::Bin/../init/gen_alignDB.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name"
-        . " -t=\"$target_id,$target_name\""
-        . " -q=\"$query_id,$query_name\""
-        . " -a=$axt_dir"
-        . " -l=$axt_threshold"
-        . " --parallel=$parallel";
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name"
+        . " -t \"$target_id,$target_name\""
+        . " -q \"$query_id,$query_name\""
+        . " -dir $dir_align"
+        . " -lt $length_threshold"
+        . " --parallel $parallel";
 
     $self->exec_cmd($cmd);
 

@@ -36,8 +36,8 @@ my $ensembl_db = $Config->{database}{ensembl};
 my $gff_file = '';
 
 # axt
-my $axt_dir       = $Config->{taxon}{axt_dir};
-my $axt_threshold = $Config->{generate}{axt_threshold};
+my $dir_align        = $Config->{taxon}{dir_align};
+my $length_threshold = $Config->{generate}{length_threshold};
 
 # target, query init values
 my $target_taxon_id = $Config->{taxon}{target_taxon_id};
@@ -72,14 +72,14 @@ GetOptions(
     'd|db=s'                 => \$db_name,
     'u|username=s'           => \$username,
     'p|password=s'           => \$password,
-    'a|axt_dir=s'            => \$axt_dir,
+    'da|dir_align=s'         => \$dir_align,
     't|target=s'             => \$target,
     'q|query=s'              => \$query,
     'e|ensembl=s'            => \$ensembl_db,
     'gff_file=s'             => \$gff_file,
     'parallel=i'             => \$parallel,
     'batch=i'                => \$batch_number,
-    'at|lt|axt_threshold=i'  => \$axt_threshold,
+    'lt|length_threshold=i'  => \$length_threshold,
     'st|sum_threshold=i'     => \$sum_threshold,
     'ct|combine_threshold=i' => \$combine_threshold,
     'r|run=s'                => \$run,
@@ -124,22 +124,22 @@ else {
 #----------------------------------------------------------#
 my $dispatch = {
     1 => "perl $FindBin::Bin/../init/init_alignDB.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " -d=$db_name",
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name",
     2 => "perl $FindBin::Bin/../init/gen_alignDB.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " --db=$db_name"
-        . " -t=\"$target\""
-        . " -q=\"$query\""
-        . " -a=$axt_dir"
-        . " --length=$axt_threshold"
-        . " --parallel=$parallel",
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " --db $db_name"
+        . " -t \"$target\""
+        . " -q \"$query\""
+        . " --da $dir_align"
+        . " -lt $length_threshold"
+        . " --parallel $parallel",
     3 => undef,
     5 => "perl $FindBin::Bin/../init/insert_isw.pl"
         . " -s=$server"

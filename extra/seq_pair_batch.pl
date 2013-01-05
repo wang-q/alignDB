@@ -33,7 +33,7 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-my $axt_threshold = $Config->{generate}{axt_threshold};
+my $length_threshold = $Config->{generate}{length_threshold};
 my $sum_threshold = $Config->{stat}{sum_threshold};
 
 # running options
@@ -60,7 +60,7 @@ GetOptions(
     'b|bz=s'             => \$bz_path,
     'p|parallel=i'       => \$parallel,
     'batch=i'            => \$batch_number,
-    'at|axt_threshold=i' => \$axt_threshold,
+    'lt|length_threshold=i' => \$length_threshold,
     'st|sum_threshold=i' => \$sum_threshold,
     'f|pair_file=s'      => \$pair_file,
     'd|dir_as_taxon=s'   => \$dir_as_taxon,
@@ -123,7 +123,7 @@ my $worker = sub {
         2 => "perl $FindBin::Bin/../init/gen_alignDB.pl"
             . " --db [% db %]"
             . " -a [% ldir %] [% tq %]"
-            . " --length   [% at %]"
+            . " --length   [% lt %]"
             . " --parallel [% parallel %]",
         5 => "perl $FindBin::Bin/../init/insert_isw.pl"
             . " --db [% db %]"
@@ -162,7 +162,7 @@ my $worker = sub {
                 parallel    => $parallel,
                 batch       => $batch_number,
                 common_file => $common_file,
-                at          => $axt_threshold,
+                lt          => $length_threshold,
                 st          => $sum_threshold,
             },
             \$cmd

@@ -37,7 +37,7 @@ my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
 # axt
-my $axt_dir = $Config->{taxon}{axt_dir};
+my $dir_align = $Config->{taxon}{dir_align};
 
 # target, query init values
 my $target_taxon_id = $Config->{taxon}{target_taxon_id};
@@ -49,31 +49,31 @@ my $target = $target_taxon_id . "," . $target_name;    # target sequence
 my $query  = $query_taxon_id . "," . $query_name;      # query sequence
 
 # program parameter
-my $axt_threshold
-    = $Config->{generate}{axt_threshold};    # legnth threshold of align
+my $length_threshold
+    = $Config->{generate}{length_threshold};    # legnth threshold of align
 
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
 
-my $gzip;                                          # open .axt.gz
+my $gzip;                                       # open .axt.gz
 
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    's|server=s'   => \$server,
-    'P|port=i'     => \$port,
-    'd|db=s'       => \$db,
-    'u|username=s' => \$username,
-    'p|password=s' => \$password,
-    'axt_dir=s'    => \$axt_dir,
-    'target=s'     => \$target,
-    'query=s'      => \$query,
-    'length=i'     => \$axt_threshold,
-    'parallel=i'   => \$parallel,
-    'gzip'         => \$gzip,
+    'help|?'             => \$help,
+    'man'                => \$man,
+    's|server=s'         => \$server,
+    'P|port=i'           => \$port,
+    'u|username=s'       => \$username,
+    'p|password=s'       => \$password,
+    'd|db=s'             => \$db,
+    'da|dir|dir_align=s' => \$dir_align,
+    'target=s'           => \$target,
+    'query=s'            => \$query,
+    'lt|length=i'        => \$length_threshold,
+    'parallel=i'         => \$parallel,
+    'gzip'               => \$gzip,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -84,11 +84,11 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 my @files;
 if ( !$gzip ) {
-    @files = sort File::Find::Rule->file->name('*.axt')->in($axt_dir);
+    @files = sort File::Find::Rule->file->name('*.axt')->in($dir_align);
     printf "\n----Total .axt Files: %4s----\n\n", scalar @files;
 }
 if ( scalar @files == 0 or $gzip ) {
-    @files = sort File::Find::Rule->file->name('*.axt.gz')->in($axt_dir);
+    @files = sort File::Find::Rule->file->name('*.axt.gz')->in($dir_align);
     printf "\n----Total .axt.gz Files: %4s----\n\n", scalar @files;
     $gzip++;
 }
@@ -122,9 +122,9 @@ my $worker = sub {
     $inner_watch->block_message("Process $infile...");
 
     my $obj = AlignDB->new(
-        mysql     => "$db:$server",
-        user      => $username,
-        passwd    => $password,
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
     );
 
     my ( $target_taxon_id, ) = split ",", $target;
@@ -137,7 +137,7 @@ my $worker = sub {
         $infile,
         {   target_taxon_id => $target_taxon_id,
             query_taxon_id  => $query_taxon_id,
-            threshold       => $axt_threshold,
+            threshold       => $length_threshold,
             gzip            => $gzip,
         }
     );
@@ -157,7 +157,7 @@ my $run = AlignDB::Run->new(
 );
 $run->run;
 
-$stopwatch->end_message("All files have been processed.", "duration" );
+$stopwatch->end_message( "All files have been processed.", "duration" );
 
 # store program running meta info to database
 # this AlignDB object is just for storing meta info
@@ -185,10 +185,10 @@ __END__
         --man               full documentation
         --server            MySQL server IP/Domain name
         --port              MySQL server port
-        --db                database name
         --username          username
         --password          password
-        --axt_dir           .axt files' directory
+        --db                database name
+        --dir_align         .axt files' directory
         --target            "target_taxon_id,target_name"
         --query             "query_taxon_id,query_name"
         --length            threshold of alignment length

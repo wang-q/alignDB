@@ -52,16 +52,16 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'axt_dir=s'  => \$dir,
-    'target=s'   => \$target,
-    'parallel=i' => \$parallel,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=i'     => \$port,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'd|db=s'       => \$db,
+    'dir=s'        => \$dir,
+    'target=s'     => \$target,
+    'parallel=i'   => \$parallel,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -187,24 +187,24 @@ __END__
         --man               full documentation
         --server            MySQL server IP/Domain name
         --port              MySQL server port
-        --db                database name
         --username          username
         --password          password
-        --axt_dir           .axt files' directory
+        --db                database name
+        --dir               genome files' directory
         --target            "target_taxon_id,target_name"
         --parallel          run in parallel mode
 
 =cut
 
 >perl init_alignDB.pl -d athvsself
->perl gen_alignDB_genome.pl -d athvsself -t "3702,Ath" -a e:\data\alignment\arabidopsis\ath_58\  --parallel 4
+>perl gen_alignDB_genome.pl -d athvsself -t "3702,Ath" --dir e:\data\alignment\arabidopsis\ath_58\  --parallel 4
 
 >perl init_alignDB.pl -d nipvsself
->perl gen_alignDB_genome.pl -d nipvsself -t "39947,Nip" -a e:\data\alignment\rice\nip_58\  --parallel 4
+>perl gen_alignDB_genome.pl -d nipvsself -t "39947,Nip" --dir e:\data\alignment\rice\nip_58\  --parallel 4
 
 >perl init_alignDB.pl -d 9311vsself
->perl gen_alignDB_genome.pl -d 9311vsself -t "39946,9311" -a e:\data\alignment\rice\9311_58\  --parallel 4
+>perl gen_alignDB_genome.pl -d 9311vsself -t "39946,9311" --dir e:\data\alignment\rice\9311_58\  --parallel 4
 
 >perl init_alignDB.pl -d S288Cvsself
->perl gen_alignDB_genome.pl -d S288Cvsself -t "4932,S288C" -a d:\data\alignment\yeast65\S288C\  --parallel 4
-$perl gen_alignDB_genome.pl -d S288Cvsself -t "4932,S288C" -a /home/wangq/data/alignment/yeast65/S288C/  --parallel 4
+>perl gen_alignDB_genome.pl -d S288Cvsself -t "4932,S288C" --dir d:\data\alignment\yeast65\S288C\  --parallel 4
+$perl gen_alignDB_genome.pl -d S288Cvsself -t "4932,S288C" --dir /home/wangq/data/alignment/yeast65/S288C/  --parallel 4
