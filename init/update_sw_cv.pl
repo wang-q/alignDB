@@ -81,12 +81,11 @@ my @align_ids;
     );
 
     # add column
-    $obj->create_column( "exonsw",   "exonsw_cv",   "DOUBLE" );
     $obj->create_column( "codingsw", "codingsw_cv", "DOUBLE" );
     $obj->create_column( "ofgsw",    "ofgsw_cv",    "DOUBLE" );
     $obj->create_column( "isw",      "isw_cv",      "DOUBLE" );
     $obj->create_column( "gsw",      "gsw_cv",      "DOUBLE" );
-    print "Table exonsw, codingsw, ofgsw, isw and gsw altered\n";
+    print "Table codingsw, ofgsw, isw and gsw altered\n";
 
     @align_ids = @{ $obj->get_align_ids };
 }
@@ -121,23 +120,6 @@ my $worker = sub {
 
     # Database handler
     my $dbh = $obj->dbh;
-
-    my $exonsw_sth = $dbh->prepare(
-        q{
-        SELECT s.exonsw_id, w.window_runlist
-        FROM exonsw s, window w
-        where s.window_id = w.window_id
-        and w.align_id = ?
-        }
-    );
-
-    my $exonsw_update_sth = $dbh->prepare(
-        q{
-        UPDATE exonsw
-        SET exonsw_cv = ?
-        WHERE exonsw_id = ?
-        }
-    );
 
     my $codingsw_sth = $dbh->prepare(
         q{
@@ -215,19 +197,6 @@ my $worker = sub {
 
         # sliding in target_set
         my $target_set = AlignDB::IntSpan->new($target_runlist);
-
-        $exonsw_sth->execute($align_id);
-        while ( my @row = $exonsw_sth->fetchrow_array ) {
-            my ( $exonsw_id, $window_runlist ) = @row;
-            my $window_set = AlignDB::IntSpan->new($window_runlist);
-            my $resize_set
-                = center_resize( $window_set, $target_set, $stat_segment_size );
-
-            my $seqs_ref = $obj->get_seqs($align_id);
-            my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-                = $obj->segment_gc_stat( $seqs_ref, $resize_set );
-            $exonsw_update_sth->execute( $gc_cv, $exonsw_id );
-        }
 
         $codingsw_sth->execute($align_id);
         while ( my @row = $codingsw_sth->fetchrow_array ) {
@@ -343,7 +312,7 @@ __END__
 
 =head1 NAME
 
-    update_sw_cv.pl - CV for exonsw, codingsw, ofgsw and isw
+    update_sw_cv.pl - CV for codingsw, ofgsw, isw and gsw
 
 =head1 SYNOPSIS
 

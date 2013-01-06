@@ -31,7 +31,7 @@
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_imagemenuitem_quit_activate"/>
+                        <signal name="activate" handler="on_imagemenuitem_quit_activate" swapped="no"/>
                       </widget>
                     </child>
                   </widget>
@@ -55,7 +55,7 @@
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_imagemenuitem_about_activate"/>
+                        <signal name="activate" handler="on_imagemenuitem_about_activate" swapped="no"/>
                       </widget>
                     </child>
                   </widget>
@@ -81,7 +81,7 @@
                 <property name="tooltip" translatable="yes">Restore all to defaults</property>
                 <property name="label">Default</property>
                 <property name="stock_id">gtk-undo</property>
-                <signal name="clicked" handler="on_toolbutton_default_clicked"/>
+                <signal name="clicked" handler="on_toolbutton_default_clicked" swapped="no"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
@@ -95,7 +95,7 @@
                 <property name="tooltip" translatable="yes">List all processes</property>
                 <property name="label" translatable="yes">Process</property>
                 <property name="stock_id">gtk-convert</property>
-                <signal name="clicked" handler="on_toolbutton_process_clicked"/>
+                <signal name="clicked" handler="on_toolbutton_process_clicked" swapped="no"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
@@ -341,7 +341,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_test_clicked"/>
+                            <signal name="clicked" handler="on_button_test_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -392,7 +392,7 @@
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                             <property name="relief">half</property>
-                            <signal name="clicked" handler="on_button_choose_db_clicked"/>
+                            <signal name="clicked" handler="on_button_choose_db_clicked" swapped="no"/>
                             <child>
                               <widget class="GtkImage" id="image5">
                                 <property name="visible">True</property>
@@ -418,7 +418,7 @@
                             <property name="receives_default">True</property>
                             <property name="relief">half</property>
                             <property name="image_position">right</property>
-                            <signal name="clicked" handler="on_button_load_query_clicked"/>
+                            <signal name="clicked" handler="on_button_load_query_clicked" swapped="no"/>
                             <child>
                               <widget class="GtkImage" id="image3">
                                 <property name="visible">True</property>
@@ -444,7 +444,7 @@
                             <property name="receives_default">True</property>
                             <property name="relief">half</property>
                             <property name="image_position">right</property>
-                            <signal name="clicked" handler="on_button_load_target_clicked"/>
+                            <signal name="clicked" handler="on_button_load_target_clicked" swapped="no"/>
                             <child>
                               <widget class="GtkImage" id="image1">
                                 <property name="visible">True</property>
@@ -488,7 +488,7 @@
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
                                 <property name="relief">half</property>
-                                <signal name="clicked" handler="on_button_auto_db_name_clicked"/>
+                                <signal name="clicked" handler="on_button_auto_db_name_clicked" swapped="no"/>
                                 <child>
                                   <widget class="GtkImage" id="image2">
                                     <property name="visible">True</property>
@@ -708,7 +708,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_init_aligndb_clicked"/>
+                            <signal name="clicked" handler="on_button_init_aligndb_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -825,7 +825,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_open_dir_align_clicked"/>
+                            <signal name="clicked" handler="on_button_open_dir_align_clicked" swapped="no"/>
                             <child>
                               <widget class="GtkImage" id="image7">
                                 <property name="visible">True</property>
@@ -899,7 +899,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_gen_aligndb_clicked"/>
+                            <signal name="clicked" handler="on_button_gen_aligndb_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -976,34 +976,6 @@
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkCheckButton" id="checkbutton_insert_codingsw">
-                            <property name="label" translatable="yes">codingsw</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">False</property>
-                            <property name="draw_indicator">True</property>
-                          </widget>
-                          <packing>
-                            <property name="left_attach">1</property>
-                            <property name="right_attach">2</property>
-                            <property name="top_attach">2</property>
-                            <property name="bottom_attach">3</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <widget class="GtkCheckButton" id="checkbutton_insert_exonsw">
-                            <property name="label" translatable="yes">exonsw</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">False</property>
-                            <property name="draw_indicator">True</property>
-                          </widget>
-                          <packing>
-                            <property name="top_attach">2</property>
-                            <property name="bottom_attach">3</property>
-                          </packing>
-                        </child>
-                        <child>
                           <widget class="GtkCheckButton" id="checkbutton_insert_segment">
                             <property name="label" translatable="yes">Segment</property>
                             <property name="visible">True</property>
@@ -1024,6 +996,12 @@
                             <property name="receives_default">False</property>
                             <property name="draw_indicator">True</property>
                           </widget>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <placeholder/>
                         </child>
                       </widget>
                       <packing>
@@ -1065,7 +1043,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_insert_gc_clicked"/>
+                            <signal name="clicked" handler="on_button_insert_gc_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -1090,7 +1068,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_insert_gene_clicked"/>
+                            <signal name="clicked" handler="on_button_insert_gene_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -1115,7 +1093,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_upd_swcv_clicked"/>
+                            <signal name="clicked" handler="on_button_upd_swcv_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -1233,7 +1211,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_upd_feature_clicked"/>
+                            <signal name="clicked" handler="on_button_upd_feature_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -1247,7 +1225,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_upd_slippage_clicked"/>
+                            <signal name="clicked" handler="on_button_upd_slippage_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -1272,7 +1250,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_upd_segment_clicked"/>
+                            <signal name="clicked" handler="on_button_upd_segment_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -1440,7 +1418,7 @@
                             <property name="receives_default">True</property>
                             <property name="relief">half</property>
                             <property name="image_position">right</property>
-                            <signal name="clicked" handler="on_button_auto_common_stat_file_clicked"/>
+                            <signal name="clicked" handler="on_button_auto_common_stat_file_clicked" swapped="no"/>
                             <child>
                               <widget class="GtkImage" id="image8">
                                 <property name="visible">True</property>
@@ -1510,7 +1488,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_common_chart_clicked"/>
+                            <signal name="clicked" handler="on_button_common_chart_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -1525,7 +1503,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_common_stat_clicked"/>
+                            <signal name="clicked" handler="on_button_common_stat_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -1692,7 +1670,7 @@
                             <property name="receives_default">True</property>
                             <property name="relief">half</property>
                             <property name="image_position">right</property>
-                            <signal name="clicked" handler="on_button_auto_gc_stat_file_clicked"/>
+                            <signal name="clicked" handler="on_button_auto_gc_stat_file_clicked" swapped="no"/>
                             <child>
                               <widget class="GtkImage" id="image6">
                                 <property name="visible">True</property>
@@ -1762,7 +1740,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_gc_chart_clicked"/>
+                            <signal name="clicked" handler="on_button_gc_chart_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -1777,7 +1755,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_gc_stat_clicked"/>
+                            <signal name="clicked" handler="on_button_gc_stat_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -2009,7 +1987,7 @@
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
                                 <property name="relief">half</property>
-                                <signal name="clicked" handler="on_button_auto_goal_db_name_clicked"/>
+                                <signal name="clicked" handler="on_button_auto_goal_db_name_clicked" swapped="no"/>
                                 <child>
                                   <widget class="GtkImage" id="image16">
                                     <property name="visible">True</property>
@@ -2039,7 +2017,7 @@
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                             <property name="relief">half</property>
-                            <signal name="clicked" handler="on_button_choose_goal_db_clicked"/>
+                            <signal name="clicked" handler="on_button_choose_goal_db_clicked" swapped="no"/>
                             <child>
                               <widget class="GtkImage" id="image17">
                                 <property name="visible">True</property>
@@ -2065,7 +2043,7 @@
                             <property name="receives_default">True</property>
                             <property name="relief">half</property>
                             <property name="image_position">right</property>
-                            <signal name="clicked" handler="on_button_choose_second_db_clicked"/>
+                            <signal name="clicked" handler="on_button_choose_second_db_clicked" swapped="no"/>
                             <child>
                               <widget class="GtkImage" id="image9">
                                 <property name="visible">True</property>
@@ -2091,7 +2069,7 @@
                             <property name="receives_default">True</property>
                             <property name="relief">half</property>
                             <property name="image_position">right</property>
-                            <signal name="clicked" handler="on_button_choose_first_db_clicked"/>
+                            <signal name="clicked" handler="on_button_choose_first_db_clicked" swapped="no"/>
                             <child>
                               <widget class="GtkImage" id="image15">
                                 <property name="visible">True</property>
@@ -2148,7 +2126,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_join_dbs_clicked"/>
+                            <signal name="clicked" handler="on_button_join_dbs_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -2173,7 +2151,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_upd_cpg_clicked"/>
+                            <signal name="clicked" handler="on_button_upd_cpg_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -2317,7 +2295,7 @@
                             <property name="receives_default">True</property>
                             <property name="relief">half</property>
                             <property name="image_position">right</property>
-                            <signal name="clicked" handler="on_button_auto_three_stat_file_clicked"/>
+                            <signal name="clicked" handler="on_button_auto_three_stat_file_clicked" swapped="no"/>
                             <child>
                               <widget class="GtkImage" id="image10">
                                 <property name="visible">True</property>
@@ -2416,7 +2394,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_three_chart_clicked"/>
+                            <signal name="clicked" handler="on_button_three_chart_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -2431,7 +2409,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_three_stat_clicked"/>
+                            <signal name="clicked" handler="on_button_three_stat_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -2552,7 +2530,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_copy_clicked"/>
+                            <signal name="clicked" handler="on_button_copy_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -2566,7 +2544,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_clear_clicked"/>
+                            <signal name="clicked" handler="on_button_clear_clicked" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -2800,7 +2778,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="toggled" handler="on_togglebutton_growl_send_toggled"/>
+                            <signal name="toggled" handler="on_togglebutton_growl_send_toggled" swapped="no"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>

@@ -206,12 +206,6 @@ sub read_config {
     $self->set_value( "checkbutton_insert_segment",
         $Config->{gc}{insert_segment} );
 
-    # insert gene
-    $self->set_value( "checkbutton_insert_exonsw",
-        $Config->{gene}{insert_exonsw} );
-    $self->set_value( "checkbutton_insert_codingsw",
-        $Config->{gene}{insert_codingsw} );
-
     # three-way
     $self->set_value( "entry_first_db",  $Config->{ref}{first_db} );
     $self->set_value( "entry_second_db", $Config->{ref}{second_db} );
@@ -900,9 +894,6 @@ sub on_button_insert_gene_clicked {
 
     my $parallel = $self->get_value("entry_parallel");
 
-    my $insert_exonsw   = $self->get_value("checkbutton_insert_exonsw");
-    my $insert_codingsw = $self->get_value("checkbutton_insert_codingsw");
-
     my $cmd
         = "perl $FindBin::Bin/../gene/insert_gene.pl"
         . " -s $server"
@@ -911,8 +902,6 @@ sub on_button_insert_gene_clicked {
         . " --password $password"
         . " -d $db_name"
         . " -e $ensembl"
-        . " --insert_exonsw $insert_exonsw"
-        . " --insert_codingsw $insert_codingsw"
         . " --parallel $parallel";
 
     $self->exec_cmd($cmd);
