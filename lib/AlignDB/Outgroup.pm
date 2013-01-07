@@ -259,25 +259,25 @@ sub add_align {
     }
     my $seq_count = scalar @{$seq_refs};
     if ( $seq_count < 3 ) {
-        confess "Two few sequences [$seq_count]\n";
+        confess "Too few sequences [$seq_count]\n";
     }
 
     # appoint reference/outgroup
-    my $ref_name = $names->[0];
-    my $ref_seq  = $seq_refs->[0];
+    my $ref_name = $names->[-1];
+    my $ref_seq  = $seq_refs->[-1];
 
     # exclude outgroup
-    my $ingroup_names = [ @{$names}[ 1 .. $seq_count - 1 ] ];
-    my $ingroup_seqs  = [ @{$seq_refs}[ 1 .. $seq_count - 1 ] ];
+    my $ingroup_names = [ @{$names}[ 0 .. $seq_count - 2 ] ];
+    my $ingroup_seqs  = [ @{$seq_refs}[ 0 .. $seq_count - 2 ] ];
 
     #----------------------------#
     # INSERT INTO align
     #----------------------------#
     my $align_id = $self->_insert_align( @{$ingroup_seqs} );
     printf "Prosess align %s in %s %s - %s\n", $align_id,
-        $info_of->{ $names->[1] }{chr_name},
-        $info_of->{ $names->[1] }{chr_start},
-        $info_of->{ $names->[1] }{chr_end};
+        $info_of->{ $names->[0] }{chr_name},
+        $info_of->{ $names->[0] }{chr_start},
+        $info_of->{ $names->[0] }{chr_end};
 
     #----------------------------#
     # UPDATE align, INSERT INTO sequence, target, queries

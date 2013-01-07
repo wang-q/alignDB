@@ -269,7 +269,15 @@ sub _insert_indel {
                 push @indel_class, $seq;
             }
         }
-        confess "Can't determine indels \n" unless $indel_seq;
+        unless ($indel_seq) {
+            print Dump {
+                align_id   => $align_id,
+                cur_indel  => $cur_indel,
+                indel_seqs => \@indel_seqs,
+            };
+            warn "Can't determine indels \n";
+            next;
+        }
 
         if ( scalar @indel_class < 2 ) {
             confess "no indel!\n";
