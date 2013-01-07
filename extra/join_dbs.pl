@@ -45,11 +45,11 @@ my $password = $Config->{database}{password};
 my $length_threshold = $Config->{ref}{length_threshold};
 
 # Database info
-# Normal order: TvsR, TvsQ1, TvsQ2
+# Normal order: TvsO, TvsQ1, TvsQ2
 my $dbs;
-my $outgroup;
 my $target;
 my $queries;
+my $outgroup;
 my $goal_db;
 
 my $trimmed_fasta = 0;
@@ -64,8 +64,6 @@ my $reduce_end = 10;
 # realign parameters
 my $indel_expand = $Config->{ref}{indel_expand};
 my $indel_join   = $Config->{ref}{indel_join};
-
-my $multi = 0;
 
 my $man  = 0;
 my $help = 0;
@@ -90,7 +88,6 @@ GetOptions(
     'no_insert'      => \$no_insert,
     'indel_expand=i' => \$indel_expand,
     'indel_join=i'   => \$indel_join,
-    'multi'          => \$multi,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -126,21 +123,35 @@ my ( @all_dbs, @all_names, @ingroup_names, $target_db );
 {
     @all_dbs = grep {defined} split ",", $dbs;
     my @queries = grep {defined} split ",", $queries;
-    if ( scalar @all_dbs != scalar @queries + 1 ) {
-        printf "DB %d\tQueries %d\n", scalar @all_dbs, scalar @queries;
-        die "DB number doesn't match with species number\n";
-    }
-    elsif ( !$target ) {
+
+    if ( !$target ) {
         die "Target not defined\n";
-    }
-    elsif ( !$outgroup ) {
-        die "Outgroup not defined\n";
     }
     elsif ( !scalar @queries ) {
         die "Queries not defined\n";
     }
 
-    @all_names = ( $target, @queries, $outgroup );
+    if ($outgroup) {
+        print "Outgroup defined.\n";
+        print "We will produce alignments w/ outgroup.\n";
+
+        if ( scalar @all_dbs != scalar @queries + 1 ) {
+            printf "DB %d\tQueries %d\n", scalar @all_dbs, scalar @queries;
+            die "DB number doesn't match with species number\n";
+        }
+        @all_names = ( $target, @queries, $outgroup );
+    }
+    else {
+        print "Outgroup not defined.\n";
+        print "We will produce alignments w/o outgroup.\n";
+
+        if ( scalar @all_dbs != scalar @queries ) {
+            printf "DB %d\tQueries %d\n", scalar @all_dbs, scalar @queries;
+            die "DB number doesn't match with species number\n";
+        }
+        @all_names = ( $target, @queries );
+    }
+
     @ingroup_names = ( $target, @queries );
 
     $target =~ /^(\d+)(.+)/;
@@ -258,16 +269,14 @@ SEG: for (@segments) {
                     . "-$seg_end" . ".fas";
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>', $outfile;
-                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
-                    $out_fh, $simple_header );
+                write_fasta( \%info_of, \@all_names, $out_fh, $simple_header );
                 close $out_fh;
             }
             else {
                 my $outfile = "./$goal_db_crude/" . $chr_name . ".fas";
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>>', $outfile;
-                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
-                    $out_fh, 0 );
+                write_fasta( \%info_of, \@all_names, $out_fh, 0 );
                 print {$out_fh} "\n";
                 close $out_fh;
             }
@@ -290,7 +299,7 @@ SEG: for (@segments) {
         #   ref    GAAAAC
         #   target G----C
         #   query  G----C
-        {
+        if ($outgroup) {
             trim_outgroup( \%info_of, \@all_names, \@ingroup_names, $outgroup );
         }
 
@@ -308,7 +317,7 @@ SEG: for (@segments) {
         #   ref GGAGAC
         #   tar G-A-AC
         #   que G----C
-        {
+        if ($outgroup) {
             record_complex_indel( \%info_of, \@all_names, \@ingroup_names,
                 $outgroup );
         }
@@ -330,16 +339,14 @@ SEG: for (@segments) {
                     . "-$seg_end" . ".fas";
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>', $outfile;
-                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
-                    $out_fh, $simple_header );
+                write_fasta( \%info_of, \@all_names, $out_fh, $simple_header );
                 close $out_fh;
             }
             else {
                 my $outfile = "./$goal_db/" . $chr_name . ".fas";
                 print " " x 4, "$outfile\n";
                 open my $out_fh, '>>', $outfile;
-                write_fasta( \%info_of, [ $outgroup, @ingroup_names ],
-                    $out_fh, 0 );
+                write_fasta( \%info_of, \@all_names, $out_fh, 0 );
                 print {$out_fh} "\n";
                 close $out_fh;
             }
@@ -349,68 +356,43 @@ SEG: for (@segments) {
         # insert as a three-way alignDB
         #----------------------------#
         if ( !$no_insert ) {
-            if ( !$multi ) {
-                my $goal_obj = AlignDB->new(
+            my $goal_obj;
+            if ($outgroup) {
+                $goal_obj = AlignDB::Outgroup->new(
                     mysql  => "$goal_db:$server",
                     user   => $username,
                     passwd => $password,
                 );
-
-                # keep the original order of target and queries
-                my %ingroup_order;
-                for ( 0 .. @ingroup_names - 1 ) {
-                    $ingroup_order{ $ingroup_names[$_] } = $_;
-                }
-                my $combinat = Math::Combinatorics->new(
-                    count => 2,
-                    data  => \@ingroup_names,
-                );
-                while ( my @combo = $combinat->next_combination ) {
-                    @combo = sort { $ingroup_order{$a} <=> $ingroup_order{$b} }
-                        @combo;
-                    my ( $tname, $qname ) = @combo;
-                    print " " x 4, "insert $tname $qname\n";
-                    $goal_obj->update_names(
-                        {   $info_of{$tname}->{taxon_id} =>
-                                $info_of{$tname}->{name},
-                            $info_of{$qname}->{taxon_id} =>
-                                $info_of{$qname}->{name},
-                            $info_of{$outgroup}->{taxon_id} =>
-                                $info_of{$outgroup}->{name},
-                        }
-                    );
-                    $goal_obj->add_align( $info_of{$tname}, $info_of{$qname},
-                        $info_of{$outgroup}, $info_of{$outgroup}->{all_indel} );
-                }
             }
             else {
-                my $goal_obj = AlignDB::Outgroup->new(
+                $goal_obj = AlignDB->new(
                     mysql  => "$goal_db:$server",
                     user   => $username,
                     passwd => $password,
                 );
-                my $name_of       = {};
-                my $multi_info_of = {};
-                my $real_names    = [];
-                my $seq_refs      = [];
-
-                # join_name : 0target
-                # real_name : human
-                for my $join_name ( $outgroup, @ingroup_names ) {
-                    my $real_name = $info_of{$join_name}->{name};
-                    my $taxon_id  = $info_of{$join_name}->{taxon_id};
-                    $name_of->{$taxon_id} = $real_name;
-
-                    $multi_info_of->{$real_name} = $info_of{$join_name};
-                    $multi_info_of->{$real_name}{chr_id}
-                        = $goal_obj->get_chr_id_hash($taxon_id)
-                        ->{ $multi_info_of->{$real_name}{chr_name} };
-                    push @{$real_names}, $real_name;
-                    push @{$seq_refs},   $info_of{$join_name}->{seq};
-                }
-                $goal_obj->update_names($name_of);
-                $goal_obj->add_align( $multi_info_of, $real_names, $seq_refs );
             }
+
+            my $name_of      = {};
+            my $goal_info_of = {};
+            my $real_names   = [];
+            my $seq_refs     = [];
+
+            # join_name : 0target
+            # real_name : human
+            for my $join_name (@all_names) {
+                my $real_name = $info_of{$join_name}->{name};
+                my $taxon_id  = $info_of{$join_name}->{taxon_id};
+                $name_of->{$taxon_id} = $real_name;
+
+                $goal_info_of->{$real_name} = $info_of{$join_name};
+                $goal_info_of->{$real_name}{chr_id}
+                    = $goal_obj->get_chr_id_hash($taxon_id)
+                    ->{ $goal_info_of->{$real_name}{chr_name} };
+                push @{$real_names}, $real_name;
+                push @{$seq_refs},   $info_of{$join_name}->{seq};
+            }
+            $goal_obj->update_names($name_of);
+            $goal_obj->add_align( $goal_info_of, $real_names, $seq_refs );
         }
     }
 }
@@ -962,5 +944,8 @@ $ perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11,S288CvsYJM789 \
     --goal_db S288CvsThree --no_insert --trimmed_fasta \
     --outgroup 0query --target 0target --queries 1query,2query
 
-$ perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar \
-    --outgroup 0query --target 0target --queries 1query --length 5000
+> perl two_way_batch.pl -d S288CvsRM11 -t "4932,S288C" -q "285006,RM11" -da d:\data\alignment\yeast_combine\S288CvsRM11\ -lt 5000 --parallel 4 --run skeleton
+> perl two_way_batch.pl -d S288CvsSpar -t "4932,S288C" -q "226125,Spar" -da d:\data\alignment\yeast_combine\S288CvsSpar\ -lt 5000 --parallel 4 --run skeleton
+
+> perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar --target 0target --outgroup 0query --queries 1query --length 5000
+> perl join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11_Spar --target 0target --queries 0query,1query --length 5000
