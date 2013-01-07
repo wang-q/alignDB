@@ -231,16 +231,11 @@ taxon_id,genus,species,sub_species,common_name,classification
 262316,Mycobacterium,avium,subsp. paratuberculosis K-10
 243243,Mycobacterium,avium,104
 233413,Mycobacterium,bovis,AF2122/97
-410289,Mycobacterium,bovis,BCG str. Pasteur 1173P2
 561275,Mycobacterium,bovis,BCG str. Tokyo 172
 272631,Mycobacterium,leprae,TN
 561304,Mycobacterium,leprae,Br4923
 246196,Mycobacterium,smegmatis,str. MC2 155
-83332,Mycobacterium,tuberculosis,H37Rv
-83331,Mycobacterium,tuberculosis,CDC1551
 419947,Mycobacterium,tuberculosis,H37Ra
-336982,Mycobacterium,tuberculosis,F11
-478434,Mycobacterium,tuberculosis,KZN 1435
 216594,Mycobacterium,marinum,M
 350054,Mycobacterium,gilvum,PYR-GCK
 362242,Mycobacterium,ulcerans,Agy99
@@ -319,13 +314,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 189918,Mycobacterium,sp. KMS,
 469383,Conexibacter,woesei,DSM 14684
 196162,Nocardioides,sp. JS614,
-206672,Bifidobacterium,longum,NCC2705
-205913,Bifidobacterium,longum,DJO10A
-391904,Bifidobacterium,longum,subsp. infantis ATCC 15697
-759350,Bifidobacterium,longum,subsp. longum JDM301
-890402,Bifidobacterium,longum,subsp. longum BBMN68
-565040,Bifidobacterium,longum,subsp. infantis 157F
-565042,Bifidobacterium,longum,subsp. longum JCM 1217
 675635,Pseudonocardia,dioxanivorans,CB1190
 861360,Arthrobacter,arilaitensis,Re117
 662755,Corynebacterium,resistens,DSM 45100
@@ -396,13 +384,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 349102,Rhodobacter,sphaeroides,ATCC 17025
 557760,Rhodobacter,sphaeroides,KD131
 648757,Rhodomicrobium,vannielii,ATCC 17100
-258594,Rhodopseudomonas,palustris,CGA009
-316058,Rhodopseudomonas,palustris,HaA2
-316056,Rhodopseudomonas,palustris,BisB18
-316057,Rhodopseudomonas,palustris,BisB5
-316055,Rhodopseudomonas,palustris,BisA53
-395960,Rhodopseudomonas,palustris,TIE-1
-652103,Rhodopseudomonas,palustris,DX-1
 269796,Rhodospirillum,rubrum,ATCC 11170
 375451,Roseobacter,denitrificans,OCh 114
 582402,Hirschia,baltica,ATCC 49814
@@ -555,14 +536,8 @@ taxon_id,genus,species,sub_species,common_name,classification
 428406,Ralstonia,pickettii,12D
 626418,Burkholderia,glumae,BGR1
 265072,Methylobacillus,flagellatus,KT
-242231,Neisseria,gonorrhoeae,FA 1090
 521006,Neisseria,gonorrhoeae,NCCP11945
 489653,Neisseria,lactamica,020-06
-122586,Neisseria,meningitidis,MC58
-122587,Neisseria,meningitidis,Z2491
-272831,Neisseria,meningitidis,FAM18
-374833,Neisseria,meningitidis,053442
-662598,Neisseria,meningitidis,alpha14
 257310,Bordetella,bronchiseptica,RB50
 257311,Bordetella,parapertussis,12822
 257313,Bordetella,pertussis,Tohama I
@@ -573,22 +548,13 @@ taxon_id,genus,species,sub_species,common_name,classification
 75379,Thiomonas,intermedia,K12
 757424,Herbaspirillum,seropedicae,SmR1
 323848,Nitrosospira,multiformis,ATCC 25196
-243160,Burkholderia,mallei,ATCC 23344
-320388,Burkholderia,mallei,SAVP1
-412022,Burkholderia,mallei,NCTC 10229
-320389,Burkholderia,mallei,NCTC 10247
 999541,Burkholderia,gladioli,BSR3
-272560,Burkholderia,pseudomallei,K96243
-320372,Burkholderia,pseudomallei,1710b
-357348,Burkholderia,pseudomallei,1106a
-320373,Burkholderia,pseudomallei,668
 937774,Taylorella,equigenitalis,MCE9
 395495,Leptothrix,cholodnii,SP-6
 543728,Variovorax,paradoxus,S110
 595537,Variovorax,paradoxus,EPS
 292415,Thiobacillus,denitrificans,ATCC 25259
 266265,Burkholderia,xenovorans,LB400
-271848,Burkholderia,thailandensis,E264
 269482,Burkholderia,vietnamiensis,G4
 62928,Azoarcus,sp. BH72,
 398578,Delftia,acidovorans,SPH-1
@@ -598,10 +564,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 762376,Achromobacter,xylosoxidans,A8
 365046,Ramlibacter,tataouinensis,TTB310
 340100,Bordetella,petrii,DSM 12804
-331271,Burkholderia,cenocepacia,AU 1054
-331272,Burkholderia,cenocepacia,HI2424
-406425,Burkholderia,cenocepacia,MC0-3
-216591,Burkholderia,cenocepacia,J2315
 420662,Methylibium,petroleiphilum,PM1
 381666,Cupriavidus,necator,Ralstonia eutropha H16
 1042878,Cupriavidus,necator,N-1
@@ -622,7 +584,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 261292,Nitrosomonas,sp. Is79A3,
 398527,Burkholderia,phytofirmans,PsJN
 582744,Methylovorus,glucosotrophus,Methylovorus glucosetrophus SIP3-4
-269483,Burkholderia,sp. 383,
 296591,Polaromonas,sp. JS666,
 522306,Candidatus Accumulibacter,phosphatis,clade IIA str. UW-1
 583345,Methylotenera,mobilis,JLW8
@@ -642,12 +603,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 887061,Methylovorus,sp. MP688,
 1007105,Pusillimonas,sp. T7-7,
 666681,Methylotenera,versatilis,301
-272561,Chlamydia,trachomatis,D/UW-3/CX
-315277,Chlamydia,trachomatis,A/HAR-13
-471472,Chlamydia,trachomatis,434/Bu
-471473,Chlamydia,trachomatis,L2b/UCH-1/proctitis
-672161,Chlamydia,trachomatis,B/TZ1A828/OT
-887712,Chlamydia,trachomatis,L2c
 716544,Waddlia,chondrophila,WSU 86-1044
 765952,Parachlamydia,acanthamoebae,UV7
 218497,Chlamydophila,abortus,S26/3
@@ -656,7 +611,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 115713,Chlamydophila,pneumoniae,CWL029
 138677,Chlamydophila,pneumoniae,J138
 182082,Chlamydophila,pneumoniae,TW-183
-243161,Chlamydia,muridarum,Nigg
 331113,Simkania,negevensis,Z
 331635,Chlamydophila,pecorum,E58
 264201,Candidatus Protochlamydia,amoebophila,UWE25
@@ -680,15 +634,7 @@ taxon_id,genus,species,sub_species,common_name,classification
 384616,Pyrobaculum,islandicum,DSM 4184
 399550,Staphylothermus,marinus,F1
 330779,Sulfolobus,acidocaldarius,DSM 639
-273057,Sulfolobus,solfataricus,P2
 178306,Pyrobaculum,aerophilum,str. IM2
-429572,Sulfolobus,islandicus,L.S.2.15
-427317,Sulfolobus,islandicus,M.14.25
-427318,Sulfolobus,islandicus,M.16.27
-439386,Sulfolobus,islandicus,Y.G.57.14
-419942,Sulfolobus,islandicus,Y.N.15.51
-426118,Sulfolobus,islandicus,M.16.4
-425944,Sulfolobus,islandicus,L.D.8.5
 399549,Metallosphaera,sedula,DSM 5348
 415426,Hyperthermus,butylicus,DSM 5456
 633148,Thermosphaera,aggregans,DSM 11486
@@ -714,18 +660,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 551115,Trichormus,azollae,'Nostoc azollae' 0708
 240292,Anabaena,variabilis,ATCC 29413
 203124,Trichodesmium,erythraeum,IMS101
-74547,Prochlorococcus,marinus,str. MIT 9313
-167539,Prochlorococcus,marinus,subsp. marinus str. CCMP1375
-59919,Prochlorococcus,marinus,subsp. pastoris str. CCMP1986
-59920,Prochlorococcus,marinus,str. NATL2A
-74546,Prochlorococcus,marinus,str. MIT 9312
-146891,Prochlorococcus,marinus,str. AS9601
-167542,Prochlorococcus,marinus,str. MIT 9515
-59922,Prochlorococcus,marinus,str. MIT 9303
-167555,Prochlorococcus,marinus,str. NATL1A
-167546,Prochlorococcus,marinus,str. MIT 9301
-93060,Prochlorococcus,marinus,str. MIT 9215
-93059,Prochlorococcus,marinus,str. MIT 9211
 1140,Synechococcus,elongatus,PCC 7942
 269084,Synechococcus,elongatus,PCC 6301
 32049,Synechococcus,sp. PCC 7002,
@@ -805,24 +739,9 @@ taxon_id,genus,species,sub_species,common_name,classification
 447217,Anaeromyxobacter,sp. K,
 644282,Desulfarculus,baarsii,DSM 2075
 360106,Campylobacter,fetus,subsp. fetus 82-40
-192222,Campylobacter,jejuni,subsp. jejuni NCTC 11168
-195099,Campylobacter,jejuni,RM1221
-354242,Campylobacter,jejuni,subsp. jejuni 81-176
-360109,Campylobacter,jejuni,subsp. doylei 269.97
-407148,Campylobacter,jejuni,subsp. jejuni 81116
-757425,Campylobacter,jejuni,subsp. jejuni ICDCCJ07001
 360104,Campylobacter,concisus,13826
 360105,Campylobacter,curvus,525.92
 306263,Campylobacter,lari,RM2100
-85962,Helicobacter,pylori,26695
-85963,Helicobacter,pylori,J99
-357544,Helicobacter,pylori,HPAG1
-512562,Helicobacter,pylori,Shi470
-563041,Helicobacter,pylori,G27
-570508,Helicobacter,pylori,P12
-592205,Helicobacter,pylori,B38
-765963,Helicobacter,pylori,PeCan4
-765962,Helicobacter,pylori,SJM180
 382638,Helicobacter,acinonychis,str. Sheeba
 936155,Helicobacter,felis,ATCC 49179
 679897,Helicobacter,mustelae,12198
@@ -867,10 +786,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 547559,Natrialba,magadii,ATCC 43099
 259564,Methanococcoides,burtonii,DSM 6242
 272844,Pyrococcus,abyssi,GE5
-267377,Methanococcus,maripaludis,S2
-402880,Methanococcus,maripaludis,C5
-426368,Methanococcus,maripaludis,C7
-444158,Methanococcus,maripaludis,C6
 679901,Methanosalsum,zhilinae,DSM 4017
 419665,Methanococcus,aeolicus,Nankai-3
 273116,Thermoplasma,volcanium,GSS1
@@ -917,21 +832,7 @@ taxon_id,genus,species,sub_species,common_name,classification
 278197,Pediococcus,pentosaceus,ATCC 25745
 334413,Finegoldia,magna,ATCC 29328
 697329,Ruminococcus,albus,7
-158878,Staphylococcus,aureus,subsp. aureus Mu50
-158879,Staphylococcus,aureus,subsp. aureus N315
-196620,Staphylococcus,aureus,subsp. aureus MW2
 282458,Staphylococcus,aureus,subsp. aureus MRSA252
-282459,Staphylococcus,aureus,subsp. aureus MSSA476
-93062,Staphylococcus,aureus,subsp. aureus COL
-273036,Staphylococcus,aureus,RF122
-451515,Staphylococcus,aureus,subsp. aureus USA300_FPR3757
-93061,Staphylococcus,aureus,subsp. aureus NCTC 8325
-359786,Staphylococcus,aureus,subsp. aureus JH9
-359787,Staphylococcus,aureus,subsp. aureus JH1
-426430,Staphylococcus,aureus,subsp. aureus str. Newman
-418127,Staphylococcus,aureus,subsp. aureus Mu3
-451516,Staphylococcus,aureus,subsp. aureus USA300_TCH1516
-681288,Staphylococcus,aureus,subsp. aureus ED98
 396513,Staphylococcus,carnosus,subsp. carnosus TM300
 176280,Staphylococcus,epidermidis,ATCC 12228
 176279,Staphylococcus,epidermidis,RP62A
@@ -939,58 +840,11 @@ taxon_id,genus,species,sub_species,common_name,classification
 467705,Streptococcus,gordonii,str. Challis substr. CH1
 927666,Streptococcus,oralis,Uo5
 388919,Streptococcus,sanguinis,SK36
-391295,Streptococcus,suis,05ZYH33
-391296,Streptococcus,suis,98HAH33
-568814,Streptococcus,suis,BM407
-218494,Streptococcus,suis,P1/7
-568813,Streptococcus,suis,SC84
-1007064,Streptococcus,suis,ST3
-264199,Streptococcus,thermophilus,LMG 18311
-299768,Streptococcus,thermophilus,CNRZ1066
-322159,Streptococcus,thermophilus,LMD-9
 210007,Streptococcus,mutans,UA159
 511691,Streptococcus,mutans,NN2025
-208435,Streptococcus,agalactiae,2603V/R
-211110,Streptococcus,agalactiae,NEM316
-205921,Streptococcus,agalactiae,A909
-170187,Streptococcus,pneumoniae,TIGR4
-171101,Streptococcus,pneumoniae,R6
-373153,Streptococcus,pneumoniae,D39
-487214,Streptococcus,pneumoniae,Hungary19A-6
-516950,Streptococcus,pneumoniae,CGSP14
-512566,Streptococcus,pneumoniae,G54
-561276,Streptococcus,pneumoniae,ATCC 700669
-525381,Streptococcus,pneumoniae,TCH8431/19A
-488221,Streptococcus,pneumoniae,70585
-488222,Streptococcus,pneumoniae,JJA
-488223,Streptococcus,pneumoniae,P1031
-487213,Streptococcus,pneumoniae,Taiwan19F-14
-574093,Streptococcus,pneumoniae,AP200
-189423,Streptococcus,pneumoniae,670-6B
-160490,Streptococcus,pyogenes,M1 GAS
-186103,Streptococcus,pyogenes,MGAS8232
-198466,Streptococcus,pyogenes,MGAS315
-193567,Streptococcus,pyogenes,SSI-1
-286636,Streptococcus,pyogenes,MGAS10394
-319701,Streptococcus,pyogenes,MGAS6180
-293653,Streptococcus,pyogenes,MGAS5005
-370552,Streptococcus,pyogenes,MGAS10270
-370554,Streptococcus,pyogenes,MGAS10750
-370553,Streptococcus,pyogenes,MGAS2096
-370551,Streptococcus,pyogenes,MGAS9429
-160491,Streptococcus,pyogenes,str. Manfredo
-471876,Streptococcus,pyogenes,NZ131
-486410,Streptococcus,dysgalactiae,subsp. equisimilis GGS_124
-552526,Streptococcus,equi,subsp. zooepidemicus MGCS10565
-553482,Streptococcus,equi,subsp. equi 4047
-40041,Streptococcus,equi,subsp. zooepidemicus
 936154,Streptococcus,parauberis,KCTC 11537
 218495,Streptococcus,uberis,0140J
 226185,Enterococcus,faecalis,V583
-272623,Lactococcus,lactis,subsp. lactis Il1403
-272622,Lactococcus,lactis,subsp. cremoris SK11
-416870,Lactococcus,lactis,subsp. cremoris MG1363
-684738,Lactococcus,lactis,subsp. lactis KF147
 866775,Aerococcus,urinae,ACS-120-V-Col10a
 358681,Brevibacillus,brevis,NBRC 100599
 941639,Bacillus,coagulans,2-6
@@ -1004,16 +858,8 @@ taxon_id,genus,species,sub_species,common_name,classification
 235909,Geobacillus,kaustophilus,HTA426
 272562,Clostridium,acetobutylicum,ATCC 824
 991791,Clostridium,acetobutylicum,DSM 1731
-413999,Clostridium,botulinum,A str. ATCC 3502
-441770,Clostridium,botulinum,A str. ATCC 19397
-441771,Clostridium,botulinum,A str. Hall
-441772,Clostridium,botulinum,F str. Langeland
-498213,Clostridium,botulinum,B1 str. Okra
-498214,Clostridium,botulinum,A3 str. Loch Maree
 508765,Clostridium,botulinum,B str. Eklund 17B
 508767,Clostridium,botulinum,E3 str. Alaska E43
-536232,Clostridium,botulinum,A2 str. Kyoto
-515621,Clostridium,botulinum,Ba4 str. 657
 929506,Clostridium,botulinum,BKT015925
 573061,Clostridium,cellulovorans,743B
 272563,Clostridium,difficile,630
@@ -1054,13 +900,7 @@ taxon_id,genus,species,sub_species,common_name,classification
 695560,Lactobacillus,amylovorus,GRL 1112
 334390,Lactobacillus,fermentum,IFO 3956
 362948,Lactobacillus,salivarius,UCC118
-169963,Listeria,monocytogenes,EGD-e
-265669,Listeria,monocytogenes,serotype 4b str. F2365
-552536,Listeria,monocytogenes,HCC23
-568819,Listeria,monocytogenes,serotype 4b str. CLIP 80459
-637381,Listeria,monocytogenes,08-5923
 683837,Listeria,seeligeri,serovar 1/2b str. SLCC3954
-272626,Listeria,innocua,Clip11262
 386043,Listeria,welshimeri,serovar 6b str. SLCC5334
 903814,Eubacterium,limosum,KIST612
 340047,Mycoplasma,capricolum,subsp. capricolum ATCC 27343
@@ -1079,7 +919,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 265311,Mesoplasma,florum,L1
 292459,Symbiobacterium,thermophilum,IAM 14863
 698737,Staphylococcus,lugdunensis,HKU09-01
-365659,Streptococcus,mitis,B6
 574087,Acetohalobium,arabaticum,DSM 5501
 272633,Mycoplasma,penetrans,HF-2
 289397,Mycoplasma,bovis,PG45
@@ -1195,46 +1034,19 @@ taxon_id,genus,species,sub_species,common_name,classification
 593907,Cellvibrio,gilvus,ATCC 13127
 319224,Shewanella,putrefaciens,CN-32
 326442,Pseudoalteromonas,haloplanktis,TAC125
-177416,Francisella,tularensis,subsp. tularensis SCHU S4
-376619,Francisella,tularensis,subsp. holarctica LVS
 393115,Francisella,tularensis,subsp. tularensis FSC198
-393011,Francisella,tularensis,subsp. holarctica OSU18
-418136,Francisella,tularensis,subsp. tularensis WY96-3418
-458234,Francisella,tularensis,subsp. holarctica FTNF002-00
-441952,Francisella,tularensis,subsp. mediasiatica FSC147
-401614,Francisella,novicida,U112
-208964,Pseudomonas,aeruginosa,PAO1
-208963,Pseudomonas,aeruginosa,UCBPP-PA14
-381754,Pseudomonas,aeruginosa,PA7
-557722,Pseudomonas,aeruginosa,LESB58
 342610,Pseudoalteromonas,atlantica,T6c
 220664,Pseudomonas,fluorescens,Pf-5
 205922,Pseudomonas,fluorescens,Pf0-1
 216595,Pseudomonas,fluorescens,SBW25
 399739,Pseudomonas,mendocina,ymp
 1001585,Pseudomonas,mendocina,NK-01
-160488,Pseudomonas,putida,KT2440
-351746,Pseudomonas,putida,F1
-76869,Pseudomonas,putida,GB-1
-390235,Pseudomonas,putida,W619
-1042876,Pseudomonas,putida,S16
 379731,Pseudomonas,stutzeri,A1501
 96563,Pseudomonas,stutzeri,ATCC 17588 = LMG 11199
 205918,Pseudomonas,syringae,pv. syringae B728a
-190485,Xanthomonas,campestris,pv. campestris str. ATCC 33913
-314565,Xanthomonas,campestris,pv. campestris str. 8004
-509169,Xanthomonas,campestris,pv. campestris str. B100
-291331,Xanthomonas,oryzae,pv. oryzae KACC10331
-342109,Xanthomonas,oryzae,pv. oryzae MAFF 311018
-360094,Xanthomonas,oryzae,pv. oryzae PXO99A
 322710,Azotobacter,vinelandii,DJ
 243233,Methylococcus,capsulatus,str. Bath
 857087,Methylomonas,methanica,MC09
-272624,Legionella,pneumophila,subsp. pneumophila str. Philadelphia 1
-297245,Legionella,pneumophila,str. Lens
-297246,Legionella,pneumophila,str. Paris
-400673,Legionella,pneumophila,str. Corby
-423212,Legionella,pneumophila,2300/99 Alcoy
 661367,Legionella,longbeachae,NSW150
 749219,Moraxella,catarrhalis,RH4
 290338,Citrobacter,koseri,ATCC BAA-895
@@ -1245,36 +1057,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 665029,Erwinia,amylovora,CFBP1430
 706191,Pantoea,ananatis,LMG 20103
 561230,Pectobacterium,carotovorum,subsp. carotovorum PC1
-511145,Escherichia,coli,str. K-12 substr. MG1655
-386585,Escherichia,coli,O157:H7 str. Sakai
-155864,Escherichia,coli,O157:H7 str. EDL933
-199310,Escherichia,coli,CFT073
-364106,Escherichia,coli,UTI89
-362663,Escherichia,coli,536
-405955,Escherichia,coli,APEC O1
-331112,Escherichia,coli,HS
-331111,Escherichia,coli,E24377A
-481805,Escherichia,coli,ATCC 8739
-316385,Escherichia,coli,str. K-12 substr. DH10B
-439855,Escherichia,coli,SMS-3-5
-444450,Escherichia,coli,O157:H7 str. EC4115
-409438,Escherichia,coli,SE11
-574521,Escherichia,coli,O127:H6 str. E2348/69
-585055,Escherichia,coli,55989
-585397,Escherichia,coli,ED1a
-585034,Escherichia,coli,IAI1
-585057,Escherichia,coli,IAI39
-585035,Escherichia,coli,S88
-585056,Escherichia,coli,UMN026
-866768,Escherichia,coli,'BL21-Gold(DE3)pLysS AG'
-595496,Escherichia,coli,BW2952
-413997,Escherichia,coli,B str. REL606
-544404,Escherichia,coli,O157:H7 str. TW14359
-585395,Escherichia,coli,O103:H2 str. 12009
-585396,Escherichia,coli,O111:H- str. 11128
-573235,Escherichia,coli,O26:H11 str. 11368
-701177,Escherichia,coli,O55:H7 str. CB9615
-585054,Escherichia,fergusonii,ATCC 35469
 484021,Klebsiella,pneumoniae,subsp. pneumoniae NTUH-K2044
 272620,Klebsiella,pneumoniae,subsp. pneumoniae MGH 78578
 507522,Klebsiella,pneumoniae,342
@@ -1289,26 +1071,10 @@ taxon_id,genus,species,sub_species,common_name,classification
 406817,Xenorhabdus,nematophila,ATCC 19061
 393305,Yersinia,enterocolitica,subsp. enterocolitica 8081
 994476,Yersinia,enterocolitica,subsp. palearctica 105.5R(r)
-214092,Yersinia,pestis,CO92
-187410,Yersinia,pestis,KIM 10
-229193,Yersinia,pestis,biovar Microtus str. 91001
-360102,Yersinia,pestis,Antiqua
-377628,Yersinia,pestis,Nepal516
-386656,Yersinia,pestis,Pestoides F
-349746,Yersinia,pestis,Angola
-637386,Yersinia,pestis,Z176003
-273123,Yersinia,pseudotuberculosis,IP 32953
-349747,Yersinia,pseudotuberculosis,IP 31758
-502800,Yersinia,pseudotuberculosis,YPIII
-502801,Yersinia,pseudotuberculosis,PB1/+
 498217,Edwardsiella,tarda,EIB202
 380703,Aeromonas,hydrophila,subsp. hydrophila ATCC 7966
 382245,Aeromonas,salmonicida,subsp. salmonicida A449
 998088,Aeromonas,veronii,B565
-243277,Vibrio,cholerae,O1 biovar El Tor str. N16961
-345073,Vibrio,cholerae,O395
-579112,Vibrio,cholerae,M66-2
-593588,Vibrio,cholerae,MJ-1236
 312309,Aliivibrio,fischeri,Vibrio fischeri ES114
 388396,Aliivibrio,fischeri,Vibrio fischeri MJ11
 338187,Vibrio,harveyi,ATCC BAA-1116
@@ -1316,33 +1082,18 @@ taxon_id,genus,species,sub_species,common_name,classification
 216895,Vibrio,vulnificus,CMCP6
 196600,Vibrio,vulnificus,YJ016
 914127,Vibrio,vulnificus,MO6-24/O
-71421,Haemophilus,influenzae,Rd KW20
-281310,Haemophilus,influenzae,86-028NP
-374930,Haemophilus,influenzae,PittEE
-374931,Haemophilus,influenzae,PittGG
-866630,Haemophilus,influenzae,F3031
-935897,Haemophilus,influenzae,F3047
 233412,Haemophilus,ducreyi,35000HP
 205914,Histophilus,somni,Haemophilus somnus 129PT
 228400,Histophilus,somni,Haemophilus somnus 2336
 557723,Haemophilus,parasuis,SH0165
 272843,Pasteurella,multocida,subsp. multocida str. Pm70
 1005058,Gallibacterium,anatis,UMN179
-227377,Coxiella,burnetii,RSA 493
-434922,Coxiella,burnetii,Dugway 5J108-111
-360115,Coxiella,burnetii,RSA 331
-434923,Coxiella,burnetii,CbuG_Q212
-434924,Coxiella,burnetii,CbuK_Q154
 246195,Dichelobacter,nodosus,VCS1703A
 243159,Acidithiobacillus,ferrooxidans,ATCC 23270
 555778,Halothiobacillus,neapolitanus,c2
 572477,Allochromatium,vinosum,DSM 180
 349124,Halorhodospira,halophila,SL1
 323261,Nitrosococcus,oceani,ATCC 19707
-160492,Xylella,fastidiosa,9a5c
-183190,Xylella,fastidiosa,Temecula1
-405440,Xylella,fastidiosa,M12
-405441,Xylella,fastidiosa,M23
 377629,Teredinibacter,turnerae,T7901
 351348,Marinobacter,hydrocarbonoclasticus,Marinobacter aquaeolei VT8
 768066,Halomonas,elongata,DSM 2581
@@ -1351,21 +1102,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 290339,Cronobacter,sakazakii,ATCC BAA-894
 399741,Serratia,proteamaculans,568
 167879,Colwellia,psychrerythraea,34H
-220341,Salmonella,enterica,subsp. enterica serovar Typhi str. CT18
-99287,Salmonella,enterica,subsp. enterica serovar Typhimurium str. LT2
-209261,Salmonella,enterica,subsp. enterica serovar Typhi str. Ty2
-295319,Salmonella,enterica,subsp. enterica serovar Paratyphi A str. ATCC 9150
-321314,Salmonella,enterica,subsp. enterica serovar Choleraesuis str. SC-B67
-882884,Salmonella,enterica,subsp. arizonae serovar 62:z4,z23:-- str. RSK2980
-454169,Salmonella,enterica,subsp. enterica serovar Heidelberg str. SL476
-423368,Salmonella,enterica,subsp. enterica serovar Newport str. SL254
-439843,Salmonella,enterica,subsp. enterica serovar Schwarzengrund str. CVM19633
-554290,Salmonella,enterica,subsp. enterica serovar Paratyphi A str. AKU_12601
-454166,Salmonella,enterica,subsp. enterica serovar Agona str. SL483
-439851,Salmonella,enterica,subsp. enterica serovar Dublin str. CT_02021853
-550538,Salmonella,enterica,subsp. enterica serovar Gallinarum str. 287/91
-550537,Salmonella,enterica,subsp. enterica serovar Enteritidis str. P125109
-476213,Salmonella,enterica,subsp. enterica serovar Paratyphi C strain RKS4594
 264730,Pseudomonas,savastanoi,Pseudomonas syringae pv. phaseolicola 1448A
 218491,Pectobacterium,atrosepticum,SCRI1043
 243265,Photorhabdus,luminescens,subsp. laumondii TTO1
@@ -1433,7 +1169,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 523791,Kangiella,koreensis,DSM 16069
 425104,Shewanella,sediminis,HAW-EB3
 458817,Shewanella,halifaxensis,HAW-EB4
-384676,Pseudomonas,entomophila,L48
 743721,Pseudoxanthomonas,suwonensis,11-1
 335284,Psychrobacter,cryohalolentis,K5
 259536,Psychrobacter,arcticus,273-4
@@ -1451,7 +1186,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 225849,Shewanella,piezotolerans,WP3
 412965,,Calyptogena okutanii thioautotrophic gill symbiont,Candidatus Vesicomyosocius okutanii HA
 693216,Cronobacter,turicensis,z3032
-316273,Xanthomonas,euvesicatoria,Xanthomonas campestris pv. vesicatoria str. 85-10
 712898,Pantoea,vagans,C9-1
 105559,Nitrosococcus,watsonii,C-113
 573569,Francisella,sp. TX077308,
@@ -1559,13 +1293,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 903896,Acinetobacter,baumannii,Naval-17,903896,
 903895,Acinetobacter,baumannii,Canada BC-5,903895,
 903899,Acinetobacter,baumannii,IS-123,903899,
-400667,Acinetobacter,baumannii,ATCC 17978,400667,
-436717,Acinetobacter,oleivorans,DR1,436717,
-509170,Acinetobacter,baumannii,SDF,509170,
-509173,Acinetobacter,baumannii,AYE,509173,
-405416,Acinetobacter,baumannii,ACICU,405416,
-480119,Acinetobacter,baumannii,AB0057,480119,
-557600,Acinetobacter,baumannii,AB307-0294,557600,
 575584,Acinetobacter,baumannii,ATCC 19606 = CIP 70.34,575584,
 696749,Acinetobacter,baumannii,1656-2,696749,
 980514,Acinetobacter,baumannii,TCDC-AB0715,980514,
@@ -1578,10 +1305,7 @@ taxon_id,genus,species,sub_species,common_name,classification
 1100841,Acinetobacter,baumannii,TYTH-1,1100841,
 903935,Acinetobacter,baumannii,OIFC111,903935,
 903926,Acinetobacter,baumannii,OIFC035,903926,
-416269,Actinobacillus,pleuropneumoniae,serovar 5b str. L20,Actinobacillus_pleuropneumoniae_serovar_5b_str_L20,
 339671,Actinobacillus,succinogenes,130Z,Actinobacillus_succinogenes_130Z,
-434271,Actinobacillus,pleuropneumoniae,serovar 3 str. JL03,Actinobacillus_pleuropneumoniae_serovar_3_str_JL03,
-537457,Actinobacillus,pleuropneumoniae,serovar 7 str. AP76,Actinobacillus_pleuropneumoniae_serovar_7_str_AP76,
 754254,Actinobacillus,pleuropneumoniae,serovar 2 str. 4226,Actinobacillus_pleuropneumoniae_serovar_2_str_4226,
 754256,Actinobacillus,pleuropneumoniae,serovar 6 str. Femo,Actinobacillus_pleuropneumoniae_serovar_6_str_Femo,
 228399,Actinobacillus,pleuropneumoniae,serovar 1 str. 4074,Actinobacillus_pleuropneumoniae_serovar_1_str_4074,
@@ -1655,17 +1379,7 @@ taxon_id,genus,species,sub_species,common_name,classification
 1052588,Bacillus,subtilis,subsp. subtilis str. RO-NN-1,Bacillus_subtilis_subsp_subtilis_str_RO_NN_1,
 1089443,Bacillus,subtilis,subsp. subtilis str. SC-8,Bacillus_subtilis_subsp_subtilis_str_SC_8,
 1220533,Bacillus,subtilis,QB928,Bacillus_subtilis_QB928,
-222523,Bacillus,cereus,ATCC 10987,Bacillus_cereus_ATCC_10987,
-226900,Bacillus,cereus,ATCC 14579,Bacillus_cereus_ATCC_14579,
-288681,Bacillus,cereus,E33L,Bacillus_cereus_E33L,
 405533,Bacillus,cereus,AH1134,Bacillus_cereus_AH1134,
-405534,Bacillus,cereus,AH187,Bacillus_cereus_AH187,
-405532,Bacillus,cereus,B4264,Bacillus_cereus_B4264,
-405535,Bacillus,cereus,AH820,Bacillus_cereus_AH820,
-405531,Bacillus,cereus,G9842,Bacillus_cereus_G9842,
-361100,Bacillus,cereus,Q1,Bacillus_cereus_Q1,
-572264,Bacillus,cereus,03BB102,Bacillus_cereus_03BB102,
-637380,Bacillus,cereus,biovar anthracis str. CI,Bacillus_cereus_biovar_anthracis_str_CI,
 334406,Bacillus,cereus,NC7401,Bacillus_cereus_NC7401,
 347495,Bacillus,cereus,F837/76,Bacillus_cereus_F837_76,
 718220,Bacillus,cereus,IS075,Bacillus_cereus_IS075,
@@ -1775,3 +1489,289 @@ taxon_id,genus,species,sub_species,common_name,classification
 541229,Bacillus,thuringiensis,serovar chinensis CT-43,Bacillus_thuringiensis_serovar_chinensis_CT_43,
 1218175,Bacillus,thuringiensis,HD-771,Bacillus_thuringiensis_HD_771,
 1195464,Bacillus,thuringiensis,MC28,Bacillus_thuringiensis_MC28,
+400667,Acinetobacter,baumannii,ATCC 17978,Acinetobacter_baumannii_ATCC_17978,
+436717,Acinetobacter,sp. DR1,sp. DR1,Acinetobacter_sp_DR1,
+509173,Acinetobacter,baumannii,AYE,Acinetobacter_baumannii_AYE,
+509170,Acinetobacter,baumannii,SDF,Acinetobacter_baumannii_SDF,
+405416,Acinetobacter,baumannii,ACICU,Acinetobacter_baumannii_ACICU,
+480119,Acinetobacter,baumannii,AB0057,Acinetobacter_baumannii_AB0057,
+557600,Acinetobacter,baumannii,AB307-0294,Acinetobacter_baumannii_AB307_0294,
+416269,Actinobacillus,pleuropneumoniae,serovar 5b str. L20,Actinobacillus_pleuropneumoniae_serovar_5b_str_L20,
+434271,Actinobacillus,pleuropneumoniae,serovar 3 str. JL03,Actinobacillus_pleuropneumoniae_serovar_3_str_JL03,
+537457,Actinobacillus,pleuropneumoniae,serovar 7 str. AP76,Actinobacillus_pleuropneumoniae_serovar_7_str_AP76,
+222523,Bacillus,cereus,ATCC 10987,Bacillus_cereus_ATCC_10987,
+226900,Bacillus,cereus,ATCC 14579,Bacillus_cereus_ATCC_14579,
+288681,Bacillus,cereus,E33L,Bacillus_cereus_E33L,
+405534,Bacillus,cereus,AH187,Bacillus_cereus_AH187,
+405532,Bacillus,cereus,B4264,Bacillus_cereus_B4264,
+405535,Bacillus,cereus,AH820,Bacillus_cereus_AH820,
+405531,Bacillus,cereus,G9842,Bacillus_cereus_G9842,
+361100,Bacillus,cereus,Q1,Bacillus_cereus_Q1,
+572264,Bacillus,cereus,03BB102,Bacillus_cereus_03BB102,
+637380,Bacillus,cereus,biovar anthracis str. CI,Bacillus_cereus_biovar_anthracis_str_CI,
+206672,Bifidobacterium,longum,NCC2705,Bifidobacterium_longum_NCC2705,
+205913,Bifidobacterium,longum,DJO10A,Bifidobacterium_longum_DJO10A,
+391904,Bifidobacterium,longum,subsp. infantis ATCC 15697,Bifidobacterium_longum_subsp_infantis_ATCC_15697,
+759350,Bifidobacterium,longum,subsp. longum JDM301,Bifidobacterium_longum_subsp_longum_JDM301,
+890402,Bifidobacterium,longum,subsp. longum BBMN68,Bifidobacterium_longum_subsp_longum_BBMN68,
+565040,Bifidobacterium,longum,subsp. infantis 157F,Bifidobacterium_longum_subsp_infantis_157F,
+565042,Bifidobacterium,longum,subsp. longum JCM 1217,Bifidobacterium_longum_subsp_longum_JCM_1217,
+331271,Burkholderia,cenocepacia,AU 1054,Burkholderia_cenocepacia_AU_1054,
+269483,Burkholderia,sp. 383,sp. 383,Burkholderia_sp_383,
+331272,Burkholderia,cenocepacia,HI2424,Burkholderia_cenocepacia_HI2424,
+406425,Burkholderia,cenocepacia,MC0-3,Burkholderia_cenocepacia_MC0_3,
+216591,Burkholderia,cenocepacia,J2315,Burkholderia_cenocepacia_J2315,
+243160,Burkholderia,mallei,ATCC 23344,Burkholderia_mallei_ATCC_23344,
+320388,Burkholderia,mallei,SAVP1,Burkholderia_mallei_SAVP1,
+412022,Burkholderia,mallei,NCTC 10229,Burkholderia_mallei_NCTC_10229,
+320389,Burkholderia,mallei,NCTC 10247,Burkholderia_mallei_NCTC_10247,
+272560,Burkholderia,pseudomallei,K96243,Burkholderia_pseudomallei_K96243,
+271848,Burkholderia,thailandensis,E264,Burkholderia_thailandensis_E264,
+320372,Burkholderia,pseudomallei,1710b,Burkholderia_pseudomallei_1710b,
+357348,Burkholderia,pseudomallei,1106a,Burkholderia_pseudomallei_1106a,
+320373,Burkholderia,pseudomallei,668,Burkholderia_pseudomallei_668,
+192222,Campylobacter,jejuni,subsp. jejuni NCTC 11168,Campylobacter_jejuni_subsp_jejuni_NCTC_11168,
+195099,Campylobacter,jejuni,RM1221,Campylobacter_jejuni_RM1221,
+354242,Campylobacter,jejuni,subsp. jejuni 81-176,Campylobacter_jejuni_subsp_jejuni_81_176,
+360109,Campylobacter,jejuni,subsp. doylei 269.97,Campylobacter_jejuni_subsp_doylei_269_97,
+407148,Campylobacter,jejuni,subsp. jejuni 81116,Campylobacter_jejuni_subsp_jejuni_81116,
+757425,Campylobacter,jejuni,subsp. jejuni ICDCCJ07001,Campylobacter_jejuni_subsp_jejuni_ICDCCJ07001,
+272561,Chlamydia,trachomatis,D/UW-3/CX,Chlamydia_trachomatis_D_UW_3_CX,
+243161,Chlamydia,muridarum,Nigg,Chlamydia_muridarum_Nigg,
+315277,Chlamydia,trachomatis,A/HAR-13,Chlamydia_trachomatis_A_HAR_13,
+471472,Chlamydia,trachomatis,434/Bu,Chlamydia_trachomatis_434_Bu,
+471473,Chlamydia,trachomatis,L2b/UCH-1/proctitis,Chlamydia_trachomatis_L2b_UCH_1_proctitis,
+672161,Chlamydia,trachomatis,B/TZ1A828/OT,Chlamydia_trachomatis_B_TZ1A828_OT,
+887712,Chlamydia,trachomatis,L2c,Chlamydia_trachomatis_L2c,
+413999,Clostridium,botulinum,A str. ATCC 3502,Clostridium_botulinum_A_str_ATCC_3502,
+515621,Clostridium,botulinum,Ba4 str. 657,Clostridium_botulinum_Ba4_str_657,
+441770,Clostridium,botulinum,A str. ATCC 19397,Clostridium_botulinum_A_str_ATCC_19397,
+441771,Clostridium,botulinum,A str. Hall,Clostridium_botulinum_A_str_Hall,
+441772,Clostridium,botulinum,F str. Langeland,Clostridium_botulinum_F_str_Langeland,
+498213,Clostridium,botulinum,B1 str. Okra,Clostridium_botulinum_B1_str_Okra,
+498214,Clostridium,botulinum,A3 str. Loch Maree,Clostridium_botulinum_A3_str_Loch_Maree,
+536232,Clostridium,botulinum,A2 str. Kyoto,Clostridium_botulinum_A2_str_Kyoto,
+227377,Coxiella,burnetii,RSA 493,Coxiella_burnetii_RSA_493,
+434922,Coxiella,burnetii,Dugway 5J108-111,Coxiella_burnetii_Dugway_5J108_111,
+360115,Coxiella,burnetii,RSA 331,Coxiella_burnetii_RSA_331,
+434923,Coxiella,burnetii,CbuG_Q212,Coxiella_burnetii_CbuG_Q212,
+434924,Coxiella,burnetii,CbuK_Q154,Coxiella_burnetii_CbuK_Q154,
+511145,Escherichia,coli,str. K-12 substr. MG1655,Escherichia_coli_str_K_12_substr_MG1655,
+585054,Escherichia,fergusonii,ATCC 35469,Escherichia_fergusonii_ATCC_35469,
+386585,Escherichia,coli,O157:H7 str. Sakai,Escherichia_coli_O157_H7_str_Sakai,
+155864,Escherichia,coli,O157:H7 str. EDL933,Escherichia_coli_O157_H7_str_EDL933,
+199310,Escherichia,coli,CFT073,Escherichia_coli_CFT073,
+364106,Escherichia,coli,UTI89,Escherichia_coli_UTI89,
+362663,Escherichia,coli,536,Escherichia_coli_536,
+405955,Escherichia,coli,APEC O1,Escherichia_coli_APEC_O1,
+331112,Escherichia,coli,HS,Escherichia_coli_HS,
+331111,Escherichia,coli,E24377A,Escherichia_coli_E24377A,
+481805,Escherichia,coli,ATCC 8739,Escherichia_coli_ATCC_8739,
+316385,Escherichia,coli,str. K-12 substr. DH10B,Escherichia_coli_str_K_12_substr_DH10B,
+439855,Escherichia,coli,SMS-3-5,Escherichia_coli_SMS_3_5,
+444450,Escherichia,coli,O157:H7 str. EC4115,Escherichia_coli_O157_H7_str_EC4115,
+409438,Escherichia,coli,SE11,Escherichia_coli_SE11,
+574521,Escherichia,coli,O127:H6 str. E2348/69,Escherichia_coli_O127_H6_str_E2348_69,
+585055,Escherichia,coli,55989,Escherichia_coli_55989,
+585397,Escherichia,coli,ED1a,Escherichia_coli_ED1a,
+585034,Escherichia,coli,IAI1,Escherichia_coli_IAI1,
+585057,Escherichia,coli,IAI39,Escherichia_coli_IAI39,
+585035,Escherichia,coli,S88,Escherichia_coli_S88,
+585056,Escherichia,coli,UMN026,Escherichia_coli_UMN026,
+866768,Escherichia,coli,'BL21-Gold(DE3)pLysS AG',Escherichia_coli_BL21_Gold_DE3_pLysS_AG_,
+595496,Escherichia,coli,BW2952,Escherichia_coli_BW2952,
+413997,Escherichia,coli,B str. REL606,Escherichia_coli_B_str_REL606,
+544404,Escherichia,coli,O157:H7 str. TW14359,Escherichia_coli_O157_H7_str_TW14359,
+585395,Escherichia,coli,O103:H2 str. 12009,Escherichia_coli_O103_H2_str_12009,
+585396,Escherichia,coli,O111:H- str. 11128,Escherichia_coli_O111_H_str_11128,
+573235,Escherichia,coli,O26:H11 str. 11368,Escherichia_coli_O26_H11_str_11368,
+701177,Escherichia,coli,O55:H7 str. CB9615,Escherichia_coli_O55_H7_str_CB9615,
+177416,Francisella,tularensis,subsp. tularensis SCHU S4,Francisella_tularensis_subsp_tularensis_SCHU_S4,
+401614,Francisella,novicida,U112,Francisella_novicida_U112,
+376619,Francisella,tularensis,subsp. holarctica LVS,Francisella_tularensis_subsp_holarctica_LVS,
+393011,Francisella,tularensis,subsp. holarctica OSU18,Francisella_tularensis_subsp_holarctica_OSU18,
+418136,Francisella,tularensis,subsp. tularensis WY96-3418,Francisella_tularensis_subsp_tularensis_WY96_3418,
+458234,Francisella,tularensis,subsp. holarctica FTNF002-00,Francisella_tularensis_subsp_holarctica_FTNF002_00,
+441952,Francisella,tularensis,subsp. mediasiatica FSC147,Francisella_tularensis_subsp_mediasiatica_FSC147,
+71421,Haemophilus,influenzae,Rd KW20,Haemophilus_influenzae_Rd_KW20,
+281310,Haemophilus,influenzae,86-028NP,Haemophilus_influenzae_86_028NP,
+374930,Haemophilus,influenzae,PittEE,Haemophilus_influenzae_PittEE,
+374931,Haemophilus,influenzae,PittGG,Haemophilus_influenzae_PittGG,
+866630,Haemophilus,influenzae,F3031,Haemophilus_influenzae_F3031,
+935897,Haemophilus,influenzae,F3047,Haemophilus_influenzae_F3047,
+85962,Helicobacter,pylori,26695,Helicobacter_pylori_26695,
+85963,Helicobacter,pylori,J99,Helicobacter_pylori_J99,
+357544,Helicobacter,pylori,HPAG1,Helicobacter_pylori_HPAG1,
+512562,Helicobacter,pylori,Shi470,Helicobacter_pylori_Shi470,
+563041,Helicobacter,pylori,G27,Helicobacter_pylori_G27,
+570508,Helicobacter,pylori,P12,Helicobacter_pylori_P12,
+592205,Helicobacter,pylori,B38,Helicobacter_pylori_B38,
+765963,Helicobacter,pylori,PeCan4,Helicobacter_pylori_PeCan4,
+765962,Helicobacter,pylori,SJM180,Helicobacter_pylori_SJM180,
+272623,Lactococcus,lactis,subsp. lactis Il1403,Lactococcus_lactis_subsp_lactis_Il1403,
+272622,Lactococcus,lactis,subsp. cremoris SK11,Lactococcus_lactis_subsp_cremoris_SK11,
+416870,Lactococcus,lactis,subsp. cremoris MG1363,Lactococcus_lactis_subsp_cremoris_MG1363,
+684738,Lactococcus,lactis,subsp. lactis KF147,Lactococcus_lactis_subsp_lactis_KF147,
+272624,Legionella,pneumophila,subsp. pneumophila str. Philadelphia 1,Legionella_pneumophila_subsp_pneumophila_str_Philadelphia_1,
+297245,Legionella,pneumophila,str. Lens,Legionella_pneumophila_str_Lens,
+297246,Legionella,pneumophila,str. Paris,Legionella_pneumophila_str_Paris,
+400673,Legionella,pneumophila,str. Corby,Legionella_pneumophila_str_Corby,
+423212,Legionella,pneumophila,2300/99 Alcoy,Legionella_pneumophila_2300_99_Alcoy,
+169963,Listeria,monocytogenes,EGD-e,Listeria_monocytogenes_EGD_e,
+272626,Listeria,innocua,Clip11262,Listeria_innocua_Clip11262,
+265669,Listeria,monocytogenes,serotype 4b str. F2365,Listeria_monocytogenes_serotype_4b_str_F2365,
+552536,Listeria,monocytogenes,HCC23,Listeria_monocytogenes_HCC23,
+568819,Listeria,monocytogenes,serotype 4b str. CLIP 80459,Listeria_monocytogenes_serotype_4b_str_CLIP_80459,
+637381,Listeria,monocytogenes,08-5923,Listeria_monocytogenes_08_5923,
+267377,Methanococcus,maripaludis,S2,Methanococcus_maripaludis_S2,
+402880,Methanococcus,maripaludis,C5,Methanococcus_maripaludis_C5,
+426368,Methanococcus,maripaludis,C7,Methanococcus_maripaludis_C7,
+444158,Methanococcus,maripaludis,C6,Methanococcus_maripaludis_C6,
+83332,Mycobacterium,tuberculosis,H37Rv,Mycobacterium_tuberculosis_H37Rv,
+410289,Mycobacterium,bovis,BCG str. Pasteur 1173P2,Mycobacterium_bovis_BCG_str_Pasteur_1173P2,
+83331,Mycobacterium,tuberculosis,CDC1551,Mycobacterium_tuberculosis_CDC1551,
+336982,Mycobacterium,tuberculosis,F11,Mycobacterium_tuberculosis_F11,
+478434,Mycobacterium,tuberculosis,KZN 1435,Mycobacterium_tuberculosis_KZN_1435,
+122586,Neisseria,meningitidis,MC58,Neisseria_meningitidis_MC58,
+242231,Neisseria,gonorrhoeae,FA 1090,Neisseria_gonorrhoeae_FA_1090,
+122587,Neisseria,meningitidis,Z2491,Neisseria_meningitidis_Z2491,
+272831,Neisseria,meningitidis,FAM18,Neisseria_meningitidis_FAM18,
+374833,Neisseria,meningitidis,053442,Neisseria_meningitidis_053442,
+662598,Neisseria,meningitidis,alpha14,Neisseria_meningitidis_alpha14,
+167539,Prochlorococcus,marinus,subsp. marinus str. CCMP1375,Prochlorococcus_marinus_subsp_marinus_str_CCMP1375,
+74547,Prochlorococcus,marinus,str. MIT 9313,Prochlorococcus_marinus_str_MIT_9313,
+59919,Prochlorococcus,marinus,subsp. pastoris str. CCMP1986,Prochlorococcus_marinus_subsp_pastoris_str_CCMP1986,
+59920,Prochlorococcus,marinus,str. NATL2A,Prochlorococcus_marinus_str_NATL2A,
+74546,Prochlorococcus,marinus,str. MIT 9312,Prochlorococcus_marinus_str_MIT_9312,
+146891,Prochlorococcus,marinus,str. AS9601,Prochlorococcus_marinus_str_AS9601,
+167542,Prochlorococcus,marinus,str. MIT 9515,Prochlorococcus_marinus_str_MIT_9515,
+59922,Prochlorococcus,marinus,str. MIT 9303,Prochlorococcus_marinus_str_MIT_9303,
+167555,Prochlorococcus,marinus,str. NATL1A,Prochlorococcus_marinus_str_NATL1A,
+167546,Prochlorococcus,marinus,str. MIT 9301,Prochlorococcus_marinus_str_MIT_9301,
+93060,Prochlorococcus,marinus,str. MIT 9215,Prochlorococcus_marinus_str_MIT_9215,
+93059,Prochlorococcus,marinus,str. MIT 9211,Prochlorococcus_marinus_str_MIT_9211,
+208964,Pseudomonas,aeruginosa,PAO1,Pseudomonas_aeruginosa_PAO1,
+208963,Pseudomonas,aeruginosa,UCBPP-PA14,Pseudomonas_aeruginosa_UCBPP_PA14,
+381754,Pseudomonas,aeruginosa,PA7,Pseudomonas_aeruginosa_PA7,
+557722,Pseudomonas,aeruginosa,LESB58,Pseudomonas_aeruginosa_LESB58,
+160488,Pseudomonas,putida,KT2440,Pseudomonas_putida_KT2440,
+384676,Pseudomonas,entomophila,L48,Pseudomonas_entomophila_L48,
+351746,Pseudomonas,putida,F1,Pseudomonas_putida_F1,
+76869,Pseudomonas,putida,GB-1,Pseudomonas_putida_GB_1,
+390235,Pseudomonas,putida,W619,Pseudomonas_putida_W619,
+1042876,Pseudomonas,putida,S16,Pseudomonas_putida_S16,
+258594,Rhodopseudomonas,palustris,CGA009,Rhodopseudomonas_palustris_CGA009,
+316058,Rhodopseudomonas,palustris,HaA2,Rhodopseudomonas_palustris_HaA2,
+316056,Rhodopseudomonas,palustris,BisB18,Rhodopseudomonas_palustris_BisB18,
+316057,Rhodopseudomonas,palustris,BisB5,Rhodopseudomonas_palustris_BisB5,
+316055,Rhodopseudomonas,palustris,BisA53,Rhodopseudomonas_palustris_BisA53,
+395960,Rhodopseudomonas,palustris,TIE-1,Rhodopseudomonas_palustris_TIE_1,
+652103,Rhodopseudomonas,palustris,DX-1,Rhodopseudomonas_palustris_DX_1,
+220341,Salmonella,enterica,subsp. enterica serovar Typhi str. CT18,Salmonella_enterica_subsp_enterica_serovar_Typhi_str_CT18,
+99287,Salmonella,enterica,subsp. enterica serovar Typhimurium str. LT2,Salmonella_enterica_subsp_enterica_serovar_Typhimurium_str_LT2,
+209261,Salmonella,enterica,subsp. enterica serovar Typhi str. Ty2,Salmonella_enterica_subsp_enterica_serovar_Typhi_str_Ty2,
+295319,Salmonella,enterica,subsp. enterica serovar Paratyphi A str. ATCC 9150,Salmonella_enterica_subsp_enterica_serovar_Paratyphi_A_str_ATCC_9150,
+321314,Salmonella,enterica,subsp. enterica serovar Choleraesuis str. SC-B67,Salmonella_enterica_subsp_enterica_serovar_Choleraesuis_str_SC_B67,
+882884,Salmonella,enterica,subsp. arizonae serovar 62:z4,z23:-- str. RSK2980,Salmonella_enterica_subsp_arizonae_serovar_62_z4_z23_str_RSK2980,
+454169,Salmonella,enterica,subsp. enterica serovar Heidelberg str. SL476,Salmonella_enterica_subsp_enterica_serovar_Heidelberg_str_SL476,
+423368,Salmonella,enterica,subsp. enterica serovar Newport str. SL254,Salmonella_enterica_subsp_enterica_serovar_Newport_str_SL254,
+439843,Salmonella,enterica,subsp. enterica serovar Schwarzengrund str. CVM19633,Salmonella_enterica_subsp_enterica_serovar_Schwarzengrund_str_CVM19633,
+554290,Salmonella,enterica,subsp. enterica serovar Paratyphi A str. AKU_12601,Salmonella_enterica_subsp_enterica_serovar_Paratyphi_A_str_AKU_12601,
+454166,Salmonella,enterica,subsp. enterica serovar Agona str. SL483,Salmonella_enterica_subsp_enterica_serovar_Agona_str_SL483,
+439851,Salmonella,enterica,subsp. enterica serovar Dublin str. CT_02021853,Salmonella_enterica_subsp_enterica_serovar_Dublin_str_CT_02021853,
+550538,Salmonella,enterica,subsp. enterica serovar Gallinarum str. 287/91,Salmonella_enterica_subsp_enterica_serovar_Gallinarum_str_287_91,
+550537,Salmonella,enterica,subsp. enterica serovar Enteritidis str. P125109,Salmonella_enterica_subsp_enterica_serovar_Enteritidis_str_P125109,
+476213,Salmonella,enterica,subsp. enterica serovar Paratyphi C strain RKS4594,Salmonella_enterica_subsp_enterica_serovar_Paratyphi_C_strain_RKS4594,
+93062,Staphylococcus,aureus,subsp. aureus COL,Staphylococcus_aureus_subsp_aureus_COL,
+273036,Staphylococcus,aureus,RF122,Staphylococcus_aureus_RF122,
+158878,Staphylococcus,aureus,subsp. aureus Mu50,Staphylococcus_aureus_subsp_aureus_Mu50,
+158879,Staphylococcus,aureus,subsp. aureus N315,Staphylococcus_aureus_subsp_aureus_N315,
+196620,Staphylococcus,aureus,subsp. aureus MW2,Staphylococcus_aureus_subsp_aureus_MW2,
+282459,Staphylococcus,aureus,subsp. aureus MSSA476,Staphylococcus_aureus_subsp_aureus_MSSA476,
+451515,Staphylococcus,aureus,subsp. aureus USA300_FPR3757,Staphylococcus_aureus_subsp_aureus_USA300_FPR3757,
+93061,Staphylococcus,aureus,subsp. aureus NCTC 8325,Staphylococcus_aureus_subsp_aureus_NCTC_8325,
+359786,Staphylococcus,aureus,subsp. aureus JH9,Staphylococcus_aureus_subsp_aureus_JH9,
+359787,Staphylococcus,aureus,subsp. aureus JH1,Staphylococcus_aureus_subsp_aureus_JH1,
+426430,Staphylococcus,aureus,subsp. aureus str. Newman,Staphylococcus_aureus_subsp_aureus_str_Newman,
+418127,Staphylococcus,aureus,subsp. aureus Mu3,Staphylococcus_aureus_subsp_aureus_Mu3,
+451516,Staphylococcus,aureus,subsp. aureus USA300_TCH1516,Staphylococcus_aureus_subsp_aureus_USA300_TCH1516,
+681288,Staphylococcus,aureus,subsp. aureus ED98,Staphylococcus_aureus_subsp_aureus_ED98,
+208435,Streptococcus,agalactiae,2603V/R,Streptococcus_agalactiae_2603V_R,
+211110,Streptococcus,agalactiae,NEM316,Streptococcus_agalactiae_NEM316,
+205921,Streptococcus,agalactiae,A909,Streptococcus_agalactiae_A909,
+552526,Streptococcus,equi,subsp. zooepidemicus MGCS10565,Streptococcus_equi_subsp_zooepidemicus_MGCS10565,
+553482,Streptococcus,equi,subsp. equi 4047,Streptococcus_equi_subsp_equi_4047,
+40041,Streptococcus,equi,subsp. zooepidemicus,Streptococcus_equi_subsp_zooepidemicus,
+170187,Streptococcus,pneumoniae,TIGR4,Streptococcus_pneumoniae_TIGR4,
+365659,Streptococcus,mitis,B6,Streptococcus_mitis_B6,
+171101,Streptococcus,pneumoniae,R6,Streptococcus_pneumoniae_R6,
+373153,Streptococcus,pneumoniae,D39,Streptococcus_pneumoniae_D39,
+487214,Streptococcus,pneumoniae,Hungary19A-6,Streptococcus_pneumoniae_Hungary19A_6,
+516950,Streptococcus,pneumoniae,CGSP14,Streptococcus_pneumoniae_CGSP14,
+512566,Streptococcus,pneumoniae,G54,Streptococcus_pneumoniae_G54,
+561276,Streptococcus,pneumoniae,ATCC 700669,Streptococcus_pneumoniae_ATCC_700669,
+525381,Streptococcus,pneumoniae,TCH8431/19A,Streptococcus_pneumoniae_TCH8431_19A,
+488221,Streptococcus,pneumoniae,70585,Streptococcus_pneumoniae_70585,
+488222,Streptococcus,pneumoniae,JJA,Streptococcus_pneumoniae_JJA,
+488223,Streptococcus,pneumoniae,P1031,Streptococcus_pneumoniae_P1031,
+487213,Streptococcus,pneumoniae,Taiwan19F-14,Streptococcus_pneumoniae_Taiwan19F_14,
+574093,Streptococcus,pneumoniae,AP200,Streptococcus_pneumoniae_AP200,
+189423,Streptococcus,pneumoniae,670-6B,Streptococcus_pneumoniae_670_6B,
+160490,Streptococcus,pyogenes,M1 GAS,Streptococcus_pyogenes_M1_GAS,
+486410,Streptococcus,dysgalactiae,subsp. equisimilis GGS_124,Streptococcus_dysgalactiae_subsp_equisimilis_GGS_124,
+186103,Streptococcus,pyogenes,MGAS8232,Streptococcus_pyogenes_MGAS8232,
+198466,Streptococcus,pyogenes,MGAS315,Streptococcus_pyogenes_MGAS315,
+193567,Streptococcus,pyogenes,SSI-1,Streptococcus_pyogenes_SSI_1,
+286636,Streptococcus,pyogenes,MGAS10394,Streptococcus_pyogenes_MGAS10394,
+319701,Streptococcus,pyogenes,MGAS6180,Streptococcus_pyogenes_MGAS6180,
+293653,Streptococcus,pyogenes,MGAS5005,Streptococcus_pyogenes_MGAS5005,
+370552,Streptococcus,pyogenes,MGAS10270,Streptococcus_pyogenes_MGAS10270,
+370554,Streptococcus,pyogenes,MGAS10750,Streptococcus_pyogenes_MGAS10750,
+370553,Streptococcus,pyogenes,MGAS2096,Streptococcus_pyogenes_MGAS2096,
+370551,Streptococcus,pyogenes,MGAS9429,Streptococcus_pyogenes_MGAS9429,
+160491,Streptococcus,pyogenes,str. Manfredo,Streptococcus_pyogenes_str_Manfredo,
+471876,Streptococcus,pyogenes,NZ131,Streptococcus_pyogenes_NZ131,
+391295,Streptococcus,suis,05ZYH33,Streptococcus_suis_05ZYH33,
+391296,Streptococcus,suis,98HAH33,Streptococcus_suis_98HAH33,
+568814,Streptococcus,suis,BM407,Streptococcus_suis_BM407,
+218494,Streptococcus,suis,P1/7,Streptococcus_suis_P1_7,
+568813,Streptococcus,suis,SC84,Streptococcus_suis_SC84,
+1007064,Streptococcus,suis,ST3,Streptococcus_suis_ST3,
+264199,Streptococcus,thermophilus,LMG 18311,Streptococcus_thermophilus_LMG_18311,
+299768,Streptococcus,thermophilus,CNRZ1066,Streptococcus_thermophilus_CNRZ1066,
+322159,Streptococcus,thermophilus,LMD-9,Streptococcus_thermophilus_LMD_9,
+427317,Sulfolobus,islandicus,M.14.25,Sulfolobus_islandicus_M_14_25,
+273057,Sulfolobus,solfataricus,P2,Sulfolobus_solfataricus_P2,
+429572,Sulfolobus,islandicus,L.S.2.15,Sulfolobus_islandicus_L_S_2_15,
+427318,Sulfolobus,islandicus,M.16.27,Sulfolobus_islandicus_M_16_27,
+439386,Sulfolobus,islandicus,Y.G.57.14,Sulfolobus_islandicus_Y_G_57_14,
+419942,Sulfolobus,islandicus,Y.N.15.51,Sulfolobus_islandicus_Y_N_15_51,
+426118,Sulfolobus,islandicus,M.16.4,Sulfolobus_islandicus_M_16_4,
+425944,Sulfolobus,islandicus,L.D.8.5,Sulfolobus_islandicus_L_D_8_5,
+243277,Vibrio,cholerae,O1 biovar El Tor str. N16961,Vibrio_cholerae_O1_biovar_El_Tor_str_N16961,
+345073,Vibrio,cholerae,O395,Vibrio_cholerae_O395,
+579112,Vibrio,cholerae,M66-2,Vibrio_cholerae_M66_2,
+593588,Vibrio,cholerae,MJ-1236,Vibrio_cholerae_MJ_1236,
+190485,Xanthomonas,campestris,pv. campestris str. ATCC 33913,Xanthomonas_campestris_pv_campestris_str_ATCC_33913,
+314565,Xanthomonas,campestris,pv. campestris str. 8004,Xanthomonas_campestris_pv_campestris_str_8004,
+509169,Xanthomonas,campestris,pv. campestris str. B100,Xanthomonas_campestris_pv_campestris_str_B100,
+291331,Xanthomonas,oryzae,pv. oryzae KACC10331,Xanthomonas_oryzae_pv_oryzae_KACC10331,
+316273,Xanthomonas,euvesicatoria,campestris pv. vesicatoria str. 85-10,Xanthomonas_campestris_pv_vesicatoria_str_85_10,
+342109,Xanthomonas,oryzae,pv. oryzae MAFF 311018,Xanthomonas_oryzae_pv_oryzae_MAFF_311018,
+360094,Xanthomonas,oryzae,pv. oryzae PXO99A,Xanthomonas_oryzae_pv_oryzae_PXO99A,
+183190,Xylella,fastidiosa,Temecula1,Xylella_fastidiosa_Temecula1,
+160492,Xylella,fastidiosa,9a5c,Xylella_fastidiosa_9a5c,
+405440,Xylella,fastidiosa,M12,Xylella_fastidiosa_M12,
+405441,Xylella,fastidiosa,M23,Xylella_fastidiosa_M23,
+187410,Yersinia,pestis,KIM 10,Yersinia_pestis_KIM_10,
+229193,Yersinia,pestis,biovar Microtus str. 91001,Yersinia_pestis_biovar_Microtus_str_91001,
+360102,Yersinia,pestis,Antiqua,Yersinia_pestis_Antiqua,
+377628,Yersinia,pestis,Nepal516,Yersinia_pestis_Nepal516,
+386656,Yersinia,pestis,Pestoides F,Yersinia_pestis_Pestoides_F,
+349746,Yersinia,pestis,Angola,Yersinia_pestis_Angola,
+637386,Yersinia,pestis,Z176003,Yersinia_pestis_Z176003,
+273123,Yersinia,pseudotuberculosis,IP 32953,Yersinia_pseudotuberculosis_IP_32953,
+214092,Yersinia,pestis,CO92,Yersinia_pestis_CO92,
+349747,Yersinia,pseudotuberculosis,IP 31758,Yersinia_pseudotuberculosis_IP_31758,
+502800,Yersinia,pseudotuberculosis,YPIII,Yersinia_pseudotuberculosis_YPIII,
+502801,Yersinia,pseudotuberculosis,PB1/+,Yersinia_pseudotuberculosis_PB1_,
