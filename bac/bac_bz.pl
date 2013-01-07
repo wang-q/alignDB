@@ -87,7 +87,7 @@ GetOptions(
     'w|working_dir=s' => \$working_dir,
     'p|parent_id=s'   => \$parent_id,
     't|target_id=i'   => \$target_id,
-    'o|r=i'           => \$outgroup_id,
+    'o|r|outgroup=i'  => \$outgroup_id,
     'e|exclude=s'     => \$exclude_ids,
     'n|name_str=s'    => \$name_str,
     'gr'              => \$gr,
@@ -233,6 +233,7 @@ my @query_ids;
             print {$fh} $message;
             print $message;
 
+            # make $outgroup_id first
             @query_ids = map { $_ == $outgroup_id ? () : $_ } @query_ids;
             unshift @query_ids, $outgroup_id;
         }
@@ -418,26 +419,16 @@ perl [% findbin %]/../extra/seq_pair_batch.pl \
     -f [% seq_pair_file %] \
     -lt 1000 -st 0  -r 1,2,5,21,40
 
-## join_dbs.pl
-#perl [% findbin %]/../extra/join_dbs.pl \
-#    --multi --block --trimmed_fasta --length 1000 \
-#    --goal_db [% name_str %] --outgroup 0query --target 0target \
-#    --queries [% FOREACH i IN [ 1 .. query_ids.max ] %][% i %]query,[% END %] \
-#    --dbs [% FOREACH id IN query_ids %][% target_id %]vs[% id %],[% END %]
-#
-## multi-way batch
-#perl [% findbin %]/../extra/multi_way_batch.pl \
-#    -d [% name_str %] \
-#    -f [% working_dir %]/[% name_str %] \
-#    --gff_file [% gff_files.join(',') %] \
-#    -lt 1000 -st 0 --parallel [% parallel %] --batch 5 \
-#    --run 10,21,30-32,40,41,43
-
 # join_dbs.pl
 perl [% findbin %]/../extra/join_dbs.pl \
     --no_insert --block --trimmed_fasta --length 1000 \
-    --goal_db [% name_str %] --outgroup 0query --target 0target \
+    --goal_db [% name_str %] --target 0target \
+[% IF outgroup_id -%]
+    --outgroup 0query \
     --queries [% FOREACH i IN [ 1 .. query_ids.max ] %][% i %]query,[% END %] \
+[% ELSE -%]
+    --queries [% FOREACH i IN [ 0 .. query_ids.max ] %][% i %]query,[% END %] \
+[% END -%]
     --dbs [% FOREACH id IN query_ids %][% target_id %]vs[% id %],[% END %]
 
 #----------------------------#
@@ -451,21 +442,25 @@ fi
 
 cd [% working_dir %]/rawphylo
 
-perl [% findbin %]/../../blastz/concat_fasta.pl \
-    -i [% working_dir %]/[% name_str %]  \
-    -o [% working_dir %]/rawphylo/[% name_str %].phy \
-    -p
-
 rm [% working_dir %]/rawphylo/RAxML*
 
 [% IF query_ids.size > 2 -%]
-raxml -T 2 -f a -m GTRGAMMA -p $RANDOM -N 100 -x $RANDOM \
-    -o [% query_ids.0 %] -n [% name_str %] \
-    -s [% working_dir %]/rawphylo/[% name_str %].phy
+perl [% findbin %]/../../blastz/concat_fasta.pl \
+    -i [% working_dir %]/[% name_str %] \
+    -o [% working_dir %]/rawphylo/[% name_str %].phy \
+    -p
+
+raxml -T 3 -f a -m GTRGAMMA -p $RANDOM -N 100 -x $RANDOM \
+[% IF outgroup_id -%]
+    -o [% query_ids.0 %] \
+[% END -%]
+    -n [% name_str %] -s [% working_dir %]/rawphylo/[% name_str %].phy
 
 cp [% working_dir %]/rawphylo/RAxML_best* [% working_dir %]/rawphylo/[% name_str %].nwk
+
 [% ELSE -%]
 echo "(([% target_id %],[% query_ids.1 %]),[% query_ids.0 %]);" > [% working_dir %]/rawphylo/[% name_str %].nwk
+
 [% END -%]
 
 cd [% working_dir %]/..
@@ -485,6 +480,7 @@ EOF
             seq_pair_file => $seq_pair_file,
             name_str      => $name_str,
             target_id     => $target_id,
+            outgroup_id   => $outgroup_id,
             query_ids     => \@query_ids,
             gff_files     => \@new_gff_files,
             sql_cmd       => "mysql -h$server -P$port -u$username -p$password ",
@@ -633,7 +629,7 @@ perl [% findbin %]/../../blastz/mz.pl \
 # maf2fasta
 #----------------------------#
 perl [% findbin %]/../../blastz/maf2fasta.pl \
-    --has_outgroup -p [% parallel %] --block \
+    -p [% parallel %] --block \
     -i [% round2_dir %]/[% name_str %] \
     -o [% round2_dir %]/[% name_str %]_fasta
 
@@ -642,6 +638,9 @@ perl [% findbin %]/../../blastz/maf2fasta.pl \
 #----------------------------#
 perl [% findbin %]/../../blastz/refine_fasta.pl \
     --msa mafft --block -p [% parallel %] \
+[% IF outgroup_id -%]
+    --outgroup \
+[% END -%]
     -i [% round2_dir %]/[% name_str %]_fasta \
     -o [% round2_dir %]/[% name_str %]_mft
 
@@ -653,8 +652,11 @@ perl [% findbin %]/../extra/multi_way_batch.pl \
     -f [% round2_dir %]/[% name_str %]_mft \
     --gff_file [% gff_files.join(',') %] \
     --block --id [% round2_dir %]/id2name.csv \
+[% IF outgroup_id -%]
+    --outgroup \
+[% END -%]
     -lt 1000 -st 0 -ct 0 --parallel [% parallel %] --batch 5 \
-    --run 1,10,21,30-32,40,41,43
+    --run 1,2,5,10,21,30-32,40,41,43
 
 #----------------------------#
 # RAxML
@@ -674,9 +676,11 @@ perl [% findbin %]/../../blastz/concat_fasta.pl \
 
 rm [% working_dir %]/phylo/RAxML*
 
-raxml -T 2 -f a -m GTRGAMMA -p $RANDOM -N 100 -x $RANDOM \
-    -o [% query_ids.0 %] -n [% name_str %] \
-    -s [% working_dir %]/phylo/[% name_str %].phy
+raxml -T 3 -f a -m GTRGAMMA -p $RANDOM -N 100 -x $RANDOM \
+[% IF outgroup_id -%]
+    -o [% outgroup_id %] \
+[% END -%]
+    -n [% name_str %] -s [% working_dir %]/phylo/[% name_str %].phy
 
 EOF
     $tt->process(
@@ -689,6 +693,7 @@ EOF
             seq_pair_file => $seq_pair_file,
             name_str      => $name_str,
             target_id     => $target_id,
+            outgroup_id   => $outgroup_id,
             query_ids     => \@query_ids,
             gff_files     => \@new_gff_files,
         },

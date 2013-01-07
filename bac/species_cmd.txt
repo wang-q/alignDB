@@ -13,37 +13,19 @@
 # D on average 0.187349566
 perl bac_bz.pl -p 470,436717 -t 400667 -o 436717 -n Acinetobacter_baumannii
 
-#* perl bac_bz.pl -p 470,436717 -t 400667 -o 436717 -e 1116234,1116235,1116236,1221287,1100841,509170 -n Acinetobacter_baumannii --gr --sca
-# for f in `find . -name "cmd.sh" `;do   echo sh $f ;done | sort > runall.sh
-# for f in `find . -name "file-rm.sh" `;do    echo sh $f ;done | sort >> runall.sh
-# for f in `find . -name "pair-multi.sh" `;do  echo sh $f ;done | sort >> runall.sh
-# time sh runall.sh
-#real    163m43.456s
-#user    348m54.549s
-#sys     19m30.248s
-
-
 #=========
 # 715 Actinobacillus pleuropneumoniae
-perl bac_bz.pl -p 715 -t 416269 -o 537457
-
-#* perl bac_bz.pl -p 715,696748 -t 416269 -o 696748 -n Acinetobacter_pleuropneumoniae --gr --sca
-#real    33m1.043s
-#user    61m6.081s
-#sys     8m17.154s
+perl bac_bz.pl -p 715 -t 416269 
 
 # ***reject
 # genus 713 Actinobacillus
 # perl bac_bz.pl -p 713 -n Actinobacillus
-# perl bac_bz.pl -p 713 -t 416269 -n Acinetobacter_pleuropneumoniae --gr --sca
 
 #=========
 # Bacillus cereus
 # 222690,405531,405532 are in a subtree, D with others is about 0.11
-perl bac_bz.pl -p 1396 -t 222523 -o 226900 -e 405531,405532
-
-# perl bac_bz.pl -p 1396 -t 222523 -n Bacillus_cereus --gr 
-# perl bac_bz.pl -p 1386 -t 222523 -n Bacillus --gr
+# perl bac_bz.pl -p 1396 -t 222523 -o 226900 -e 405531,405532
+perl bac_bz.pl -p 1396 -t 222523
 
 #=========
 # 1678 Bifidobacterium 
@@ -51,7 +33,8 @@ perl bac_bz.pl -p 1396 -t 222523 -o 226900 -e 405531,405532
 
 # 216816 Bifidobacterium longum
 # perl bac_bz.pl -p 216816 -t 206672 -o 391904
-perl bac_bz.pl -p 216816 -t 206672 -o 759350 -e 391904
+# perl bac_bz.pl -p 216816 -t 206672 -o 759350 -e 391904
+perl bac_bz.pl -p 216816 -t 206672
 
 #=========
 # genus 32008 Burkholderia
@@ -68,20 +51,19 @@ perl bac_bz.pl -p 28450,271848 -t 272560 -o 271848 -n Burkholderia_pseudomallei
 
 #=========
 # Campylobacter_jejuni
-perl bac_bz.pl -p 197 -t 192222 -o 360109
+# perl bac_bz.pl -p 197 -t 192222 -o 36010
+perl bac_bz.pl -p 197 -t 192222
 
 #=========
 # Chlamydia trachomatis
 # 471472, 471473, 887712 are in a subtree
 # pick 887712 as ref, which is the newest
-perl bac_bz.pl -p 813 -t 272561 -o 887712
+# perl bac_bz.pl -p 813 -t 272561 -o 887712
+# perl bac_bz.pl -p 813 -t 272561
 
 # *** REJECT
 # use 243161 Chlamydia muridarum Nigg as ref
-# Aligned length (Mb) 0.5976
-# Indels / 100 bp 0.23182
-# D on average 0.294519429
-# bac_bz.pl -p "813,243161" -t 272561 -o 243161  -n Chlamydia_trachomatis
+perl bac_bz.pl -p 813,243161 -t 272561 -o 243161  -n Chlamydia_trachomatis
 
 #=========
 # Clostridium botulinum
@@ -93,7 +75,7 @@ perl bac_bz.pl -p 1491 -t 413999 -o 515621 -e 508765,508767,929506
 
 #=========
 # 777 Coxiella burnetii
-perl bac_bz.pl -p 777 -t 227377 -o 434922
+perl bac_bz.pl -p 777 -t 227377
 
 #=========
 # Escherichia coli
@@ -104,7 +86,7 @@ perl bac_bz.pl -p 777 -t 227377 -o 434922
 # Aligned length (Mb) 2.7929
 # Indels / 100 bp 0.10384
 # D on average 0.134734029
-perl bac_bz.pl -p "562,585054" -t 511145 -o 585054 -n Escherichia_coli
+perl bac_bz.pl -p 562,585054 -t 511145 -o 585054 -n Escherichia_coli
 
 #=========
 # Francisella tularensis
@@ -116,7 +98,8 @@ perl bac_bz.pl -p 263,401614 -t 177416 -o 401614 -e 393115 -n Francisella_tulare
 
 #=========
 # Haemophilus influenzae
-perl bac_bz.pl -p 727 -t 71421 -o 374931 -e 374930
+# perl bac_bz.pl -p 727 -t 71421 -o 374931 -e 374930
+perl bac_bz.pl -p 727 -t 71421
 
 # *** REJECT 
 # genus Haemophilus
@@ -132,7 +115,8 @@ perl bac_bz.pl -p 727 -t 71421 -o 374931 -e 374930
 
 #=========
 # Helicobacter pylori
-perl bac_bz.pl -p 210 -t 85962 -o 85963
+# perl bac_bz.pl -p 210 -t 85962 -o 85963
+perl bac_bz.pl -p 210 -t 85962
 
 # *** REJECT 
 # use 382638 Helicobacter acinonychis str. Sheeba as ref
@@ -141,14 +125,15 @@ perl bac_bz.pl -p 210 -t 85962 -o 85963
 # D on average 0.15013743
 # bac_bz.pl -p 210,382638 -t 85962 -o 382638
 
-
 #=========
 # Lactococcus lactis
-perl bac_bz.pl -p 1358 -t 272623 -o 272622
+# perl bac_bz.pl -p 1358 -t 272623 -o 272622
+perl bac_bz.pl -p 1358 -t 272623
 
 #=========
 #  446 Legionella pneumophila
-perl bac_bz.pl -p 446 -t 400673 -o 272624
+# perl bac_bz.pl -p 446 -t 400673 -o 272624
+perl bac_bz.pl -p 446 -t 272624
 
 # *** REJECT 
 # 661367 Legionella longbeachae NSW150 as ref
@@ -190,13 +175,15 @@ perl bac_bz.pl -p 487,242231 -o 242231 -t 122586 -n Neisseria_meningitidis
 # perl bac_bz.pl -p 482 -n Neisseria
 
 #=========
-# Prochlorococcus marinus
+# 1219 Prochlorococcus marinus
 # perl bac_bz.pl -p 1219 -t 146891
-perl bac_bz.pl -p 93060,74546,146891,167546,59919 -t 146891 -o 59919
+# perl bac_bz.pl -p 93060,74546,146891,167546,59919 -t 146891 -o 59919
+perl bac_bz.pl -p 1219 -t 167539
 
 #=========
 # 287 Pseudomonas aeruginosa
-perl bac_bz.pl -p 287 -t 208964 -o 381754
+# perl bac_bz.pl -p 287 -t 208964 -o 381754
+perl bac_bz.pl -p 287 -t 208964
 
 # genus 286 Pseudomonas
 # perl bac_bz.pl -p 286 -t 208964 -n Pseudomonas
@@ -214,11 +201,13 @@ perl bac_bz.pl -p 303,384676 -t 160488 -o 384676 -n Pseudomonas_putida
 #=========
 # 1076 Rhodopseudomonas palustris
 # perl bac_bz.pl -p 1076 -t 258594 -o 316056 -e 316055 
-perl bac_bz.pl -p 1076 -t 258594 -o 316057 -e 316055,316056
+# perl bac_bz.pl -p 1076 -t 258594 -o 316057 -e 316055,316056
+perl bac_bz.pl -p 1076 -t 258594
 
 #=========
 # Salmonella_enterica
-perl bac_bz.pl -p 28901 -t 220341 -o 882884
+# perl bac_bz.pl -p 28901 -t 220341 -o 882884
+perl bac_bz.pl -p 28901 -t 220341
 
 # Salmonella
 # perl bac_bz.pl -p 590 -t 220341 -o 882884 -n Salmonella --gr --sca
@@ -231,14 +220,16 @@ perl bac_bz.pl -p 1280 -t 93062 -o 273036 -e 282458
 
 #=========
 # 1311 Streptococcus agalactiae
-perl bac_bz.pl -p 1311 -t 208435 -o 211110
+# perl bac_bz.pl -p 1311 -t 208435 -o 211110
+perl bac_bz.pl -p 1311 -t 208435
 
 # *** reject S. gallolyticus
 # perl bac_bz.pl -p 1311,637909,990317 -t 208435 -n Streptococcus_agalactiae
 
 #=========
 # 1336 Streptococcus equi
-perl bac_bz.pl -p 1336 -t 552526 -o 553482
+# perl bac_bz.pl -p 1336 -t 552526 -o 553482
+ perl bac_bz.pl -p 1336 -t 552526
 
 # *** reject
 # 486410 Streptococcus dysgalactiae subsp. equisimilis GGS_124
@@ -261,7 +252,8 @@ perl bac_bz.pl -p 1314,486410 -t 160490 -o 486410 -n Streptococcus_pyogenes
 
 #=========
 # 1307 Streptococcus suis
-perl bac_bz.pl -p 1307 -t 391295 -o 1007064 -e 568813
+# perl bac_bz.pl -p 1307 -t 391295 -o 1007064 -e 568813
+perl bac_bz.pl -p 1307 -t 391295
 
 # *** reject
 # 467705 Streptococcus gordonii str. Challis substr. CH1
@@ -269,7 +261,8 @@ perl bac_bz.pl -p 1307 -t 391295 -o 1007064 -e 568813
 
 #=========
 # 1308 Streptococcus thermophilus
-perl bac_bz.pl -p 1308 -t 264199 -o 322159
+# perl bac_bz.pl -p 1308 -t 264199 -o 322159
+perl bac_bz.pl -p 1308 -t 264199
 
 # *** reject S. gallolyticus and S. mutans
 # perl bac_bz.pl -p 1308,637909,990317,511691,210007 -t 264199 -n Streptococcus_thermophilus
@@ -279,11 +272,13 @@ perl bac_bz.pl -p 1308 -t 264199 -o 322159
 # perl bac_bz.pl -p 662 -t 243277 -n Vibrio
 
 # 666 Vibrio cholerae
-perl bac_bz.pl -p 666 -t 243277 -o 345073
+# perl bac_bz.pl -p 666 -t 243277 -o 345073
+perl bac_bz.pl -p 666 -t 243277
 
 #=========
 # 339 Xanthomonas campestris
-perl bac_bz.pl -p 339 -t 190485 -o 509169
+# perl bac_bz.pl -p 339 -t 190485 -o 509169
+perl bac_bz.pl -p 339 -t 190485
 
 # genus 338 Xanthomonas
 # perl bac_bz.pl -p 338  -t 190485 -n Xanthomonas
@@ -302,7 +297,8 @@ perl bac_bz.pl -p 347,316273 -t 291331 -o 316273 -n Xanthomonas_oryzae
 
 #=========
 # 2371 Xylella fastidiosa
-perl bac_bz.pl -p 2371 -t 183190 -o 160492
+# perl bac_bz.pl -p 2371 -t 183190 -o 160492
+perl bac_bz.pl -p 2371 -t 183190
 
 #=========
 # 632 Yersinia pestis
@@ -336,12 +332,12 @@ perl bac_bz.pl -p 633,214092 -t 273123 -o 214092 -n Yersinia_pseudotuberculosis
 
 #=========
 # Bacillus anthracis
-perl bac_bz.pl -p 1392 -t 198094 -o 568206
+# perl bac_bz.pl -p 1392 -t 198094 -o 568206
 
 #=========
 # 62322 Shewanella baltica
 # perl bac_bz.pl -p 62322 -t 402882 -o 325240 
-perl bac_bz.pl -p 62322 -t 399599 -o 325240 
+# perl bac_bz.pl -p 62322 -t 399599 -o 325240 
 
 # genus 22 Shewanella
 # perl bac_bz.pl -p 22 -t 325240 -n Shewanella
