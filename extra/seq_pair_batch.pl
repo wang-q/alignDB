@@ -122,7 +122,7 @@ my $worker = sub {
         1 => "perl $FindBin::Bin/../init/init_alignDB.pl" . " --db [% db %] ",
         2 => "perl $FindBin::Bin/../init/gen_alignDB.pl"
             . " --db [% db %]"
-            . " -a [% ldir %] [% tq %]"
+            . " -da [% ldir %] [% tq %]"
             . " --length   [% lt %]"
             . " --parallel [% parallel %]",
         5 => "perl $FindBin::Bin/../init/insert_isw.pl"
