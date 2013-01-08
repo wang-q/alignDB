@@ -197,8 +197,7 @@ my $dispatch = {
         . " --port=$port"
         . " -u=$username"
         . " --password=$password"
-        . " -d=$db_name"
-        . ( $outgroup ? " --outgroup" : "" ),
+        . " -d=$db_name",
     32 => undef,
     33 => "perl $FindBin::Bin/../gene/update_snp_dnds.pl"
         . " -s=$server"
