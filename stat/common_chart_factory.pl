@@ -72,15 +72,14 @@ $excel_obj->jc_correction if $jc_correction;
 #----------------------------------------------------------#
 # draw charts section
 #----------------------------------------------------------#
+my @sheet_names = @{ $excel_obj->sheet_names };
+
 {
 
     #----------------------------#
     # worksheet -- combined_distance
     #----------------------------#
-    my @sheets = qw{
-        combined_distance distance_coding distance_non_coding
-        combined_density density_coding density_non_coding
-    };
+    my @sheets = grep {/^d\d_comb/} @sheet_names;
     for my $sheet_name (@sheets) {
         my %option = (
             chart_serial => 1,
@@ -129,11 +128,6 @@ $excel_obj->jc_correction if $jc_correction;
 }
 
 {
-
-    #----------------------------#
-    # worksheet -- combined_distance
-    #----------------------------#
-    my $sheet_name = 'combined_distance';
     my %option     = (
         chart_serial => 1,
         x_column     => 1,
@@ -148,22 +142,6 @@ $excel_obj->jc_correction if $jc_correction;
         Top          => 14.25,
         Left         => 520,
     );
-
-    #$excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- distance_non_slip
-    #----------------------------#
-    $sheet_name = 'distance_non_slip';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- distance_slip
-    #----------------------------#
-    $sheet_name = 'distance_slip';
-
-    $excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
     # worksheet -- align_coding
@@ -208,58 +186,6 @@ $excel_obj->jc_correction if $jc_correction;
 
         $excel_obj->draw_y( $sheet_name, \%option );
     }
-
-    #----------------------------#
-    # worksheet -- distance_gc
-    #----------------------------#
-    $sheet_name = 'distance_gc';
-    $option{y_title} = "GC proportion";
-
-    #$excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- distance_gc_non_slip
-    #----------------------------#
-    $sheet_name = 'distance_gc_non_slip';
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- distance_gc_slip
-    #----------------------------#
-    $sheet_name = 'distance_gc_slip';
-    $excel_obj->draw_y( $sheet_name, \%option );
-}
-
-{
-
-    #----------------------------#
-    # worksheet -- combined_density
-    #----------------------------#
-    my $sheet_name = 'combined_density';
-    my %option     = (
-        chart_serial => 1,
-        x_column     => 1,
-        y_column     => 2,
-        first_row    => 3,
-        last_row     => 33,
-        x_max_scale  => 30,
-        x_title      => "Indel density (d2)",
-        y_title      => "Nucleotide diversity",
-        Height       => 200,
-        Width        => 260,
-        Top          => 14.25,
-        Left         => 520,
-    );
-
-    #$excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- density_gc
-    #----------------------------#
-    $sheet_name = 'density_gc';
-    $option{y_title} = "GC proportion";
-
-    #$excel_obj->draw_y( $sheet_name, \%option );
 }
 
 {
