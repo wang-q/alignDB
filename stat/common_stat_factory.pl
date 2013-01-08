@@ -362,147 +362,18 @@ my $summary = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- distance
+# worksheet -- pi_gc_cv
 #----------------------------------------------------------#
-my $distance = sub {
-    my $sheet_name = 'distance';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # write header
-        my @headers = qw{distance AVG_pi STD_pi AVG_gc STD_gc
-            AVG_cv STD_cv COUNT};
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
-
-    {    # write contents
-        my $sql_query = q{
-            SELECT
-                isw_distance distance,
-                AVG(isw_pi) AVG_pi,
-                STD(isw_pi) STD_pi,
-                AVG(isw_average_gc) AVG_gc,
-                STD(isw_average_gc) STD_gc,
-                AVG(isw_cv) AVG_cv,
-                STD(isw_cv) STD_cv,
-                COUNT(*) COUNT
-            FROM isw
-            GROUP BY isw_distance
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    {    # write footer
-        $sheet_row += 2;
-        my $thaw_sql = $sql_file->retrieve('common-distance_total-0');
-        my %option   = (
-            sql_query      => $thaw_sql->as_sql,
-            sheet_row      => $sheet_row,
-            sheet_col      => $sheet_col,
-            content_format => 'TOTAL',
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    print "Sheet \"$sheet_name\" has been generated.\n";
-};
-
-#----------------------------------------------------------#
-# worksheet -- density
-#----------------------------------------------------------#
-my $density = sub {
-    my $sheet_name = 'density';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # write header
-        my @headers = qw{density AVG_pi STD_pi AVG_gc STD_gc
-            AVG_cv STD_cv COUNT};
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
-
-    {    # write contents
-        my $sql_query = q{
-            SELECT
-                isw_density density,
-                AVG(isw_pi) AVG_pi,
-                STD(isw_pi) STD_pi,
-                AVG(isw_average_gc) AVG_gc,
-                STD(isw_average_gc) STD_gc,
-                AVG(isw_cv) AVG_cv,
-                STD(isw_cv) STD_cv,
-                COUNT(*) COUNT
-            FROM isw
-            GROUP BY isw_density
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    {    # write footer
-        $sheet_row += 2;
-        my $thaw_sql = $sql_file->retrieve('common-distance_total-0');
-        my %option   = (
-            sql_query      => $thaw_sql->as_sql,
-            sheet_row      => $sheet_row,
-            sheet_col      => $sheet_col,
-            content_format => 'TOTAL',
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    print "Sheet \"$sheet_name\" has been generated.\n";
-};
-
-my $combined_distance = sub {
-
-    # make combine
-    my @combined;
+my $pi_gc_cv = sub {
     {
-        my $thaw_sql   = $sql_file->retrieve('common-distance_combine-0');
-        my $standalone = [ -1, 0 ];
-        my %option     = (
-            sql_query  => $thaw_sql->as_sql,
-            threshold  => $combine_threshold,
-            standalone => $standalone,
-        );
-        @combined = @{ $write_obj->make_combine( \%option ) };
-    }
-
-    #----------------------------------------------------------#
-    # worksheet -- combined_distance
-    #----------------------------------------------------------#
-    {
-        my $sheet_name = 'combined_distance';
+        my $sheet_name = 'd1_pi_gc_cv';
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
+        my $thaw_sql = $sql_file->retrieve('common-d1_pi_gc_cv-0');
+
         {    # write header
-            my @headers = qw{AVG_distance AVG_pi STD_pi AVG_gc STD_gc
-                AVG_cv STD_cv COUNT};
+            my @headers = $thaw_sql->as_header;
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -514,39 +385,105 @@ my $combined_distance = sub {
         }
 
         {    # write contents
-            my $sql_query = q{
-                SELECT
-                    AVG(isw_distance) AVG_distance,
-                    AVG(isw_pi) AVG_pi,
-                    STD(isw_pi) STD_pi,
-                    AVG(isw_average_gc) AVG_gc,
-                    STD(isw_average_gc) STD_gc,
-                    AVG(isw_cv) AVG_cv,
-                    STD(isw_cv) STD_cv,
-                    COUNT(*) COUNT
-                FROM isw
-                WHERE isw_distance IN
-            };
             my %option = (
-                sql_query => $sql_query,
+                sql_query => $thaw_sql->as_sql,
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
-                combined  => \@combined,
             );
-            ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    }
+
+    {
+        my $sheet_name = 'd2_pi_gc_cv';
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('common-d1_pi_gc_cv-0');
+        $thaw_sql->replace( { distance => 'density' } );
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            my %option = (
+                sql_query => $thaw_sql->as_sql,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
     }
 };
 
-my $combined_density = sub {
+#----------------------------------------------------------#
+# worksheet -- comb_pi_gc_cv
+#----------------------------------------------------------#
+my $comb_pi_gc_cv = sub {
 
     # make combine
     my @combined;
     {
-        my $thaw_sql = $sql_file->retrieve('common-distance_combine-0');
+        my $thaw_sql   = $sql_file->retrieve('common-d1_combine-0');
+        my $standalone = [ -1, 0 ];
+        my %option     = (
+            sql_query  => $thaw_sql->as_sql,
+            threshold  => $combine_threshold,
+            standalone => $standalone,
+        );
+        @combined = @{ $write_obj->make_combine( \%option ) };
+    }
+
+    {
+        my $sheet_name = 'd1_comb_pi_gc_cv';
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        my $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
+
+        {    # write header
+            my @headers = $thaw_sql->as_header;
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            my %option = (
+                sql_obj     => $thaw_sql,
+                sheet_row   => $sheet_row,
+                sheet_col   => $sheet_col,
+                combine_col => 'isw.isw_distance',
+                combined    => \@combined,
+            );
+            ($sheet_row)
+                = $write_obj->write_content_combine_obj( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    }
+
+    # make combine again
+    {
+        my $thaw_sql = $sql_file->retrieve('common-d1_combine-0');
         $thaw_sql->replace( { distance => 'density' } );
         my $standalone = [ -1, 0 ];
         my %option = (
@@ -557,17 +494,16 @@ my $combined_density = sub {
         @combined = @{ $write_obj->make_combine( \%option ) };
     }
 
-    #----------------------------------------------------------#
-    # worksheet -- combined_density
-    #----------------------------------------------------------#
     {
-        my $sheet_name = 'combined_density';
+        my $sheet_name = 'd2_comb_pi_gc_cv';
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
+        my $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
+        $thaw_sql->replace( { distance => 'density' } );
+
         {    # write header
-            my @headers = qw{AVG_density  AVG_pi STD_pi AVG_gc STD_gc
-                AVG_cv STD_cv COUNT};
+            my @headers = $thaw_sql->as_header;
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -579,27 +515,15 @@ my $combined_density = sub {
         }
 
         {    # write contents
-            my $sql_query = q{
-                SELECT
-                    AVG(isw_density) AVG_density,
-                    AVG(isw_pi) AVG_pi,
-                    STD(isw_pi) STD_pi,
-                    AVG(isw_average_gc) AVG_gc,
-                    STD(isw_average_gc) STD_gc,
-                    AVG(isw_cv) AVG_cv,
-                    STD(isw_cv) STD_cv,
-                    COUNT(*) COUNT
-                FROM isw
-                WHERE isw_density IN
-            };
             my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                combined  => \@combined,
+                sql_obj     => $thaw_sql,
+                sheet_row   => $sheet_row,
+                sheet_col   => $sheet_col,
+                combine_col => 'isw.isw_density',
+                combined    => \@combined,
             );
             ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
+                = $write_obj->write_content_combine_obj( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -630,7 +554,7 @@ my $group_distance = sub {
     # make last portion
     my ( $all_length, $last_portion );
     {
-        my $thaw_sql = $sql_file->retrieve('common-distance_combine-0');
+        my $thaw_sql = $sql_file->retrieve('common-d1_combine-0');
         my $portion  = 0.05;
         my %option   = (
             sql_query => $thaw_sql->as_sql,
@@ -663,7 +587,7 @@ my $group_distance = sub {
     );
 
     {    # write contents
-        my $thaw_sql = $sql_file->retrieve('common-distance_avg-0');
+        my $thaw_sql = $sql_file->retrieve('common-d1_pi_avg-0');
         $thaw_sql->add_select( "SUM(isw_length)", 'SUM_length' );
         $thaw_sql->add_select( "SUM(isw_length) / $all_length * 100",
             'length_proportion' );
@@ -671,8 +595,8 @@ my $group_distance = sub {
             sql_obj   => $thaw_sql,
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
-            group     => \@group_distance,
             group_col => 'isw_distance',
+            group     => \@group_distance,
         );
         ($sheet_row) = $write_obj->write_content_group_obj( $sheet, \%option );
     }
@@ -704,7 +628,7 @@ my $group_density = sub {
     # make last portion
     my ( $all_length, $last_portion );
     {
-        my $thaw_sql = $sql_file->retrieve('common-distance_combine-0');
+        my $thaw_sql = $sql_file->retrieve('common-d1_combine-0');
         $thaw_sql->replace( { distance => 'density' } );
         my $portion = 0.05;
         my %option  = (
@@ -732,7 +656,7 @@ my $group_density = sub {
     );
 
     {    # write contents
-        my $thaw_sql = $sql_file->retrieve('common-distance_avg-0');
+        my $thaw_sql = $sql_file->retrieve('common-d1_pi_avg-0');
         $thaw_sql->add_select( "SUM(isw_length)", 'SUM_length' );
         $thaw_sql->add_select( "SUM(isw_length) / $all_length * 100",
             'length_proportion' );
@@ -741,8 +665,8 @@ my $group_density = sub {
             sql_obj   => $thaw_sql,
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
-            group     => \@group_density,
             group_col => 'isw_density',
+            group     => \@group_density,
         );
         ($sheet_row) = $write_obj->write_content_group_obj( $sheet, \%option );
     }
@@ -750,7 +674,10 @@ my $group_density = sub {
     print "Sheet \"$sheet_name\" has been generated.\n";
 };
 
-my $distance_coding = sub {
+#----------------------------------------------------------#
+# worksheet -- comb_coding
+#----------------------------------------------------------#
+my $comb_coding = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
@@ -758,297 +685,256 @@ my $distance_coding = sub {
         return;
     }
 
-    # make combine
-    my ( $isw_f1_1, $isw_f1_2 ) = ( 1, 1 );
-    my @combined;
-    {
-        my $thaw_sql = $sql_file->retrieve('common-distance_coding_combine-2');
-        my $standalone = [ -1, 0 ];
-        my %option     = (
-            sql_query  => $thaw_sql->as_sql,
-            threshold  => $combine_threshold,
-            standalone => $standalone,
-            bind_value => [ $isw_f1_1, $isw_f1_2 ],
-        );
-        @combined = @{ $write_obj->make_combine( \%option ) };
+    my @type_levels = ( [ 'coding', 1, 1 ], [ 'non_coding', 0, 0 ], );
+
+    my $write_sheet_d1 = sub {
+        my ( $name, $feature_1, $feature_2 ) = @{ $_[0] };
+
+        # make combine
+        my @combined;
+        {
+            my $thaw_sql
+                = $sql_file->retrieve('common-d1_make_combine_coding-0');
+            my $standalone = [ -1, 0 ];
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                threshold  => $combine_threshold,
+                standalone => $standalone,
+                bind_value => [ $feature_1, $feature_2 ],
+            );
+            @combined = @{ $write_obj->make_combine( \%option ) };
+        }
+
+        {
+            my $sheet_name = "d1_comb_$name";
+            my $sheet;
+            my ( $sheet_row, $sheet_col );
+
+            my $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
+
+            {    # write header
+                my @headers = $thaw_sql->as_header;
+                ( $sheet_row, $sheet_col ) = ( 0, 0 );
+                my %option = (
+                    sheet_row => $sheet_row,
+                    sheet_col => $sheet_col,
+                    header    => \@headers,
+                );
+                ( $sheet, $sheet_row )
+                    = $write_obj->write_header_direct( $sheet_name, \%option );
+            }
+
+            {    # write contents
+                my %option = (
+                    sql_obj     => $thaw_sql,
+                    sheet_row   => $sheet_row,
+                    sheet_col   => $sheet_col,
+                    combine_col => 'isw.isw_distance',
+                    combined    => \@combined,
+                    bind_value  => [ $feature_1, $feature_2 ],
+                );
+                ($sheet_row)
+                    = $write_obj->write_content_combine_obj( $sheet, \%option );
+            }
+
+            print "Sheet \"$sheet_name\" has been generated.\n";
+        }
+    };
+
+    my $write_sheet_d2 = sub {
+        my ( $name, $feature_1, $feature_2 ) = @{ $_[0] };
+
+        # make combine
+        my @combined;
+        {
+            my $thaw_sql
+                = $sql_file->retrieve('common-d1_make_combine_coding-0');
+            $thaw_sql->replace( { distance => 'density' } );
+            my $standalone = [ -1, 0 ];
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                threshold  => $combine_threshold,
+                standalone => $standalone,
+                bind_value => [ $feature_1, $feature_2 ],
+            );
+            @combined = @{ $write_obj->make_combine( \%option ) };
+        }
+
+        {
+            my $sheet_name = "d2_comb_$name";
+            my $sheet;
+            my ( $sheet_row, $sheet_col );
+
+            my $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
+            $thaw_sql->replace( { distance => 'density' } );
+
+            {    # write header
+                my @headers = $thaw_sql->as_header;
+                ( $sheet_row, $sheet_col ) = ( 0, 0 );
+                my %option = (
+                    sheet_row => $sheet_row,
+                    sheet_col => $sheet_col,
+                    header    => \@headers,
+                );
+                ( $sheet, $sheet_row )
+                    = $write_obj->write_header_direct( $sheet_name, \%option );
+            }
+
+            {    # write contents
+                my %option = (
+                    sql_obj     => $thaw_sql,
+                    sheet_row   => $sheet_row,
+                    sheet_col   => $sheet_col,
+                    combine_col => 'isw.isw_density',
+                    combined    => \@combined,
+                    bind_value  => [ $feature_1, $feature_2 ],
+                );
+                ($sheet_row)
+                    = $write_obj->write_content_combine_obj( $sheet, \%option );
+            }
+
+            print "Sheet \"$sheet_name\" has been generated.\n";
+        }
+    };
+
+    for (@type_levels) {
+        $write_sheet_d1->($_);
     }
 
-    #----------------------------------------------------------#
-    # worksheet -- distance_coding
-    #----------------------------------------------------------#
-    {
-        my $sheet_name = 'distance_coding';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers = qw{AVG_distance AVG_pi STD_pi AVG_gc STD_gc
-                AVG_cv STD_cv COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            my $sql_query = q{
-                SELECT
-                    AVG(isw.isw_distance) AVG_distance,
-                    AVG(isw_pi) AVG_pi,
-                    STD(isw_pi) STD_pi,
-                    AVG(isw_average_gc) AVG_gc,
-                    STD(isw_average_gc) STD_gc,
-                    AVG(isw_cv) AVG_cv,
-                    STD(isw_cv) STD_cv,
-                    COUNT(*) COUNT
-                FROM isw
-                WHERE (isw.isw_coding >= ?)
-                  AND (isw.isw_coding  <= ?)
-                  AND isw_distance IN 
-            };
-            my %option = (
-                sql_query  => $sql_query,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                combined   => \@combined,
-                bind_value => [ $isw_f1_1, $isw_f1_2 ],
-            );
-            ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
+    for (@type_levels) {
+        $write_sheet_d2->($_);
     }
 };
 
-my $distance_non_coding = sub {
+#----------------------------------------------------------#
+# worksheet -- comb_slippage
+#----------------------------------------------------------#
+my $comb_slippage = sub {
 
     # if the target column of the target table does not contain
     #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw', 'isw_coding' ) ) {
+    unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
         return;
     }
 
-    # make combine
-    my ( $isw_f1_1, $isw_f1_2 ) = ( 0, 0 );
-    my @combined;
-    {
-        my $thaw_sql = $sql_file->retrieve('common-distance_coding_combine-2');
-        my $standalone = [ -1, 0 ];
-        my %option     = (
-            sql_query  => $thaw_sql->as_sql,
-            threshold  => $combine_threshold,
-            standalone => $standalone,
-            bind_value => [ $isw_f1_1, $isw_f1_2 ],
-        );
-        @combined = @{ $write_obj->make_combine( \%option ) };
-    }
+    my @type_levels = ( [ 'slippage', 1, 1 ], [ 'non_slippage', 0, 0 ], );
 
-    #----------------------------------------------------------#
-    # worksheet -- distance_non_coding
-    #----------------------------------------------------------#
-    {
-        my $sheet_name = 'distance_non_coding';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
+    my $write_sheet_d1 = sub {
+        my ( $name, $feature_1, $feature_2 ) = @{ $_[0] };
 
-        {    # write header
-            my @headers = qw{AVG_distance AVG_pi STD_pi AVG_gc STD_gc
-                AVG_cv STD_cv COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        # make combine
+        my @combined;
+        {
+            my $thaw_sql
+                = $sql_file->retrieve('common-d1_make_combine_slippage-0');
+            my $standalone = [ -1, 0 ];
             my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
+                sql_query  => $thaw_sql->as_sql,
+                threshold  => $combine_threshold,
+                standalone => $standalone,
+                bind_value => [ $feature_1, $feature_2 ],
             );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+            @combined = @{ $write_obj->make_combine( \%option ) };
         }
 
-        {    # write contents
-            my $sql_query = q{
-                SELECT
-                    AVG(isw.isw_distance) AVG_distance,
-                    AVG(isw_pi) AVG_pi,
-                    STD(isw_pi) STD_pi,
-                    AVG(isw_average_gc) AVG_gc,
-                    STD(isw_average_gc) STD_gc,
-                    AVG(isw_cv) AVG_cv,
-                    STD(isw_cv) STD_cv,
-                    COUNT(*) COUNT
-                FROM isw
-                WHERE (isw.isw_coding >= ?)
-                  AND (isw.isw_coding  <= ?)
-                  AND isw_distance IN 
-            };
+        {
+            my $sheet_name = "d1_comb_$name";
+            my $sheet;
+            my ( $sheet_row, $sheet_col );
+
+            my $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
+
+            {    # write header
+                my @headers = $thaw_sql->as_header;
+                ( $sheet_row, $sheet_col ) = ( 0, 0 );
+                my %option = (
+                    sheet_row => $sheet_row,
+                    sheet_col => $sheet_col,
+                    header    => \@headers,
+                );
+                ( $sheet, $sheet_row )
+                    = $write_obj->write_header_direct( $sheet_name, \%option );
+            }
+
+            {    # write contents
+                my %option = (
+                    sql_obj     => $thaw_sql,
+                    sheet_row   => $sheet_row,
+                    sheet_col   => $sheet_col,
+                    combine_col => 'isw.isw_distance',
+                    combined    => \@combined,
+                    bind_value  => [ $feature_1, $feature_2 ],
+                );
+                ($sheet_row)
+                    = $write_obj->write_content_combine_obj( $sheet, \%option );
+            }
+
+            print "Sheet \"$sheet_name\" has been generated.\n";
+        }
+    };
+
+    my $write_sheet_d2 = sub {
+        my ( $name, $feature_1, $feature_2 ) = @{ $_[0] };
+
+        # make combine
+        my @combined;
+        {
+            my $thaw_sql
+                = $sql_file->retrieve('common-d1_make_combine_slippage-0');
+            $thaw_sql->replace( { distance => 'density' } );
+            my $standalone = [ -1, 0 ];
             my %option = (
-                sql_query  => $sql_query,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                combined   => \@combined,
-                bind_value => [ $isw_f1_1, $isw_f1_2 ],
+                sql_query  => $thaw_sql->as_sql,
+                threshold  => $combine_threshold,
+                standalone => $standalone,
+                bind_value => [ $feature_1, $feature_2 ],
             );
-            ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
+            @combined = @{ $write_obj->make_combine( \%option ) };
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    }
-};
+        {
+            my $sheet_name = "d2_comb_$name";
+            my $sheet;
+            my ( $sheet_row, $sheet_col );
 
-my $density_coding = sub {
+            my $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
+            $thaw_sql->replace( { distance => 'density' } );
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw', 'isw_coding' ) ) {
-        return;
-    }
+            {    # write header
+                my @headers = $thaw_sql->as_header;
+                ( $sheet_row, $sheet_col ) = ( 0, 0 );
+                my %option = (
+                    sheet_row => $sheet_row,
+                    sheet_col => $sheet_col,
+                    header    => \@headers,
+                );
+                ( $sheet, $sheet_row )
+                    = $write_obj->write_header_direct( $sheet_name, \%option );
+            }
 
-    # make combine
-    my ( $isw_f1_1, $isw_f1_2 ) = ( 1, 1 );
-    my @combined;
-    {
-        my $thaw_sql = $sql_file->retrieve('common-distance_coding_combine-2');
-        $thaw_sql->replace( { distance => 'density' } );
-        my $standalone = [ -1, 0 ];
-        my %option = (
-            sql_query  => $thaw_sql->as_sql,
-            threshold  => $combine_threshold,
-            standalone => $standalone,
-            bind_value => [ $isw_f1_1, $isw_f1_2 ],
-        );
-        @combined = @{ $write_obj->make_combine( \%option ) };
-    }
+            {    # write contents
+                my %option = (
+                    sql_obj     => $thaw_sql,
+                    sheet_row   => $sheet_row,
+                    sheet_col   => $sheet_col,
+                    combine_col => 'isw.isw_density',
+                    combined    => \@combined,
+                    bind_value  => [ $feature_1, $feature_2 ],
+                );
+                ($sheet_row)
+                    = $write_obj->write_content_combine_obj( $sheet, \%option );
+            }
 
-    #----------------------------------------------------------#
-    # worksheet -- density_coding
-    #----------------------------------------------------------#
-    {
-        my $sheet_name = 'density_coding';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers = qw{AVG_density AVG_pi STD_pi AVG_gc STD_gc
-                AVG_cv STD_cv COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+            print "Sheet \"$sheet_name\" has been generated.\n";
         }
+    };
 
-        {    # write contents
-            my $sql_query = q{
-                SELECT
-                    AVG(isw.isw_density) AVG_density,
-                    AVG(isw_pi) AVG_pi,
-                    STD(isw_pi) STD_pi,
-                    AVG(isw_average_gc) AVG_gc,
-                    STD(isw_average_gc) STD_gc,
-                    AVG(isw_cv) AVG_cv,
-                    STD(isw_cv) STD_cv,
-                    COUNT(*) COUNT
-                FROM isw
-                WHERE (isw.isw_coding >= ?)
-                  AND (isw.isw_coding  <= ?)
-                  AND isw_density IN 
-            };
-            my %option = (
-                sql_query  => $sql_query,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                combined   => \@combined,
-                bind_value => [ $isw_f1_1, $isw_f1_2 ],
-            );
-            ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    }
-};
-
-my $density_non_coding = sub {
-
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw', 'isw_coding' ) ) {
-        return;
+    for (@type_levels) {
+        $write_sheet_d1->($_);
     }
 
-    # make combine
-    my ( $isw_f1_1, $isw_f1_2 ) = ( 0, 0 );
-    my @combined;
-    {
-        my $thaw_sql = $sql_file->retrieve('common-distance_coding_combine-2');
-        $thaw_sql->replace( { distance => 'density' } );
-        my $standalone = [ -1, 0 ];
-        my %option = (
-            sql_query  => $thaw_sql->as_sql,
-            threshold  => $combine_threshold,
-            standalone => $standalone,
-            bind_value => [ $isw_f1_1, $isw_f1_2 ],
-        );
-        @combined = @{ $write_obj->make_combine( \%option ) };
-    }
-
-    #----------------------------------------------------------#
-    # worksheet -- density_non_coding
-    #----------------------------------------------------------#
-    {
-        my $sheet_name = 'density_non_coding';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers = qw{AVG_density AVG_pi STD_pi AVG_gc STD_gc
-                AVG_cv STD_cv COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            my $sql_query = q{
-                SELECT
-                    AVG(isw.isw_density) AVG_density,
-                    AVG(isw_pi) AVG_pi,
-                    STD(isw_pi) STD_pi,
-                    AVG(isw_average_gc) AVG_gc,
-                    STD(isw_average_gc) STD_gc,
-                    AVG(isw_cv) AVG_cv,
-                    STD(isw_cv) STD_cv,
-                    COUNT(*) COUNT
-                FROM isw
-                WHERE (isw.isw_coding >= ?)
-                  AND (isw.isw_coding <= ?)
-                  AND isw_density IN 
-            };
-            my %option = (
-                sql_query  => $sql_query,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                combined   => \@combined,
-                bind_value => [ $isw_f1_1, $isw_f1_2 ],
-            );
-            ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
+    for (@type_levels) {
+        $write_sheet_d2->($_);
     }
 };
 
@@ -1649,11 +1535,7 @@ my $indel_gc_group = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    my @indel_group = (
-        [ 0,   0.2999 ],
-        [ 0.3, 0.4999 ],
-        [ 0.5, 1 ],
-    );
+    my @indel_group = ( [ 0, 0.2999 ], [ 0.3, 0.4999 ], [ 0.5, 1 ], );
 
     {    # write contents
         my $thaw_sql_R = $sql_file->retrieve('common-indel_size_r-0');
@@ -1739,26 +1621,21 @@ my $snp_indel_ratio = sub {
         @group_align = @{$group};
     }
 
-    # write header
-    {
-        my $sql_query = q{
-            # header of Table group_density
-            SELECT 'AVG_pi', 'AVG_SNP/Indel', 'COUNT', 'AVG_align_length',
-                   'SUM_align_length', 'AVG_SNP/kb', 'AVG_Indel/kb'
-        };
+    {    # write header
+        my @headers
+            = qw{AVG_pi AVG_SNP/Indel COUNT AVG_align_length SUM_align_length AVG_SNP/kb AVG_Indel/kb};
         ( $sheet_row, $sheet_col ) = ( 0, 1 );
         my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            header     => \@headers,
+            query_name => $sheet_name,
         );
         ( $sheet, $sheet_row )
-            = $write_obj->write_header_sql( $sheet_name, \%option );
+            = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    # align query
-    #
-    {
+    {    # align query
         my $sql_query = q{
             SELECT AVG(p.pi) `AVG_pi`,
                    AVG(p.snp / p.indel) `AVG_SNP/Indel`,
@@ -1780,8 +1657,7 @@ my $snp_indel_ratio = sub {
         ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
     }
 
-    # drop temporary table
-    {
+    {    # drop temporary table
         my $sql_query = q{
             DROP TABLE IF EXISTS pi_group
         };
@@ -1870,26 +1746,20 @@ my $snp_base_change = sub {
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
-    # write header
-    {
-        my $query_name = 'snp_base_change';
-        my $sql_query  = q{
-            # header
-            SELECT 'base_change', 'snp_number'
-        };
+    {    # write header
+        my @headers = qw{base_change snp_number};
         ( $sheet_row, $sheet_col ) = ( 0, 1 );
         my %option = (
-            sql_query  => $sql_query,
             sheet_row  => $sheet_row,
             sheet_col  => $sheet_col,
-            query_name => $query_name,
+            header     => \@headers,
+            query_name => $sheet_name,
         );
         ( $sheet, $sheet_row )
-            = $write_obj->write_header_sql( $sheet_name, \%option );
+            = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    # write contents
-    {
+    {    # write contents
         $sheet_row++;
         my $query_name = 'T2Q';
         my $sql_query  = q{
@@ -2045,183 +1915,8 @@ my $density_snp = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- distance_slip
-#----------------------------------------------------------#
-my $distance_slip = sub {
-
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
-        return;
-    }
-
-    my @slip_levels = ( [ 'non_slip', 0, 0 ], [ 'slip', 1, 1 ], );
-
-    my $write_sheet = sub {
-        my ($slip_levels) = @_;
-        my $sheet_name = 'distance_' . $slip_levels->[0];
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers = qw{distance AVG_pi COUNT STD_pi};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-                # S widnows, isw_indel_id is indel_id (left indel's id)
-            my $thaw_sql_s = $sql_file->retrieve('common-distance_slip_s-4');
-            my %option     = (
-                sql_query  => $thaw_sql_s->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [
-                    $slip_levels->[1], $slip_levels->[2],
-                    $slip_levels->[1], $slip_levels->[2],
-                ],
-            );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-        }
-
-        {    # L & R windows
-            my $thaw_sql_lr = $sql_file->retrieve('common-distance_slip_lr-2');
-            my %option      = (
-                sql_query  => $thaw_sql_lr->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $slip_levels->[1], $slip_levels->[2], ],
-            );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-        }
-
-        {    # write footer
-            $sheet_row += 2;
-            my $thaw_sql = $sql_file->retrieve('common-distance_slip_total-2');
-            my %option   = (
-                sql_query      => $thaw_sql->as_sql,
-                sheet_row      => $sheet_row,
-                sheet_col      => $sheet_col,
-                content_format => 'TOTAL',
-                bind_value     => [ $slip_levels->[1], $slip_levels->[2], ]
-            );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    };
-
-    foreach (@slip_levels) {
-        &$write_sheet($_);
-    }
-};
-
-#----------------------------------------------------------#
-# worksheet -- distance_gc_slip
-#----------------------------------------------------------#
-my $distance_gc_slip = sub {
-
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
-        return;
-    }
-
-    my @slip_levels = ( [ 'non_slip', 0, 0 ], [ 'slip', 1, 1 ], );
-
-    my $write_sheet = sub {
-        my ($slip_levels) = @_;
-        my $sheet_name = 'distance_gc_' . $slip_levels->[0];
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers = qw{distance AVG_gc COUNT STD_gc};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-                # S widnows, isw_indel_id is indel_id (left indel's id)
-            my $thaw_sql_s = $sql_file->retrieve('common-distance_slip_s-4');
-            $thaw_sql_s->replace(
-                {   AVG_pi       => 'AVG_gc',
-                    STD_pi       => 'STD_gc',
-                    'isw.isw_pi' => 'isw.isw_average_gc',
-                }
-            );
-            my %option = (
-                sql_query  => $thaw_sql_s->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [
-                    $slip_levels->[1], $slip_levels->[2],
-                    $slip_levels->[1], $slip_levels->[2],
-                ],
-            );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-        }
-
-        {    # L & R windows
-            my $thaw_sql_lr = $sql_file->retrieve('common-distance_slip_lr-2');
-            $thaw_sql_lr->replace(
-                {   AVG_pi       => 'AVG_gc',
-                    STD_pi       => 'STD_gc',
-                    'isw.isw_pi' => 'isw.isw_average_gc',
-                }
-            );
-            my %option = (
-                sql_query  => $thaw_sql_lr->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $slip_levels->[1], $slip_levels->[2], ],
-            );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-        }
-
-        {    # write footer
-            $sheet_row += 2;
-            my $thaw_sql = $sql_file->retrieve('common-distance_slip_total-2');
-            $thaw_sql->replace(
-                {   AVG_pi       => 'AVG_gc',
-                    STD_pi       => 'STD_gc',
-                    'isw.isw_pi' => 'isw.isw_average_gc',
-                }
-            );
-            my %option = (
-                sql_query      => $thaw_sql->as_sql,
-                sheet_row      => $sheet_row,
-                sheet_col      => $sheet_col,
-                content_format => 'TOTAL',
-                bind_value     => [ $slip_levels->[1], $slip_levels->[2], ]
-            );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    };
-
-    foreach (@slip_levels) {
-        &$write_sheet($_);
-    }
-};
-
-#----------------------------------------------------------#
 # worksheet -- align_coding
 #----------------------------------------------------------#
-#
 my $align_coding = sub {
 
     # if the target column of the target table does not contain
@@ -2296,7 +1991,6 @@ my $align_coding = sub {
 #----------------------------------------------------------#
 # worksheet -- align_repeat
 #----------------------------------------------------------#
-#
 my $align_repeat = sub {
 
     # if the target column of the target table does not contain
@@ -2371,7 +2065,6 @@ my $align_repeat = sub {
 #----------------------------------------------------------#
 # worksheet -- align_te
 #----------------------------------------------------------#
-#
 my $align_te = sub {
 
     # if the target column of the target table does not contain
@@ -2450,7 +2143,6 @@ my $align_te = sub {
 #----------------------------------------------------------#
 # worksheet -- align_paralog
 #----------------------------------------------------------#
-#
 my $align_paralog = sub {
 
     # if the target column of the target table does not contain
@@ -2528,12 +2220,11 @@ my $align_paralog = sub {
 
 foreach my $n (@tasks) {
     if ( $n == 1 ) { &$basic; &$process; &$summary; next; }
-    if ( $n == 2 ) { &$distance; &$combined_distance; next; }
-    if ( $n == 3 )  { &$group_distance;       next; }
-    if ( $n == 4 )  { &$distance_coding;      &$distance_non_coding; next; }
-    if ( $n == 5 )  { &$density;              &$combined_density; next; }
-    if ( $n == 6 )  { &$group_density;        next; }
-    if ( $n == 7 )  { &$density_coding;       &$density_non_coding; next; }
+    if ( $n == 2 )  { &$pi_gc_cv;             next; }
+    if ( $n == 3 )  { &$comb_pi_gc_cv;        next; }
+    if ( $n == 4 )  { &$group_distance;       &$group_density; next; }
+    if ( $n == 5 )  { &$comb_coding;          next; }
+    if ( $n == 6 )  { &$comb_slippage;        next; }
     if ( $n == 8 )  { &$dd_group;             next; }
     if ( $n == 9 )  { &$indel_size_group;     &$indel_size_asymmetry; next; }
     if ( $n == 10 ) { &$indel_extand_group;   &$indel_extand_asymmetry; next; }
@@ -2544,7 +2235,6 @@ foreach my $n (@tasks) {
     if ( $n == 15 ) { &$indel_length;         &$indel_length_100; next; }
     if ( $n == 16 ) { &$snp_base_change;      next; }
     if ( $n == 17 ) { &$distance_snp;         &$density_snp; next; }
-    if ( $n == 18 ) { &$distance_slip;        &$distance_gc_slip; next; }
 
     if ( $n == 51 ) { &$align_coding;  next; }
     if ( $n == 52 ) { &$align_repeat;  next; }
@@ -2559,21 +2249,20 @@ __END__
 
 =head1 NAME
 
-    stat_factory.pl - Generate statistical Excel files from alignDB
+    common_stat_factory.pl - Generate statistical Excel files from alignDB
 
 =head1 SYNOPSIS
 
-    stat_factory.pl [options]
-     Options:
-       --help            brief help message
-       --man             full documentation
-       --server          MySQL server IP/Domain name
-       --db              database name
-       --username        username
-       --password        password
-       --output          output filename
-       --run             run special analysis
-       
+    common_stat_factory.pl [options]
+      Options:
+        --help              brief help message
+        --man               full documentation
+        --server            MySQL server IP/Domain name
+        --db                database name
+        --username          username
+        --password          password
+        --output            output filename
+        --run               run special analysis
 
 =head1 OPTIONS
 
@@ -2588,10 +2277,3 @@ Print a brief help message and exits.
 Prints the manual page and exits.
 
 =back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
-
-=cut

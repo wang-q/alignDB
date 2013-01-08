@@ -52,93 +52,90 @@ sub ns { return AlignDB::SQL->new; }
 # stat_factory.pl SQL
 #----------------------------------------------------------#
 
-#SELECT isw_distance distance,
-#       AVG(isw_pi) AVG_pi,
-#       COUNT(*) COUNT,
-#       STD(isw_pi) STD_pi
+#SELECT
+#  isw.isw_distance distance,
+#  AVG(isw.isw_pi) AVG_pi,
+#  STD(isw.isw_pi) STD_pi,
+#  AVG(isw.isw_average_gc) AVG_gc,
+#  STD(isw.isw_average_gc) STD_gc,
+#  AVG(isw.isw_cv) AVG_gc,
+#  STD(isw.isw_cv) STD_gc,
+#  COUNT(*) COUNT
 #FROM isw
-#GROUP BY isw_distance
+#GROUP BY
+#  isw_isw_distance
 {
+    my $name = 'common-d1_pi_gc_cv-0';
+
     my $sql = ns();
-    $sql->add_select( 'isw_distance', 'distance' );
-    $sql->add_select( 'AVG(isw_pi)',  'AVG_pi' );
-    $sql->add_select( 'COUNT(*)',     'COUNT' );
-    $sql->add_select( 'STD(isw_pi)',  'STD_pi' );
+    $sql->add_select( 'isw.isw_distance',        'distance' );
+    $sql->add_select( 'AVG(isw.isw_pi)',         'AVG_pi' );
+    $sql->add_select( 'STD(isw.isw_pi)',         'STD_pi' );
+    $sql->add_select( 'AVG(isw.isw_average_gc)', 'AVG_gc' );
+    $sql->add_select( 'STD(isw.isw_average_gc)', 'STD_gc' );
+    $sql->add_select( 'AVG(isw.isw_cv)',         'AVG_gc' );
+    $sql->add_select( 'STD(isw.isw_cv)',         'STD_gc' );
+    $sql->add_select( 'COUNT(*)',                'COUNT' );
     $sql->from( ['isw'] );
-    $sql->group( { column => 'isw_distance' } );
+    $sql->group( { column => 'isw.isw_distance' } );
 
-    $sql_file->set( 'common-distance-0', $sql );
-    print $sql->as_sql if $verbose;
-}
+    $sql_file->set( $name, $sql );
 
-#SELECT 'Total',
-#       AVG(isw_pi) AVG_pi,
-#       COUNT(*) COUNT,
-#       STD(isw_pi) STD_pi
-#FROM isw
-{
-    my $sql = ns();
-    $sql->select( ['\'Total\''] );
-    $sql->add_select( 'AVG(isw_pi)', 'AVG_pi' );
-    $sql->add_select( 'COUNT(*)',    'COUNT' );
-    $sql->add_select( 'STD(isw_pi)', 'STD_pi' );
-    $sql->from( ['isw'] );
-
-    $sql_file->set( 'common-distance_total-0', $sql );
-    print $sql->as_sql if $verbose;
-}
-
-#SELECT isw_distance distance,
-#       COUNT(*) COUNT,
-#       SUM(isw_length) SUM_length
-#FROM isw
-#GROUP BY isw_distance
-{
-    my $sql = ns();
-    $sql->add_select( 'isw_distance',    'distance' );
-    $sql->add_select( 'COUNT(*)',        'COUNT' );
-    $sql->add_select( 'SUM(isw_length)', 'SUM_length' );
-    $sql->from( ['isw'] );
-    $sql->group( { column => 'isw_distance' } );
-
-    $sql_file->set( 'common-distance_combine-0', $sql );
-    print $sql->as_sql if $verbose;
-}
-
-#SELECT AVG(isw_distance) AVG_distance,
-#       AVG(isw_pi) AVG_pi,
-#       COUNT(*) COUNT,
-#       STD(isw_pi) STD_pi
-#FROM isw
-{
-    my $sql = ns();
-    $sql->add_select( 'AVG(isw_distance)', 'AVG_distance' );
-    $sql->add_select( 'AVG(isw_pi)',       'AVG_pi' );
-    $sql->add_select( 'COUNT(*)',          'COUNT' );
-    $sql->add_select( 'STD(isw_pi)',       'STD_pi' );
-    $sql->from( ['isw'] );
-
-    $sql_file->set( 'common-distance_avg-0', $sql );
+    print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
 
 #SELECT
 #  isw.isw_distance distance,
-#  COUNT(*) COUNT
-#FROM
-#WHERE (isw.isw_coding >= ?)
-#  AND (isw.isw_coding <= ?)
+#  COUNT(*) COUNT,
+#  SUM(isw.isw_length) SUM_length
+#FROM isw
+#GROUP BY
+#  isw.isw_distance
 {
     my $sql = ns();
     $sql->add_select( 'isw.isw_distance', 'distance' );
     $sql->add_select( 'COUNT(*)',         'COUNT' );
 
+    # for group last portion
+    $sql->add_select( 'SUM(isw_length)', 'SUM_length' );
+
     $sql->from( ['isw'] );
-    $sql->add_where( 'isw.isw_coding' => { op => '>=', value => '1' } );
-    $sql->add_where( 'isw.isw_coding' => { op => '<=', value => '1' } );
     $sql->group( { column => 'isw.isw_distance' } );
 
-    $sql_file->set( 'common-distance_coding_combine-2', $sql );
+    $sql_file->set( 'common-d1_combine-0', $sql );
+    print $sql->as_sql if $verbose;
+}
+
+#SELECT
+#  isw.isw_distance distance,
+#  AVG(isw.isw_pi) AVG_pi,
+#  STD(isw.isw_pi) STD_pi,
+#  AVG(isw.isw_average_gc) AVG_gc,
+#  STD(isw.isw_average_gc) STD_gc,
+#  AVG(isw.isw_cv) AVG_gc,
+#  STD(isw.isw_cv) STD_gc,
+#  COUNT(*) COUNT
+#FROM isw
+#GROUP BY
+#  isw_isw_distance
+{
+    my $name = 'common-d1_comb_pi_gc_cv-0';
+
+    my $sql = ns();
+    $sql->add_select( 'AVG(isw.isw_distance)',   'AVG_distance' );
+    $sql->add_select( 'AVG(isw.isw_pi)',         'AVG_pi' );
+    $sql->add_select( 'STD(isw.isw_pi)',         'STD_pi' );
+    $sql->add_select( 'AVG(isw.isw_average_gc)', 'AVG_gc' );
+    $sql->add_select( 'STD(isw.isw_average_gc)', 'STD_gc' );
+    $sql->add_select( 'AVG(isw.isw_cv)',         'AVG_gc' );
+    $sql->add_select( 'STD(isw.isw_cv)',         'STD_gc' );
+    $sql->add_select( 'COUNT(*)',                'COUNT' );
+    $sql->from( ['isw'] );
+
+    $sql_file->set( $name, $sql );
+
+    print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
 
@@ -147,21 +144,157 @@ sub ns { return AlignDB::SQL->new; }
 #  AVG(isw.isw_pi) AVG_pi,
 #  COUNT(*) COUNT,
 #  STD(isw.isw_pi) STD_pi
-#FROM
-#WHERE (isw.isw_coding >= ?)
-#  AND (isw.isw_coding <= ?)
+#FROM isw
 {
+    my $name = 'common-d1_pi_avg-0';
+
     my $sql = ns();
     $sql->add_select( 'AVG(isw.isw_distance)', 'AVG_distance' );
     $sql->add_select( 'AVG(isw.isw_pi)',       'AVG_pi' );
     $sql->add_select( 'COUNT(*)',              'COUNT' );
     $sql->add_select( 'STD(isw.isw_pi)',       'STD_pi' );
+    $sql->from( ['isw'] );
 
+    $sql_file->set( $name, $sql );
+
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
+#SELECT
+#  isw.isw_distance distance,
+#  COUNT(*) COUNT
+#FROM isw
+#WHERE (isw.isw_coding >= ?)
+#  AND (isw.isw_coding <= ?)
+#GROUP BY
+#  isw.isw_distance
+{
+    my $name = 'common-d1_make_combine_coding-0';
+
+    my $sql = ns();
+    $sql->add_select( 'isw.isw_distance', 'distance' );
+    $sql->add_select( 'COUNT(*)',         'COUNT' );
     $sql->from( ['isw'] );
     $sql->add_where( 'isw.isw_coding' => { op => '>=', value => '1' } );
     $sql->add_where( 'isw.isw_coding' => { op => '<=', value => '1' } );
+    $sql->group( { column => 'isw.isw_distance' } );
 
-    $sql_file->set( 'common-distance_coding-2', $sql );
+    $sql_file->set( $name, $sql );
+
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
+#SELECT
+#  AVG(isw.isw_distance) AVG_distance,
+#  AVG(isw.isw_pi) AVG_pi,
+#  STD(isw.isw_pi) STD_pi,
+#  AVG(isw.isw_average_gc) AVG_gc,
+#  STD(isw.isw_average_gc) STD_gc,
+#  AVG(isw.isw_cv) AVG_gc,
+#  STD(isw.isw_cv) STD_gc,
+#  COUNT(*) COUNT
+#FROM isw
+#WHERE (isw.isw_coding >= ?)
+#  AND (isw.isw_coding <= ?)
+{
+    my $name = 'common-d1_comb_coding-0';
+
+    my $sql = ns();
+    $sql->add_select( 'AVG(isw.isw_distance)',   'AVG_distance' );
+    $sql->add_select( 'AVG(isw.isw_pi)',         'AVG_pi' );
+    $sql->add_select( 'STD(isw.isw_pi)',         'STD_pi' );
+    $sql->add_select( 'AVG(isw.isw_average_gc)', 'AVG_gc' );
+    $sql->add_select( 'STD(isw.isw_average_gc)', 'STD_gc' );
+    $sql->add_select( 'AVG(isw.isw_cv)',         'AVG_gc' );
+    $sql->add_select( 'STD(isw.isw_cv)',         'STD_gc' );
+    $sql->add_select( 'COUNT(*)',                'COUNT' );
+    $sql->from( ['isw'] );
+
+    $sql->add_where( 'isw.isw_coding' => { op => '>=', value => '1' } );
+    $sql->add_where( 'isw.isw_coding' => { op => '<=', value => '1' } );
+
+    $sql_file->set( $name, $sql );
+
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
+#SELECT
+#  isw.isw_distance distance,
+#  COUNT(*) COUNT
+#FROM isw
+#  INNER JOIN indel ON
+#    isw.isw_indel_id = indel.indel_id
+#WHERE (indel.indel_slippage >= ?)
+#  AND (indel.indel_slippage <= ?)
+#GROUP BY
+#  isw.isw_distance
+{
+    my $name = 'common-d1_make_combine_slippage-0';
+
+    my $sql = ns();
+    $sql->add_select( 'isw.isw_distance', 'distance' );
+    $sql->add_select( 'COUNT(*)',         'COUNT' );
+
+    $sql->add_join(
+        isw => {
+            type      => 'inner',
+            table     => 'indel',
+            condition => 'isw.isw_indel_id = indel.indel_id',
+        }
+    );
+    $sql->add_where( 'indel.indel_slippage' => { op => '>=', value => '1' } );
+    $sql->add_where( 'indel.indel_slippage' => { op => '<=', value => '1' } );
+    $sql->group( { column => 'isw.isw_distance' } );
+
+    $sql_file->set( $name, $sql );
+
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
+#SELECT
+#  AVG(isw.isw_distance) AVG_distance,
+#  AVG(isw.isw_pi) AVG_pi,
+#  STD(isw.isw_pi) STD_pi,
+#  AVG(isw.isw_average_gc) AVG_gc,
+#  STD(isw.isw_average_gc) STD_gc,
+#  AVG(isw.isw_cv) AVG_gc,
+#  STD(isw.isw_cv) STD_gc,
+#  COUNT(*) COUNT
+#FROM isw
+#  INNER JOIN indel ON
+#    isw.isw_indel_id = indel.indel_id
+#WHERE (indel.indel_slippage >= ?)
+#  AND (indel.indel_slippage <= ?)
+{
+    my $name = 'common-d1_comb_slippage-0';
+
+    my $sql = ns();
+    $sql->add_select( 'AVG(isw.isw_distance)',   'AVG_distance' );
+    $sql->add_select( 'AVG(isw.isw_pi)',         'AVG_pi' );
+    $sql->add_select( 'STD(isw.isw_pi)',         'STD_pi' );
+    $sql->add_select( 'AVG(isw.isw_average_gc)', 'AVG_gc' );
+    $sql->add_select( 'STD(isw.isw_average_gc)', 'STD_gc' );
+    $sql->add_select( 'AVG(isw.isw_cv)',         'AVG_gc' );
+    $sql->add_select( 'STD(isw.isw_cv)',         'STD_gc' );
+    $sql->add_select( 'COUNT(*)',                'COUNT' );
+
+    $sql->add_join(
+        isw => {
+            type      => 'inner',
+            table     => 'indel',
+            condition => 'isw.isw_indel_id = indel.indel_id',
+        }
+    );
+    $sql->add_where( 'indel.indel_slippage' => { op => '>=', value => '1' } );
+    $sql->add_where( 'indel.indel_slippage' => { op => '<=', value => '1' } );
+
+    $sql_file->set( $name, $sql );
+
+    print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
 
@@ -323,122 +456,6 @@ sub ns { return AlignDB::SQL->new; }
     $sql->group( { column => 'indel_length' } );
 
     $sql_file->set( 'common-indel_length-0', $sql );
-    print $sql->as_sql if $verbose;
-}
-
-#SELECT
-#  isw.isw_distance distance,
-#  AVG(isw.isw_pi) AVG_pi,
-#  COUNT(*) COUNT,
-#  STD(isw.isw_pi) STD_pi
-#FROM isw
-#  INNER JOIN indel i1 ON
-#    isw.indel_id = i1.indel_id
-#  INNER JOIN indel i2 ON
-#    isw.prev_indel_id = i2.indel_id
-#WHERE (isw.isw_type IN ('S'))
-#  AND (i1.indel_slippage >= ?)
-#  AND (i1.indel_slippage <= ?)
-#  AND (i2.indel_slippage >= ?)
-#  AND (i2.indel_slippage <= ?)
-#GROUP BY
-#  isw.isw_distance
-{
-    my $sql = ns();
-    $sql->add_select( 'isw.isw_distance', 'distance' );
-    $sql->add_select( 'AVG(isw.isw_pi)',  'AVG_pi' );
-    $sql->add_select( 'COUNT(*)',         'COUNT' );
-    $sql->add_select( 'STD(isw.isw_pi)',  'STD_pi' );
-
-    $sql->add_join(
-        isw => [
-            {   type      => 'inner',
-                table     => 'indel i1',
-                condition => 'isw.indel_id = i1.indel_id',
-            },
-            {   type      => 'inner',
-                table     => 'indel i2',
-                condition => 'isw.prev_indel_id = i2.indel_id',
-            },
-        ]
-    );
-    $sql->add_where( 'isw.isw_type'      => \q{IN ('S')} );
-    $sql->add_where( 'i1.indel_slippage' => { op => '>=', value => '1' } );
-    $sql->add_where( 'i1.indel_slippage' => { op => '<=', value => '1' } );
-    $sql->add_where( 'i2.indel_slippage' => { op => '>=', value => '1' } );
-    $sql->add_where( 'i2.indel_slippage' => { op => '<=', value => '1' } );
-    $sql->group( { column => 'isw.isw_distance' } );
-
-    $sql_file->set( 'common-distance_slip_s-4', $sql );
-    print $sql->as_sql if $verbose;
-}
-
-#SELECT
-#  isw.isw_distance distance,
-#  AVG(isw.isw_pi) AVG_pi,
-#  COUNT(*) COUNT,
-#  STD(isw.isw_pi) STD_pi
-#FROM isw
-#  INNER JOIN indel ON
-#    isw.isw_indel_id = indel.indel_id
-#WHERE (isw.isw_type IN ('L', 'R'))
-#  AND (indel.indel_slippage >= ?)
-#  AND (indel.indel_slippage <= ?)
-#GROUP BY
-#  isw.isw_distance
-{
-    my $sql = ns();
-    $sql->add_select( 'isw.isw_distance', 'distance' );
-    $sql->add_select( 'AVG(isw.isw_pi)',  'AVG_pi' );
-    $sql->add_select( 'COUNT(*)',         'COUNT' );
-    $sql->add_select( 'STD(isw.isw_pi)',  'STD_pi' );
-
-    $sql->add_join(
-        isw => {
-            type      => 'inner',
-            table     => 'indel',
-            condition => 'isw.isw_indel_id = indel.indel_id',
-        }
-    );
-    $sql->add_where( 'isw.isw_type'         => \q{IN ('L', 'R')} );
-    $sql->add_where( 'indel.indel_slippage' => { op => '>=', value => '1' } );
-    $sql->add_where( 'indel.indel_slippage' => { op => '<=', value => '1' } );
-    $sql->group( { column => 'isw.isw_distance' } );
-
-    $sql_file->set( 'common-distance_slip_lr-2', $sql );
-    print $sql->as_sql if $verbose;
-}
-
-#SELECT
-#  'Total',
-#  AVG(isw_pi) AVG_pi,
-#  COUNT(*) COUNT,
-#  STD(isw_pi) STD_pi
-#FROM isw
-#  INNER JOIN indel ON
-#    isw.isw_indel_id = indel.indel_id
-#WHERE (isw.isw_type IN ('L', 'R'))
-#  AND (indel.indel_slippage >= ?)
-#  AND (indel.indel_slippage <= ?)
-{
-    my $sql = ns();
-    $sql->select( ['\'Total\''] );
-    $sql->add_select( 'AVG(isw_pi)', 'AVG_pi' );
-    $sql->add_select( 'COUNT(*)',    'COUNT' );
-    $sql->add_select( 'STD(isw_pi)', 'STD_pi' );
-
-    $sql->add_join(
-        isw => {
-            type      => 'inner',
-            table     => 'indel',
-            condition => 'isw.isw_indel_id = indel.indel_id',
-        }
-    );
-    $sql->add_where( 'isw.isw_type'         => \q{IN ('L', 'R')} );
-    $sql->add_where( 'indel.indel_slippage' => { op => '>=', value => '1' } );
-    $sql->add_where( 'indel.indel_slippage' => { op => '<=', value => '1' } );
-
-    $sql_file->set( 'common-distance_slip_total-2', $sql );
     print $sql->as_sql if $verbose;
 }
 
