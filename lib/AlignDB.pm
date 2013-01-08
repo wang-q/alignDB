@@ -409,13 +409,8 @@ sub _insert_snp {
 
         my $target_base = $bases[0];
         my $all_bases = join '', @bases;
+
         my $query_base;
-
-        # for compatiblities with old stats
-        if ( $seq_count == 2 ) {
-            $query_base = $bases[1];
-        }
-
         my $mutant_to;
         my $snp_freq = 0;
         my $snp_occured;
@@ -437,8 +432,8 @@ sub _insert_snp {
                     $snp_occured .= 'x';
                 }
             }
-            my ($other_base) = grep { $_ ne $target_base } @bases;
-            $mutant_to = $target_base . '<->' . $other_base;
+            $query_base = grep { $_ ne $target_base } @bases;
+            $mutant_to = $target_base . '<->' . $query_base;
         }
 
         # here freq is the minor allele freq
