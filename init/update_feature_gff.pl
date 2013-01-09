@@ -39,7 +39,11 @@ my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
+# support multiply files, seperated by ','
 my $gff_files;
+
+# RepeatMasker generated gff files
+my $rm_gff_files;
 
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
@@ -51,16 +55,17 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    's|server=s'   => \$server,
-    'P|port=i'     => \$port,
-    'd|db=s'       => \$db,
-    'u|username=s' => \$username,
-    'p|password=s' => \$password,
-    'gff_file=s'   => \$gff_files,      # support multiply file, seperated by ,
-    'parallel=i'   => \$parallel,
-    'batch=i'      => \$batch_number,
+    'help|?'         => \$help,
+    'man'            => \$man,
+    's|server=s'     => \$server,
+    'P|port=i'       => \$port,
+    'u|username=s'   => \$username,
+    'p|password=s'   => \$password,
+    'd|db=s'         => \$db,
+    'gff_file=s'     => \$gff_files,
+    'rm_gff_files=s' => \$rm_gff_files,
+    'parallel=i'     => \$parallel,
+    'batch=i'        => \$batch_number,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -89,6 +94,23 @@ for my $file ( split /\,/, $gff_files ) {
         }
     }
     $cds_set_of->{$basename} = $cds_set;
+}
+
+my $repeat_set_of = {};
+for my $file ( split /\,/, $rm_gff_files ) {
+
+    my $basename = basename( $file, '.gff', '.gff3', '.rm.gff', '.rm.gff3' );
+    print "Loading RepeatMasker annotations for [$basename]\n";
+    my $gff_obj = Bio::Tools::GFF->new(
+        -file        => $file,
+        -gff_version => 3
+    );
+
+    my $repeat_set = AlignDB::IntSpan->new;
+    while ( my $feature = $gff_obj->next_feature ) {
+        $repeat_set->add_range( $feature->start, $feature->end );
+    }
+    $repeat_set_of->{$basename} = $repeat_set;
 }
 
 #----------------------------#
@@ -224,7 +246,7 @@ UPDATE: for my $align_id (@align_ids) {
         my ($target_seq) = @{ $obj->get_seqs($align_id) };
         $obj->process_message($align_id);
 
-        next UPDATE if $chr_name =~ /rand|un|contig|hap|scaf|gi_/i;
+        next UPDATE if $chr_name =~ /rand|contig|hap|scaf|gi_/i;
 
         $chr_name =~ s/chr0?//i;
 
@@ -259,13 +281,30 @@ UPDATE: for my $align_id (@align_ids) {
             my $align_chr_start   = $chr_pos[1];
             my $align_chr_end     = $chr_pos[$align_length];
             my $align_chr_runlist = "$align_chr_start-$align_chr_end";
-            my $align_coding      = feature_portion( $cds_set_of->{$chr_name},
-                $align_chr_runlist );
-            my $align_cds_set
-                = $cds_set_of->{$chr_name}->map_set( sub { $align_pos{$_} } );
 
-            $align_feature_sth->execute( $align_coding, undef, undef,
-                $align_cds_set->runlist, undef, undef, $align_id, );
+            # feature protions and runlists
+            my ($align_coding,      $align_repeats,
+                $align_cds_runlist, $align_repeat_runlist
+            );
+
+            if ( $cds_set_of->{$chr_name} ) {
+                $align_coding = feature_portion( $cds_set_of->{$chr_name},
+                    $align_chr_runlist );
+                $align_cds_runlist
+                    = $cds_set_of->{$chr_name}
+                    ->map_set( sub { $align_pos{$_} } )->runlist;
+            }
+
+            if ( $repeat_set_of->{$chr_name} ) {
+                $align_repeats = feature_portion( $repeat_set_of->{$chr_name},
+                    $align_chr_runlist );
+                $align_repeat_runlist
+                    = $repeat_set_of->{$chr_name}
+                    ->map_set( sub { $align_pos{$_} } )->runlist;
+            }
+
+            $align_feature_sth->execute( $align_coding, $align_repeats, undef,
+                $align_cds_runlist, $align_repeat_runlist, undef, $align_id, );
 
             $align_feature_sth->finish;
         }
@@ -281,10 +320,21 @@ UPDATE: for my $align_id (@align_ids) {
 
             {
                 my $indel_chr_runlist = "$indel_chr_start-$indel_chr_end";
-                my $indel_coding = feature_portion( $cds_set_of->{$chr_name},
-                    $indel_chr_runlist );
 
-                $indel_feature_sth->execute( $indel_coding, undef, $indel_id, );
+                # feature protions
+                my ( $indel_coding, $indel_repeats );
+                if ( $cds_set_of->{$chr_name} ) {
+                    $indel_coding = feature_portion( $cds_set_of->{$chr_name},
+                        $indel_chr_runlist );
+                }
+                if ( $repeat_set_of->{$chr_name} ) {
+                    $indel_repeats
+                        = feature_portion( $repeat_set_of->{$chr_name},
+                        $indel_chr_runlist );
+                }
+
+                $indel_feature_sth->execute( $indel_coding, $indel_repeats,
+                    $indel_id, );
                 $indel_feature_sth->finish;
             }
 
@@ -299,10 +349,21 @@ UPDATE: for my $align_id (@align_ids) {
                     my $isw_chr_end   = $chr_pos[$isw_end];
 
                     my $isw_chr_runlist = "$isw_chr_start-$isw_chr_end";
-                    my $isw_coding = feature_portion( $cds_set_of->{$chr_name},
-                        $isw_chr_runlist );
 
-                    $isw_feature_sth->execute( $isw_coding, undef, $isw_id, );
+                    # feature protions
+                    my ( $isw_coding, $isw_repeats );
+                    if ( $cds_set_of->{$chr_name} ) {
+                        $isw_coding = feature_portion( $cds_set_of->{$chr_name},
+                            $isw_chr_runlist );
+                    }
+                    if ( $repeat_set_of->{$chr_name} ) {
+                        $isw_repeats
+                            = feature_portion( $repeat_set_of->{$chr_name},
+                            $isw_chr_runlist );
+                    }
+
+                    $isw_feature_sth->execute( $isw_coding, $isw_repeats,
+                        $isw_id, );
                 }
 
                 $isw_feature_sth->finish;
@@ -320,10 +381,20 @@ UPDATE: for my $align_id (@align_ids) {
                 my ( $snp_id, $snp_pos ) = @row;
                 my $snp_chr_pos = $chr_pos[$snp_pos];
 
-                # coding
-                my $snp_coding = $cds_set_of->{$chr_name}->member($snp_chr_pos);
+                # feature protions
+                my ( $snp_coding, $snp_repeats );
+                if ( $cds_set_of->{$chr_name} ) {
+                    $snp_coding
+                        = $cds_set_of->{$chr_name}->member($snp_chr_pos);
+                }
+                if ( $repeat_set_of->{$chr_name} ) {
+                    $snp_repeats
+                        = feature_portion( $repeat_set_of->{$chr_name},
+                        $snp_chr_pos );
+                }
 
-                $snp_feature_sth->execute( $snp_coding, undef, $snp_id, );
+                $snp_feature_sth->execute( $snp_coding, $snp_repeats, $snp_id,
+                );
             }
 
             $snp_feature_sth->finish;
@@ -340,10 +411,21 @@ UPDATE: for my $align_id (@align_ids) {
                 my $window_set = AlignDB::IntSpan->new($window_runlist);
                 my $window_chr_set
                     = $window_set->map_set( sub { $chr_pos[$_] } );
-                my $window_coding = feature_portion( $cds_set_of->{$chr_name},
-                    $window_chr_set );
-                $window_update_sth->execute( $window_coding, undef, $window_id,
-                );
+
+                # feature protions
+                my ( $window_coding, $window_repeats );
+                if ( $cds_set_of->{$chr_name} ) {
+                    $window_coding = feature_portion( $cds_set_of->{$chr_name},
+                        $window_chr_set );
+                }
+                if ( $repeat_set_of->{$chr_name} ) {
+                    $window_repeats
+                        = feature_portion( $repeat_set_of->{$chr_name},
+                        $window_chr_set );
+                }
+
+                $window_update_sth->execute( $window_coding, $window_repeats,
+                    $window_id, );
             }
 
             $window_update_sth->finish;

@@ -209,7 +209,7 @@ UPDATE: for my $align_id (@align_ids) {
         my ($target_seq) = @{ $obj->get_seqs($align_id) };
         $obj->process_message($align_id);
 
-        next UPDATE if $chr_name =~ /rand|un|contig|hap|scaf|gi_/i;
+        next UPDATE if $chr_name =~ /rand|contig|hap|scaf|gi_/i;
 
         $chr_name =~ s/chr0?//i;
 
@@ -249,6 +249,8 @@ UPDATE: for my $align_id (@align_ids) {
             my $align_chr_start   = $chr_pos[1];
             my $align_chr_end     = $chr_pos[$align_length];
             my $align_chr_runlist = "$align_chr_start-$align_chr_end";
+
+            # feature protions
             my $align_coding
                 = $ensembl->feature_portion( '_cds_set', $align_chr_runlist );
             my $align_repeats = $ensembl->feature_portion( '_repeat_set',
