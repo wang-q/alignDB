@@ -210,8 +210,8 @@ SEG: for (@segments) {
         #----------------------------#
         # get seq, use align coordinates
         #----------------------------#
+        print " " x 4, "build seqs\n";
         for my $db_name (@all_dbs) {
-            print " " x 4, "build $db_name seqs\n";
             my $align_id = $db_info_of->{$db_name}{align_id};
 
             my $error
@@ -293,6 +293,13 @@ SEG: for (@segments) {
         }
 
         #----------------------------#
+        # trim header and footer indels
+        #----------------------------#
+        {
+            trim_hf( \%info_of, \@all_names );
+        }
+
+        #----------------------------#
         # trim outgroup only sequence
         #----------------------------#
         # if intersect is superset of union
@@ -304,18 +311,11 @@ SEG: for (@segments) {
         }
 
         #----------------------------#
-        # trim header and footer indels
-        #----------------------------#
-        {
-            trim_hf( \%info_of, \@all_names );
-        }
-
-        #----------------------------#
         # record complex indels and ingroup indels
         #----------------------------#
         # if intersect is subset of union
         #   ref GGAGAC
-        #   tar G-A-AC
+        #   tar GGA--C
         #   que G----C
         if ($outgroup) {
             record_complex_indel( \%info_of, \@all_names, \@ingroup_names,
@@ -814,7 +814,8 @@ sub trim_outgroup {
     }
 
     # trim all segments in trim_region
-    print " " x 4, "Delete trim region\n" if $trim_region->is_not_empty;
+    print " " x 4, "Delete trim region " . $trim_region->runlist . "\n"
+        if $trim_region->is_not_empty;
     for ( reverse $trim_region->spans ) {
         my $seg_start = $_->[0];
         my $seg_end   = $_->[1];
@@ -826,6 +827,8 @@ sub trim_outgroup {
             );
         }
     }
+
+    #exit;
 }
 
 sub record_complex_indel {
@@ -849,6 +852,8 @@ sub record_complex_indel {
     my $union_set     = AlignDB::IntSpan::union( values %indel_sets );
     my $intersect_set = AlignDB::IntSpan::intersect( values %indel_sets );
 
+    print " " x 4,
+        "Delete complex trim region " . $intersect_set->runlist . "\n";
     for ( reverse $intersect_set->spans ) {
         my $seg_start = $_->[0];
         my $seg_end   = $_->[1];
@@ -861,7 +866,6 @@ sub record_complex_indel {
                 $seg_end - $seg_start + 1, ''
             );
         }
-        print " " x 4, "Delete complex trim region $seg_start - $seg_end\n";
 
         # add to complex_region
         for my $span ( $union_set->runlists ) {
@@ -882,10 +886,7 @@ sub record_complex_indel {
     }
 
     # add ingroup-outgroup complex indels to complex_region
-    # and record ingroup indels
-    my $all_indel_region = AlignDB::IntSpan->new;
     for my $name ( @{$ingroup_names} ) {
-        $all_indel_region->merge( $indel_sets{$name} );
         my $outgroup_intersect_set
             = $outgroup_indel_set->intersect( $indel_sets{$name} );
         for my $out_span ( $outgroup_intersect_set->runlists ) {
@@ -903,9 +904,6 @@ sub record_complex_indel {
 
     # record complex indel info to $info{$outgroup}
     $info_of->{$outgroup}{complex} = $complex_region->runlist;
-
-    # record all ingroup indel info to $info{$outgroup}
-    $info_of->{$outgroup}{all_indel} = $all_indel_region->runlist;
 }
 
 __END__
