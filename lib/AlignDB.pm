@@ -432,7 +432,7 @@ sub _insert_snp {
                     $snp_occured .= 'x';
                 }
             }
-            $query_base = grep { $_ ne $target_base } @bases;
+            ($query_base) = grep { $_ ne $target_base } @bases;
             $mutant_to = $target_base . '<->' . $query_base;
         }
 
