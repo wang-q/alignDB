@@ -254,35 +254,18 @@ sub _insert_indel {
             push @indel_seqs, ( substr $seq, $indel_start - 1, $indel_length );
         }
 
-        my $indel_seq = '';
         my $indel_type;
-        my @indel_class;
-        for my $seq (@indel_seqs) {
-            if ( $seq =~ /[agct]/i ) {
-                $indel_seq = $seq;
-            }
-            my $class_bool = 0;
-            for (@indel_class) {
-                if ( $_ eq $seq ) { $class_bool = 1; }
-            }
-            unless ($class_bool) {
-                push @indel_class, $seq;
-            }
-        }
-        unless ($indel_seq) {
-            print Dump {
-                align_id   => $align_id,
-                cur_indel  => $cur_indel,
-                indel_seqs => \@indel_seqs,
-            };
-            warn "Can't determine indels \n";
-            next;
-        }
+        my @uniq_indel_seqs = uniq(@indel_seqs);
 
-        if ( scalar @indel_class < 2 ) {
+        # seqs with least '-' char wins
+        my ($indel_seq) = map { $_->[0] }
+            sort { $a->[1] <=> $b->[1] }
+            map { [ $_, tr/-/-/ ] } @uniq_indel_seqs;
+
+        if ( scalar @uniq_indel_seqs < 2 ) {
             confess "no indel!\n";
         }
-        elsif ( scalar @indel_class > 2 ) {
+        elsif ( scalar @uniq_indel_seqs > 2 ) {
             $indel_type = 'C';
         }
         elsif ( $indel_seq =~ /-/ ) {
@@ -310,8 +293,7 @@ sub _insert_indel {
         else {
             for (@indel_seqs) {
 
-                # same as target 'x'
-                # not 'o'
+                # same as target 'x', not 'o'
                 if ( $indel_seqs[0] eq $_ ) {
                     $indel_freq++;
                     $indel_occured .= 'o';
