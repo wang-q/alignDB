@@ -606,6 +606,20 @@ EOF
 cd [% round2_dir %]
 
 #----------------------------#
+# clean
+#----------------------------#
+if [ -d [% working_dir %]/phylo ]
+then
+    rm -fr [% working_dir %]/phylo
+fi
+
+# only keep dirs of taxon_id
+for d in `find . -mindepth 1 -maxdepth 1 -type d | grep '[a-z]' `;do \
+    echo Clean path $d ; \
+    rm -fr $d; \
+done
+
+#----------------------------#
 # seq_pair
 #----------------------------#
 perl [% findbin %]/../extra/seq_pair_batch.pl -d 1 --parallel [% parallel %] \
@@ -649,14 +663,14 @@ perl [% findbin %]/../../blastz/refine_fasta.pl \
 #----------------------------#
 perl [% findbin %]/../extra/multi_way_batch.pl \
     -d [% name_str %] \
-    -f [% round2_dir %]/[% name_str %]_mft \
+    -da [% round2_dir %]/[% name_str %]_mft \
     --gff_file [% gff_files.join(',') %] \
     --block --id [% round2_dir %]/id2name.csv \
 [% IF outgroup_id -%]
     --outgroup \
 [% END -%]
     -lt 1000 -st 0 -ct 0 --parallel [% parallel %] --batch 5 \
-    --run 1,2,5,10,21,30-32,40,41,43
+    --run 1,2,5,10,21,30-32,40-42,44
 
 #----------------------------#
 # RAxML
