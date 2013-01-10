@@ -248,7 +248,7 @@ my @query_ids;
     close $fh;
 }
 
-my @new_gff_files;
+my ( @new_gff_files, @target_accs );
 {    # build fasta files
 
     $base_dir = $nb_dir if $gr;
@@ -301,6 +301,7 @@ my @new_gff_files;
             }
 
             if ( $taxon_id eq $target_id ) {
+                push @target_accs, $acc;
                 print "Copy target gff\n";
                 my ($gff_file) = grep {/$acc/} @gff_files;
                 my $new_gff_file
@@ -665,6 +666,7 @@ perl [% findbin %]/../extra/multi_way_batch.pl \
     -d [% name_str %] \
     -da [% round2_dir %]/[% name_str %]_mft \
     --gff_file [% gff_files.join(',') %] \
+    --rm_gff_file [% FOREACH acc IN target_accs %][% round2_dir %]/[% target_id %]/[% acc %].rm.gff,[% END %] \
     --block --id [% round2_dir %]/id2name.csv \
 [% IF outgroup_id -%]
     --outgroup \
@@ -710,6 +712,7 @@ EOF
             outgroup_id   => $outgroup_id,
             query_ids     => \@query_ids,
             gff_files     => \@new_gff_files,
+            target_accs   => \@target_accs,
         },
         File::Spec->catfile( $round2_dir, "pair-multi.sh" )
     ) or die Template->error;

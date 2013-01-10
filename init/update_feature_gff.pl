@@ -62,7 +62,7 @@ GetOptions(
     'u|username=s'   => \$username,
     'p|password=s'   => \$password,
     'd|db=s'         => \$db,
-    'gff_file=s'     => \$gff_files,
+    'gff_files=s'    => \$gff_files,
     'rm_gff_files=s' => \$rm_gff_files,
     'parallel=i'     => \$parallel,
     'batch=i'        => \$batch_number,
@@ -78,7 +78,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 $stopwatch->start_message("Update annotations of $db...");
 
 my $cds_set_of = {};
-for my $file ( split /\,/, $gff_files ) {
+for my $file ( grep {defined} split /\,/, $gff_files ) {
     next unless -e $file;
     my $basename = basename( $file, '.gff', '.gff3' );
     print "Loading annotations for [$basename]\n";
@@ -97,9 +97,9 @@ for my $file ( split /\,/, $gff_files ) {
 }
 
 my $repeat_set_of = {};
-for my $file ( split /\,/, $rm_gff_files ) {
+for my $file ( grep {defined} split /\,/, $rm_gff_files ) {
     next unless -e $file;
-    my $basename = basename( $file, '.gff', '.gff3', '.rm.gff', '.rm.gff3' );
+    my $basename = basename( $file, '.rm.gff', '.rm.gff3', '.gff', '.gff3' );
     print "Loading RepeatMasker annotations for [$basename]\n";
     my $gff_obj = Bio::Tools::GFF->new(
         -file        => $file,

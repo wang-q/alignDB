@@ -36,7 +36,8 @@ my $ensembl_db = $Config->{database}{ensembl};
 # alignments have an outgroup
 my $outgroup;
 
-my $gff_file = '';
+my $gff_files    = '';
+my $rm_gff_files = '';
 
 # alignment
 my $dir_align        = $Config->{taxon}{dir_align};
@@ -72,7 +73,8 @@ GetOptions(
     'o|outgroup'             => \$outgroup,
     'da|dir_align=s'         => \$dir_align,
     'e|ensembl=s'            => \$ensembl_db,
-    'gff_file=s'             => \$gff_file,
+    'gff_files=s'            => \$gff_files,
+    'rm_gff_files=s'         => \$rm_gff_files,
     'id|id_of=s'             => \$file_id_of,
     'block'                  => \$block,
     'parallel=i'             => \$parallel,
@@ -104,7 +106,7 @@ elsif ( $run eq 'gc' ) {
     @tasks = ( 1 .. 3, 10, 21, 30 .. 32, 40, 42 );
 }
 elsif ( $run eq 'gene' ) {
-    @tasks = ( 1 .. 3, 10, 20, 21, 30 .. 33, 40 , 43, 45 );
+    @tasks = ( 1 .. 3, 10, 20, 21, 30 .. 33, 40, 43, 45 );
 }
 elsif ( $run eq 'stat' ) {
     @tasks = ( 40 .. 45 );
@@ -194,7 +196,8 @@ my $dispatch = {
         . " -d $db_name"
         . " --parallel $parallel"
         . " --batch $batch_number"
-        . " --gff_file $gff_file",
+        . " --gff_files $gff_files"
+        . " --rm_gff_files $rm_gff_files",
     31 => "perl $FindBin::Bin/../init/update_indel_slippage.pl"
         . " -s $server"
         . " --port $port"
@@ -268,7 +271,7 @@ my $dispatch = {
 
 # use the dispatch template to generate $cmd
 for my $step (@tasks) {
-    if ( $gff_file and $step == 30 ) {
+    if ( $gff_files and $step == 30 ) {
         $step = '30gff';
     }
 
