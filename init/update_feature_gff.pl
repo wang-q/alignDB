@@ -79,7 +79,7 @@ $stopwatch->start_message("Update annotations of $db...");
 
 my $cds_set_of = {};
 for my $file ( split /\,/, $gff_files ) {
-
+    next unless -e $file;
     my $basename = basename( $file, '.gff', '.gff3' );
     print "Loading annotations for [$basename]\n";
     my $gff_obj = Bio::Tools::GFF->new(
@@ -98,7 +98,7 @@ for my $file ( split /\,/, $gff_files ) {
 
 my $repeat_set_of = {};
 for my $file ( split /\,/, $rm_gff_files ) {
-
+    next unless -e $file;
     my $basename = basename( $file, '.gff', '.gff3', '.rm.gff', '.rm.gff3' );
     print "Loading RepeatMasker annotations for [$basename]\n";
     my $gff_obj = Bio::Tools::GFF->new(

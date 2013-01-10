@@ -19,7 +19,6 @@
         |-gr_overview.pl                          |   252 lines |      6.6K
         |-gr_strains.csv                          |  4415 lines |   834.44K
         |-gr_strains.pl                           |   256 lines |     6.75K
-        |-new file                                | total lines |         0
         |-runall.sh                               |    42 lines |     1.97K
         |-species_cmd.txt                         |   374 lines |    10.47K
         |-species_cmd_new.txt                     |   422 lines |    12.53K
