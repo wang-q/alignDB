@@ -41,10 +41,10 @@ sub insert_segment {
     my $dbh = $self->dbh;
 
     my @segment_levels = (
-        [ 'A', '',    '' ],
-        [ 1,   5000,  5000 ],
-        [ 2,   1000,  1000 ],
-        [ 3,   500,   500 ],
+        [ 'A', '',   '' ],
+        [ 1,   5000, 5000 ],
+        [ 2,   1000, 1000 ],
+        [ 3,   500,  500 ],
     );
 
     if ( $self->alt_level ) {
@@ -607,31 +607,39 @@ sub insert_gsw {
 
     # extreme_id & prev_extreme_id
     my $fetch_ex_id = $dbh->prepare(
-        "SELECT e.extreme_id, e.prev_extreme_id, e.extreme_type
+        q{
+        SELECT e.extreme_id, e.prev_extreme_id, e.extreme_type
         FROM extreme e, window w
         WHERE e.window_id = w.window_id
-        AND w.align_id = ?"
+        AND w.align_id = ?
+        }
     );
     $fetch_ex_id->execute($align_id);
 
-    # extreme_runlist
-    my $fetch_ex_runlist = $dbh->prepare(
-        'SELECT w.window_runlist, e.extreme_left_amplitude
+    # extreme_runlist, _amplitude and _average_gc
+    my $fetch_ex_attr = $dbh->prepare(
+        q{
+        SELECT w.window_runlist, e.extreme_left_amplitude, w.window_average_gc
         FROM extreme e, window w
         WHERE e.window_id = w.window_id
-        AND e.extreme_id = ?'
+        AND e.extreme_id = ?
+        }
     );
 
     # prepare gsw_insert
     my $gsw_insert = $dbh->prepare(
-        'INSERT INTO gsw (
+        q{
+        INSERT INTO gsw (
             gsw_id, extreme_id, prev_extreme_id, window_id,
-            gsw_type, gsw_distance, gsw_density, gsw_amplitude
+            gsw_type, gsw_distance, gsw_density,
+            gsw_amplitude, gsw_trough_gc
         )
         VALUES (
             NULL, ?, ?, ?,
-            ?, ?, ?, ?
-        )'
+            ?, ?, ?,
+            ?, ?
+        )
+        }
     );
 
     while ( my $ref = $fetch_ex_id->fetchrow_hashref ) {
@@ -641,11 +649,11 @@ sub insert_gsw {
 
         # determining $gsw_type here, ascend and descent
         my $gsw_type;
-        if ( $ex_type eq 'C' ) {
-            $gsw_type = 'R';    # ascend, right side of trough
+        if ( $ex_type eq 'C' ) {    # crest
+            $gsw_type = 'R';        # ascend, right side of trough
         }
-        elsif ( $ex_type eq 'T' ) {
-            $gsw_type = 'L';    # descend, left side of trough
+        elsif ( $ex_type eq 'T' ) {    # trough
+            $gsw_type = 'L';           # descend, left side of trough
         }
         else {
             warn "extreme_type [$ex_type] error\n";
@@ -656,14 +664,15 @@ sub insert_gsw {
             next;
         }
 
-        # get runlists of the two extremes
-        $fetch_ex_runlist->execute($prev_ex_id);
-        my ($prev_ex_runlist) = $fetch_ex_runlist->fetchrow_array;
+        # get attrs of the two extremes
+        $fetch_ex_attr->execute($prev_ex_id);
+        my ( $prev_ex_runlist, undef, $prev_ex_gc )
+            = $fetch_ex_attr->fetchrow_array;
         my $prev_ex_set = AlignDB::IntSpan->new($prev_ex_runlist);
 
-        $fetch_ex_runlist->execute($ex_id);
-        my ( $ex_runlist, $ex_left_amplitude )
-            = $fetch_ex_runlist->fetchrow_array;
+        $fetch_ex_attr->execute($ex_id);
+        my ( $ex_runlist, $ex_left_amplitude, $ex_gc )
+            = $fetch_ex_attr->fetchrow_array;
         my $ex_set = AlignDB::IntSpan->new($ex_runlist);
 
         # find middle points of extremes
@@ -682,7 +691,13 @@ sub insert_gsw {
         # and start at "0", because the first windows is within the trough
         # windows.
         my $gsw_density = int( ( $interval_length - $gsw0_size ) / $gsw_size );
+
+        # amplitude and trough_gc
         my $gsw_amplitude = int( $ex_left_amplitude / 0.01 );
+        my $gsw_trough_gc
+            = $ex_type eq 'T'
+            ? int( $ex_gc / 0.01 )
+            : int( $prev_ex_gc / 0.01 );
 
         {    # More windows will be submitted in the following section
 
@@ -712,9 +727,9 @@ sub insert_gsw {
                     = $self->insert_window( $align_id, $gsw_set );
 
                 $gsw_insert->execute(
-                    $ex_id,    $prev_ex_id,   $cur_window_id,
-                    $gsw_type, $gsw_distance, $gsw_density,
-                    $gsw_amplitude,
+                    $ex_id,         $prev_ex_id,   $cur_window_id,
+                    $gsw_type,      $gsw_distance, $gsw_density,
+                    $gsw_amplitude, $gsw_trough_gc,
                 );
 
                 if ( $gsw_type eq 'R' ) {

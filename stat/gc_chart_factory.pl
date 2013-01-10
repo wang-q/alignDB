@@ -167,6 +167,32 @@ $excel_obj->jc_correction if $jc_correction;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
+    # worksheet -- combined_trough_gc
+    #----------------------------#
+    $sheet_name           = 'combined_trough_gc';
+    $option{chart_serial} = 1;
+    $option{y_column}     = 2;
+    $option{x_title}      = "Trough GC";
+    $option{y_title}      = "Nucleotide diversity";
+    $option{Top}          = 14.25;
+    $option{x_max_scale}  = 30;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 2
+    $option{chart_serial}++;
+    $option{y_column} = 4;
+    $option{y_title}  = "Indel per 100 bp";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 3
+    $option{chart_serial}++;
+    $option{y_column} = 6;
+    $option{y_title}  = "Window CV";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    #----------------------------#
     # worksheet -- combined_a2d
     #----------------------------#
     $sheet_name           = 'combined_a2d';

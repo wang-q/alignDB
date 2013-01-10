@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/6/2013 7:07:57 AM                          */
+/* Created on:     1/11/2013 2:18:58 AM                         */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -199,6 +199,7 @@ create table gsw
    gsw_distance                   int,
    gsw_density                    int,
    gsw_amplitude                  int,
+   gsw_trough_gc                  int,
    primary key (gsw_id)
 )
 ENGINE = MyISAM;

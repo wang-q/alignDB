@@ -313,7 +313,7 @@ my $combined_density = sub {
 
         {    # write header
             my @headers
-                = qw{ AVG_distance AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
+                = qw{ AVG_density AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -359,7 +359,7 @@ my $combined_amplitude = sub {
         SELECT gsw_amplitude amplitude,
                COUNT(*) COUNT
         FROM gsw g
-        WHERE gsw_amplitude >= 10
+        WHERE gsw_amplitude >= 15
         GROUP BY gsw_amplitude
     };
     my $standalone = [ 0 .. 9 ];
@@ -380,7 +380,7 @@ my $combined_amplitude = sub {
 
         {    # write header
             my @headers
-                = qw{ AVG_distance AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
+                = qw{ AVG_amplitude AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
@@ -419,6 +419,72 @@ my $combined_amplitude = sub {
     }
 };
 
+my $combined_trough_gc = sub {
+
+    # make combine
+    my $sql_query = q{
+        SELECT gsw_trough_gc trough_gc,
+               COUNT(*) COUNT
+        FROM gsw g
+        GROUP BY gsw_trough_gc
+    };
+    my $standalone = [];
+    my %option     = (
+        sql_query  => $sql_query,
+        threshold  => $combine_threshold,
+        standalone => $standalone,
+    );
+    my @combined = @{ $write_obj->make_combine( \%option ) };
+
+    #----------------------------------------------------------#
+    # worksheet -- combined_trough_gc
+    #----------------------------------------------------------#
+    {
+        my $sheet_name = 'combined_trough_gc';
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        {    # write header
+            my @headers
+                = qw{ AVG_trough_gc AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            $sql_query = q{
+                SELECT  AVG(gsw_trough_gc) AVG_trough_gc,
+                        AVG(w.window_pi) AVG_pi,
+                        STD(w.window_pi) STD_pi,
+                        AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                        STD(w.window_indel / w.window_length * 100) STD_indel,
+                        AVG(g.gsw_cv) AVG_cv,
+                        STD(g.gsw_cv) STD_cv,
+                        COUNT(w.window_indel) COUNT
+                FROM gsw g, window w
+                WHERE g.window_id = w.window_id
+                AND gsw_trough_gc IN
+            };
+            %option = (
+                sql_query => $sql_query,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                combined  => \@combined,
+            );
+            ($sheet_row)
+                = $write_obj->write_content_combine( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    }
+};
+
 my $combined_a2d = sub {
 
     # make combine
@@ -426,7 +492,7 @@ my $combined_a2d = sub {
         SELECT FLOOR(gsw_amplitude / gsw_density) a2d,
                COUNT(*) COUNT
         FROM gsw g
-        WHERE gsw_amplitude >= 10
+        WHERE gsw_amplitude >= 15
         AND FLOOR(gsw_amplitude / gsw_density) >= 0
         GROUP BY a2d
     };
@@ -1762,15 +1828,16 @@ foreach my $n (@tasks) {
     if ( $n == 2 ) { &$combined_distance;  next; }
     if ( $n == 3 ) { &$combined_density;   next; }
     if ( $n == 4 ) { &$combined_amplitude; next; }
-    if ( $n == 5 ) { &$combined_a2d;       next; }
-    if ( $n == 6 ) { &$dd_group;           next; }
-    if ( $n == 7 ) { &$da_group;           &$da2d_group; next; }
+    if ( $n == 5 ) { &$combined_trough_gc; next; }
+    if ( $n == 6 ) { &$combined_a2d;       next; }
+    if ( $n == 7 ) { &$dd_group;           next; }
+    if ( $n == 8 ) { &$da_group;           &$da2d_group; next; }
 
-    if ( $n == 8 )  { &$segment_gc_indel;     next; }
-    if ( $n == 9 )  { &$segment_std_indel;    next; }
-    if ( $n == 10 ) { &$segment_cv_indel;     next; }
-    if ( $n == 11 ) { &$segment_mdcw_indel;   next; }
-    if ( $n == 12 ) { &$segment_coding_indel; next; }
+    if ( $n == 10 ) { &$segment_gc_indel;     next; }
+    if ( $n == 11 ) { &$segment_std_indel;    next; }
+    if ( $n == 12 ) { &$segment_cv_indel;     next; }
+    if ( $n == 13 ) { &$segment_mdcw_indel;   next; }
+    if ( $n == 14 ) { &$segment_coding_indel; next; }
 
     #if ($n == 8) { &$extreme_amplitude_group; next; }
     #if ($n == 24) { &$segment_extreme_indel;  next; }
