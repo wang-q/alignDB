@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/11/2013 2:18:58 AM                         */
+/* Created on:     1/13/2013 9:55:49 PM                         */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -138,8 +138,8 @@ create table extreme
    extreme_type                   char(8),
    extreme_left_amplitude         double,
    extreme_right_amplitude        double,
-   extreme_left_wave_length       double,
-   extreme_right_wave_length      double,
+   extreme_left_wave_length       int,
+   extreme_right_wave_length      int,
    primary key (extreme_id, prev_extreme_id)
 )
 ENGINE = MyISAM;
@@ -197,9 +197,10 @@ create table gsw
    window_id                      int,
    gsw_type                       char(8),
    gsw_distance                   int,
-   gsw_density                    int,
-   gsw_amplitude                  int,
-   gsw_trough_gc                  int,
+   gsw_wave_length                int,
+   gsw_amplitude                  double,
+   gsw_trough_gc                  double,
+   gsw_gradient                   double,
    primary key (gsw_id)
 )
 ENGINE = MyISAM;

@@ -19,7 +19,7 @@ has 'wave_window_step' => ( is => 'rw', isa => 'Int', default => 50, );
 has 'vicinal_size' => ( is => 'rw', isa => 'Int', default => 500, );
 
 # minimal fall range
-has 'fall_range' => ( is => 'rw', isa => 'Num', default => 0.15, );
+has 'fall_range' => ( is => 'rw', isa => 'Num', default => 0.1, );
 
 # gsw window size
 has 'gsw_size' => ( is => 'rw', isa => 'Int', default => 100, );
@@ -193,6 +193,7 @@ sub _mdcw {
     return mean(@dcws);
 }
 
+# find local maxima, minima
 sub find_extreme_step1 {
     my $self    = shift;
     my $windows = shift;
@@ -212,7 +213,7 @@ sub find_extreme_step1 {
         my @right_vicinal_windows;
         my ( $right_low, $right_high, $right_flag );
         foreach ( $i + 1 .. $i + $vicinal_number ) {
-            next unless $_ < scalar $count;
+            next unless $_ < $count;
             push @right_vicinal_windows, $windows->[$_]->{sw_gc};
         }
 
@@ -230,7 +231,7 @@ sub find_extreme_step1 {
         }
 
         if ( $right_low and $right_high ) {
-            print "Error while determining right vicinity.\n";
+            print " " x 4, "Can't determine right vicinity.\n";
             $right_flag = 'N';    # non
         }
         elsif ($right_low) {
@@ -269,7 +270,7 @@ sub find_extreme_step1 {
         }
 
         if ( $left_low and $left_high ) {
-            print "Error while determining left vicinity.\n";
+            print " " x 4, "Can't determine left vicinity.\n";
             $left_flag = 'N';
         }
         elsif ($left_low) {
@@ -308,7 +309,10 @@ sub find_extreme_step2 {
 
     my $count = scalar @$windows;
 
-    my $fall_range = $self->fall_range;
+    my $fall_range       = $self->fall_range;
+    my $vicinal_size     = $self->vicinal_size;
+    my $wave_window_step = $self->wave_window_step;
+    my $vicinal_number   = int( $vicinal_size / $wave_window_step );
 
 REDO: while (1) {
         my @extreme;
@@ -404,7 +408,7 @@ REDO: while (1) {
             }
         }
 
-        # delete small-range crest--trough
+        # delete small fall-range crest--trough
         for my $i ( 0 .. scalar @extreme - 1 ) {
             my $wave = $windows->[ $extreme[$i] ]->{high_low_flag};
             my $gc   = $windows->[ $extreme[$i] ]->{sw_gc};
@@ -430,6 +434,19 @@ REDO: while (1) {
             {
                 $windows->[ $extreme[ $i + 1 ] ]->{high_low_flag} = 'N';
                 next REDO;
+            }
+        }
+
+        # delete vicinal crest--trough
+        for my $i ( 0 .. scalar @extreme - 1 ) {
+            my $wave = $windows->[ $extreme[$i] ]->{high_low_flag};
+            my $gc   = $windows->[ $extreme[$i] ]->{sw_gc};
+
+            if ( $i + 1 < scalar @extreme ) {
+                if ( $extreme[ $i + 1 ] - $extreme[$i] <= $vicinal_number ) {
+                    $windows->[ $extreme[ $i + 1 ] ]->{high_low_flag} = 'N';
+                    next REDO;
+                }
             }
         }
 
@@ -631,8 +648,8 @@ sub insert_gsw {
         q{
         INSERT INTO gsw (
             gsw_id, extreme_id, prev_extreme_id, window_id,
-            gsw_type, gsw_distance, gsw_density,
-            gsw_amplitude, gsw_trough_gc
+            gsw_type, gsw_distance, gsw_wave_length,
+            gsw_amplitude, gsw_trough_gc, gsw_gradient
         )
         VALUES (
             NULL, ?, ?, ?,
@@ -692,12 +709,11 @@ sub insert_gsw {
         # windows.
         my $gsw_density = int( ( $interval_length - $gsw0_size ) / $gsw_size );
 
-        # amplitude and trough_gc
-        my $gsw_amplitude = int( $ex_left_amplitude / 0.01 );
-        my $gsw_trough_gc
-            = $ex_type eq 'T'
-            ? int( $ex_gc / 0.01 )
-            : int( $prev_ex_gc / 0.01 );
+        # wave length, amplitude, trough_gc and gradient
+        my $gsw_wave_length = $interval_length;
+        my $gsw_amplitude   = $ex_left_amplitude;
+        my $gsw_trough_gc   = $ex_type eq 'T' ? $ex_gc : $prev_ex_gc;
+        my $gsw_gradient    = $gsw_amplitude / $interval_length;
 
         {    # More windows will be submitted in the following section
 
@@ -727,9 +743,9 @@ sub insert_gsw {
                     = $self->insert_window( $align_id, $gsw_set );
 
                 $gsw_insert->execute(
-                    $ex_id,         $prev_ex_id,   $cur_window_id,
-                    $gsw_type,      $gsw_distance, $gsw_density,
-                    $gsw_amplitude, $gsw_trough_gc,
+                    $ex_id,         $prev_ex_id,    $cur_window_id,
+                    $gsw_type,      $gsw_distance,  $gsw_wave_length,
+                    $gsw_amplitude, $gsw_trough_gc, $gsw_gradient,
                 );
 
                 if ( $gsw_type eq 'R' ) {
