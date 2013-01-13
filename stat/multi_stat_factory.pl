@@ -814,7 +814,7 @@ my $combined_pigccv = sub {
     # make combine
     my @combined;
     {
-        my $thaw_sql   = $sql_file->retrieve('common-distance_combine-0');
+        my $thaw_sql   = $sql_file->retrieve('common-d1_combine-0');
         my $standalone = [ -1, 0 ];
         my %option     = (
             sql_query  => $thaw_sql->as_sql,
