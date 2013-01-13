@@ -7,6 +7,8 @@ use Pod::Usage;
 use Config::Tiny;
 use YAML qw(Dump Load DumpFile LoadFile);
 
+use Number::Format qw(round);
+
 use AlignDB::IntSpan;
 use AlignDB::SQL;
 use AlignDB::SQL::Library;
@@ -219,406 +221,366 @@ my $summary = sub {
     print "Sheet \"$sheet_name\" has been generated.\n";
 };
 
-my $combined_distance = sub {
-
-    # make combine
-    my $sql_query = q{
-        SELECT gsw_distance distance,
-               COUNT(*) COUNT
-        FROM gsw g
-        GROUP BY gsw_distance
-    };
-    my $standalone = [ 0, 1 ];
-    my %option = (
-        sql_query  => $sql_query,
-        threshold  => $combine_threshold,
-        standalone => $standalone,
-    );
-    my @combined = @{ $write_obj->make_combine( \%option ) };
-
-    #----------------------------------------------------------#
-    # worksheet -- combined_distance
-    #----------------------------------------------------------#
-    {
-        my $sheet_name = 'combined_distance';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers
-                = qw{ AVG_distance AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            $sql_query = q{
-                SELECT  AVG(gsw_distance) AVG_distance,
-                        AVG(w.window_pi) AVG_pi,
-                        STD(w.window_pi) STD_pi,
-                        AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                        STD(w.window_indel / w.window_length * 100) STD_indel,
-                        AVG(g.gsw_cv) AVG_cv,
-                        STD(g.gsw_cv) STD_cv,
-                        COUNT(w.window_id) COUNT
-                FROM gsw g, window w
-                WHERE g.window_id = w.window_id
-                AND gsw_distance IN 
-            };
-            %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                combined  => \@combined,
-            );
-            ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    }
-};
-
-my $combined_density = sub {
-
-    # make combine
-    my $sql_query = q{
-        SELECT gsw_density density,
-               COUNT(*) COUNT
-        FROM gsw g
-        WHERE gsw_density != 0
-        GROUP BY gsw_density
-    };
-    my $standalone = [ 0, 1 ];
-    my %option = (
-        sql_query  => $sql_query,
-        threshold  => $combine_threshold,
-        standalone => $standalone,
-    );
-    my @combined = @{ $write_obj->make_combine( \%option ) };
-
-    #----------------------------------------------------------#
-    # worksheet -- combined_density
-    #----------------------------------------------------------#
-    {
-        my $sheet_name = 'combined_density';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers
-                = qw{ AVG_density AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            $sql_query = q{
-                SELECT  AVG(gsw_density) AVG_density,
-                        AVG(w.window_pi) AVG_pi,
-                        STD(w.window_pi) STD_pi,
-                        AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                        STD(w.window_indel / w.window_length * 100) STD_indel,
-                        AVG(g.gsw_cv) AVG_cv,
-                        STD(g.gsw_cv) STD_cv,
-                        COUNT(w.window_indel) COUNT
-                FROM gsw g, window w
-                WHERE g.window_id = w.window_id
-                AND gsw_density IN
-            };
-            %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                combined  => \@combined,
-            );
-            ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    }
-};
-
-my $combined_amplitude = sub {
-
-    # make combine
-    my $sql_query = q{
-        SELECT gsw_amplitude amplitude,
-               COUNT(*) COUNT
-        FROM gsw g
-        WHERE gsw_amplitude >= 15
-        GROUP BY gsw_amplitude
-    };
-    my $standalone = [ 0 .. 9 ];
-    my %option     = (
-        sql_query  => $sql_query,
-        threshold  => $combine_threshold,
-        standalone => $standalone,
-    );
-    my @combined = @{ $write_obj->make_combine( \%option ) };
-
-    #----------------------------------------------------------#
-    # worksheet -- combined_amplitude
-    #----------------------------------------------------------#
-    {
-        my $sheet_name = 'combined_amplitude';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers
-                = qw{ AVG_amplitude AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            $sql_query = q{
-                SELECT  AVG(gsw_amplitude) AVG_amplitude,
-                        AVG(w.window_pi) AVG_pi,
-                        STD(w.window_pi) STD_pi,
-                        AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                        STD(w.window_indel / w.window_length * 100) STD_indel,
-                        AVG(g.gsw_cv) AVG_cv,
-                        STD(g.gsw_cv) STD_cv,
-                        COUNT(w.window_indel) COUNT
-                FROM gsw g, window w
-                WHERE g.window_id = w.window_id
-                AND gsw_amplitude IN
-            };
-            %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                combined  => \@combined,
-            );
-            ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    }
-};
-
-my $combined_trough_gc = sub {
-
-    # make combine
-    my $sql_query = q{
-        SELECT gsw_trough_gc trough_gc,
-               COUNT(*) COUNT
-        FROM gsw g
-        GROUP BY gsw_trough_gc
-    };
-    my $standalone = [];
-    my %option     = (
-        sql_query  => $sql_query,
-        threshold  => $combine_threshold,
-        standalone => $standalone,
-    );
-    my @combined = @{ $write_obj->make_combine( \%option ) };
-
-    #----------------------------------------------------------#
-    # worksheet -- combined_trough_gc
-    #----------------------------------------------------------#
-    {
-        my $sheet_name = 'combined_trough_gc';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers
-                = qw{ AVG_trough_gc AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            $sql_query = q{
-                SELECT  AVG(gsw_trough_gc) AVG_trough_gc,
-                        AVG(w.window_pi) AVG_pi,
-                        STD(w.window_pi) STD_pi,
-                        AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                        STD(w.window_indel / w.window_length * 100) STD_indel,
-                        AVG(g.gsw_cv) AVG_cv,
-                        STD(g.gsw_cv) STD_cv,
-                        COUNT(w.window_indel) COUNT
-                FROM gsw g, window w
-                WHERE g.window_id = w.window_id
-                AND gsw_trough_gc IN
-            };
-            %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                combined  => \@combined,
-            );
-            ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    }
-};
-
-my $combined_a2d = sub {
-
-    # make combine
-    my $sql_query = q{
-        SELECT FLOOR(gsw_amplitude / gsw_density) a2d,
-               COUNT(*) COUNT
-        FROM gsw g
-        WHERE gsw_amplitude >= 15
-        AND FLOOR(gsw_amplitude / gsw_density) >= 0
-        GROUP BY a2d
-    };
-    my $standalone = [ 0, 1 ];
-    my %option = (
-        sql_query  => $sql_query,
-        threshold  => $combine_threshold,
-        standalone => $standalone,
-    );
-    my @combined = @{ $write_obj->make_combine( \%option ) };
-
-    #----------------------------------------------------------#
-    # worksheet -- combined_a2d
-    #----------------------------------------------------------#
-    {
-        my $sheet_name = 'combined_a2d';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers
-                = qw{ AVG_distance AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            $sql_query = q{
-                SELECT  AVG(FLOOR(gsw_amplitude / gsw_density)) AVG_a2d,
-                        AVG(w.window_pi) AVG_pi,
-                        STD(w.window_pi) STD_pi,
-                        AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                        STD(w.window_indel / w.window_length * 100) STD_indel,
-                        AVG(g.gsw_cv) AVG_cv,
-                        STD(g.gsw_cv) STD_cv,
-                        COUNT(w.window_indel) COUNT
-                FROM gsw g, window w
-                WHERE g.window_id = w.window_id
-                AND FLOOR(gsw_amplitude / gsw_density) IN
-            };
-            %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                combined  => \@combined,
-            );
-            ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    }
-};
-
-my $dd_group = sub {
-
-    #----------------------------------------------------------#
-    # worksheet -- dd_group
-    #----------------------------------------------------------#
-    {
-        my $sheet_name = 'dd_group';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my $query_name = 'dd_group';
-            my @headers    = qw{distance AVG_indel COUNT STD_indel};
-            ( $sheet_row, $sheet_col ) = ( 0, 1 );
-            my %option = (
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                header     => \@headers,
-                query_name => $query_name,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        my @dd_density_group
-            = ( [ 1, 2 ], [ 3, 6 ], [ 7, 10 ], [ 11, 14 ], [ 15, 999 ], );
-
-        # write contents
-        {
-            my $sql_query = q{
-                SELECT CONCAT(gsw_type, gsw_distance) distance,
-                       AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                       COUNT(w.window_indel) COUNT,
-                       STD(w.window_indel / w.window_length * 100) STD_indel
-                FROM gsw g, window w
-                WHERE g.gsw_type = ?
-                AND g.window_id = w.window_id
-                AND g.gsw_density BETWEEN ? AND ?
-                AND g.gsw_distance <= ?
-                GROUP BY CONCAT(g.gsw_type, g.gsw_distance)
-                ORDER BY g.gsw_distance
-            };
-            my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                group     => \@dd_density_group,
-            );
-            ($sheet_row) = $write_obj->write_content_dd_gc( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    }
-};
-
 #----------------------------------------------------------#
-# worksheet -- da_group
+# worksheet -- distance_to_trough
 #----------------------------------------------------------#
-#
-my $da_group = sub {
-    my $sheet_name = 'da_group';
+my $distance_to_trough = sub {
+    my $sheet_name = 'distance_to_trough';
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
     {    # write header
-        my $query_name = 'da_group';
+        my @headers
+            = qw{ distance_to_trough AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  gsw_distance distance_to_trough,
+                    AVG(w.window_pi) AVG_pi,
+                    STD(w.window_pi) STD_pi,
+                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                    STD(w.window_indel / w.window_length * 100) STD_indel,
+                    AVG(g.gsw_cv) AVG_cv,
+                    STD(g.gsw_cv) STD_cv,
+                    COUNT(w.window_id) COUNT
+            FROM gsw g, window w
+            WHERE g.window_id = w.window_id
+            GROUP BY gsw_distance
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
+# worksheet -- wave_length
+#----------------------------------------------------------#
+my $wave_length = sub {
+    my $sheet_name = 'wave_length';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers
+            = qw{ wave_length AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  FLOOR(gsw_wave_length / 100) wave_length,
+                    AVG(w.window_pi) AVG_pi,
+                    STD(w.window_pi) STD_pi,
+                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                    STD(w.window_indel / w.window_length * 100) STD_indel,
+                    AVG(g.gsw_cv) AVG_cv,
+                    STD(g.gsw_cv) STD_cv,
+                    COUNT(w.window_indel) COUNT
+            FROM gsw g, window w
+            WHERE g.window_id = w.window_id
+            GROUP BY FLOOR(gsw_wave_length / 100) 
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+
+};
+
+#----------------------------------------------------------#
+# worksheet -- amplitude
+#----------------------------------------------------------#
+my $amplitude = sub {
+
+    # make combine
+    my @combined;
+    {
+        my $sql_query = q{
+            SELECT FLOOR(gsw_amplitude / 0.01) amplitude,
+                   COUNT(*) COUNT
+            FROM gsw g
+            WHERE 1 = 1
+            AND FLOOR(gsw_amplitude / 0.01) >= 10
+            GROUP BY FLOOR(gsw_amplitude / 0.01)
+        };
+        my $standalone = [];
+        my %option     = (
+            sql_query  => $sql_query,
+            threshold  => $combine_threshold,
+            standalone => $standalone,
+            merge_last => 1,
+        );
+        @combined = @{ $write_obj->make_combine( \%option ) };
+    }
+
+    my $sheet_name = 'amplitude';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers
+            = qw{ AVG_amplitude AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  AVG(FLOOR(gsw_amplitude / 0.01)) AVG_amplitude,
+                    AVG(w.window_pi) AVG_pi,
+                    STD(w.window_pi) STD_pi,
+                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                    STD(w.window_indel / w.window_length * 100) STD_indel,
+                    AVG(g.gsw_cv) AVG_cv,
+                    STD(g.gsw_cv) STD_cv,
+                    COUNT(w.window_indel) COUNT
+            FROM gsw g, window w
+            WHERE g.window_id = w.window_id
+            AND FLOOR(gsw_amplitude / 0.01) >= 10
+            AND FLOOR(gsw_amplitude / 0.01) IN 
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            combined  => \@combined,
+        );
+        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+
+};
+
+#----------------------------------------------------------#
+# worksheet -- trough_gc
+#----------------------------------------------------------#
+my $trough_gc = sub {
+
+    # make combine
+    my @combined;
+    {
+        my $sql_query = q{
+            SELECT FLOOR(gsw_trough_gc / 0.01) trough_gc,
+                   COUNT(*) COUNT
+            FROM gsw g
+            GROUP BY FLOOR(gsw_trough_gc / 0.01)
+        };
+        my $standalone = [];
+        my %option     = (
+            sql_query  => $sql_query,
+            threshold  => $combine_threshold,
+            standalone => $standalone,
+            merge_last => 1,
+        );
+        @combined = @{ $write_obj->make_combine( \%option ) };
+    }
+
+    my $sheet_name = 'trough_gc';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers
+            = qw{ AVG_trough_gc AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  AVG(FLOOR(gsw_trough_gc / 0.01)) AVG_trough_gc,
+                    AVG(w.window_pi) AVG_pi,
+                    STD(w.window_pi) STD_pi,
+                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                    STD(w.window_indel / w.window_length * 100) STD_indel,
+                    AVG(g.gsw_cv) AVG_cv,
+                    STD(g.gsw_cv) STD_cv,
+                    COUNT(w.window_indel) COUNT
+            FROM gsw g, window w
+            WHERE g.window_id = w.window_id
+            AND FLOOR(gsw_trough_gc / 0.01) IN 
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            combined  => \@combined,
+        );
+        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+
+};
+
+#----------------------------------------------------------#
+# worksheet -- gradient
+#----------------------------------------------------------#
+my $gradient = sub {
+
+    # make combine
+    my @combined;
+    {
+        my $sql_query = q{
+            SELECT FLOOR(gsw_gradient / 0.00001) gradient,
+                   COUNT(*) COUNT
+            FROM gsw g
+            GROUP BY FLOOR(gsw_gradient / 0.00001)
+        };
+        my $standalone = [];
+        my %option     = (
+            sql_query  => $sql_query,
+            threshold  => $combine_threshold,
+            standalone => $standalone,
+            merge_last => 1,
+        );
+        @combined = @{ $write_obj->make_combine( \%option ) };
+    }
+
+    my $sheet_name = 'gradient';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers
+            = qw{ AVG_gradient AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  AVG(FLOOR(gsw_gradient / 0.00001)) AVG_gradient,
+                    AVG(w.window_pi) AVG_pi,
+                    STD(w.window_pi) STD_pi,
+                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                    STD(w.window_indel / w.window_length * 100) STD_indel,
+                    AVG(g.gsw_cv) AVG_cv,
+                    STD(g.gsw_cv) STD_cv,
+                    COUNT(w.window_indel) COUNT
+            FROM gsw g, window w
+            WHERE g.window_id = w.window_id
+            AND FLOOR(gsw_gradient / 0.00001) IN
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            combined  => \@combined,
+        );
+        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
+# worksheet -- d_wave_length_series
+#----------------------------------------------------------#
+my $d_wave_length_series = sub {
+
+    my $sheet_name = 'd_wave_length_series';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my $query_name = 'd_wave_length_series';
+        my @headers    = qw{distance AVG_indel COUNT STD_indel};
+        ( $sheet_row, $sheet_col ) = ( 0, 1 );
+        my %option = (
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            header     => \@headers,
+            query_name => $query_name,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    my @levels = ( [ 5, 14 ], [ 15, 24 ], [ 25, 34 ], [ 35, 999 ], );
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT gsw_distance distance,
+                   AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                   COUNT(w.window_indel) COUNT,
+                   STD(w.window_indel / w.window_length * 100) STD_indel
+            FROM gsw g, window w
+            WHERE g.window_id = w.window_id
+            AND g.gsw_distance <= 10
+            AND FLOOR(gsw_wave_length / 100) BETWEEN ? AND ?
+            GROUP BY g.gsw_distance
+            ORDER BY g.gsw_distance ASC
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            group     => \@levels,
+        );
+        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
+# worksheet -- d_amplitude_series
+#----------------------------------------------------------#
+my $d_amplitude_series = sub {
+
+    my $sheet_name = 'd_amplitude_series';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my $query_name = 'd_amplitude_series';
         my @headers    = qw{gsw_distance AVG_indel COUNT STD_indel};
         ( $sheet_row, $sheet_col ) = ( 0, 1 );
         my %option = (
@@ -631,65 +593,140 @@ my $da_group = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    my @amplitude_group = ( [ 10, 14 ], [ 15, 19 ], [ 20, 100 ], );
+    my @levels = ( [ 15, 19 ], [ 20, 24 ], [ 25, 29 ], [ 30, 100 ] );
 
-    # write contents
-    {
-        my $sql_query_D = q{
-            # amplitude_group for D windows
-            SELECT  CONCAT(g.gsw_type, g.gsw_distance) gsw_distance,
+    {    # write contents
+        my $sql_query = q{
+            SELECT  g.gsw_distance gsw_distance,
                     AVG(w.window_indel / w.window_length * 100) AVG_indel,
                     COUNT(*) COUNT,
                     STD(w.window_indel / w.window_length * 100) STD_indel
             FROM    gsw g,
                     window w
             WHERE g.window_id = w.window_id
-            AND g.gsw_type = 'L'
-            AND g.gsw_density > 5
-            AND g.gsw_distance <= 5
-            AND g.gsw_amplitude BETWEEN ? AND ?
-            GROUP BY CONCAT(g.gsw_type, g.gsw_distance)
-            ORDER BY g.gsw_distance DESC
-        };
-        my $sql_query_A = q{
-            # amplitude_group for A windows
-            SELECT  CONCAT(g.gsw_type, g.gsw_distance) gsw_distance,
-                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                    COUNT(*) COUNT,
-                    STD(w.window_indel / w.window_length * 100) STD_indel
-            FROM    gsw g,
-                    window w
-            WHERE g.window_id = w.window_id
-            AND g.gsw_type = 'R'
-            AND g.gsw_density > 5
-            AND g.gsw_distance <= 5
-            AND g.gsw_amplitude BETWEEN ? AND ?
-            GROUP BY CONCAT(g.gsw_type, g.gsw_distance)
+            AND g.gsw_distance <= 10
+            AND FLOOR(gsw_amplitude / 0.01) BETWEEN ? AND ?
+            GROUP BY g.gsw_distance
+            ORDER BY g.gsw_distance ASC
         };
         my %option = (
-            sql_query_1 => $sql_query_D,
-            sql_query_2 => $sql_query_A,
-            sheet_row   => $sheet_row,
-            sheet_col   => $sheet_col,
-            group       => \@amplitude_group,
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            group     => \@levels,
         );
-        ($sheet_row) = $write_obj->write_content_indel( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
 };
 
 #----------------------------------------------------------#
-# worksheet -- da2d_group
+# worksheet -- d_gradient_series
 #----------------------------------------------------------#
-#
-my $da2d_group = sub {
-    my $sheet_name = 'da2d_group';
+my $d_gradient_series = sub {
+
+    # find quartiles
+    my @levels;
+    {
+        my $sql_query = q{
+            SELECT g.gsw_gradient
+            FROM gsw g
+            WHERE 1 = 1
+        };
+        my %option = ( sql_query => $sql_query, );
+        my $quartiles = $write_obj->quantile_sql( \%option, 4 );
+        $_ = round( $_, 5 ) for @{$quartiles};
+        @levels = (
+            [ $quartiles->[0], $quartiles->[1] ],    # 1/4
+            [ $quartiles->[1], $quartiles->[2] ],    # 2/4
+            [ $quartiles->[2], $quartiles->[3] ],    # 3/4
+            [ $quartiles->[3], $quartiles->[4] ],    # 4/4
+        );
+    }
+    
+    my $sheet_name = 'd_gradient_series';
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
     {    # write header
-        my $query_name = 'da2d_group';
+        my $query_name = 'd_gradient_series';
+        my @headers    = qw{gsw_distance AVG_indel COUNT STD_indel};
+        ( $sheet_row, $sheet_col ) = ( 0, 1 );
+        my %option = (
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            header     => \@headers,
+            query_name => $query_name,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+    
+    {# write contents
+        my $sql_query = q{
+            SELECT  g.gsw_distance gsw_distance,
+                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                    COUNT(*) COUNT,
+                    STD(w.window_indel / w.window_length * 100) STD_indel
+            FROM    gsw g,
+                    window w
+            WHERE g.window_id = w.window_id
+            AND g.gsw_distance <= 10
+            AND g.gsw_gradient BETWEEN ? AND ?
+            GROUP BY g.gsw_distance
+            ORDER BY g.gsw_distance ASC
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row   => $sheet_row,
+            sheet_col   => $sheet_col,
+            group       => \@levels,
+        );
+        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
+# worksheet -- d_gc_series
+#----------------------------------------------------------#
+my $d_gc_series = sub {
+
+    # find quartiles
+    my @levels;
+    {
+        my $sql_query = q{
+            SELECT w.window_average_gc
+            FROM gsw g, window w
+            WHERE 1 = 1
+            AND g.window_id = w.window_id
+        };
+        my %option = ( sql_query => $sql_query, );
+        my $quartiles = $write_obj->quantile_sql( \%option, 10 );
+        $_ = round( $_, 4 ) for @{$quartiles};
+        @levels = (
+
+            #[ $quartiles->[0],  $quartiles->[1] ],     # 1/10
+            #[ $quartiles->[1],  $quartiles->[2] ],     # 2/10
+            [ $quartiles->[2], $quartiles->[3] ],    # 3/10
+            [ $quartiles->[3], $quartiles->[4] ],    # 4/10
+            [ $quartiles->[5], $quartiles->[6] ],    # 5/10
+            [ $quartiles->[6], $quartiles->[7] ],    # 6/10
+            [ $quartiles->[7], $quartiles->[8] ],    # 7/10
+            [ $quartiles->[8], $quartiles->[9] ],    # 8/10
+                 #[ $quartiles->[9],  $quartiles->[10] ],    # 9/10
+                 #[ $quartiles->[10], $quartiles->[11] ],    # 10/10
+        );
+    }
+
+    my $sheet_name = 'd_gc_series';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {            # write header
+        my $query_name = 'd_gc_series';
         my @headers    = qw{gsw_distance AVG_indel COUNT STD_indel};
         ( $sheet_row, $sheet_col ) = ( 0, 1 );
         my %option = (
@@ -702,142 +739,100 @@ my $da2d_group = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    my @amplitude_group = ( [ 0, 0 ], [ 1, 1 ], [ 2, 2 ], [ 3, 100 ], );
-
     # write contents
     {
-        my $sql_query_D = q{
-            # amplitude_group for D windows
-            SELECT  CONCAT(g.gsw_type, g.gsw_distance) gsw_distance,
+        my $sql_query = q{
+            SELECT  g.gsw_distance gsw_distance,
                     AVG(w.window_indel / w.window_length * 100) AVG_indel,
                     COUNT(*) COUNT,
                     STD(w.window_indel / w.window_length * 100) STD_indel
             FROM    gsw g,
                     window w
             WHERE g.window_id = w.window_id
-            AND g.gsw_type = 'L'
-            AND g.gsw_density > 5
-            AND g.gsw_distance <= 5
-            AND FLOOR(g.gsw_amplitude / g.gsw_density) BETWEEN ? AND ?
-            GROUP BY CONCAT(g.gsw_type, g.gsw_distance)
-            ORDER BY g.gsw_distance DESC
-        };
-        my $sql_query_A = q{
-            # amplitude_group for A windows
-            SELECT  CONCAT(g.gsw_type, g.gsw_distance) gsw_distance,
-                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                    COUNT(*) COUNT,
-                    STD(w.window_indel / w.window_length * 100) STD_indel
-            FROM    gsw g,
-                    window w
-            WHERE g.window_id = w.window_id
-            AND g.gsw_type = 'R'
-            AND g.gsw_density > 5
-            AND g.gsw_distance <= 5
-            AND FLOOR(g.gsw_amplitude / g.gsw_density) BETWEEN ? AND ?
-            GROUP BY CONCAT(g.gsw_type, g.gsw_distance)
+            AND g.gsw_distance <= 10
+            AND w.window_average_gc BETWEEN ? AND ?
+            GROUP BY g.gsw_distance 
+            ORDER BY g.gsw_distance ASC
         };
         my %option = (
-            sql_query_1 => $sql_query_D,
-            sql_query_2 => $sql_query_A,
-            sheet_row   => $sheet_row,
-            sheet_col   => $sheet_col,
-            group       => \@amplitude_group,
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            group     => \@levels,
         );
-        ($sheet_row) = $write_obj->write_content_indel( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
 };
 
 #----------------------------------------------------------#
-# worksheet -- extreme_amplitude_group
+# worksheet -- d_trough_gc_series
 #----------------------------------------------------------#
-#my $extreme_amplitude_group = sub {
-#    my $sheet_name = 'extreme_amplitude_group';
-#    my $sheet;
-#    my ($sheet_row, $sheet_col);
-#
-#    # write header
-#    {
-#        my $query_name = 'extreme_amplitude_group';
-#        my $sql_query  = q{
-#            # header of Table group_density
-#            SELECT 'gsw_distance', 'AVG_indel', 'COUNT', 'STD_indel'
-#        };
-#        ($sheet_row, $sheet_col) = (0, 1);
-#        my %option = (
-#            sql_query  => $sql_query,
-#            sheet_row  => $sheet_row,
-#            sheet_col  => $sheet_col,
-#            query_name => $query_name,
-#        );
-#        ($sheet, $sheet_row) =
-#          $write_obj->write_header_sql($sheet_name, \%option);
-#    }
-#
-#    my @amplitude_group = (
-#        [ 0,    0.1499, 0,    0.1499, ],
-#        [ 0.15, 1,      0,    0.1499, ],
-#        [ 0,    0.1499, 0.15, 1, ],
-#        [ 0.15, 1,      0.15, 1, ],
-#    );
-#
-#    # write contents
-#    {
-#        my $sql_query_D = q{
-#            # extreme_amplitude_group for D windows
-#            SELECT  CONCAT(g.gsw_type, g.gsw_distance) gsw_distance,
-#                    AVG(w.window_indel) AVG_indel,
-#                    COUNT(*) COUNT,
-#                    STD(w.window_indel) STD_indel
-#            FROM    gsw g,
-#                    window w,
-#                    (SELECT extreme_id
-#                     FROM extreme
-#                     WHERE extreme_left_amplitude BETWEEN ? AND ?
-#                     AND extreme_right_amplitude BETWEEN ? AND ?
-#                    ) e
-#            WHERE g.window_id = w.window_id
-#            AND g.gsw_type = 'L'
-#            AND g.gsw_density > 5
-#            AND g.gsw_distance <= 5
-#            AND g.extreme_id = e.extreme_id
-#            GROUP BY CONCAT(g.gsw_type, g.gsw_distance)
-#            ORDER BY g.gsw_distance DESC
-#        };
-#        my $sql_query_A = q{
-#            # extreme_amplitude_group for A windows
-#            SELECT  CONCAT(g.gsw_type, g.gsw_distance) gsw_distance,
-#                    AVG(w.window_indel) AVG_indel,
-#                    COUNT(*) COUNT,
-#                    STD(w.window_indel) STD_indel
-#            FROM    gsw g,
-#                    window w,
-#                    (SELECT extreme_id
-#                     FROM extreme
-#                     WHERE extreme_left_amplitude BETWEEN ? AND ?
-#                     AND extreme_right_amplitude BETWEEN ? AND ?
-#                    ) e
-#            WHERE g.window_id = w.window_id
-#            AND g.gsw_type = 'R'
-#            AND g.gsw_density > 5
-#            AND g.gsw_distance <= 5
-#            AND g.prev_extreme_id = e.extreme_id
-#            GROUP BY CONCAT(g.gsw_type, g.gsw_distance)
-#        };
-#        my %option = (
-#            sql_query_1 => $sql_query_D,
-#            sql_query_2 => $sql_query_A,
-#            sheet_row   => $sheet_row,
-#            sheet_col   => $sheet_col,
-#            group       => \@amplitude_group,
-#        );
-#        ($sheet_row) = $write_obj->write_content_indel($sheet, \%option);
-#    }
-#
-#    print "Sheet \"$sheet_name\" has been generated.\n";
-#};
+my $d_trough_gc_series = sub {
+
+    # find quartiles
+    my @levels;
+    {
+        my $sql_query = q{
+            SELECT g.gsw_trough_gc
+            FROM gsw g
+            WHERE 1 = 1
+        };
+        my %option = ( sql_query => $sql_query, );
+        my $quartiles = $write_obj->quantile_sql( \%option, 4 );
+        $_ = round( $_, 4 ) for @{$quartiles};
+        @levels = (
+            [ $quartiles->[0], $quartiles->[1] ],    # 1/4
+            [ $quartiles->[1], $quartiles->[2] ],    # 2/4
+            [ $quartiles->[2], $quartiles->[3] ],    # 3/4
+            [ $quartiles->[3], $quartiles->[4] ],    # 4/4
+        );
+    }
+
+    my $sheet_name = 'd_trough_gc_series';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {                                                # write header
+        my $query_name = 'd_trough_gc_series';
+        my @headers    = qw{gsw_trough_gc AVG_indel COUNT STD_indel};
+        ( $sheet_row, $sheet_col ) = ( 0, 1 );
+        my %option = (
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            header     => \@headers,
+            query_name => $query_name,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  g.gsw_distance gsw_distance,
+                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                    COUNT(*) COUNT,
+                    STD(w.window_indel / w.window_length * 100) STD_indel
+            FROM    gsw g,
+                    window w
+            WHERE g.window_id = w.window_id
+            AND g.gsw_distance <= 10
+            AND g.gsw_trough_gc BETWEEN ? AND ?
+            GROUP BY g.gsw_distance 
+            ORDER BY g.gsw_distance ASC
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            group     => \@levels,
+        );
+        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
 
 #----------------------------------------------------------#
 # worksheet -- segment_gc_indel
@@ -1296,6 +1291,9 @@ my $segment_mdcw_indel = sub {
 # worksheet -- segment_coding_indel
 #----------------------------------------------------------#
 my $segment_coding_indel = sub {
+    unless ( $write_obj->check_column( 'window', 'window_coding' ) ) {
+        return;
+    }
 
     my @segment_levels = ( 'A', 1 .. 3 );
     if ($alt_level) {
@@ -1404,130 +1402,6 @@ my $segment_coding_indel = sub {
     }
 
 };
-
-#----------------------------------------------------------#
-# worksheet -- segment_extreme_indel
-#----------------------------------------------------------#
-#my $segment_extreme_indel = sub {
-#
-#    my @segment_levels =
-#      ([ '', 1 ], [ 10000, 2 ], [ 5000, 3 ], [ 1000, 4 ], [ 500, 5 ],);
-#
-#    my $write_sheet = sub {
-#        my ($segment_type) = @_;
-#        my $sheet_name = 'segment_extreme_indel' . "_$segment_type";
-#        my $sheet;
-#        my ($sheet_row, $sheet_col);
-#
-#        # create temporary table
-#        {
-#            my $sql_query = q{
-#                DROP TABLE IF EXISTS extreme_group
-#            };
-#            my %option = (sql_query => $sql_query,);
-#            $write_obj->excute_sql(\%option);
-#        }
-#
-#        {
-#            my $sql_query = q{
-#                # create temporary table
-#                CREATE TABLE extreme_group (e_id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (e_id))
-#                    ENGINE=MyISAM
-#                    SELECT w.window_pi `pi`,
-#                           w.window_indel `indel`,
-#                           w.window_average_gc `gc`,
-#                           s.segment_feature4 `extreme`,
-#                           w.window_length `length`
-#                    FROM segment s, window w
-#                    WHERE s.window_id = w.window_id
-#                    AND s.segment_type = ?
-#                    ORDER BY extreme DESC
-#            };
-#            my %option = (
-#                sql_query => $sql_query,
-#                bind_value => [ $segment_type ],
-#
-#            );
-#            $write_obj->excute_sql(\%option);
-#        }
-#
-#        # make group
-#        my @combined_segment;
-#        {
-#            my $sql_query = q{
-#                # segment_sum
-#                SELECT e_id, length
-#                FROM extreme_group
-#            };
-#            my $merge_last = 1;
-#            my %option     = (
-#                sql_query  => $sql_query,
-#                threshold  => $sum_threshold,
-#                merge_last => $merge_last,
-#            );
-#            @combined_segment = @{ $write_obj->make_combine(\%option) };
-#        }
-#
-#        # write header
-#        {
-#            my $sql_query = q{
-#                # header of Table group_density
-#                SELECT 'AVG_extreme', 'AVG_pi', 'AVG_Indel/100bp', 'AVG_gc',
-#                       'AVG_length', 'COUNT', 'SUM_length'
-#            };
-#            ($sheet_row, $sheet_col) = (0, 1);
-#            my %option = (
-#                sql_query => $sql_query,
-#                sheet_row => $sheet_row,
-#                sheet_col => $sheet_col,
-#            );
-#            ($sheet, $sheet_row) =
-#              $write_obj->write_header_sql($sheet_name, \%option);
-#        }
-#
-#        # query
-#        {
-#            my $sql_query = q{
-#                SELECT AVG(e.extreme) `AVG_extreme`,
-#                       AVG(e.pi) `AVG_pi`,
-#                       AVG(e.indel / e.length * 100) `AVG_Indel/100bp`,
-#                       AVG(e.gc) `AVG_gc`,
-#                       AVG(e.length) `AVG_length`,
-#                       COUNT(*) COUNT,
-#                       SUM(e.length) `SUM_length`
-#                FROM extreme_group e
-#                WHERE e_id IN
-#            };
-#            my %option = (
-#                sql_query => $sql_query,
-#                sheet_row => $sheet_row,
-#                sheet_col => $sheet_col,
-#                group     => \@combined_segment,
-#            );
-#
-#            ($sheet_row) = $write_obj->write_content_group($sheet, \%option);
-#        }
-#
-#        # drop temporary table
-#        {
-#            my $sql_query = q{
-#                DROP TABLE IF EXISTS extreme_group
-#            };
-#            my %option = (sql_query => $sql_query,);
-#            $write_obj->excute_sql(\%option);
-#        }
-#
-#        $sheet->set_zoom(75);
-#
-#        print "Sheet \"$sheet_name\" has been generated.\n";
-#    };
-#
-#    foreach (@segment_levels) {
-#        my $segment_type = $_->[1];
-#        &$write_sheet($segment_type);
-#    }
-#
-#};
 
 # coding; repeat; non-repeat & non-coding
 my $segment_gc_indel_cr = sub {
@@ -1824,23 +1698,21 @@ my $segment_summary = sub {
 };
 
 foreach my $n (@tasks) {
-    if ( $n == 1 ) { &$summary; &$segment_summary; next; }
-    if ( $n == 2 ) { &$combined_distance;  next; }
-    if ( $n == 3 ) { &$combined_density;   next; }
-    if ( $n == 4 ) { &$combined_amplitude; next; }
-    if ( $n == 5 ) { &$combined_trough_gc; next; }
-    if ( $n == 6 ) { &$combined_a2d;       next; }
-    if ( $n == 7 ) { &$dd_group;           next; }
-    if ( $n == 8 ) { &$da_group;           &$da2d_group; next; }
+    if ( $n == 1 ) { &$summary;            &$segment_summary; next; }
+    if ( $n == 2 ) { &$distance_to_trough; &$wave_length;     next; }
+    if ( $n == 3 ) { next; }
+    if ( $n == 4 ) { &$amplitude;          &$gradient;        next; }
+    if ( $n == 5 ) { &$trough_gc;            next; }
+    if ( $n == 6 ) { next; }
+    if ( $n == 7 ) { &$d_wave_length_series; next; }
+    if ( $n == 8 ) { &$d_amplitude_series; &$d_gradient_series;  next; }
+    if ( $n == 9 ) { &$d_gc_series;        &$d_trough_gc_series; next; }
 
     if ( $n == 10 ) { &$segment_gc_indel;     next; }
     if ( $n == 11 ) { &$segment_std_indel;    next; }
     if ( $n == 12 ) { &$segment_cv_indel;     next; }
     if ( $n == 13 ) { &$segment_mdcw_indel;   next; }
     if ( $n == 14 ) { &$segment_coding_indel; next; }
-
-    #if ($n == 8) { &$extreme_amplitude_group; next; }
-    #if ($n == 24) { &$segment_extreme_indel;  next; }
 
     if ( $n == 30 ) { &$segment_gc_indel_cr; next; }
     if ( $n == 31 ) { &$segment_cv_indel_cr; next; }

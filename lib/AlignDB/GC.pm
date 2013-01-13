@@ -443,7 +443,7 @@ REDO: while (1) {
             my $gc   = $windows->[ $extreme[$i] ]->{sw_gc};
 
             if ( $i + 1 < scalar @extreme ) {
-                if ( $extreme[ $i + 1 ] - $extreme[$i] <= $vicinal_number ) {
+                if ( $extreme[ $i + 1 ] - $extreme[$i] < $vicinal_number ) {
                     $windows->[ $extreme[ $i + 1 ] ]->{high_low_flag} = 'N';
                     next REDO;
                 }
@@ -536,16 +536,18 @@ sub insert_extreme {
         }
     }
 
-    my $prev_extreme_middle_right = 1;
-    my $prev_extreme_gc           = $slidings[0]->{gc};
+    my $prev_extreme_middle_right_idx = 1;
+    my $prev_extreme_gc               = $slidings[0]->{gc};
     for ( my $i = 0; $i < scalar @extreme_site; $i++ ) {
 
         # wave_length
         my $extreme_set         = $extreme_site[$i]->{set};
-        my $extreme_middle_left = $extreme_set->lookup_index($half_length);
+        my $extreme_middle_left = $extreme_set->at($half_length);
+        my $extreme_middle_left_idx
+            = $comparable_set->index($extreme_middle_left);
         my $left_wave_length
-            = $extreme_middle_left - $prev_extreme_middle_right + 1;
-        $prev_extreme_middle_right = $extreme_middle_left + 1;
+            = $extreme_middle_left_idx - $prev_extreme_middle_right_idx + 1;
+        $prev_extreme_middle_right_idx = $extreme_middle_left_idx + 1;
         $extreme_site[$i]->{left_wave_length} = $left_wave_length;
 
         # amplitude
@@ -555,17 +557,18 @@ sub insert_extreme {
         $prev_extreme_gc = $extreme_gc;
     }
 
-    my $next_extreme_middle_left = $align_length;
-    my $next_extreme_gc          = $slidings[-1]->{gc};
+    my $next_extreme_middle_left_idx = $comparable_set->cardinality;
+    my $next_extreme_gc              = $slidings[-1]->{gc};
     for ( my $i = scalar @extreme_site - 1; $i >= 0; $i-- ) {
 
         # wave_length
-        my $extreme_set = $extreme_site[$i]->{set};
-        my $extreme_middle_right
-            = $extreme_set->lookup_index( $half_length + 1 );
+        my $extreme_set          = $extreme_site[$i]->{set};
+        my $extreme_middle_right = $extreme_set->at( $half_length + 1 );
+        my $extreme_middle_right_idx
+            = $comparable_set->index($extreme_middle_right);
         my $right_wave_length
-            = $next_extreme_middle_left - $extreme_middle_right + 1;
-        $next_extreme_middle_left = $extreme_middle_right - 1;
+            = $next_extreme_middle_left_idx - $extreme_middle_right_idx + 1;
+        $next_extreme_middle_left_idx = $extreme_middle_right_idx - 1;
         $extreme_site[$i]->{right_wave_length} = $right_wave_length;
 
         # amplitude
@@ -654,7 +657,7 @@ sub insert_gsw {
         VALUES (
             NULL, ?, ?, ?,
             ?, ?, ?,
-            ?, ?
+            ?, ?, ?
         )
         }
     );
@@ -697,8 +700,8 @@ sub insert_gsw {
         my $half_length        = int( $ex_set->cardinality / 2 );
         my $prev_middle_right  = $prev_ex_set->at( $half_length + 1 );
         my $ex_middle_left     = $ex_set->at($half_length);
-        my $interval_start_idx = $comparable_set->index($prev_middle_right) + 1;
-        my $interval_end_idx   = $comparable_set->index($ex_middle_left) - 1;
+        my $interval_start_idx = $comparable_set->index($prev_middle_right);
+        my $interval_end_idx   = $comparable_set->index($ex_middle_left);
 
         next if $interval_start_idx > $interval_end_idx;
 

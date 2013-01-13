@@ -760,7 +760,7 @@ sub insert_ssw {
         my ( $snp_id, $snp_pos, $snp_occured ) = @row;
 
         # index of snp in the $comparable_set
-        my $snp_index = $comparable_set->lookup_member($snp_pos);
+        my $snp_index = $comparable_set->index($snp_pos);
 
         $snp_info->{$snp_index}{snp_id}      = $snp_id;
         $snp_info->{$snp_index}{snp_pos}     = $snp_pos;
@@ -799,7 +799,7 @@ sub insert_ssw {
                 print "ssw_type \"$ssw_type\" error\n";
             }
 
-            # $gsw_distance is from 0 to $gsw_density
+            # distance is from 0 to density
         SSW: for my $i ( 0 .. $ssw_max_distance ) {
                 my $ssw_set = $comparable_set->slice( $ssw_start, $ssw_end );
                 my $ssw_set_member_number = $ssw_set->cardinality;

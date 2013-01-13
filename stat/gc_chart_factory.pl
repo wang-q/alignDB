@@ -82,9 +82,9 @@ $excel_obj->jc_correction if $jc_correction;
 {
 
     #----------------------------#
-    # worksheet -- combined_distance
+    # worksheet -- distance_to_trough
     #----------------------------#
-    my $sheet_name = 'combined_distance';
+    my $sheet_name = 'distance_to_trough';
     my %option     = (
         chart_serial => 1,
         x_column     => 1,
@@ -114,16 +114,29 @@ $excel_obj->jc_correction if $jc_correction;
     $option{y_title}  = "Window CV";
     $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
+}
 
+{
     #----------------------------#
-    # worksheet -- combined_density
+    # worksheet -- wave_length
     #----------------------------#
-    $sheet_name           = 'combined_density';
-    $option{chart_serial} = 1;
-    $option{y_column}     = 2;
-    $option{x_title}      = "Wave length";
-    $option{y_title}      = "Nucleotide diversity";
-    $option{Top}          = 14.25;
+    my $sheet_name = 'wave_length';
+    my %option     = (
+        chart_serial => 1,
+        x_column     => 1,
+        y_column     => 2,
+        first_row    => 2,
+        last_row     => 32,
+        x_title      => "Wave length",
+        y_title      => "Nucleotide diversity",
+        Height       => 200,
+        Width        => 260,
+        Top          => 14.25,
+        Left         => 550,
+    );
+    $option{x_min_scale}  = 5;
+    $option{x_max_scale}  = 35;
+    $option{x_scale_unit} = 5;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     # chart 2
@@ -139,17 +152,29 @@ $excel_obj->jc_correction if $jc_correction;
     $option{y_title}  = "Window CV";
     $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
+}
 
+{
     #----------------------------#
-    # worksheet -- combined_amplitude
+    # worksheet -- amplitude
     #----------------------------#
-    $sheet_name           = 'combined_amplitude';
-    $option{chart_serial} = 1;
-    $option{y_column}     = 2;
-    $option{x_title}      = "Amplitude";
-    $option{y_title}      = "Nucleotide diversity";
-    $option{Top}          = 14.25;
-    $option{x_max_scale}  = 30;
+    my $sheet_name = 'amplitude';
+    my %option     = (
+        chart_serial => 1,
+        x_column     => 1,
+        y_column     => 2,
+        first_row    => 2,
+        last_row     => 32,
+        x_title      => "Amplitude",
+        y_title      => "Nucleotide diversity",
+        Height       => 200,
+        Width        => 260,
+        Top          => 14.25,
+        Left         => 550,
+    );
+    $option{x_min_scale}  = 10;
+    $option{x_max_scale}  = 40;
+    $option{x_scale_unit} = 5;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     # chart 2
@@ -165,17 +190,29 @@ $excel_obj->jc_correction if $jc_correction;
     $option{y_title}  = "Window CV";
     $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
+}
 
+{
     #----------------------------#
-    # worksheet -- combined_trough_gc
+    # worksheet -- trough_gc
     #----------------------------#
-    $sheet_name           = 'combined_trough_gc';
-    $option{chart_serial} = 1;
-    $option{y_column}     = 2;
+    my $sheet_name = 'trough_gc';
+    my %option     = (
+        chart_serial => 1,
+        x_column     => 1,
+        y_column     => 2,
+        first_row    => 2,
+        last_row     => 32,
+        x_title      => "Trough GC",
+        y_title      => "Nucleotide diversity",
+        Height       => 200,
+        Width        => 260,
+        Top          => 14.25,
+        Left         => 550,
+    );
     $option{x_title}      = "Trough GC";
     $option{y_title}      = "Nucleotide diversity";
-    $option{Top}          = 14.25;
-    $option{x_max_scale}  = 30;
+    $option{x_scale_unit} = 5;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     # chart 2
@@ -193,12 +230,12 @@ $excel_obj->jc_correction if $jc_correction;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
-    # worksheet -- combined_a2d
+    # worksheet -- gradient
     #----------------------------#
-    $sheet_name           = 'combined_a2d';
+    $sheet_name           = 'gradient';
     $option{chart_serial} = 1;
     $option{y_column}     = 2;
-    $option{x_title}      = "Amplitude/Wave length";
+    $option{x_title}      = "Gradient";
     $option{y_title}      = "Nucleotide diversity";
     $option{Top}          = 14.25;
     $option{x_max_scale}  = 15;
@@ -222,25 +259,51 @@ $excel_obj->jc_correction if $jc_correction;
 {
 
     #----------------------------#
-    # worksheet -- dd_group
+    # worksheet -- d_wave_length_series
     #----------------------------#
-    my $sheet_name = 'dd_group';
-    my @group_name = qw{101--300 301--700 701--1100 1101--1500 >1500};
+    my $sheet_name = 'd_wave_length_series';
     my %option     = (
         chart_serial   => 1,
-        x_title        => "Distance to GC trough (d')",
+        x_title        => "Distance to GC trough",
         y_title        => "Indel per 100 bp",
         Height         => 300,
         Width          => 390,
-        Top            => 14.25 * 38,
+        Top            => 14.25 * 17,
         Left           => 360,
-        group_name     => \@group_name,
         section_top    => 2,
-        section_end    => 36,
-        section_length => 35,
-        x_orientation  => 90,
+        section_end    => 13,
+        section_length => 12,
+        x_orientation  => 0,
     );
-
+    $option{group_name} = [1 .. 4] ;
+    $excel_obj->draw_dd( $sheet_name, \%option );
+    
+    #----------------------------#
+    # worksheet -- d_amplitude_series
+    #----------------------------#
+    $sheet_name = 'd_amplitude_series';
+    $option{group_name} = [1 .. 4] ;
+    $excel_obj->draw_dd( $sheet_name, \%option );
+    
+    #----------------------------#
+    # worksheet -- d_gradient_series
+    #----------------------------#
+    $sheet_name = 'd_gradient_series';
+    $option{group_name} = [1 .. 4] ;
+    $excel_obj->draw_dd( $sheet_name, \%option );
+    
+    #----------------------------#
+    # worksheet -- dtrough_gc_series
+    #----------------------------#
+    $sheet_name = 'd_trough_gc_series';
+    $option{group_name} = [1 .. 4] ;
+    $excel_obj->draw_dd( $sheet_name, \%option );
+    
+    #----------------------------#
+    # worksheet -- dgc_series
+    #----------------------------#
+    $sheet_name = 'd_gc_series';
+    $option{group_name} = [1 .. 6] ;
     $excel_obj->draw_dd( $sheet_name, \%option );
 }
 
@@ -275,40 +338,6 @@ $excel_obj->jc_correction if $jc_correction;
     $excel_obj->draw_dd( $sheet_name, \%option );
 }
 
-{
-
-    #----------------------------#
-    # worksheet -- da_group
-    #----------------------------#
-    # select worksheet by name
-    my $sheet_name = 'da_group';
-    my @group_name = ( "10--14", "15--19", "20--100", );
-    my %option     = (
-        chart_serial   => 1,
-        x_title        => "Distance to GC trough",
-        y_title        => "Indel per 100 bp",
-        Height         => 300,
-        Width          => 390,
-        Top            => 14.25 * 17,
-        Left           => 360,
-        group_name     => \@group_name,
-        section_top    => 2,
-        section_end    => 15,
-        section_length => 14,
-        x_orientation  => 0,
-    );
-
-    $excel_obj->draw_dd( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- indel_size_asymmetry
-    #----------------------------#
-    $sheet_name         = 'da2d_group';
-    @group_name         = ( "0--0", "1--1", "2--2", "3--100", );
-    $option{group_name} = \@group_name;
-
-    $excel_obj->draw_dd( $sheet_name, \%option );
-}
 
 {
 

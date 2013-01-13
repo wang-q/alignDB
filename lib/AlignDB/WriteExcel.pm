@@ -458,6 +458,42 @@ sub write_content_indel {
     }
 }
 
+sub write_content_series {
+    my ( $self, $sheet, $option ) = @_;
+
+    # init objects
+    my $dbh  = $self->dbh;
+    my $fmt  = $self->format;
+    my @cols = @{ $self->columns };
+
+    # init table cursor
+    my $sheet_row = $option->{sheet_row};
+    my $sheet_col = $option->{sheet_col};
+
+    my $sql_query = $option->{sql_query};
+    my @group       = @{ $option->{group} };
+
+    foreach (@group) {
+        my @range = @$_;
+        my $group_name;
+        if ( scalar @range > 1 ) {
+            $group_name = join "-", @range;
+        }
+        else {
+            $group_name = $range[0];
+        }
+        $sheet_row++;    # add a blank line
+        my %option = (
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            query_name => $group_name,
+            bind_value => \@range,
+        );
+        ($sheet_row) = $self->write_content_direct( $sheet, \%option );
+    }
+}
+
 sub write_content_dd {
     my ( $self, $sheet, $option ) = @_;
 
@@ -474,58 +510,6 @@ sub write_content_dd {
     my @group     = @{ $option->{group} };
 
     my $group_rows_range = int( $group[-1]->[0] + 1 ) + 2 + 3;
-
-    foreach (@group) {
-        my @range = @$_;
-        my $group_name;
-        if ( scalar @range > 1 ) {
-            $group_name = join "-", @range;
-        }
-        else {
-            $group_name = $range[0];
-        }
-        my $group_row = $sheet_row;
-        $group_row++;    # add a blank line
-        my %option = (
-            sql_query  => $sql_query,
-            sheet_row  => $group_row,
-            sheet_col  => $sheet_col,
-            query_name => $group_name,
-            bind_value => [ 'L', @range, $range[0] ],
-        );
-        ($group_row) = $self->write_content_direct( $sheet, \%option );
-
-        $group_row = $sheet_row + $group_rows_range;
-        $group_row--;
-        %option = (
-            sql_query  => $sql_query,
-            sheet_row  => $group_row,
-            sheet_col  => $sheet_col,
-            bind_value => [ 'R', @range, $range[0] ],
-            write_step => -1,
-        );
-        ($group_row) = $self->write_content_direct( $sheet, \%option );
-
-        $sheet_row += $group_rows_range;
-    }
-}
-
-sub write_content_dd_gc {
-    my ( $self, $sheet, $option ) = @_;
-
-    # init objects
-    my $dbh  = $self->dbh;
-    my $fmt  = $self->format;
-    my @cols = @{ $self->columns };
-
-    # init table cursor
-    my $sheet_row = $option->{sheet_row};
-    my $sheet_col = $option->{sheet_col};
-
-    my $sql_query = $option->{sql_query};
-    my @group     = @{ $option->{group} };
-
-    my $group_rows_range = int( $group[-1]->[0] + 1 ) * 2 + 3;
 
     foreach (@group) {
         my @range = @$_;
