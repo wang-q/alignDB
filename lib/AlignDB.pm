@@ -1049,20 +1049,33 @@ sub parse_block_fasta_file {
             for my $header (@headers) {
                 $header =~ $head_qr;
                 my $name = $1;
-                push @names, $name;
-                $info_of->{$name} = {
-                    chr_name   => $2,
-                    chr_strand => $3,
-                    chr_start  => $4,
-                    chr_end    => $5,
-                };
-                if ( $info_of->{$name}{chr_strand} eq '1' ) {
-                    $info_of->{$name}{chr_strand} = '+';
-                }
-                elsif ( $info_of->{$name}{chr_strand} eq '-1' ) {
-                    $info_of->{$name}{chr_strand} = '-';
-                }
 
+                if ($name) {
+                    push @names, $name;
+                    $info_of->{$name} = {
+                        chr_name   => $2,
+                        chr_strand => $3,
+                        chr_start  => $4,
+                        chr_end    => $5,
+                    };
+                    if ( $info_of->{$name}{chr_strand} eq '1' ) {
+                        $info_of->{$name}{chr_strand} = '+';
+                    }
+                    elsif ( $info_of->{$name}{chr_strand} eq '-1' ) {
+                        $info_of->{$name}{chr_strand} = '-';
+                    }
+
+                }
+                else {
+                    $name = $header;
+                    push @names, $name;
+                    $info_of->{$name} = {
+                        chr_name   => 'chrUn',
+                        chr_strand => '+',
+                        chr_start  => undef,
+                        chr_end    => undef,
+                    };
+                }
                 $info_of->{$name}{name}     = $name;
                 $info_of->{$name}{taxon_id} = $id_of->{$name};
                 $info_of->{$name}{chr_id}
@@ -1123,6 +1136,7 @@ sub get_seqs {
             FROM sequence s
             INNER JOIN query q on s.seq_id = q.seq_id
             WHERE s.align_id = ?
+            ORDER BY q.query_position
             }
         );
 
@@ -1181,7 +1195,7 @@ sub get_names {
 
     my @names;
     for my $table (qw{target query reference}) {
-        my $query = qq{
+        my $sql = qq{
             SELECT 
                 c.common_name
             FROM
@@ -1198,9 +1212,11 @@ sub get_names {
                 s.align_id = ?
         };
 
-        $query =~ s/_TABLE_/$table/g;
+        $sql =~ s/_TABLE_/$table/g;
 
-        my $sth = $dbh->prepare($query);
+        $sql .= "ORDER BY query.query_position" if $table eq 'query';
+
+        my $sth = $dbh->prepare($sql);
         $sth->execute($align_id);
         while ( my ($name) = $sth->fetchrow_array ) {
             push @names, $name;
@@ -1789,6 +1805,7 @@ sub get_target_info {
     return $hash_ref;
 }
 
+# when you are sure the alignDB is pairwise
 sub get_query_info {
     my $self     = shift;
     my $align_id = shift;
@@ -1822,6 +1839,45 @@ sub get_query_info {
     $sth->finish;
 
     return $hash_ref;
+}
+
+# general purpose
+sub get_queries_info {
+    my $self     = shift;
+    my $align_id = shift;
+
+    my $dbh = $self->dbh;
+
+    my $query = q{
+        SELECT c.taxon_id,
+               c.chr_id,
+               c.chr_name,
+               c.chr_length,
+               s.chr_start,
+               s.chr_end,
+               s.chr_strand,
+               s.seq_length,
+               s.seq_gc,
+               s.seq_runlist,
+               a.align_length,
+               q.query_strand,
+               q.query_position
+        FROM sequence s 
+        INNER JOIN query q ON s.seq_id = q.seq_id
+        LEFT JOIN chromosome c ON s.chr_id = c.chr_id
+        INNER JOIN align a ON s.align_id = a.align_id
+        WHERE s.align_id = ?
+    };
+
+    my $sth = $dbh->prepare($query);
+    $sth->execute($align_id);
+    my @array;
+    while ( my $hash_ref = $sth->fetchrow_hashref ) {
+        push @array, $hash_ref;
+    }
+    $sth->finish;
+
+    return @array;
 }
 
 ##################################################

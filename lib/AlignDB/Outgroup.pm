@@ -255,6 +255,7 @@ sub add_align {
     }
 
     if ( scalar @{$names} != scalar @{$seq_refs} ) {
+        warn Dump $names;
         confess "Names and Sequences should have the same number!\n";
     }
     my $seq_count = scalar @{$seq_refs};
