@@ -622,13 +622,14 @@ sub insert_gsw {
     my $dbh = $self->dbh;
 
     # get gc sliding windows' sizes
-    my $gsw_size  = $self->gsw_size;
-    my $gsw0_size = int( $gsw_size / 2 );
+    my $gsw_size = $self->gsw_size;
 
     # extreme_id & prev_extreme_id
     my $fetch_ex_id = $dbh->prepare(
         q{
-        SELECT e.extreme_id, e.prev_extreme_id, e.extreme_type
+        SELECT e.extreme_id,
+                e.prev_extreme_id,
+                e.extreme_type
         FROM extreme e, window w
         WHERE e.window_id = w.window_id
         AND w.align_id = ?
@@ -639,7 +640,10 @@ sub insert_gsw {
     # extreme_runlist, _amplitude and _average_gc
     my $fetch_ex_attr = $dbh->prepare(
         q{
-        SELECT w.window_runlist, e.extreme_left_amplitude, w.window_average_gc
+        SELECT w.window_runlist,
+                w.window_average_gc,
+                e.extreme_left_amplitude,
+                e.extreme_left_wave_length
         FROM extreme e, window w
         WHERE e.window_id = w.window_id
         AND e.extreme_id = ?
@@ -686,70 +690,64 @@ sub insert_gsw {
 
         # get attrs of the two extremes
         $fetch_ex_attr->execute($prev_ex_id);
-        my ( $prev_ex_runlist, undef, $prev_ex_gc )
+        my ( $prev_ex_runlist, $prev_ex_gc, undef, undef )
             = $fetch_ex_attr->fetchrow_array;
         my $prev_ex_set = AlignDB::IntSpan->new($prev_ex_runlist);
 
         $fetch_ex_attr->execute($ex_id);
-        my ( $ex_runlist, $ex_left_amplitude, $ex_gc )
+        my ( $ex_runlist, $ex_gc, $ex_left_amplitude, $ex_left_wave_length )
             = $fetch_ex_attr->fetchrow_array;
         my $ex_set = AlignDB::IntSpan->new($ex_runlist);
-
-        # find middle points of extremes
-        # the interval is between two middle points
-        my $half_length        = int( $ex_set->cardinality / 2 );
-        my $prev_middle_right  = $prev_ex_set->at( $half_length + 1 );
-        my $ex_middle_left     = $ex_set->at($half_length);
-        my $interval_start_idx = $comparable_set->index($prev_middle_right);
-        my $interval_end_idx   = $comparable_set->index($ex_middle_left);
-
-        next if $interval_start_idx > $interval_end_idx;
-
-        my $interval_length = $interval_end_idx - $interval_start_idx + 1;
 
         # determining $gsw_density here, which is different from isw_density
         # and start at "0", because the first windows is within the trough
         # windows.
-        my $gsw_density = int( ( $interval_length - $gsw0_size ) / $gsw_size );
+        my $half_length = int( $ex_set->cardinality / 2 );
+        my $gsw_density
+            = int( ( $ex_left_wave_length - $half_length ) / $gsw_size );
 
         # wave length, amplitude, trough_gc and gradient
-        my $gsw_wave_length = $interval_length;
+        my $gsw_wave_length = $ex_left_wave_length;
         my $gsw_amplitude   = $ex_left_amplitude;
         my $gsw_trough_gc   = $ex_type eq 'T' ? $ex_gc : $prev_ex_gc;
-        my $gsw_gradient    = $gsw_amplitude / $interval_length;
+        my $gsw_gradient    = $gsw_amplitude / $ex_left_wave_length;
+
+        my @gsw_windows;
+        if ( $ex_type eq 'T' ) {    # push trough to gsw
+            push @gsw_windows,
+                {
+                type     => 'M',
+                set      => $ex_set,
+                distance => 0,
+                };
+        }
 
         {    # More windows will be submitted in the following section
 
             # distance start counting from trough
             # $sw_start and $sw_end are both index of $comprarable_set
-            # $gsw_distance is from 0 to $gsw_density
-            # length of window 0 is 50
-            # ..., L2, L1, L0, R0, R1, R2, ...
-            # Two window 0 have a total length of 100
+            # $gsw_distance is from 1 to $gsw_density
+            # window 0 is trough
+            # ..., L2, L1, M0, R1, R2, ...
             my ( $sw_start, $sw_end );
             if ( $gsw_type eq 'R' ) {
-                $sw_start = $interval_start_idx;
-                $sw_end   = $sw_start + $gsw0_size - 1;
+                $sw_start = $comparable_set->index( $prev_ex_set->max ) + 1;
+                $sw_end   = $sw_start + $gsw_size - 1;
             }
             elsif ( $gsw_type eq 'L' ) {
-                $sw_end   = $interval_end_idx;
-                $sw_start = $sw_end - $gsw0_size + 1;
-            }
-            else {
-                warn "gsw_type [$gsw_type] error\n";
+                $sw_end   = $comparable_set->index( $ex_set->min ) - 1;
+                $sw_start = $sw_end - $gsw_size + 1;
             }
 
-            for my $gsw_distance ( 0 .. $gsw_density ) {
+            for my $gsw_distance ( 1 .. $gsw_density ) {
                 my $gsw_set = $comparable_set->slice( $sw_start, $sw_end );
 
-                my ($cur_window_id)
-                    = $self->insert_window( $align_id, $gsw_set );
-
-                $gsw_insert->execute(
-                    $ex_id,         $prev_ex_id,    $cur_window_id,
-                    $gsw_type,      $gsw_distance,  $gsw_wave_length,
-                    $gsw_amplitude, $gsw_trough_gc, $gsw_gradient,
-                );
+                push @gsw_windows,
+                    {
+                    type     => $gsw_type,
+                    set      => $gsw_set,
+                    distance => $gsw_distance,
+                    };
 
                 if ( $gsw_type eq 'R' ) {
                     $sw_start = $sw_end + 1;
@@ -759,6 +757,17 @@ sub insert_gsw {
                     $sw_end   = $sw_start - 1;
                     $sw_start = $sw_end - $gsw_size + 1;
                 }
+            }
+
+            for my $gsw (@gsw_windows) {
+                my ($cur_window_id)
+                    = $self->insert_window( $align_id, $gsw->{set} );
+
+                $gsw_insert->execute(
+                    $ex_id,         $prev_ex_id,      $cur_window_id,
+                    $gsw->{type},   $gsw->{distance}, $gsw_wave_length,
+                    $gsw_amplitude, $gsw_trough_gc,   $gsw_gradient,
+                );
             }
         }
     }
