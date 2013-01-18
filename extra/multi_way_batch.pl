@@ -55,10 +55,6 @@ my $parallel = $Config->{generate}{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{generate}{batch};
 
-# stat parameter
-my $sum_threshold     = $Config->{stat}{sum_threshold};
-my $combine_threshold = $Config->{stat}{combine_threshold};
-
 my $man  = 0;
 my $help = 0;
 
@@ -80,8 +76,6 @@ GetOptions(
     'parallel=i'             => \$parallel,
     'batch=i'                => \$batch_number,
     'lt|length_threshold=i'  => \$length_threshold,
-    'st|sum_threshold=i'     => \$sum_threshold,
-    'ct|combine_threshold=i' => \$combine_threshold,
     'r|run=s'                => \$run,
 ) or pod2usage(2);
 
@@ -222,26 +216,21 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . " -o $FindBin::Bin/../stat/$db_name.common.xlsx"
-        . " -st $sum_threshold"
-        . " -ct $combine_threshold",
+        . " -o $FindBin::Bin/../stat/$db_name.common.xlsx",
     41 => "perl $FindBin::Bin/../stat/multi_stat_factory.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . " -o $FindBin::Bin/../stat/$db_name.multi.xlsx"
-        . " -ct $combine_threshold",
+        . " -o $FindBin::Bin/../stat/$db_name.multi.xlsx",
     42 => "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . " -o $FindBin::Bin/../stat/$db_name.gc.xlsx"
-        . " -st $sum_threshold"
-        . " -ct $combine_threshold",
+        . " -o $FindBin::Bin/../stat/$db_name.gc.xlsx",
     43 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
         . " -s $server"
         . " --port $port"

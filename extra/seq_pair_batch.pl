@@ -34,7 +34,6 @@ my $stopwatch = AlignDB::Stopwatch->new(
 );
 
 my $length_threshold = $Config->{generate}{length_threshold};
-my $sum_threshold = $Config->{stat}{sum_threshold};
 
 # running options
 my $bz_path = "$FindBin::Bin/../../blastz";
@@ -61,7 +60,6 @@ GetOptions(
     'p|parallel=i'       => \$parallel,
     'batch=i'            => \$batch_number,
     'lt|length_threshold=i' => \$length_threshold,
-    'st|sum_threshold=i' => \$sum_threshold,
     'f|pair_file=s'      => \$pair_file,
     'd|dir_as_taxon=s'   => \$dir_as_taxon,
     'r|run=s'            => \$task,
@@ -135,8 +133,7 @@ my $worker = sub {
             . " --batch    [% batch %]",
         40 => "perl $FindBin::Bin/../stat/common_stat_factory.pl"
             . " --db [% db %]"
-            . " -o [% common_file %]"
-            . " --threshold [% st %]",
+            . " -o [% common_file %]",
         100 => "perl $bz_path/bz.pl"
             . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
             . " -s set01 --parallel [% parallel %] --noaxt -pb lastz --lastz",
@@ -163,7 +160,6 @@ my $worker = sub {
                 batch       => $batch_number,
                 common_file => $common_file,
                 lt          => $length_threshold,
-                st          => $sum_threshold,
             },
             \$cmd
         ) or die Template->error;

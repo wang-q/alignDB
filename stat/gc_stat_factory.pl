@@ -34,9 +34,9 @@ my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
 # stat parameter
-my $run               = $Config->{stat}{run};
-my $sum_threshold     = $Config->{stat}{sum_threshold};
-my $combine_threshold = $Config->{stat}{combine_threshold};
+my $run     = 'all';
+my $combine = 0;
+my $piece   = 0;
 my $outfile;
 
 # use 200 .. 900, 1k, 2k, 3k, 4k, 5k segment levels
@@ -46,18 +46,18 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'                 => \$help,
-    'man'                    => \$man,
-    's|server=s'             => \$server,
-    'P|port=s'               => \$port,
-    'd|db=s'                 => \$db,
-    'u|username=s'           => \$username,
-    'p|password=s'           => \$password,
-    'o|output=s'             => \$outfile,
-    'r|run=s'                => \$run,
-    't|st|threshold=i'       => \$sum_threshold,
-    'ct|combine_threshold=i' => \$combine_threshold,
-    'alt_level'              => \$alt_level,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=s'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'o|output=s'   => \$outfile,
+    'r|run=s'      => \$run,
+    'cb|combine=i' => \$combine,
+    'pc|piece=i'   => \$piece,
+    'alt_level'    => \$alt_level,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -102,20 +102,19 @@ my $write_obj = AlignDB::WriteExcel->new(
 
 my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::Bin/sql.lib" );
 
-# auto detect sum threshold
-if ( $sum_threshold == 0 ) {
-    ( $sum_threshold, undef ) = $write_obj->calc_threshold;
+# auto detect combine threshold
+if ( $combine == 0 ) {
+    ($combine) = $write_obj->calc_threshold;
 }
 
 # auto detect combine threshold
-if ( $combine_threshold == 0 ) {
-    ( undef, $combine_threshold ) = $write_obj->calc_threshold;
+if ( $piece == 0 ) {
+    ( undef, $piece ) = $write_obj->calc_threshold;
 }
 
 #----------------------------------------------------------#
 # worksheet -- summary
 #----------------------------------------------------------#
-#
 my $summary = sub {
     my $sheet_name = 'summary';
     my $sheet;
@@ -333,7 +332,7 @@ my $amplitude = sub {
         my $standalone = [];
         my %option     = (
             sql_query  => $sql_query,
-            threshold  => $combine_threshold,
+            threshold  => $combine,
             standalone => $standalone,
             merge_last => 1,
         );
@@ -402,7 +401,7 @@ my $trough_gc = sub {
         my $standalone = [];
         my %option     = (
             sql_query  => $sql_query,
-            threshold  => $combine_threshold,
+            threshold  => $combine,
             standalone => $standalone,
             merge_last => 1,
         );
@@ -454,6 +453,76 @@ my $trough_gc = sub {
 };
 
 #----------------------------------------------------------#
+# worksheet -- window_gc
+#----------------------------------------------------------#
+my $window_gc = sub {
+
+    # make combine
+    my @combined;
+    {
+        my $sql_query = q{
+            SELECT FLOOR(w.window_average_gc / 0.01) window_gc,
+                   COUNT(*) COUNT
+            FROM gsw g, window w
+            WHERE 1 = 1
+            AND g.window_id = w.window_id
+            GROUP BY FLOOR(w.window_average_gc / 0.01)
+        };
+        my $standalone = [];
+        my %option     = (
+            sql_query  => $sql_query,
+            threshold  => $combine,
+            standalone => $standalone,
+            merge_last => 1,
+        );
+        @combined = @{ $write_obj->make_combine( \%option ) };
+    }
+
+    my $sheet_name = 'window_gc';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers
+            = qw{ AVG_window_gc AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  AVG(FLOOR(w.window_average_gc / 0.01)) AVG_window_gc,
+                    AVG(w.window_pi) AVG_pi,
+                    STD(w.window_pi) STD_pi,
+                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                    STD(w.window_indel / w.window_length * 100) STD_indel,
+                    AVG(g.gsw_cv) AVG_cv,
+                    STD(g.gsw_cv) STD_cv,
+                    COUNT(w.window_indel) COUNT
+            FROM gsw g, window w
+            WHERE g.window_id = w.window_id
+            AND FLOOR(w.window_average_gc / 0.01) IN 
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            combined  => \@combined,
+        );
+        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+
+};
+
+#----------------------------------------------------------#
 # worksheet -- gradient
 #----------------------------------------------------------#
 my $gradient = sub {
@@ -470,7 +539,7 @@ my $gradient = sub {
         my $standalone = [];
         my %option     = (
             sql_query  => $sql_query,
-            threshold  => $combine_threshold,
+            threshold  => $combine,
             standalone => $standalone,
             merge_last => 1,
         );
@@ -593,7 +662,7 @@ my $d_amplitude_series = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    my @levels = ( [ 15, 19 ], [ 20, 24 ], [ 25, 29 ], [ 30, 100 ] );
+    my @levels = ( [ 10, 19 ], [ 20, 29 ], [ 30, 100 ] );
 
     {    # write contents
         my $sql_query = q{
@@ -624,70 +693,70 @@ my $d_amplitude_series = sub {
 #----------------------------------------------------------#
 # worksheet -- d_gradient_series
 #----------------------------------------------------------#
-my $d_gradient_series = sub {
-
-    # find quartiles
-    my @levels;
-    {
-        my $sql_query = q{
-            SELECT g.gsw_gradient
-            FROM gsw g
-            WHERE 1 = 1
-        };
-        my %option = ( sql_query => $sql_query, );
-        my $quartiles = $write_obj->quantile_sql( \%option, 4 );
-        $_ = round( $_, 5 ) for @{$quartiles};
-        @levels = (
-            [ $quartiles->[0], $quartiles->[1] ],    # 1/4
-            [ $quartiles->[1], $quartiles->[2] ],    # 2/4
-            [ $quartiles->[2], $quartiles->[3] ],    # 3/4
-            [ $quartiles->[3], $quartiles->[4] ],    # 4/4
-        );
-    }
-    
-    my $sheet_name = 'd_gradient_series';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # write header
-        my $query_name = 'd_gradient_series';
-        my @headers    = qw{gsw_distance AVG_indel COUNT STD_indel};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $query_name,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
-    
-    {# write contents
-        my $sql_query = q{
-            SELECT  g.gsw_distance gsw_distance,
-                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                    COUNT(*) COUNT,
-                    STD(w.window_indel / w.window_length * 100) STD_indel
-            FROM    gsw g,
-                    window w
-            WHERE g.window_id = w.window_id
-            AND g.gsw_distance <= 10
-            AND g.gsw_gradient BETWEEN ? AND ?
-            GROUP BY g.gsw_distance
-            ORDER BY g.gsw_distance ASC
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row   => $sheet_row,
-            sheet_col   => $sheet_col,
-            group       => \@levels,
-        );
-        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
-    }
-
-    print "Sheet \"$sheet_name\" has been generated.\n";
-};
+#my $d_gradient_series = sub {
+#
+#    # find quartiles
+#    my @levels;
+#    {
+#        my $sql_query = q{
+#            SELECT g.gsw_gradient
+#            FROM gsw g
+#            WHERE 1 = 1
+#        };
+#        my %option = ( sql_query => $sql_query, );
+#        my $quartiles = $write_obj->quantile_sql( \%option, 4 );
+#        $_ = round( $_, 5 ) for @{$quartiles};
+#        @levels = (
+#            [ $quartiles->[0], $quartiles->[1] ],    # 1/4
+#            [ $quartiles->[1], $quartiles->[2] ],    # 2/4
+#            [ $quartiles->[2], $quartiles->[3] ],    # 3/4
+#            [ $quartiles->[3], $quartiles->[4] ],    # 4/4
+#        );
+#    }
+#
+#    my $sheet_name = 'd_gradient_series';
+#    my $sheet;
+#    my ( $sheet_row, $sheet_col );
+#
+#    {                                                # write header
+#        my $query_name = 'd_gradient_series';
+#        my @headers    = qw{gsw_distance AVG_indel COUNT STD_indel};
+#        ( $sheet_row, $sheet_col ) = ( 0, 1 );
+#        my %option = (
+#            sheet_row  => $sheet_row,
+#            sheet_col  => $sheet_col,
+#            header     => \@headers,
+#            query_name => $query_name,
+#        );
+#        ( $sheet, $sheet_row )
+#            = $write_obj->write_header_direct( $sheet_name, \%option );
+#    }
+#
+#    {    # write contents
+#        my $sql_query = q{
+#            SELECT  g.gsw_distance gsw_distance,
+#                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+#                    COUNT(*) COUNT,
+#                    STD(w.window_indel / w.window_length * 100) STD_indel
+#            FROM    gsw g,
+#                    window w
+#            WHERE g.window_id = w.window_id
+#            AND g.gsw_distance <= 10
+#            AND g.gsw_gradient BETWEEN ? AND ?
+#            GROUP BY g.gsw_distance
+#            ORDER BY g.gsw_distance ASC
+#        };
+#        my %option = (
+#            sql_query => $sql_query,
+#            sheet_row => $sheet_row,
+#            sheet_col => $sheet_col,
+#            group     => \@levels,
+#        );
+#        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+#    }
+#
+#    print "Sheet \"$sheet_name\" has been generated.\n";
+#};
 
 #----------------------------------------------------------#
 # worksheet -- d_gc_series
@@ -702,22 +771,24 @@ my $d_gc_series = sub {
             FROM gsw g, window w
             WHERE 1 = 1
             AND g.window_id = w.window_id
+            AND g.gsw_distance > 0
+            AND g.gsw_distance <= 10
         };
         my %option = ( sql_query => $sql_query, );
         my $quartiles = $write_obj->quantile_sql( \%option, 10 );
         $_ = round( $_, 4 ) for @{$quartiles};
         @levels = (
 
-            #[ $quartiles->[0],  $quartiles->[1] ],     # 1/10
-            #[ $quartiles->[1],  $quartiles->[2] ],     # 2/10
-            [ $quartiles->[2], $quartiles->[3] ],    # 3/10
-            [ $quartiles->[3], $quartiles->[4] ],    # 4/10
-            [ $quartiles->[5], $quartiles->[6] ],    # 5/10
-            [ $quartiles->[6], $quartiles->[7] ],    # 6/10
-            [ $quartiles->[7], $quartiles->[8] ],    # 7/10
-            [ $quartiles->[8], $quartiles->[9] ],    # 8/10
-                 #[ $quartiles->[9],  $quartiles->[10] ],    # 9/10
-                 #[ $quartiles->[10], $quartiles->[11] ],    # 10/10
+            [ $quartiles->[0],  $quartiles->[1] ],     # 1/10
+            [ $quartiles->[1],  $quartiles->[2] ],     # 2/10
+            [ $quartiles->[2],  $quartiles->[3] ],     # 3/10
+            [ $quartiles->[3],  $quartiles->[4] ],     # 4/10
+            [ $quartiles->[5],  $quartiles->[6] ],     # 5/10
+            [ $quartiles->[6],  $quartiles->[7] ],     # 6/10
+            [ $quartiles->[7],  $quartiles->[8] ],     # 7/10
+            [ $quartiles->[8],  $quartiles->[9] ],     # 8/10
+            #[ $quartiles->[9],  $quartiles->[10] ],    # 9/10
+            #[ $quartiles->[10], $quartiles->[11] ],    # 10/10
         );
     }
 
@@ -725,7 +796,7 @@ my $d_gc_series = sub {
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
-    {            # write header
+    {                                                  # write header
         my $query_name = 'd_gc_series';
         my @headers    = qw{gsw_distance AVG_indel COUNT STD_indel};
         ( $sheet_row, $sheet_col ) = ( 0, 1 );
@@ -749,6 +820,7 @@ my $d_gc_series = sub {
             FROM    gsw g,
                     window w
             WHERE g.window_id = w.window_id
+            AND g.gsw_distance > 0
             AND g.gsw_distance <= 10
             AND w.window_average_gc BETWEEN ? AND ?
             GROUP BY g.gsw_distance 
@@ -839,7 +911,7 @@ my $d_trough_gc_series = sub {
 #----------------------------------------------------------#
 my $segment_gc_indel = sub {
 
-    my @segment_levels = ( 'A', 1 .. 3 );
+    my @segment_levels = ( 1 .. 3 );
     if ($alt_level) {
         @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
@@ -864,7 +936,7 @@ my $segment_gc_indel = sub {
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
                            w.window_average_gc `gc`,
-                           s.segment_gc_CV `cv`,
+                           s.segment_gc_cv `cv`,
                            w.window_coding `coding`,
                            w.window_length `length`
                     FROM segment s, window w
@@ -887,13 +959,11 @@ my $segment_gc_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $merge_last = 1;
-            my %option     = (
-                sql_query  => $sql_query,
-                threshold  => $sum_threshold,
-                merge_last => $merge_last,
+            my %option = (
+                sql_query => $sql_query,
+                piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
         }
 
         {    # write header
@@ -952,7 +1022,7 @@ my $segment_gc_indel = sub {
 #----------------------------------------------------------#
 my $segment_std_indel = sub {
 
-    my @segment_levels = ( 'A', 1 .. 3 );
+    my @segment_levels = ( 1 .. 3 );
     if ($alt_level) {
         @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
@@ -1000,13 +1070,11 @@ my $segment_std_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $merge_last = 1;
-            my %option     = (
-                sql_query  => $sql_query,
-                threshold  => $sum_threshold,
-                merge_last => $merge_last,
+            my %option = (
+                sql_query => $sql_query,
+                piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
         }
 
         {    # write header
@@ -1065,7 +1133,7 @@ my $segment_std_indel = sub {
 #----------------------------------------------------------#
 my $segment_cv_indel = sub {
 
-    my @segment_levels = ( 'A', 1 .. 3 );
+    my @segment_levels = ( 1 .. 3 );
     if ($alt_level) {
         @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
@@ -1090,7 +1158,7 @@ my $segment_cv_indel = sub {
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
                            w.window_average_gc `gc`,
-                           s.segment_gc_CV `cv`,
+                           s.segment_gc_cv `cv`,
                            w.window_coding `coding`,
                            w.window_length `length`
                     FROM segment s, window w
@@ -1113,13 +1181,11 @@ my $segment_cv_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $merge_last = 1;
-            my %option     = (
-                sql_query  => $sql_query,
-                threshold  => $sum_threshold,
-                merge_last => $merge_last,
+            my %option = (
+                sql_query => $sql_query,
+                piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
         }
 
         {    # write header
@@ -1179,7 +1245,7 @@ my $segment_cv_indel = sub {
 #----------------------------------------------------------#
 my $segment_mdcw_indel = sub {
 
-    my @segment_levels = ( 'A', 1 .. 3 );
+    my @segment_levels = ( 1 .. 3 );
     if ($alt_level) {
         @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
@@ -1227,13 +1293,11 @@ my $segment_mdcw_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $merge_last = 1;
-            my %option     = (
-                sql_query  => $sql_query,
-                threshold  => $sum_threshold,
-                merge_last => $merge_last,
+            my %option = (
+                sql_query => $sql_query,
+                piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
         }
 
         {    # write header
@@ -1295,7 +1359,7 @@ my $segment_coding_indel = sub {
         return;
     }
 
-    my @segment_levels = ( 'A', 1 .. 3 );
+    my @segment_levels = ( 1 .. 3 );
     if ($alt_level) {
         @segment_levels = ( 2 .. 10, 20, 30, 40, 50 );
     }
@@ -1343,13 +1407,11 @@ my $segment_coding_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $merge_last = 1;
-            my %option     = (
-                sql_query  => $sql_query,
-                threshold  => $sum_threshold,
-                merge_last => $merge_last,
+            my %option = (
+                sql_query => $sql_query,
+                piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
         }
 
         {    # write header
@@ -1459,13 +1521,11 @@ my $segment_gc_indel_cr = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $merge_last = 1;
-            my %option     = (
-                sql_query  => $sql_query,
-                threshold  => $sum_threshold,
-                merge_last => $merge_last,
+            my %option = (
+                sql_query => $sql_query,
+                piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
         }
 
         {    # write header
@@ -1577,13 +1637,11 @@ my $segment_cv_indel_cr = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my $merge_last = 1;
-            my %option     = (
-                sql_query  => $sql_query,
-                threshold  => $sum_threshold,
-                merge_last => $merge_last,
+            my %option = (
+                sql_query => $sql_query,
+                piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
         }
 
         {    # write header
@@ -1702,11 +1760,11 @@ foreach my $n (@tasks) {
     if ( $n == 2 ) { &$distance_to_trough; &$wave_length;     next; }
     if ( $n == 3 ) { next; }
     if ( $n == 4 ) { &$amplitude;          &$gradient;        next; }
-    if ( $n == 5 ) { &$trough_gc;            next; }
+    if ( $n == 5 ) { &$trough_gc;          &$window_gc;       next; }
     if ( $n == 6 ) { next; }
     if ( $n == 7 ) { &$d_wave_length_series; next; }
-    if ( $n == 8 ) { &$d_amplitude_series; &$d_gradient_series;  next; }
-    if ( $n == 9 ) { &$d_gc_series;        &$d_trough_gc_series; next; }
+    if ( $n == 8 ) { &$d_amplitude_series;   next; }    #&$d_gradient_series;
+    if ( $n == 9 ) { &$d_gc_series; &$d_trough_gc_series; next; }
 
     if ( $n == 10 ) { &$segment_gc_indel;     next; }
     if ( $n == 11 ) { &$segment_std_indel;    next; }

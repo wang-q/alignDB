@@ -471,7 +471,7 @@ sub write_content_series {
     my $sheet_col = $option->{sheet_col};
 
     my $sql_query = $option->{sql_query};
-    my @group       = @{ $option->{group} };
+    my @group     = @{ $option->{group} };
 
     foreach (@group) {
         my @range = @$_;
@@ -854,6 +854,63 @@ sub make_combine {
     return \@combined;
 }
 
+sub make_combine_piece {
+    my ( $self, $option ) = @_;
+
+    # init objects
+    my $dbh = $self->dbh;
+
+    # init parameters
+    my $sql_query  = $option->{sql_query};
+    my $piece  = $option->{piece};
+
+    # bind value
+    my $bind_value = $option->{bind_value};
+    unless ( defined $bind_value ) {
+        $bind_value = [];
+    }
+
+    # init DBI query
+    my $sth = $dbh->prepare($sql_query);
+    $sth->execute(@$bind_value);
+
+    my @row_count = ();
+    while ( my @row = $sth->fetchrow_array ) {
+        push @row_count, \@row;
+    }
+    
+    my $sum;
+    $sum += $_->[1] for @row_count;
+    my $small_chunk     =  $sum / $piece;
+
+    my @combined;    # return these
+    my @temp_combined = ();
+    my $temp_count    = 0;
+    for my $row_ref (@row_count) {
+        if ( $temp_count < $small_chunk ) {
+            push @temp_combined, $row_ref->[0];
+            $temp_count += $row_ref->[1];
+
+            if ( $temp_count >= $small_chunk ) {
+                push @combined, [@temp_combined];
+                @temp_combined = ();
+                $temp_count    = 0;
+            }
+        }
+        else {
+            warn "Errors occured in calculating combined distance.\n";
+        }
+    }
+
+    # Write the last weighted row which COUNT might
+    #   be smaller than $threshold
+    if ( $temp_count > 0 ) {
+        push @combined, [@temp_combined];
+    }
+
+    return \@combined;
+}
+
 sub make_last_portion {
     my ( $self, $option ) = @_;
 
@@ -1045,39 +1102,44 @@ sub calc_threshold {
 
     my $dbh = $self->dbh;
 
-    my ( $sum_threshold, $combine_threshold );
+    my ( $combine, $piece );
 
-    my $sth = $dbh->prepare(q{ SELECT SUM(align_length) FROM align });
+    my $sth = $dbh->prepare(
+        q{
+        SELECT SUM(FLOOR(align_comparables / 500) * 500)
+        FROM align
+        }
+    );
     $sth->execute;
     my ($total_length) = $sth->fetchrow_array;
 
-    if ( $total_length <= 1_000_000 ) {
-        $sum_threshold = int( $total_length / 10 );
+    if ( $total_length <= 5_000_000 ) {
+        $piece = 10;
     }
     elsif ( $total_length <= 10_000_000 ) {
-        $sum_threshold = int( $total_length / 10 );
+        $piece = 10;
     }
     elsif ( $total_length <= 100_000_000 ) {
-        $sum_threshold = int( $total_length / 20 );
+        $piece = 20;
     }
     elsif ( $total_length <= 1_000_000_000 ) {
-        $sum_threshold = int( $total_length / 50 );
+        $piece = 50;
     }
     else {
-        $sum_threshold = int( $total_length / 100 );
+        $piece = 100;
     }
 
     if ( $total_length <= 1_000_000 ) {
-        $combine_threshold = 100;
+        $combine = 100;
     }
-    elsif ( $total_length <= 10_000_000 ) {
-        $combine_threshold = 500;
+    elsif ( $total_length <= 5_000_000 ) {
+        $combine = 500;
     }
     else {
-        $combine_threshold = 1000;
+        $combine = 1000;
     }
 
-    return ( $sum_threshold, $combine_threshold );
+    return (  $combine, $piece );
 }
 
 # instance destructor

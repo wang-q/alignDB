@@ -29,10 +29,9 @@ my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
 # stat parameter
-my $run               = $Config->{stat}{run};
-my $sum_threshold     = $Config->{stat}{sum_threshold};
-my $combine_threshold = $Config->{stat}{combine_threshold};
-my $outfile           = "";
+my $run     = 'all';
+my $combine = 0;
+my $outfile = "";
 
 my $max_freq;    # count freq one by one to $max_freq
 
@@ -40,18 +39,17 @@ my $help = 0;
 my $man  = 0;
 
 GetOptions(
-    'help|?'                 => \$help,
-    'man'                    => \$man,
-    's|server=s'             => \$server,
-    'P|port=s'               => \$port,
-    'd|db=s'                 => \$db,
-    'u|username=s'           => \$username,
-    'p|password=s'           => \$password,
-    'o|output=s'             => \$outfile,
-    'max|max_freq=s'         => \$max_freq,
-    'r|run=s'                => \$run,
-    't|st|threshold=i'       => \$sum_threshold,
-    'ct|combine_threshold=i' => \$combine_threshold,
+    'help|?'         => \$help,
+    'man'            => \$man,
+    's|server=s'     => \$server,
+    'P|port=s'       => \$port,
+    'd|db=s'         => \$db,
+    'u|username=s'   => \$username,
+    'p|password=s'   => \$password,
+    'o|output=s'     => \$outfile,
+    'max|max_freq=s' => \$max_freq,
+    'r|run=s'        => \$run,
+    'cb|combine=i'   => \$combine,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -97,14 +95,9 @@ my $write_obj = AlignDB::WriteExcel->new(
 
 my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::Bin/sql.lib" );
 
-# auto detect sum threshold
-if ( $sum_threshold == 0 ) {
-    ( $sum_threshold, undef ) = $write_obj->calc_threshold;
-}
-
 # auto detect combine threshold
-if ( $combine_threshold == 0 ) {
-    ( undef, $combine_threshold ) = $write_obj->calc_threshold;
+if ( $combine == 0 ) {
+    ($combine) = $write_obj->calc_threshold;
 }
 
 #----------------------------#
@@ -818,7 +811,7 @@ my $combined_pigccv = sub {
         my $standalone = [ -1, 0 ];
         my %option     = (
             sql_query  => $thaw_sql->as_sql,
-            threshold  => $combine_threshold,
+            threshold  => $combine,
             standalone => $standalone,
         );
         @combined = @{ $write_obj->make_combine( \%option ) };
@@ -886,7 +879,7 @@ my $combined_pigccv = sub {
         my $standalone = [ -1, 0 ];
         my %option = (
             sql_query  => $sql_query,
-            threshold  => $combine_threshold,
+            threshold  => $combine,
             standalone => $standalone,
         );
         @combined = @{ $write_obj->make_combine( \%option ) };
@@ -956,7 +949,7 @@ my $combined_pigccv = sub {
         my $standalone = [ -1, 0 ];
         my %option = (
             sql_query  => $sql_query,
-            threshold  => $combine_threshold,
+            threshold  => $combine,
             standalone => $standalone,
         );
         @combined = @{ $write_obj->make_combine( \%option ) };

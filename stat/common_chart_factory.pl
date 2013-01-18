@@ -97,6 +97,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         );
         if ( $sheet_name =~ /density/ ) {
             $option{x_title}     = "Reciprocal of indel density (d2)";
+            $option{x_max_scale}    = 30;
             $option{last_row}    = 33;
             $option{x_max_scale} = 30;
         }

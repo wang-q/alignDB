@@ -135,7 +135,6 @@ $excel_obj->jc_correction if $jc_correction;
         Left         => 550,
     );
     $option{x_min_scale}  = 5;
-    $option{x_max_scale}  = 35;
     $option{x_scale_unit} = 5;
     $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -172,8 +171,6 @@ $excel_obj->jc_correction if $jc_correction;
         Top          => 14.25,
         Left         => 550,
     );
-    $option{x_min_scale}  = 10;
-    $option{x_max_scale}  = 40;
     $option{x_scale_unit} = 5;
     $excel_obj->draw_y( $sheet_name, \%option );
 
@@ -230,6 +227,32 @@ $excel_obj->jc_correction if $jc_correction;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
+    # worksheet -- window_gc
+    #----------------------------#
+    $sheet_name           = 'window_gc';
+    $option{chart_serial} = 1;
+    $option{y_column}     = 2;
+    $option{x_title}      = "Window GC";
+    $option{y_title}      = "Nucleotide diversity";
+    $option{Top}          = 14.25;
+    $option{x_scale_unit} = 5;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 2
+    $option{chart_serial}++;
+    $option{y_column} = 4;
+    $option{y_title}  = "Indel per 100 bp";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 3
+    $option{chart_serial}++;
+    $option{y_column} = 6;
+    $option{y_title}  = "Window CV";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    #----------------------------#
     # worksheet -- gradient
     #----------------------------#
     $sheet_name           = 'gradient';
@@ -238,7 +261,7 @@ $excel_obj->jc_correction if $jc_correction;
     $option{x_title}      = "Gradient";
     $option{y_title}      = "Nucleotide diversity";
     $option{Top}          = 14.25;
-    $option{x_max_scale}  = 15;
+    $option{x_max_scale}  = 30;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     # chart 2
@@ -303,7 +326,9 @@ $excel_obj->jc_correction if $jc_correction;
     # worksheet -- dgc_series
     #----------------------------#
     $sheet_name = 'd_gc_series';
-    $option{group_name} = [1 .. 6] ;
+    $option{group_name} = [1 .. 8] ;
+    $option{section_end} = 12 ;
+    $option{section_length} = 11;
     $excel_obj->draw_dd( $sheet_name, \%option );
 }
 

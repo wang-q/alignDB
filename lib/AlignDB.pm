@@ -1993,7 +1993,7 @@ sub get_freq {
         push @counts, $count;
     }
     if ( scalar @counts > 1 ) {
-        die "Database corrupts, freqs are not consistent\n";
+        warn "Database corrupts, freqs are not consistent\n";
     }
 
     return $counts[0];
