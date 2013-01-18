@@ -213,6 +213,13 @@ perl bac_bz.pl -p 28901 -t 220341
 # perl bac_bz.pl -p 590 -t 220341 -o 882884 -n Salmonella --gr --sca
 
 #=========
+# 62322 Shewanella baltica
+perl bac_bz.pl -p 62322,351745 -t 325240 -o 351745 -n Shewanella_baltica
+
+# genus 22 Shewanella
+# perl bac_bz.pl -p 22 -t 325240 -n Shewanella -e 318161,318167,326297,323850,425104,398579,458817,392500,225849,637905
+
+#=========
 # Staphylococcus_aureus
 # 282458 Staphylococcus aureus subsp. aureus MRSA252 is more divergent than 273036 Staphylococcus aureus RF122
 # To make 273036 more reliable as outgroup, I exclude 282458
@@ -334,13 +341,6 @@ perl bac_bz.pl -p 633,214092 -t 273123 -o 214092 -n Yersinia_pseudotuberculosis
 # Bacillus anthracis
 # perl bac_bz.pl -p 1392 -t 198094 -o 568206
 
-#=========
-# 62322 Shewanella baltica
-# perl bac_bz.pl -p 62322 -t 402882 -o 325240 
-# perl bac_bz.pl -p 62322 -t 399599 -o 325240 
-
-# genus 22 Shewanella
-# perl bac_bz.pl -p 22 -t 325240 -n Shewanella
 
 #===================ABANDON================================
 #=========
