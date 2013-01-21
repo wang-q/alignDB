@@ -224,13 +224,34 @@ my $summary = sub {
 # worksheet -- distance_to_trough
 #----------------------------------------------------------#
 my $distance_to_trough = sub {
+
+    # make combine
+    my @combined;
+    {
+        my $sql_query = q{
+            SELECT gsw_distance gsw_distance,
+                   COUNT(*) COUNT
+            FROM gsw g
+            WHERE 1 = 1
+            GROUP BY gsw_distance
+        };
+        my $standalone = [];
+        my %option     = (
+            sql_query  => $sql_query,
+            threshold  => $combine,
+            standalone => $standalone,
+            merge_last => 1,
+        );
+        @combined = @{ $write_obj->make_combine( \%option ) };
+    }
+
     my $sheet_name = 'distance_to_trough';
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
     {    # write header
         my @headers
-            = qw{ distance_to_trough AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
+            = qw{ AVG_distance_to_trough AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
         ( $sheet_row, $sheet_col ) = ( 0, 0 );
         my %option = (
             sheet_row => $sheet_row,
@@ -243,7 +264,7 @@ my $distance_to_trough = sub {
 
     {    # write contents
         my $sql_query = q{
-            SELECT  gsw_distance distance_to_trough,
+            SELECT  AVG(gsw_distance) distance_to_trough,
                     AVG(w.window_pi) AVG_pi,
                     STD(w.window_pi) STD_pi,
                     AVG(w.window_indel / w.window_length * 100) AVG_indel,
@@ -253,14 +274,15 @@ my $distance_to_trough = sub {
                     COUNT(w.window_id) COUNT
             FROM gsw g, window w
             WHERE g.window_id = w.window_id
-            GROUP BY gsw_distance
+            AND gsw_distance IN
         };
         my %option = (
             sql_query => $sql_query,
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
+            combined  => \@combined,
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -270,13 +292,34 @@ my $distance_to_trough = sub {
 # worksheet -- wave_length
 #----------------------------------------------------------#
 my $wave_length = sub {
+
+    # make combine
+    my @combined;
+    {
+        my $sql_query = q{
+            SELECT FLOOR(gsw_wave_length / 100) wave_length,
+                   COUNT(*) COUNT
+            FROM gsw g
+            WHERE 1 = 1
+            GROUP BY FLOOR(gsw_wave_length / 100)
+        };
+        my $standalone = [];
+        my %option     = (
+            sql_query  => $sql_query,
+            threshold  => $combine,
+            standalone => $standalone,
+            merge_last => 1,
+        );
+        @combined = @{ $write_obj->make_combine( \%option ) };
+    }
+
     my $sheet_name = 'wave_length';
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
     {    # write header
         my @headers
-            = qw{ wave_length AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
+            = qw{ AVG_wave_length AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
         ( $sheet_row, $sheet_col ) = ( 0, 0 );
         my %option = (
             sheet_row => $sheet_row,
@@ -289,7 +332,7 @@ my $wave_length = sub {
 
     {    # write contents
         my $sql_query = q{
-            SELECT  FLOOR(gsw_wave_length / 100) wave_length,
+            SELECT  AVG(FLOOR(gsw_wave_length / 100)) wave_length,
                     AVG(w.window_pi) AVG_pi,
                     STD(w.window_pi) STD_pi,
                     AVG(w.window_indel / w.window_length * 100) AVG_indel,
@@ -299,18 +342,18 @@ my $wave_length = sub {
                     COUNT(w.window_indel) COUNT
             FROM gsw g, window w
             WHERE g.window_id = w.window_id
-            GROUP BY FLOOR(gsw_wave_length / 100) 
+            AND FLOOR(gsw_wave_length / 100) IN
         };
         my %option = (
             sql_query => $sql_query,
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
+            combined  => \@combined,
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
-
 };
 
 #----------------------------------------------------------#
@@ -779,16 +822,16 @@ my $d_gc_series = sub {
         $_ = round( $_, 4 ) for @{$quartiles};
         @levels = (
 
-            [ $quartiles->[0],  $quartiles->[1] ],     # 1/10
-            [ $quartiles->[1],  $quartiles->[2] ],     # 2/10
-            [ $quartiles->[2],  $quartiles->[3] ],     # 3/10
-            [ $quartiles->[3],  $quartiles->[4] ],     # 4/10
-            [ $quartiles->[5],  $quartiles->[6] ],     # 5/10
-            [ $quartiles->[6],  $quartiles->[7] ],     # 6/10
-            [ $quartiles->[7],  $quartiles->[8] ],     # 7/10
-            [ $quartiles->[8],  $quartiles->[9] ],     # 8/10
-            #[ $quartiles->[9],  $quartiles->[10] ],    # 9/10
-            #[ $quartiles->[10], $quartiles->[11] ],    # 10/10
+            [ $quartiles->[0], $quartiles->[1] ],    # 1/10
+            [ $quartiles->[1], $quartiles->[2] ],    # 2/10
+            [ $quartiles->[2], $quartiles->[3] ],    # 3/10
+            [ $quartiles->[3], $quartiles->[4] ],    # 4/10
+            [ $quartiles->[5], $quartiles->[6] ],    # 5/10
+            [ $quartiles->[6], $quartiles->[7] ],    # 6/10
+            [ $quartiles->[7], $quartiles->[8] ],    # 7/10
+            [ $quartiles->[8], $quartiles->[9] ],    # 8/10
+                 #[ $quartiles->[9],  $quartiles->[10] ],    # 9/10
+                 #[ $quartiles->[10], $quartiles->[11] ],    # 10/10
         );
     }
 
@@ -796,7 +839,7 @@ my $d_gc_series = sub {
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
-    {                                                  # write header
+    {            # write header
         my $query_name = 'd_gc_series';
         my @headers    = qw{gsw_distance AVG_indel COUNT STD_indel};
         ( $sheet_row, $sheet_col ) = ( 0, 1 );

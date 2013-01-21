@@ -90,8 +90,7 @@ $excel_obj->jc_correction if $jc_correction;
         x_column     => 1,
         y_column     => 2,
         first_row    => 2,
-        last_row     => 17,
-        x_max_scale  => 15,
+        last_row     => 99,
         x_title      => "Distance to GC trough",
         y_title      => "Nucleotide diversity",
         Height       => 200,
@@ -99,6 +98,7 @@ $excel_obj->jc_correction if $jc_correction;
         Top          => 14.25,
         Left         => 550,
     );
+    $option{x_scale_unit} = 5;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     # chart 2
@@ -126,7 +126,7 @@ $excel_obj->jc_correction if $jc_correction;
         x_column     => 1,
         y_column     => 2,
         first_row    => 2,
-        last_row     => 32,
+        last_row     => 99,
         x_title      => "Wave length",
         y_title      => "Nucleotide diversity",
         Height       => 200,
@@ -163,7 +163,7 @@ $excel_obj->jc_correction if $jc_correction;
         x_column     => 1,
         y_column     => 2,
         first_row    => 2,
-        last_row     => 32,
+        last_row     => 99,
         x_title      => "Amplitude",
         y_title      => "Nucleotide diversity",
         Height       => 200,
@@ -199,9 +199,7 @@ $excel_obj->jc_correction if $jc_correction;
         x_column     => 1,
         y_column     => 2,
         first_row    => 2,
-        last_row     => 32,
-        x_title      => "Trough GC",
-        y_title      => "Nucleotide diversity",
+        last_row     => 99,
         Height       => 200,
         Width        => 260,
         Top          => 14.25,
@@ -261,7 +259,7 @@ $excel_obj->jc_correction if $jc_correction;
     $option{x_title}      = "Gradient";
     $option{y_title}      = "Nucleotide diversity";
     $option{Top}          = 14.25;
-    $option{x_max_scale}  = 30;
+    $option{x_scale_unit}  = 5;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     # chart 2
