@@ -81,10 +81,11 @@ my @align_ids;
     );
 
     # add column
-    $obj->create_column( "codingsw", "codingsw_cv", "DOUBLE" );
-    $obj->create_column( "ofgsw",    "ofgsw_cv",    "DOUBLE" );
-    $obj->create_column( "isw",      "isw_cv",      "DOUBLE" );
-    $obj->create_column( "gsw",      "gsw_cv",      "DOUBLE" );
+    $obj->create_column( "codingsw", "codingsw_cv",  "DOUBLE" );
+    $obj->create_column( "ofgsw",    "ofgsw_cv",     "DOUBLE" );
+    $obj->create_column( "isw",      "isw_cv",       "DOUBLE" );
+    $obj->create_column( "gsw",      "gsw_cv",       "DOUBLE" );
+    $obj->create_column( "gsw",      "gsw_intra_cv", "DOUBLE" );
     print "Table codingsw, ofgsw, isw and gsw altered\n";
 
     @align_ids = @{ $obj->get_align_ids };
@@ -184,7 +185,8 @@ my $worker = sub {
     my $gsw_update_sth = $dbh->prepare(
         q{
         UPDATE gsw
-        SET gsw_cv = ?
+        SET gsw_cv = ?,
+            gsw_intra_cv = ?
         WHERE gsw_id = ?
         }
     );
@@ -253,7 +255,9 @@ my $worker = sub {
             my $seqs_ref = $obj->get_seqs($align_id);
             my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
                 = $obj->segment_gc_stat( $seqs_ref, $resize_set );
-            $gsw_update_sth->execute( $gc_cv, $gsw_id );
+            my ( undef, undef, $gc_intra_cv, undef )
+                = $obj->segment_gc_stat( $seqs_ref, $window_set, 20, 20 );
+            $gsw_update_sth->execute( $gc_cv, $gc_intra_cv, $gsw_id );
         }
     }
 };

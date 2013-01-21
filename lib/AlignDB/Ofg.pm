@@ -10,6 +10,8 @@ use AlignDB::Window;
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(:all);
 
+use AlignDB::DeltaG;
+
 requires 'dbh';
 requires 'get_target_info';
 requires 'get_seqs';
@@ -20,18 +22,21 @@ use FindBin;
 use lib "$FindBin::Bin/..";
 use AlignDB::Position;
 
+# sliding windows' size, default is 100
+has 'sw_size' => ( is => 'rw', isa => 'Int', default => sub {100}, );
+
 # max outside window distance
 has 'max_out_distance' => (
     is      => 'rw',
     isa     => 'Int',
-    default => 30,
+    default => sub {30},
 );
 
 # max inside window distance
 has 'max_in_distance' => (
     is      => 'rw',
     isa     => 'Int',
-    default => 30,
+    default => sub {30},
 );
 
 # edge
@@ -50,7 +55,12 @@ has 'max_in_distance' => (
 # ------+-----------------+--------
 #  3 2 1        0          1 2 3 4
 enum 'Styles', [qw(edge edge_only center center_intact)];
-has 'style' => ( is => 'rw', isa => 'Styles', default => 'edge' );
+has 'style' => ( is => 'rw', isa => 'Styles', default => 'edge', );
+
+# dG calculator
+has 'insert_dG' => ( is => 'rw', isa => 'Bool', default => 0, );
+has 'dG_calc' =>
+    ( is => 'ro', isa => 'Object', default => sub { AlignDB::DeltaG->new }, );
 
 sub insert_ofg {
     my $self        = shift;
@@ -58,12 +68,8 @@ sub insert_ofg {
     my $all_ofgs    = shift;
     my $chr_ofg_set = shift;
 
-    my $dbh        = $self->dbh;
+    my $dbh = $self->dbh;
     my $pos_finder = AlignDB::Position->new( dbh => $dbh );
-    my $window_maker = AlignDB::Window->new(
-        max_out_distance => $self->max_out_distance,
-        max_in_distance  => $self->max_in_distance,
-    );
 
     # insert into ofg
     my $ofg_insert_sth = $dbh->prepare(
@@ -162,8 +168,8 @@ sub insert_ofgsw {
     my $style    = shift;
 
     my $dbh          = $self->dbh;
-    my $pos_finder = AlignDB::Position->new( dbh => $dbh );
     my $window_maker = AlignDB::Window->new(
+        sw_size          => $self->sw_size,
         max_out_distance => $self->max_out_distance,
         max_in_distance  => $self->max_in_distance,
     );
@@ -209,11 +215,11 @@ sub insert_ofgsw {
         q{
         INSERT INTO ofgsw (
             ofgsw_id, window_id, ofg_id,
-            ofgsw_type, ofgsw_distance
+            ofgsw_type, ofgsw_distance, ofgsw_dG
         )
         VALUES (
             NULL, ?, ?,
-            ?, ?
+            ?, ?, ?
         )
         }
     );
@@ -238,9 +244,12 @@ sub insert_ofgsw {
                     = $self->insert_window( $align_id, $outside_rsw->{set},
                     $internal_indel_flag );
 
+                my $deltaG
+                    = $self->insert_dG
+                    ? $self->_calc_deltaG( $align_id, $outside_rsw->{set} )
+                    : undef;
                 $ofgsw_insert->execute( $cur_window_id, $ofg_id,
-                    $outside_rsw->{type}, $outside_rsw->{distance},
-                );
+                    $outside_rsw->{type}, $outside_rsw->{distance}, $deltaG, );
             }
 
             # inside rsw
@@ -253,9 +262,12 @@ sub insert_ofgsw {
                     = $self->insert_window( $align_id, $inside_rsw->{set},
                     $internal_indel_flag );
 
+                my $deltaG
+                    = $self->insert_dG
+                    ? $self->_calc_deltaG( $align_id, $inside_rsw->{set} )
+                    : undef;
                 $ofgsw_insert->execute( $cur_window_id, $ofg_id,
-                    $inside_rsw->{type}, $inside_rsw->{distance},
-                );
+                    $inside_rsw->{type}, $inside_rsw->{distance}, $deltaG, );
             }
 
             if ( $style ne 'edge_only' ) {
@@ -271,8 +283,12 @@ sub insert_ofgsw {
                         = $self->insert_window( $align_id, $inside_rsw->{set},
                         $internal_indel_flag );
 
+                    my $deltaG
+                        = $self->insert_dG
+                        ? $self->_calc_deltaG( $align_id, $inside_rsw->{set} )
+                        : undef;
                     $ofgsw_insert->execute( $cur_window_id, $ofg_id,
-                        $inside_rsw->{type}, $inside_rsw->{distance},
+                        $inside_rsw->{type}, $inside_rsw->{distance}, $deltaG,
                     );
                 }
             }
@@ -287,8 +303,12 @@ sub insert_ofgsw {
                     = $self->insert_window( $align_id, $rsw->{set},
                     $internal_indel_flag );
 
+                my $deltaG
+                    = $self->insert_dG
+                    ? $self->_calc_deltaG( $align_id, $rsw->{set} )
+                    : undef;
                 $ofgsw_insert->execute( $cur_window_id, $ofg_id, $rsw->{type},
-                    $rsw->{distance}, );
+                    $rsw->{distance}, $deltaG, );
             }
         }
         elsif ( $style eq 'center_intact' ) {
@@ -300,13 +320,29 @@ sub insert_ofgsw {
                     = $self->insert_window( $align_id, $rsw->{set},
                     $internal_indel_flag );
 
+                my $deltaG
+                    = $self->insert_dG
+                    ? $self->_calc_deltaG( $align_id, $rsw->{set} )
+                    : undef;
                 $ofgsw_insert->execute( $cur_window_id, $ofg_id, $rsw->{type},
-                    $rsw->{distance}, );
+                    $rsw->{distance}, $deltaG, );
             }
         }
     }
 
     return;
+}
+
+sub _calc_deltaG {
+    my $self     = shift;
+    my $align_id = shift;
+    my $set      = shift;
+
+    my $seqs_ref   = $self->get_seqs($align_id);
+    my @seq_slices = map { $set->substr_span($_) } @{$seqs_ref};
+    my @seq_dG     = map { $self->dG_calc->polymer_deltaG($_) } @seq_slices;
+
+    return mean(@seq_dG);
 }
 
 1;

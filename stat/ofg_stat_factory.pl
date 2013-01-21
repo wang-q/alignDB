@@ -400,11 +400,77 @@ my $ofg_coding_pure = sub {
     }
 };
 
+
+#----------------------------------------------------------#
+# worksheet -- ofg_dG
+#----------------------------------------------------------#
+my $ofg_dG = sub {
+
+    # if the target column of the target table does not contain
+    #   any values, skip this stat
+    unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_dG' ) ) {
+        return;
+    }
+
+    my $sheet_name = "ofg_dG";
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers = qw{distance AVG_pi STD_pi AVG_indel STD_indel AVG_gc
+            STD_gc AVG_cv STD_cv AVG_dG STD_dG COUNT};
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # query
+        my $sql_query = q{
+            SELECT s.ofgsw_distance `distance`,
+                   AVG(w.window_pi) `avg_pi`,
+                   STD(w.window_pi) `std_pi`,
+                   AVG(w.window_indel / w.window_length * 100) `avg_indel`,
+                   STD(w.window_indel / w.window_length * 100) `std_indel`,
+                   AVG(w.window_target_gc) `avg_gc`,
+                   STD(w.window_target_gc) `std_gc`,
+                   AVG(s.ofgsw_cv) `avg_cv`,
+                   STD(s.ofgsw_cv) `std_cv`,
+                   AVG(s.ofgsw_dG) `avg_dG`,
+                   STD(s.ofgsw_dG) `std_dG`,
+                   COUNT(*) count
+              FROM ofg o,
+                   ofgsw s,
+                   window w
+            WHERE     1 = 1
+            AND o.ofg_id = s.ofg_id
+            AND s.window_id = w.window_id
+            AND s.ofgsw_distance != 0
+            GROUP BY s.ofgsw_distance
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+        );
+
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+
 foreach my $n (@tasks) {
     if ( $n == 1 ) { &$summary_gene;    next; }
     if ( $n == 2 ) { &$ofg_all;         next; }
     if ( $n == 3 ) { &$ofg_coding;      next; }
     if ( $n == 4 ) { &$ofg_coding_pure; next; }
+    if ( $n == 5 ) { &$ofg_dG; next; }
 }
 
 $stopwatch->end_message;
