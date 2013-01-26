@@ -79,9 +79,9 @@ GetOptions(
     'man'             => \$man,
     'server=s'        => \$server,
     'port=i'          => \$port,
-    'db=s'            => \$db,
     'username=s'      => \$username,
     'password=s'      => \$password,
+    'db=s'            => \$db,
     'b|base_dir=s'    => \$base_dir,
     'x|taxon_dir=s'   => \$taxon_dir,
     'w|working_dir=s' => \$working_dir,
@@ -412,13 +412,13 @@ cd [% working_dir %]
 perl [% findbin %]/../extra/seq_pair_batch.pl \
     -d 1 --parallel [% parallel %] \
     -f [% seq_pair_file %] \
-    -lt 1000 -st 0  -r 0
+    -lt 1000 -r 0
 
 # seq_pair_batch.pl stat
 perl [% findbin %]/../extra/seq_pair_batch.pl \
     -d 1 --parallel [% parallel %] \
     -f [% seq_pair_file %] \
-    -lt 1000 -st 0  -r 1,2,5,21,40
+    -lt 1000 -r 1,2,5,21,40
 
 # join_dbs.pl
 perl [% findbin %]/../extra/join_dbs.pl \
@@ -624,10 +624,10 @@ done
 # seq_pair
 #----------------------------#
 perl [% findbin %]/../extra/seq_pair_batch.pl -d 1 --parallel [% parallel %] \
-    -f [% seq_pair_file %]  -lt 1000 -st 0 -r 100-102
+    -f [% seq_pair_file %]  -lt 1000 -r 100-102
 
 #perl [% findbin %]/../extra/seq_pair_batch.pl -d 1 --parallel [% parallel %] \
-#    -f [% seq_pair_file %]  -lt 1000 -st 0 -r 1,2,21,40
+#    -f [% seq_pair_file %]  -lt 1000 -r 1,2,21,40
 
 #----------------------------#
 # mz
@@ -671,7 +671,7 @@ perl [% findbin %]/../extra/multi_way_batch.pl \
 [% IF outgroup_id -%]
     --outgroup \
 [% END -%]
-    -lt 1000 -st 0 -ct 0 --parallel [% parallel %] --batch 5 \
+    -lt 1000 --parallel [% parallel %] --batch 5 \
     --run 1,2,5,10,21,30-32,40-42,44
 
 #----------------------------#
