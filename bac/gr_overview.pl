@@ -200,12 +200,64 @@ my $gc_checklist = sub {
     print "Sheet \"$sheet_name\" has been generated.\n";
 };
 
-foreach my $n (@tasks) {
-    if ( $n == 1 ) { &$strains;      next; }
-    if ( $n == 2 ) { &$species;      next; }
-    if ( $n == 3 ) { &$gc_checklist; next; }
+#----------------------------------------------------------#
+# worksheet -- gr_gc_checklist
+#----------------------------------------------------------#
+my $gr_gc_checklist = sub {
+    my $sheet_name = 'gr_gc_checklist';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
 
-    #if ( $n == 4 ) { &$snp_list;    next; }
+    {    # write header
+        my @headers = qw{
+            genus_id genus species_id species avg_genome_size avg_gc count code
+        };
+        push @headers, "check\ntable", "check\ntree", "check\nalign",
+            "check\nxlsx";
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  genus_id,
+                    genus,
+                    species_id,
+                    species,
+                    AVG(genome_size),
+                    AVG(gc_content),
+                    COUNT(*) count,
+                    MAX(CHAR_LENGTH(code))
+            FROM gr
+            WHERE   1 = 1
+            AND status = 'Complete'
+            AND species_member > 2
+            GROUP BY species_id
+            HAVING count > 2
+            ORDER BY species
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+foreach my $n (@tasks) {
+    if ( $n == 1 ) { &$strains;         next; }
+    if ( $n == 2 ) { &$species;         next; }
+    if ( $n == 3 ) { &$gc_checklist;    next; }
+    if ( $n == 4 ) { &$gr_gc_checklist; next; }
 }
 
 $stopwatch->end_message;
