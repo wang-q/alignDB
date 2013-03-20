@@ -1,0 +1,101 @@
+
+cd /home/wangq/Scripts/alignDB/
+perl init/init_alignDB.pl  -d S288Cvsself_gene
+perl init/gen_alignDB_genome.pl -d S288Cvsself_gene -t "4932,S288C" -dir ~/data/alignment/yeast65/S288C --parallel 8
+
+perl gene/insert_gene.pl -d S288Cvsself_gene -e yeast_65 
+
+perl init/update_sw_cv.pl -d S288Cvsself_gene --batch 1 --parallel 8
+perl init/update_feature.pl -d S288Cvsself_gene -e yeast_65 --batch 1 --parallel 8
+
+perl gene/update_gene_yeast_ess.pl -d S288Cvsself_gene
+perl gene/update_gene_yeast_quan.pl -d S288Cvsself_gene
+
+perl util/query_sql.pl -s 114.212.202.159 -d S288Cvsself_gene -f doc/gene/query_gene_quan.txt -o doc/gene/S288Cvsself_gene.csv
+
+
+
+# in R
+mydata <- read.csv("d:/wq/Scripts/alignDB/doc/gene/S288Cvsself_gene.1.csv")
+
+head(mydata)
+summary(mydata)
+
+one_forth <- quantile(mydata$quan, probs = seq(0, 1, 0.25), names = FALSE)
+mydata$level <- with(mydata, ifelse(quan < one_forth[2], "q1", ifelse(quan < one_forth[3], "q2", ifelse(quan < one_forth[4], "q3", "q4"))))
+
+one_tenth <- quantile(mydata$quan, probs = seq(0, 1, 0.1), names = FALSE)
+mydata$level <- with(mydata, ifelse(quan < one_tenth[2], "lowest expressed", ifelse(quan < one_tenth[10], "q2", "highest expressed")))
+
+mydata$level <- with(mydata, ifelse(quan < 5, "q1", ifelse(quan < 25, "q2", ifelse(quan < 75, "q3", ifelse(quan < 95, "q4", "q5" )))))
+
+
+one_tenth <- quantile(mydata$interact, probs = seq(0, 1, 0.1), names = FALSE, na.rm = TRUE)
+mydata$interact_level <- with(mydata, ifelse(interact < 2, "lowest interact", ifelse(quan < one_tenth[10], "q2", "highest interact")))
+
+library(ggplot2)
+ggplot(mydata, aes(x=level, y=avg_cv, fill=level)) + geom_boxplot()
+ggplot(mydata, aes(x=level, y=avg_intra_cv, fill=level)) + geom_boxplot()
+ggplot(subset(mydata, mydata$level != "q2"), aes(x=level, y=avg_intra_cv, fill=level)) + geom_boxplot() +  guides(fill=FALSE)
+ggplot(mydata, aes(x=ess, y=avg_intra_cv, fill=ess)) + geom_boxplot() +  guides(fill=FALSE)
+
+ggplot(subset(mydata, mydata$interact_level != "q2"), aes(x=interact_level, y=avg_intra_cv, fill=interact_level)) + geom_boxplot() +  guides(fill=FALSE)
+
+
+ggplot(mydata, aes(x=avg_cv, y=quan)) +
+    geom_point(shape=1,) + 
+    geom_smooth(stat = "smooth", se=TRUE, size = 2)
+
+ggplot(mydata, aes(x=rec, y=avg_cv)) +
+    geom_point(shape=1,) + 
+    geom_smooth(stat = "smooth", se=TRUE, size = 2)
+
+ggplot(mydata, aes(x=rec, y=avg_intra_cv)) +
+    geom_point(shape=1,) + 
+    geom_smooth(method = "lm", se=TRUE, size = 2)
+
+#----------------------------------------------------------#
+# 1. insert_gene.pl
+#----------------------------------------------------------#
+E:\wq\Scripts\alignDB\gene>insert_gene.pl -d=alignDB -e=yeast_37
+
+==============================
+Update alignDB...
+
+Prosess align 1 in chrI 218482 - 228462
+Prosess align 2 in chrI 12908 - 24993
+Prosess align 3 in chrI 166020 - 181123
+Prosess align 4 in chrI 182956 - 199141
+Prosess align 5 in chrI 207009 - 222802
+
+Runtime 14 seconds.
+==============================
+
+#----------------------------------------------------------#
+# 3. update_gene_D.pl
+#----------------------------------------------------------#
+E:\wq\Scripts\alignDB\gene>update_gene_D.pl --aim_db=alignDB --ref_db=S288CvsYJM
+789
+
+==============================
+Init alignDB...
+
+Table gene altered
+Get gene divergences in ref_db: S288CvsYJM789
+Update gene_feature5 in aim_db: alignDB
+
+Runtime 2 seconds.
+==============================
+
+#----------------------------------------------------------#
+# 4. update_gene_yeast.pl
+#----------------------------------------------------------#
+E:\wq\Scripts\alignDB\gene>update_gene_yeast.pl -d=alignDB
+
+==============================
+Update alignDB...
+
+Table gene altered
+
+Runtime 2 seconds.
+==============================
