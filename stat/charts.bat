@@ -14,3 +14,6 @@ forfiles /m *.multi.xlsx -c "cmd /c perl d:/wq/Scripts/alignDB/stat/multi_chart_
 
 echo "dnds"
 forfiles /m *.dnds.xlsx -c "cmd /c perl d:/wq/Scripts/alignDB/stat/dnds_chart_factory.pl -i @path"
+
+echo "ofg"
+forfiles /m *.ofg.xlsx -c "cmd /c perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl -i @path"
