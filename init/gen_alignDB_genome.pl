@@ -61,6 +61,7 @@ GetOptions(
     'd|db=s'       => \$db,
     'dir=s'        => \$dir,
     'target=s'     => \$target,
+    'length=i'     => \$truncated_length,
     'parallel=i'   => \$parallel,
 ) or pod2usage(2);
 
