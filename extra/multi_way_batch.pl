@@ -283,13 +283,13 @@ __END__
 
 =head1 SYNOPSIS
 
-perl multi_way_batch.pl -d S288CvsThree_10k -e yeast_58 -f F:/S288CvsThree_10k -lt 5000 -st 0 --parallel=6 --run all
+perl multi_way_batch.pl -d S288CvsThree_10k -e yeast_58 -da F:/S288CvsThree_10k -lt 5000 -st 0 --parallel=6 --run all
 
-perl multi_way_batch.pl -d S288CvsTen_10k -e yeast_58 -f F:/S288CvsTen_10k -lt 5000 -st 0 --parallel=6 --run all
+perl multi_way_batch.pl -d S288CvsTen_10k -e yeast_58 -da F:/S288CvsTen_10k -lt 5000 -st 0 --parallel=6 --run all
 
 perl multi_way_batch.pl -d S288CvsSix_10k -r stat
 
-perl multi_way_batch.pl -d AthvsFive -f d:\data\alignment\arabidopsis\AthvsFive\ -lt 5000 -st 0 --parallel 4 --run 1-3,21,40
+perl multi_way_batch.pl -d AthvsFive -da d:\data\alignment\arabidopsis\AthvsFive\ -lt 5000 -st 0 --parallel 4 --run 1-3,21,40
 
-perl ~/Scripts/alignDB/extra/multi_way_batch.pl -d AthvsV_mafft --block --id 3702 -f ~/data/alignment/arabidopsis19/AthvsV_mafft -lt 5000 -st 0 --parallel 4 --run 1-3,21,40
+perl ~/Scripts/alignDB/extra/multi_way_batch.pl -d AthvsV_mafft --block --id 3702 -da ~/data/alignment/arabidopsis19/AthvsV_mafft -lt 5000 -st 0 --parallel 4 --run 1-3,21,40
 
