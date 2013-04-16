@@ -7,11 +7,14 @@ use Pod::Usage;
 use Config::Tiny;
 use YAML qw(Dump Load DumpFile LoadFile);
 
+use AlignDB::IntSpan;
+use AlignDB::Stopwatch;
+
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use AlignDB::IntSpan;
+use AlignDB;
 use AlignDB::WriteExcel;
-use AlignDB::Stopwatch;
+use AlignDB::Ofg;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -30,6 +33,8 @@ my $db       = $Config->{database}{db};
 my $run     = $Config->{stat}{run};
 my $outfile = "";
 
+my $by = "tag";    # "type" or "tt"
+
 my $man  = 0;
 my $help = 0;
 
@@ -43,6 +48,7 @@ GetOptions(
     'p|password=s' => \$password,
     'o|output=s'   => \$outfile,
     'r|run=s'      => \$run,
+    'by=s'         => \$by,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -89,7 +95,7 @@ my $write_obj = AlignDB::WriteExcel->new(
 # worksheet -- summary
 #----------------------------------------------------------#
 #
-my $summary_gene = sub {
+my $summary_ofg = sub {
     my $sheet_name = 'summary';
     my $sheet;
     my ( $sheet_row, $sheet_col );
@@ -117,6 +123,7 @@ my $summary_gene = sub {
                     COUNT(*) COUNT
               FROM ofg o
             GROUP BY o.ofg_tag, o.ofg_type
+            ORDER BY CONCAT(o.ofg_tag, "_", o.ofg_type)
         };
         my %option = (
             query_name => $query_name,
@@ -126,9 +133,45 @@ my $summary_gene = sub {
         );
         ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
+    $sheet_row++; # add a blank row
 
-    # add a blank row
-    $sheet_row++;
+    {    # write contents
+        my $query_name = 'ofg tag count';
+        my $sql_query  = q{
+            SELECT  o.ofg_tag,
+                    COUNT(*) COUNT
+              FROM ofg o
+            GROUP BY o.ofg_tag
+            ORDER BY o.ofg_tag
+        };
+        my %option = (
+            query_name => $query_name,
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+    $sheet_row++; # add a blank row
+
+    {    # write contents
+        my $query_name = 'ofg type count';
+        my $sql_query  = q{
+            SELECT  o.ofg_type,
+                    COUNT(*) COUNT
+              FROM ofg o
+            GROUP BY o.ofg_type
+            ORDER BY o.ofg_type
+        };
+        my %option = (
+            query_name => $query_name,
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+    $sheet_row++; # add a blank row
 
     {    # write contents
         my $query_name = 'ofg';
@@ -400,7 +443,6 @@ my $ofg_coding_pure = sub {
     }
 };
 
-
 #----------------------------------------------------------#
 # worksheet -- ofg_dG
 #----------------------------------------------------------#
@@ -464,13 +506,117 @@ my $ofg_dG = sub {
     print "Sheet \"$sheet_name\" has been generated.\n";
 };
 
+my $ofg_tag_type = sub {
+
+    # if the target column of the target table does not contain
+    #   any values, skip this stat
+    unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
+        return;
+    }
+
+    my $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+    AlignDB::Ofg->meta->apply($obj);
+
+    my $ary_ref;
+    if ( $by eq "tag" ) {
+        $ary_ref = $obj->get_tags;
+    }
+    elsif ( $by eq "type" ) {
+        $ary_ref = $obj->get_types;
+    }
+    elsif ( $by eq "tt" ) {
+        $ary_ref = $obj->get_tts;
+    }
+
+    my $write_sheet = sub {
+        my ( $by, $bind ) = @_;
+
+        my $sheet_name;
+        if ( $by eq "tag" ) {
+            $sheet_name = "ofg_tag_$bind";
+        }
+        elsif ( $by eq "type" ) {
+            $sheet_name = "ofg_type_$bind";
+        }
+        elsif ( $by eq "tt" ) {
+            $sheet_name = "ofg_tt_$bind";
+        }
+        $sheet_name = substr $sheet_name, 0, 31; # excel sheet name limit
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        {    # write header
+            my @headers = qw{distance AVG_pi STD_pi AVG_indel STD_indel AVG_gc
+                STD_gc AVG_cv STD_cv AVG_repeats STD_repeats COUNT};
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # query
+            my $sql_query = q{
+                SELECT s.ofgsw_distance `distance`,
+                       AVG(w.window_pi) `avg_pi`,
+                       STD(w.window_pi) `avg_pi`,
+                       AVG(w.window_indel / w.window_length * 100) `avg_indel`,
+                       STD(w.window_indel / w.window_length * 100) `avg_indel`,
+                       AVG(w.window_target_gc) `avg_gc`,
+                       STD(w.window_target_gc) `avg_gc`,
+                       AVG(s.ofgsw_cv) `avg_cv`,
+                       STD(s.ofgsw_cv) `avg_cv`,
+                       AVG(w.window_repeats) `avg_repeats`,
+                       STD(w.window_repeats) `avg_repeats`,
+                       COUNT(*) count
+                  FROM ofg o,
+                       ofgsw s,
+                       window w
+                 WHERE o.ofg_id = s.ofg_id 
+                   AND s.window_id = w.window_id
+            };
+            if ( $by eq "tag" ) {
+                $sql_query .= "AND o.ofg_tag = ? GROUP BY s.ofgsw_distance";
+            }
+            elsif ( $by eq "type" ) {
+                $sql_query .= "AND o.ofg_type = ? GROUP BY s.ofgsw_distance";
+            }
+            elsif ( $by eq "tt" ) {
+                $sql_query
+                    .= q{AND CONCAT(o.ofg_tag, "_", o.ofg_type) = ? GROUP BY s.ofgsw_distance};
+            }
+            my %option = (
+                sql_query  => $sql_query,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $bind, ],
+            );
+
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
+    for ( @{$ary_ref} ) {
+        $write_sheet->( $by, $_ );
+    }
+};
 
 foreach my $n (@tasks) {
-    if ( $n == 1 ) { &$summary_gene;    next; }
+    if ( $n == 1 ) { &$summary_ofg;     next; }
     if ( $n == 2 ) { &$ofg_all;         next; }
     if ( $n == 3 ) { &$ofg_coding;      next; }
     if ( $n == 4 ) { &$ofg_coding_pure; next; }
-    if ( $n == 5 ) { &$ofg_dG; next; }
+    if ( $n == 5 ) { &$ofg_dG;          next; }
+    if ( $n == 6 ) { &$ofg_tag_type;    next; }
 }
 
 $stopwatch->end_message;
