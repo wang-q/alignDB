@@ -57,6 +57,8 @@ my $batch_number = $Config->{generate}{batch};
 # use alternative segment levels 200 .. 900, 1000 .. 5000
 my $alt_level = 0;
 
+my $one_level = 0;
+
 my $man  = 0;
 my $help = 0;
 
@@ -71,6 +73,7 @@ GetOptions(
     'insert_gc=s'      => \$insert_gc,
     'insert_segment=s' => \$insert_segment,
     'alt_level'        => \$alt_level,
+    'one_level'        => \$one_level,
     'parallel=i'       => \$parallel,
     'batch=i'          => \$batch_number,
 ) or pod2usage(2);
@@ -131,6 +134,7 @@ my $worker = sub {
         stat_window_size => $stat_window_size,
         stat_window_step => $stat_window_step,
         alt_level        => $alt_level,
+        one_level        => $one_level,
     );
     for my $key ( sort keys %opt ) {
         $obj->$key( $opt{$key} );

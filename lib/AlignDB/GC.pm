@@ -30,8 +30,11 @@ has 'stat_window_size' => ( is => 'rw', isa => 'Int', default => 100, );
 # extreme sliding window step
 has 'stat_window_step' => ( is => 'rw', isa => 'Int', default => 100, );
 
-# use 100 .. 900 segment levels
+# use 200 .. 1000, 2000 .. 5000 segment levels
 has 'alt_level' => ( is => 'rw', isa => 'Bool', default => 0, );
+
+# use 100 level
+has 'one_level' => ( is => 'rw', isa => 'Bool', default => 0, );
 
 sub insert_segment {
     my $self           = shift;
@@ -40,16 +43,16 @@ sub insert_segment {
 
     my $dbh = $self->dbh;
 
-    my @segment_levels = (
-        [ 'A', '',   '' ],
-        [ 1,   5000, 5000 ],
-        [ 2,   1000, 1000 ],
-        [ 3,   500,  500 ],
-    );
+    my @segment_levels
+        = ( [ 1, 5000, 5000 ], [ 2, 1000, 1000 ], [ 3, 500, 500 ], );
 
     if ( $self->alt_level ) {
         @segment_levels = reverse map { [ $_, $_ * 100, $_ * 100 ] }
             ( 2 .. 10, 20, 30, 40, 50 );
+    }
+
+    if ( $self->one_level ) {
+        @segment_levels = ( [ 100, 100, 100 ] );
     }
 
     for (@segment_levels) {
@@ -77,17 +80,28 @@ sub insert_segment {
 
         my $segment_insert = $dbh->prepare($segment_sql);
 
-        foreach my $segment_set (@segment_site) {
+        for my $segment_set (@segment_site) {
 
             my ($cur_window_id)
                 = $self->insert_window( $align_id, $segment_set );
 
             my $seqs_ref = $self->get_seqs($align_id);
-            my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-                = $self->segment_gc_stat( $seqs_ref, $segment_set );
 
-            $segment_insert->execute( $cur_window_id, $segment_type, $gc_mean,
-                $gc_std, $gc_cv, $gc_mdcw );
+            if ( !$self->one_level ) {
+                my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
+                    = $self->segment_gc_stat( $seqs_ref, $segment_set );
+
+                $segment_insert->execute( $cur_window_id, $segment_type,
+                    $gc_mean, $gc_std, $gc_cv, $gc_mdcw );
+            }
+            else {
+                my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
+                    = $self->segment_gc_stat_one( $seqs_ref, $comparable_set,
+                    $segment_set );
+
+                $segment_insert->execute( $cur_window_id, $segment_type,
+                    $gc_mean, $gc_std, $gc_cv, $gc_mdcw );
+            }
         }
         $segment_insert->finish;
     }
@@ -172,6 +186,56 @@ sub segment_gc_stat {
         : $gc_mean <= 0.5 ? $gc_std / $gc_mean
         :                   $gc_std / ( 1 - $gc_mean );
     my $gc_mdcw = _mdcw(@sliding_gcs);
+
+    return ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw );
+}
+
+sub _center_resize {
+    my $old_set    = shift;
+    my $parent_set = shift;
+    my $resize     = shift;
+
+    # find the middles of old_set
+    my $half_size           = int( $old_set->size / 2 );
+    my $midleft             = $old_set->at($half_size);
+    my $midright            = $old_set->at( $half_size + 1 );
+    my $midleft_parent_idx  = $parent_set->index($midleft);
+    my $midright_parent_idx = $parent_set->index($midright);
+
+    return unless $midleft_parent_idx and $midright_parent_idx;
+
+    # map to parent
+    my $parent_size  = $parent_set->size;
+    my $half_resize  = int( $resize / 2 );
+    my $new_left_idx = $midleft_parent_idx - $half_resize + 1;
+    $new_left_idx = 1 if $new_left_idx < 1;
+    my $new_right_idx = $midright_parent_idx + $half_resize - 1;
+    $new_right_idx = $parent_size if $new_right_idx > $parent_size;
+
+    my $new_set = $parent_set->slice( $new_left_idx, $new_right_idx );
+
+    return $new_set;
+}
+
+sub segment_gc_stat_one {
+    my $self           = shift;
+    my $seqs_ref       = shift;
+    my $comparable_set = shift;
+    my $segment_set    = shift;
+
+    my $stat_segment_size = 500;
+
+    my $resize_set
+        = _center_resize( $segment_set, $comparable_set, $stat_segment_size );
+    next unless $resize_set;
+
+    my @segment_seqs = map { $segment_set->substr_span($_) } @{$seqs_ref};
+
+    my $gc_mean = calc_gc_ratio(@segment_seqs);
+    my ( $gc_std, $gc_mdcw ) = ( undef, undef );
+
+    my ( undef, undef, $gc_cv, undef )
+        = $self->segment_gc_stat( $seqs_ref, $resize_set, 100, 100 );
 
     return ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw );
 }
