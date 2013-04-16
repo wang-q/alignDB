@@ -410,9 +410,11 @@ my $worker = sub {
             # exon_info
             my $fetch_exon_info = $dbh->prepare(
                 q{
-                SELECT e.exon_tl_runlist
-                FROM exon e
-                WHERE exon_id = ?
+                SELECT e.exon_tl_runlist, g.gene_strand
+                FROM exon e, gene g
+                WHERE 1 = 1
+                AND e.gene_id = g.gene_id
+                AND exon_id = ?
                 }
             );
 
@@ -435,7 +437,7 @@ my $worker = sub {
                 my $prev_exon_id = $ref->{prev_exon_id};
 
                 $fetch_exon_info->execute($exon_id);
-                my ($exon_tl_runlist) = $fetch_exon_info->fetchrow_array;
+                my ($exon_tl_runlist, $gene_strand) = $fetch_exon_info->fetchrow_array;
 
                 next if !defined $exon_tl_runlist;
                 next if $exon_tl_runlist eq '-';
@@ -473,6 +475,23 @@ my $worker = sub {
                         $cur_window_id, $exon_id, $prev_exon_id,
                         $inside_window->{type},
                         $inside_window->{distance}
+                    );
+                }
+
+                # strand sliding
+                my @strand_windows
+                    = $window_maker->strand_window( $target_set,
+                    $exon_tl_set->min, $exon_tl_set->max, 100, $gene_strand );
+
+                for my $strand_window (@strand_windows) {
+                    my ($cur_window_id)
+                        = $obj->insert_window( $align_id,
+                        $strand_window->{set}, $internal_indel_flag );
+
+                    $codingsw_insert->execute(
+                        $cur_window_id, $exon_id, $prev_exon_id,
+                        $strand_window->{type},
+                        $strand_window->{distance}
                     );
                 }
             }
