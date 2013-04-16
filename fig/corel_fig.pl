@@ -15,6 +15,7 @@ use Win32::OLE::Const 'Microsoft Excel';
 use Win32::OLE::Const 'Corel - CorelDRAW 15.0 Type Library';
 
 use Path::Class;
+use Set::Scalar;
 
 $Win32::OLE::Warn = 2;    # die on errors...
 
@@ -101,8 +102,17 @@ for my $filename ( sort keys %{$charts} ) {
     unless ( $workbook = $excel->Workbooks->Open($efile) ) {
         die "Cannot open xls file\n";
     }
+    my @sheet_names;
+    for my $sheet ( in $workbook->Worksheets ) {
+        push @sheet_names, $sheet->{Name};
+    }
+    my $name_set = Set::Scalar->new(@sheet_names);
     for my $sheetname ( sort keys %{ $charts->{$filename} } ) {
         printf "[sheet: %s]\n", $sheetname;
+        if ( !$name_set->has($sheetname) ) {
+            print " " x 4, "sheet not exists!\n";
+            next;
+        }
         my $sheet = $workbook->Worksheets($sheetname);
         for my $chart_serial ( keys %{ $charts->{$filename}{$sheetname} } ) {
             printf "[chart: %s]\n", $chart_serial;
