@@ -110,7 +110,7 @@ sub insert_ofg {
             next if $_->{chr} ne $chr_name;
             my $iset = $_->{set}->intersect($chr_set);
             if ( $iset->is_not_empty ) {
-                print ' ' x 4, "Find ofg: $iset\n";
+                print ' ' x 4, "Find ofg: $chr_name $iset\n";
                 push @align_ofg,
                     { set => $iset, tag => $_->{tag}, type => $_->{type} };
             }
