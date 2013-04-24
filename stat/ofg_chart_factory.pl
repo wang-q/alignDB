@@ -131,47 +131,49 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             next;
         }
 
-        $option{y_column} = 2;
-        $option{x_title}  = "Distance to ofg";
-        $option{y_title}  = "Nucleotide diversity";
-        $excel_obj->draw_y( $sheet_name, \%option );
+        $option{x_title}   = "Distance to ofg";
+        $option{y_column}  = 6;
+        $option{y_title}   = "GC proportion";
+        $option{y2_column} = 8;
+        $option{y2_title}  = "Window CV";
+        $excel_obj->draw_2y( $sheet_name, \%option );
+        delete $option{y_title};
+        delete $option{y2_title};
 
         # chart 2
+        $option{chart_serial}++;
+        $option{y_column} = 2;
+        $option{y_title}  = "Nucleotide diversity";
+        $option{Top} += $option{Height} + 14.25;
+        $excel_obj->draw_y( $sheet_name, \%option );
+
+        # chart 3
         $option{chart_serial}++;
         $option{y_column} = 4;
         $option{y_title}  = "Indel per 100 bp";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
 
-        # chart 3
+        # chart 4
         $option{chart_serial}++;
         $option{y_column} = 6;
         $option{y_title}  = "GC proportion";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
 
-        # chart 4
+        # chart 5
         $option{chart_serial}++;
         $option{y_column} = 8;
         $option{y_title}  = "Window CV";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
 
-        # chart 5
+        # chart 6
         $option{chart_serial}++;
         $option{y_column} = 10;
         $option{y_title}  = "Repeats proportion";
         $option{Top} += $option{Height} + 12.75;
         $excel_obj->draw_y( $sheet_name, \%option );
-
-        # chart 6
-        $option{chart_serial}++;
-        $option{y_column}  = 6;
-        $option{y_title}   = "GC proportion";
-        $option{y2_column} = 8;
-        $option{y2_title}  = "Window CV";
-        $option{Top} += $option{Height} + 14.25;
-        $excel_obj->draw_2y( $sheet_name, \%option );
 
         if ( $set->has(-90) ) {
             my $idx = first_index { $_ == -90 } @{$values};
