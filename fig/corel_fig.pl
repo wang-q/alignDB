@@ -152,8 +152,17 @@ for my $filename ( sort keys %{$ranges} ) {
     unless ( $workbook = $excel->Workbooks->Open($efile) ) {
         die "Cannot open xls file\n";
     }
+    my @sheet_names;
+    for my $sheet ( in $workbook->Worksheets ) {
+        push @sheet_names, $sheet->{Name};
+    }
+    my $name_set = Set::Scalar->new(@sheet_names);
     for my $sheetname ( sort keys %{ $ranges->{$filename} } ) {
         printf "[sheet: %s]\n", $sheetname;
+        if ( !$name_set->has($sheetname) ) {
+            print " " x 4, "sheet not exists!\n";
+            next;
+        }
         my $sheet = $workbook->Worksheets($sheetname);
         for my $range ( @{ $ranges->{$filename}{$sheetname} } ) {
             printf "[range]\n";
