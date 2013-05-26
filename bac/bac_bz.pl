@@ -835,7 +835,7 @@ sub taxon_info {
         genus   => $genus,
         species => $species,
         subname => $sub_name,
-        dir     => File::Spec->catdir( $working_dir, $taxon_id ),
+        dir     => File::Spec->catdir( $dir, $taxon_id ),
     };
 }
 
