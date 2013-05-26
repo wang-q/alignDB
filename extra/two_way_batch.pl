@@ -215,7 +215,7 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . " -o $FindBin::Bin/../stat/$db_name.common.xlsx",
+        . " -o $db_name.common.xlsx",
     41 => undef,
     42 => "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
         . " -s $server"
@@ -223,14 +223,14 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . " -o $FindBin::Bin/../stat/$db_name.gc.xlsx",
+        . " -o $db_name.gc.xlsx",
     43 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . " -o $FindBin::Bin/../stat/$db_name.gene.xlsx",
+        . " -o $db_name.gene.xlsx",
     44 => undef,
     45 => "perl $FindBin::Bin/../stat/dnds_stat_factory.pl"
         . " -s $server"
@@ -238,7 +238,7 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . " -o $FindBin::Bin/../stat/$db_name.dnds.xlsx",
+        . " -o $db_name.dnds.xlsx",
 };
 
 #----------------------------#
