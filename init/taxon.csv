@@ -8,8 +8,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 9615,Canis,familiaris,,dog,familiaris Canis Canidae Fissipedia Carnivora Laurasiatheria Eutheria Mammalia Euteleostomi Vertebrata Craniata Chordata Metazoa Eukaryota
 4932,Saccharomyces,cerevisiae,,baker's yeast,cerevisiae Saccharomyces Saccharomycetaceae Saccharomycetales Saccharomycetes Saccharomycotina Ascomycota Fungi Metazoa Eukaryota
 226126,Saccharomyces,mikatae,IFO 1815,,mikatae Saccharomyces Saccharomycetaceae Saccharomycetales Saccharomycetes Saccharomycotina Ascomycota Fungi Metazoa Eukaryota
-39946,Oryza,sativa,(indica cultivar-group),Indian rice,sativa Oryza Oryzeae Ehrhartoideae Poaceae Poales commelinids Liliopsida Magnoliophyta Spermatophyta Euphyllophyta Tracheophyta Embryophyta Streptophytina Streptophyta Viridiplantae Eukaryota
-39947,Oryza,sativa,(japonica cultivar-group),Japanese rice,sativa Oryza Oryzeae Ehrhartoideae Poaceae Poales commelinids Liliopsida Magnoliophyta Spermatophyta Euphyllophyta Tracheophyta Embryophyta Streptophytina Streptophyta Viridiplantae Eukaryota
 7227,Drosophila,melanogaster,,Fruit fly,melanogaster Drosophila Drosophilidae Ephydroidea Muscomorpha Brachycer Diptera Endopterygota Neoptera Pterygota Insecta Hexapoda Arthropoda Metazoa Eukaryota
 7244,Drosophila,virilis,,Fruit fly,virilis Drosophila Drosophilidae Ephydroidea Muscomorpha Brachycera Diptera Endopterygota Neoptera Pterygota Insecta Hexapoda Arthropoda Metazoa Eukaryota
 7240,Drosophila,simulans,,Fruit fly,simulans Drosophila Drosophilidae Ephydroidea Muscomorpha Brachycera Diptera Endopterygota Neoptera Pterygota Insecta Hexapoda Arthropoda Metazoa Eukaryota
@@ -27,8 +25,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 112509,Hordeum,vulgare,vulgare,barley,
 4536,Oryza,nivara,,,
 4547,Saccharum,officinarum,,sugarcane,
-4558,Sorghum,bicolor,,milo,
-4565,Triticum,aestivum,,wheat,
 4577,Zea,mays,,maize,
 33113,Atropa,belladonna,,deadly nightshade,
 4081,Solanum,lycopersicum,,tomato,
@@ -37,7 +33,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 4098,Nicotiana,tomentosiformis,,,
 147425,Solanum,bulbocastanum,,,
 4113,Solanum,tuberosum,,potato,
-3702,Arabidopsis,thaliana,,ath,
 59689,Arabidopsis,lyrata,,lyrata,
 901502,Saccharomyces,cerevisiae,DBVPG1106,,
 901505,Saccharomyces,cerevisiae,Y12,,
@@ -1783,3 +1778,34 @@ taxon_id,genus,species,sub_species,common_name,classification
 331272,Burkholderia,cenocepacia,HI2424,Burkholderia_cenocepacia_HI2424,
 406425,Burkholderia,cenocepacia,MC0-3,Burkholderia_cenocepacia_MC0_3,
 216591,Burkholderia,cenocepacia,J2315,Burkholderia_cenocepacia_J2315,
+3649,Carica,papaya,,Carica_papaya,
+37657,Silene,latifolia,,Silene_latifolia,
+472368,Boea,hygrometrica,,Boea_hygrometrica,
+4155,Mimulus,guttatus,,Mimulus_guttatus,
+350892,Beta,vulgaris,subsp. maritima,Beta_vulgaris_subsp_maritima,
+343494,Beta,macrocarpa,,Beta_macrocarpa,
+3555,Beta,vulgaris,subsp. vulgaris,Beta_vulgaris_subsp_vulgaris,
+3702,Arabidopsis,thaliana,,Arabidopsis_thaliana,
+52824,Brassica,carinata,,Brassica_carinata,
+3707,Brassica,juncea,,Brassica_juncea,
+3708,Brassica,napus,,Brassica_napus,
+3712,Brassica,oleracea,,Brassica_oleracea,
+145471,Brassica,rapa,subsp. oleifera,Brassica_rapa_subsp_oleifera,
+3726,Raphanus,sativus,,Raphanus_sativus,
+3654,Citrullus,lanatus,,Citrullus_lanatus,
+3663,Cucurbita,pepo,,Cucurbita_pepo,
+157791,Vigna,radiata,,Vigna_radiata,
+3847,Glycine,max,,Glycine_max,
+34305,Lotus,japonicus,,Lotus_japonicus,
+56065,Millettia,pinnata,,Millettia_pinnata,
+3914,Vigna,angularis,,Vigna_angularis,
+39947,Oryza,sativa,Japonica Group,Oryza_sativa_Japonica_Group,
+4529,Oryza,rufipogon,,Oryza_rufipogon,
+39946,Oryza,sativa,Indica Group,Oryza_sativa_Indica_Group,
+4558,Sorghum,bicolor,,Sorghum_bicolor,
+4563,Tripsacum,dactyloides,,Tripsacum_dactyloides,
+4565,Triticum,aestivum,,Triticum_aestivum,
+15945,Zea,luxurians,,Zea_luxurians,
+381124,Zea,mays,subsp. mays,Zea_mays_subsp_mays,
+76912,Zea,mays,subsp. parviglumis,Zea_mays_subsp_parviglumis,
+4580,Zea,perennis,,Zea_perennis,
