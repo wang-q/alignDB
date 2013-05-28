@@ -39,16 +39,16 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 $dir = File::Spec->rel2abs($dir);
 my $output = File::Spec->catfile( $dir, "basicstat.yml" );
 
-my @xls_files = sort grep {/common|multi/i}
-    File::Find::Rule->file->maxdepth(1)->name('*.xlsx')->in($dir);
+my @xls_files
+    = sort grep {/common|multi/i}
+    File::Find::Rule->file->maxdepth(1)
+    ->name( '*.common.xlsx', '*.common.chart.xlsx' )->in($dir);
 
 my @data;
 for my $i ( 0 .. $#xls_files ) {
-    my $file = $xls_files[$i];
-    my $basename
-        = basename( $file, '.common.xlsx', '.common.chart.xlsx', '.multi.xlsx',
-        '.multi.chart.xlsx' );
-    my $item = {
+    my $file     = $xls_files[$i];
+    my $basename = basename( $file, '.common.xlsx', '.common.chart.xlsx', );
+    my $item     = {
         name => $basename,
         file => basename($file),
     };
