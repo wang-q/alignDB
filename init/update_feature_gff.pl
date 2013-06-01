@@ -45,6 +45,9 @@ my $gff_files;
 # RepeatMasker generated gff files
 my $rm_gff_files;
 
+# gff version
+my $gff_version = 3;
+
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
 
@@ -64,6 +67,7 @@ GetOptions(
     'd|db=s'         => \$db,
     'gff_files=s'    => \$gff_files,
     'rm_gff_files=s' => \$rm_gff_files,
+    'gff_version=i'  => \$gff_version,
     'parallel=i'     => \$parallel,
     'batch=i'        => \$batch_number,
 ) or pod2usage(2);
@@ -84,7 +88,7 @@ for my $file ( grep {defined} split /\,/, $gff_files ) {
     print "Loading annotations for [$basename]\n";
     my $gff_obj = Bio::Tools::GFF->new(
         -file        => $file,
-        -gff_version => 3
+        -gff_version => $gff_version,
     );
 
     my $cds_set = AlignDB::IntSpan->new;
@@ -103,7 +107,7 @@ for my $file ( grep {defined} split /\,/, $rm_gff_files ) {
     print "Loading RepeatMasker annotations for [$basename]\n";
     my $gff_obj = Bio::Tools::GFF->new(
         -file        => $file,
-        -gff_version => 3
+        -gff_version => $gff_version,
     );
 
     my $repeat_set = AlignDB::IntSpan->new;
