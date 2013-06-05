@@ -372,27 +372,25 @@ SEG: for (@segments) {
                 );
             }
 
-            my $name_of      = {};
-            my $goal_info_of = {};
-            my $real_names   = [];
-            my $seq_refs     = [];
+            my $name_of   = {};
+            my $info_refs = [];
+            my $seq_refs  = [];
 
             # join_name : 0target
-            # real_name : human
+            # name      : human
             for my $join_name (@all_names) {
-                my $real_name = $info_of{$join_name}->{name};
-                my $taxon_id  = $info_of{$join_name}->{taxon_id};
-                $name_of->{$taxon_id} = $real_name;
+                my $taxon_id = $info_of{$join_name}->{taxon_id};
+                $name_of->{$taxon_id} = $info_of{$join_name}->{name};
 
-                $goal_info_of->{$real_name} = $info_of{$join_name};
-                $goal_info_of->{$real_name}{chr_id}
+                my $info_ref = $info_of{$join_name};
+                $info_ref->{chr_id}
                     = $goal_obj->get_chr_id_hash($taxon_id)
-                    ->{ $goal_info_of->{$real_name}{chr_name} };
-                push @{$real_names}, $real_name;
-                push @{$seq_refs},   $info_of{$join_name}->{seq};
+                    ->{ $info_ref->{chr_name} };
+                push @{$info_refs}, $info_ref;
+                push @{$seq_refs},  $info_of{$join_name}->{seq};
             }
             $goal_obj->update_names($name_of);
-            $goal_obj->add_align( $goal_info_of, $real_names, $seq_refs );
+            $goal_obj->add_align( $info_refs, $seq_refs );
         }
     }
 }
@@ -790,7 +788,6 @@ sub trim_outgroup {
     my $outgroup      = shift;
 
     # add raw_seqs to outgroup info hash
-    # it will be used in $goal_obj->add_align
     $info_of->{$outgroup}{raw_seq} = $info_of->{$outgroup}{seq};
 
     # don't expand indel set here
