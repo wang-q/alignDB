@@ -94,7 +94,7 @@ elsif ( $run eq 'basic' ) {
     @tasks = ( 1 .. 5, 21, 40 );
 }
 elsif ( $run eq 'common' ) {
-    @tasks = ( 1 .. 5, 21, 30, 31, 40, 41 );
+    @tasks = ( 1 .. 5, 21, 30, 31, 40, 41, 44 );
 }
 elsif ( $run eq 'gc' ) {
     @tasks = ( 1 .. 5, 10, 21, 30 .. 32, 40 .. 42 );
