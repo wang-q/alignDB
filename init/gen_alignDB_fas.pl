@@ -38,11 +38,12 @@ my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
+# dir of alignments
+my $dir_align        = '';
 # alignments have an outgroup
 my $outgroup;
 
 # program parameters
-my $dir_fa           = '';
 my $length_threshold = 5000;
 
 my $block;         # input is galaxy style blocked fasta
@@ -54,7 +55,7 @@ my $parallel = $Config->{generate}{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{generate}{batch};
 
-my $gzip;          # open .fas.gz
+my $gzip;          # open .gz
 
 my $help = 0;
 my $man  = 0;
@@ -64,12 +65,12 @@ GetOptions(
     'man'           => \$man,
     's|server=s'    => \$server,
     'P|port=i'      => \$port,
-    'd|db=s'        => \$db,
     'u|username=s'  => \$username,
     'p|password=s'  => \$password,
+    'd|db=s'        => \$db,
+    'da|dir|dir_align=s' => \$dir_align,
     'o|outgroup'    => \$outgroup,
     'l|lt|length=i' => \$length_threshold,
-    'dir=s'         => \$dir_fa,
     'id|id_of=s'    => \$file_id_of,
     'block'         => \$block,
     'parallel=i'    => \$parallel,
@@ -108,12 +109,12 @@ my $id_of = {};
 my @files;
 if ( !$gzip ) {
     @files = sort File::Find::Rule->file->name( '*.fa', '*.fas', '*.fasta' )
-        ->in($dir_fa);
+        ->in($dir_align);
     printf "\n----Total .fas Files: %4s----\n\n", scalar @files;
 }
 if ( scalar @files == 0 or $gzip ) {
     @files = sort File::Find::Rule->file->name( '*.fa.gz', '*.fas.gz',
-        '*.fasta.gz' )->in($dir_fa);
+        '*.fasta.gz' )->in($dir_align);
     printf "\n----Total .fas.gz Files: %4s----\n\n", scalar @files;
     $gzip++;
 }
@@ -196,7 +197,7 @@ __END__
 
 =head1 NAME
 
-    gen_alignDB_fas.pl - Initiate, generate and update alignDB from fas files
+    gen_alignDB_fas.pl - Generate alignDB from fas files
 
 =head1 SYNOPSIS
 
@@ -206,10 +207,10 @@ __END__
         --man               full documentation
         --server            MySQL server IP/Domain name
         --port              MySQL server port
-        --db                database name
         --username          username
         --password          password
-        --dir               .fas files' directory
+        --db                database name
+        --dir_align         .axt files' directory
         --length            threshold of alignment length
         --parallel          run in parallel mode
 

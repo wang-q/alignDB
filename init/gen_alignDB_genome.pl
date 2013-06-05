@@ -125,9 +125,8 @@ my $worker = sub {
     for ( my $pos = 0; $pos < $chr_length; $pos += $truncated_length ) {
         my $seq = substr( $chr_seq, $pos, $truncated_length );
 
-        my $info_of = {
-            $target_name => {
-                taxon_id   => $target_taxon_id,
+        my $info_refs = [
+            {   taxon_id   => $target_taxon_id,
                 name       => $target_name,
                 chr_id     => $chr_id,
                 chr_name   => $chr_name,
@@ -136,13 +135,18 @@ my $worker = sub {
                 chr_strand => '+',
                 seq        => $seq,
             },
-        };
+            {   taxon_id   => $target_taxon_id,
+                name       => $target_name,
+                chr_id     => $chr_id,
+                chr_name   => $chr_name,
+                chr_start  => $pos + 1,
+                chr_end    => $pos + length($seq),
+                chr_strand => '+',
+                seq        => $seq,
+            },
+        ];
 
-        $obj->add_align(
-            $info_of,
-            [ $target_name, $target_name ],
-            [ $seq,         $seq ],
-        );
+        $obj->add_align( $info_refs, [ $seq, $seq ], );
     }
 
     $inner_watch->block_message( "$infile has been processed.", "duration" );

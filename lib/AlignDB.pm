@@ -136,15 +136,14 @@ sub _insert_seq {
 }
 
 sub _insert_set_and_sequence {
-    my $self     = shift;
-    my $align_id = shift;
-    my $info_of  = shift;
-    my $names    = shift;
-    my $seq_refs = shift;
+    my $self      = shift;
+    my $align_id  = shift;
+    my $info_refs = shift;
+    my $seq_refs  = shift;
 
     my $dbh = $self->dbh;
 
-    my $seq_count    = scalar @{$names};
+    my $seq_count    = scalar @{$seq_refs};
     my $align_length = length $seq_refs->[0];
 
     my $align_set      = AlignDB::IntSpan->new("1-$align_length");
@@ -152,14 +151,14 @@ sub _insert_set_and_sequence {
     my $comparable_set = AlignDB::IntSpan->new;
 
     for my $i ( 0 .. $seq_count - 1 ) {
-        my $name = $names->[$i];
-        $info_of->{$name}{align_id} = $align_id;
-        $info_of->{$name}{seq}      = $seq_refs->[$i];
-        $info_of->{$name}{gc}       = calc_gc_ratio( $seq_refs->[$i] );
+        my $name = $info_refs->[$i]{name};
+        $info_refs->[$i]{align_id} = $align_id;
+        $info_refs->[$i]{seq}      = $seq_refs->[$i];
+        $info_refs->[$i]{gc}       = calc_gc_ratio( $seq_refs->[$i] );
         my $seq_indel_set = find_indel_set( $seq_refs->[$i] );
         my $seq_set       = $align_set->diff($seq_indel_set);
-        $info_of->{$name}{runlist} = $seq_set->runlist;
-        $info_of->{$name}{length}  = $seq_set->cardinality;
+        $info_refs->[$i]{runlist} = $seq_set->runlist;
+        $info_refs->[$i]{length}  = $seq_set->cardinality;
 
         $indel_set->merge($seq_indel_set);
     }
@@ -188,7 +187,7 @@ sub _insert_set_and_sequence {
             VALUES ( NULL, ? )
             }
         );
-        my $seq_id = $self->_insert_seq( $info_of->{ $names->[0] } );
+        my $seq_id = $self->_insert_seq( $info_refs->[0] );
         $insert->execute($seq_id);
         $insert->finish;
     }
@@ -203,9 +202,8 @@ sub _insert_set_and_sequence {
             }
         );
         for my $i ( 1 .. $seq_count - 1 ) {
-            my $seq_id = $self->_insert_seq( $info_of->{ $names->[$i] } );
-            $insert->execute( $seq_id, $info_of->{ $names->[$i] }{chr_strand},
-                $i - 1 );
+            my $seq_id = $self->_insert_seq( $info_refs->[$i] );
+            $insert->execute( $seq_id, $info_refs->[$i]{chr_strand}, $i - 1 );
         }
         $insert->finish;
     }
@@ -853,10 +851,9 @@ sub insert_ssw {
 # This method is the most important one in this module.
 # All generating operations are performed here.
 sub add_align {
-    my $self     = shift;
-    my $info_of  = shift;
-    my $names    = shift;
-    my $seq_refs = shift;
+    my $self      = shift;
+    my $info_refs = shift;
+    my $seq_refs  = shift;
 
     my $dbh = $self->dbh;
 
@@ -872,15 +869,16 @@ sub add_align {
     # INSERT INTO align
     #----------------------------#
     my $align_id = $self->_insert_align( @{$seq_refs} );
-    printf "Prosess align %s in %s %s - %s\n", $align_id,
-        $info_of->{ $names->[0] }{chr_name},
-        $info_of->{ $names->[0] }{chr_start},
-        $info_of->{ $names->[0] }{chr_end};
+    printf "Prosess align %s in %s %s - %s of %s\n", $align_id,
+        $info_refs->[0]{chr_name},
+        $info_refs->[0]{chr_start},
+        $info_refs->[0]{chr_end},
+        $info_refs->[0]{name};
 
     #----------------------------#
     # UPDATE align, INSERT INTO sequence, target, queries
     #----------------------------#
-    $self->_insert_set_and_sequence( $align_id, $info_of, $names, $seq_refs );
+    $self->_insert_set_and_sequence( $align_id, $info_refs, $seq_refs );
 
     #----------------------------#
     # INSERT INTO indel
@@ -925,12 +923,9 @@ sub parse_axt_file {
 
     while (1) {
         my $summary_line = <$in_fh>;
-        unless ($summary_line) {
-            last;
-        }
-        if ( $summary_line =~ /^#/ ) {
-            next;
-        }
+        last unless $summary_line;
+        next if $summary_line =~ /^#/;
+
         chomp $summary_line;
         chomp( my $first_line = <$in_fh> );
         $first_line = uc $first_line;
@@ -938,18 +933,15 @@ sub parse_axt_file {
         $second_line = uc $second_line;
         my $dummy = <$in_fh>;
 
-        unless ( length $first_line > $threshold ) {
-            next;
-        }
+        next if length $first_line < $threshold;
 
         my ($align_serial, $first_chr,    $first_start,
             $first_end,    $second_chr,   $second_start,
             $second_end,   $query_strand, $align_score,
         ) = split /\s+/, $summary_line;
 
-        my $info_of = {
-            $target_name => {
-                taxon_id   => $target_taxon_id,
+        my $info_refs = [
+            {   taxon_id   => $target_taxon_id,
                 name       => $target_name,
                 chr_name   => $first_chr,
                 chr_id     => $target_chr_id_of->{$first_chr},
@@ -957,8 +949,7 @@ sub parse_axt_file {
                 chr_end    => $first_end,
                 chr_strand => '+',
             },
-            $query_name => {
-                taxon_id   => $query_taxon_id,
+            {   taxon_id   => $query_taxon_id,
                 name       => $query_name,
                 chr_name   => $second_chr,
                 chr_id     => $query_chr_id_of->{$second_chr},
@@ -966,13 +957,9 @@ sub parse_axt_file {
                 chr_end    => $second_end,
                 chr_strand => $query_strand,
             },
-        };
+        ];
 
-        $self->add_align(
-            $info_of,
-            [ $target_name, $query_name ],
-            [ $first_line,  $second_line ],
-        );
+        $self->add_align( $info_refs, [ $first_line, $second_line ], );
     }
 
     if ( !$gzip ) {
@@ -1044,46 +1031,46 @@ sub parse_block_fasta_file {
             #  chr_strand: +
             #  name: S288C
             #  taxon_id: 4932
-            my $info_of = {};
-            my @names;
+            my $info_refs = [];
             for my $header (@headers) {
                 $header =~ $head_qr;
                 my $name = $1;
 
+                my $info_ref = {};
                 if ($name) {
-                    push @names, $name;
-                    $info_of->{$name} = {
+                    $info_ref = {
                         chr_name   => $2,
                         chr_strand => $3,
                         chr_start  => $4,
                         chr_end    => $5,
                     };
-                    if ( $info_of->{$name}{chr_strand} eq '1' ) {
-                        $info_of->{$name}{chr_strand} = '+';
+                    if ( $info_ref->{chr_strand} eq '1' ) {
+                        $info_ref->{chr_strand} = '+';
                     }
-                    elsif ( $info_of->{$name}{chr_strand} eq '-1' ) {
-                        $info_of->{$name}{chr_strand} = '-';
+                    elsif ( $info_ref->{chr_strand} eq '-1' ) {
+                        $info_ref->{chr_strand} = '-';
                     }
 
                 }
                 else {
                     $name = $header;
-                    push @names, $name;
-                    $info_of->{$name} = {
+                    $info_ref = {
                         chr_name   => 'chrUn',
                         chr_strand => '+',
                         chr_start  => undef,
                         chr_end    => undef,
                     };
                 }
-                $info_of->{$name}{name}     = $name;
-                $info_of->{$name}{taxon_id} = $id_of->{$name};
-                $info_of->{$name}{chr_id}
-                    = $self->get_chr_id_hash( $info_of->{$name}{taxon_id} )
-                    ->{ $info_of->{$name}{chr_name} };
+                $info_ref->{name}     = $name;
+                $info_ref->{taxon_id} = $id_of->{$name};
+                $info_ref->{chr_id}
+                    = $self->get_chr_id_hash( $info_ref->{taxon_id} )
+                    ->{ $info_ref->{chr_name} };
+                    
+                push @{$info_refs}, $info_ref;
             }
 
-            $self->add_align( $info_of, \@names, \@seqs );
+            $self->add_align( $info_refs, \@seqs );
         }
         else {
             $content .= $line;

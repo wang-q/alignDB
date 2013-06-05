@@ -15,29 +15,28 @@ use lib "$FindBin::Bin/../";
 extends qw(AlignDB);
 
 sub _insert_ref_sequences {
-    my $self     = shift;
-    my $align_id = shift;
-    my $info_of  = shift;
-    my $ref_name = shift;
-    my $ref_seq  = shift;
+    my $self      = shift;
+    my $align_id  = shift;
+    my $info_refs = shift;
+    my $ref_seq   = shift;
 
     my $dbh = $self->dbh;
 
     my $align_length = length $ref_seq;
     my $align_set    = AlignDB::IntSpan->new("1-$align_length");
 
-    my $ref_index = -1;
+    my $ref_idx = -1;
     {
-        $info_of->{$ref_name}{align_id} = $align_id;
-        $info_of->{$ref_name}{seq}      = $ref_seq;
-        $info_of->{$ref_name}{gc}       = calc_gc_ratio($ref_seq);
+        $info_refs->[$ref_idx]{align_id} = $align_id;
+        $info_refs->[$ref_idx]{seq}      = $ref_seq;
+        $info_refs->[$ref_idx]{gc}       = calc_gc_ratio($ref_seq);
         my $seq_indel_set = find_indel_set($ref_seq);
         my $seq_set       = $align_set->diff($seq_indel_set);
-        $info_of->{$ref_name}{runlist} = $seq_set->runlist;
-        $info_of->{$ref_name}{length}  = $seq_set->cardinality;
+        $info_refs->[$ref_idx]{runlist} = $seq_set->runlist;
+        $info_refs->[$ref_idx]{length}  = $seq_set->cardinality;
 
         # for polarize indels
-        $info_of->{$ref_name}{indel_set} = $seq_indel_set;
+        $info_refs->[$ref_idx]{indel_set} = $seq_indel_set;
     }
 
     my $insert = $dbh->prepare(
@@ -50,7 +49,7 @@ sub _insert_ref_sequences {
         )
         }
     );
-    my $seq_id = $self->_insert_seq( $info_of->{$ref_name} );
+    my $seq_id = $self->_insert_seq( $info_refs->[$ref_idx] );
     $insert->execute( $seq_id, $ref_seq, '-' );
     $insert->finish;
 
@@ -239,63 +238,59 @@ sub _polarize_snp {
 }
 
 sub add_align {
-    my $self     = shift;
-    my $info_of  = shift;
-    my $names    = shift;
-    my $seq_refs = shift;
+    my $self      = shift;
+    my $info_refs = shift;
+    my $seq_refs  = shift;
 
     my $dbh = $self->dbh;
 
+    my $target_idx = 0;
+    my $ref_idx    = -1;
+
     # check align length
-    my $align_length = length $seq_refs->[0];
+    my $align_length = length $seq_refs->[$target_idx];
     for ( @{$seq_refs} ) {
         if ( ( length $_ ) != $align_length ) {
             confess "Sequences should have the same length!\n";
         }
     }
 
-    if ( scalar @{$names} != scalar @{$seq_refs} ) {
-        warn Dump $names;
-        confess "Names and Sequences should have the same number!\n";
-    }
     my $seq_count = scalar @{$seq_refs};
     if ( $seq_count < 3 ) {
         confess "Too few sequences [$seq_count]\n";
     }
 
     # appoint reference/outgroup
-    my $ref_name = $names->[-1];
-    my $ref_seq  = $seq_refs->[-1];
+    my $ref_seq = $seq_refs->[-1];
 
     # exclude outgroup
-    my $ingroup_names = [ @{$names}[ 0 .. $seq_count - 2 ] ];
-    my $ingroup_seqs  = [ @{$seq_refs}[ 0 .. $seq_count - 2 ] ];
+    my $ingroup_seqs = [ @{$seq_refs}[ 0 .. $seq_count - 2 ] ];
 
     #----------------------------#
     # INSERT INTO align
     #----------------------------#
     my $align_id = $self->_insert_align( @{$ingroup_seqs} );
-    printf "Prosess align %s in %s %s - %s\n", $align_id,
-        $info_of->{ $names->[0] }{chr_name},
-        $info_of->{ $names->[0] }{chr_start},
-        $info_of->{ $names->[0] }{chr_end};
+    printf "Prosess align %s in %s %s - %s of %s\n", $align_id,
+        $info_refs->[$target_idx]{chr_name},
+        $info_refs->[$target_idx]{chr_start},
+        $info_refs->[$target_idx]{chr_end},
+        $info_refs->[$target_idx]{name};
 
     #----------------------------#
     # UPDATE align, INSERT INTO sequence, target, queries
     #----------------------------#
-    $self->_insert_set_and_sequence( $align_id, $info_of, $ingroup_names,
-        $ingroup_seqs );
+    $self->_insert_set_and_sequence( $align_id, $info_refs, $ingroup_seqs );
 
     #----------------------------#
     # INSERT INTO ref
     #----------------------------#
-    $self->_insert_ref_sequences( $align_id, $info_of, $ref_name, $ref_seq );
+    $self->_insert_ref_sequences( $align_id, $info_refs, $ref_seq );
 
     #----------------------------#
     # INSERT INTO indel
     #----------------------------#
     $self->_insert_indel($align_id);
-    $self->_polarize_indel( $align_id, $info_of->{$ref_name}{indel_set} );
+    $self->_polarize_indel( $align_id, $info_refs->[$ref_idx]{indel_set} );
 
     #----------------------------#
     # INSERT INTO snp
@@ -357,7 +352,7 @@ sub update_D_values {
         WHERE isw_id = ?'
     );
 
-ISW: for my $isw_id (@{$isw_id_ref}) {
+ISW: for my $isw_id ( @{$isw_id_ref} ) {
         my $window_length;
         my ( $d_indel,  $d_noindel,  $d_bii,  $d_bnn,  $d_complex )  = (0) x 5;
         my ( $d_indel2, $d_noindel2, $d_bii2, $d_bnn2, $d_complex2 ) = (0) x 5;

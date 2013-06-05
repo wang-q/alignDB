@@ -36,7 +36,7 @@ my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
-# axt
+# dir of alignments
 my $dir_align = $Config->{taxon}{dir_align};
 
 # target, query init values
@@ -55,10 +55,10 @@ my $length_threshold
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
 
-my $gzip;                                       # open .axt.gz
+my $gzip;                                       # open .gz
 
-my $man  = 0;
 my $help = 0;
+my $man  = 0;
 
 GetOptions(
     'help|?'             => \$help,
@@ -71,7 +71,7 @@ GetOptions(
     'da|dir|dir_align=s' => \$dir_align,
     'target=s'           => \$target,
     'query=s'            => \$query,
-    'lt|length=i'        => \$length_threshold,
+    'l|lt|length=i'        => \$length_threshold,
     'parallel=i'         => \$parallel,
     'gzip'               => \$gzip,
 ) or pod2usage(2);
@@ -80,7 +80,25 @@ pod2usage(1) if $help;
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
 #----------------------------------------------------------#
-# Search for all files and push their paths to @axt_files
+# update names
+#----------------------------------------------------------#
+{
+    my ( $target_taxon_id, $target_name ) = split ",", $target;
+    my ( $query_taxon_id,  $query_name )  = split ",", $query;
+    $target_name = $target_taxon_id unless $target_name;
+    $query_name  = $query_taxon_id  unless $query_name;
+
+    AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+        )
+        ->update_names(
+        { $target_taxon_id => $target_name, $query_taxon_id => $query_name } );
+}
+
+#----------------------------------------------------------#
+# Search for all files and push their paths to @files
 #----------------------------------------------------------#
 my @files;
 if ( !$gzip ) {
@@ -91,25 +109,6 @@ if ( scalar @files == 0 or $gzip ) {
     @files = sort File::Find::Rule->file->name('*.axt.gz')->in($dir_align);
     printf "\n----Total .axt.gz Files: %4s----\n\n", scalar @files;
     $gzip++;
-}
-
-{    # update names
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-
-    # Database handler
-    my $dbh = $obj->dbh;
-
-    my ( $target_taxon_id, $target_name ) = split ",", $target;
-    my ( $query_taxon_id,  $query_name )  = split ",", $query;
-    $target_name = $target_taxon_id unless $target_name;
-    $query_name  = $query_taxon_id  unless $query_name;
-
-    $obj->update_names(
-        { $target_taxon_id => $target_name, $query_taxon_id => $query_name } );
 }
 
 #----------------------------------------------------------#
