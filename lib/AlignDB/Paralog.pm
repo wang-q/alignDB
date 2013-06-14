@@ -197,7 +197,7 @@ sub paralog_cover {
     open my $blast_fh, '<', $report_ref
         or die "Can't open in-memory file: $!";
 
-    my $searchio = new Bio::SearchIO(
+    my $searchio = Bio::SearchIO->new(
         -format => $result_format,
         -fh     => $blast_fh,
     );
@@ -247,7 +247,7 @@ sub longest_paralog {
     open( my $blast_fh, '<', $report_ref )
         or die "Can't open in-memory file: $!";
 
-    my $searchio = new Bio::SearchIO(
+    my $searchio = Bio::SearchIO->new(
         -format => $result_format,
         -fh     => $blast_fh,
     );
