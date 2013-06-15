@@ -54,7 +54,7 @@ GetOptions(
     'd|db=s'       => \$db,
     'u|username=s' => \$username,
     'p|password=s' => \$password,
-    'ensembl=s'    => \$ensembl_db,
+    'e|ensembl=s'  => \$ensembl_db,
     'parallel=i'   => \$parallel,
     'batch=i'      => \$batch_number,
 ) or pod2usage(2);
