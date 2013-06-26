@@ -56,9 +56,10 @@ sub BUILD {
         my $textbuffer = $textview->get_buffer;
         $self->{text} = $textbuffer;
 
-        $textbuffer->create_tag( "bold",   font => "Courier Bold 9", );
-        $textbuffer->create_tag( "normal", font => "Courier 9", );
-        $textbuffer->create_tag( "italic", font => "Courier Italic 9", );
+        $textbuffer->create_tag( "bold",   font       => "Courier Bold 9", );
+        $textbuffer->create_tag( "normal", font       => "Courier 9", );
+        $textbuffer->create_tag( "italic", font       => "Courier Italic 9", );
+        $textbuffer->create_tag( "blue",   foreground => "blue" );
 
         # create a mark at the end of the buffer, with right gravity,
         # so that when you insert text, the mark always stays on
@@ -85,6 +86,9 @@ sub BUILD {
     # active notebook_database tab 'Database'
     $app->get_widget('notebook_database')->set_current_page(2);
 
+    # set label_db_name color
+    $app->get_widget('label_db_name')
+        ->set_markup("<span foreground='blue'>db name:</span>");
     Gtk2->main;
     return;
 }
@@ -149,10 +153,12 @@ sub get_value {
 sub append_text {
     my $self   = shift;
     my $string = shift;
-    my $tags   = shift || 'normal';
+    my (@tags) = @_;
+
+    (@tags) = ('normal') unless @tags;
 
     my $text = $self->text;
-    $text->insert_with_tags_by_name( $text->get_end_iter, $string, $tags );
+    $text->insert_with_tags_by_name( $text->get_end_iter, $string, @tags );
     return;
 }
 
@@ -177,7 +183,7 @@ sub exec_cmd {
 }
 
 #----------------------------#
-# read-out configs
+# read configs
 #----------------------------#
 sub read_config {
     my $self = shift;
@@ -206,11 +212,14 @@ sub read_config {
     $self->set_value( "entry_target_name", $Config->{taxon}{target_name} );
     $self->set_value( "entry_query_id",    $Config->{taxon}{query_taxon_id} );
     $self->set_value( "entry_query_name",  $Config->{taxon}{query_name} );
-    $self->set_value( "entry_dir_align_axt", $Config->{taxon}{dir_align} );
+    $self->set_value( "entry_dir_align_axt",
+        $self->relpath_to_abs( $Config->{taxon}{dir_align} ) );
 
     # fas
-    $self->set_value( "entry_file_id2name",  $Config->{taxon}{file_id2name} );
-    $self->set_value( "entry_dir_align_fas", $Config->{taxon}{dir_align_fas} );
+    $self->set_value( "entry_file_id2name",
+        $self->relpath_to_abs( $Config->{taxon}{file_id2name} ) );
+    $self->set_value( "entry_dir_align_fas",
+        $self->relpath_to_abs( $Config->{taxon}{dir_align_fas} ) );
 
     # insert GC
     $self->set_value( "checkbutton_insert_gc", $Config->{gc}{insert_gc} );
@@ -261,6 +270,20 @@ sub fill_combobox {
     return;
 }
 
+# convert relative path to alignDB base to absolute
+sub relpath_to_abs {
+    my $self = shift;
+    my $path = shift;
+
+    if ( File::Spec->file_name_is_absolute($path) ) {
+        return $path;
+    }
+    else {
+        my $abs_path = File::Spec->rel2abs( $path, "$FindBin::Bin/.." );
+        return $abs_path;
+    }
+}
+
 #----------------------------#
 # menubar and toolbar events
 #----------------------------#
@@ -306,9 +329,6 @@ sub on_toolbutton_process_clicked {
     my $widget = shift;
 
     my $count = $self->count_processes;
-    $self->append_text( "=" x 50 . "\n" );
-    $self->append_text( "There are $count process(es) totally.\n", "italic" );
-    return unless $count > 0;
 
     for my $proc ( $self->all_processes ) {
         $proc->alive;
@@ -330,6 +350,12 @@ sub on_toolbutton_process_clicked {
             );
         }
     }
+    
+    $self->append_text( "-" x 50 . "\n" );
+    $self->append_text( "There are ", "italic" );
+    $self->append_text( $count, "bold", "blue" );
+    $self->append_text( " process(es) totally.\n", "italic" );
+    $self->append_text( "-" x 50 . "\n" );
 
     return;
 }
@@ -795,17 +821,6 @@ sub on_button_choose_second_db_clicked {
     return unless $result;
 
     $self->set_value( "entry_second_db", $result->{db_name} );
-    return;
-}
-
-sub on_button_choose_goal_db_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $result = $self->dialog_choose_db;
-    return unless $result;
-
-    $self->set_value( "entry_goal_db", $result->{db_name} );
     return;
 }
 
