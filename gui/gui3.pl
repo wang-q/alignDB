@@ -14,6 +14,7 @@ use Gtk2::Helper;
 use Config::Tiny;
 use Proc::Background;
 use File::Spec;
+use File::Basename;
 use Text::CSV_XS;
 use YAML qw(Dump Load DumpFile LoadFile);
 
@@ -56,8 +57,8 @@ sub BUILD {
         $self->{text} = $textbuffer;
 
         $textbuffer->create_tag( "bold",   font => "Courier Bold 9", );
-        $textbuffer->create_tag( "normal", font => "Courier 8", );
-        $textbuffer->create_tag( "italic", font => "Courier Italic 8", );
+        $textbuffer->create_tag( "normal", font => "Courier 9", );
+        $textbuffer->create_tag( "italic", font => "Courier Italic 9", );
 
         # create a mark at the end of the buffer, with right gravity,
         # so that when you insert text, the mark always stays on
@@ -80,6 +81,9 @@ sub BUILD {
     $win->show;
 
     $self->on_togglebutton_growl_send_toggled;
+
+    # active notebook_database tab 'Database'
+    $app->get_widget('notebook_database')->set_current_page(2);
 
     Gtk2->main;
     return;
@@ -181,25 +185,32 @@ sub read_config {
     my $Config = Config::Tiny->new;
     $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
-    # Database init values
+    # parallel init values
+    $self->set_value( "entry_parallel", $Config->{generate}{parallel} );
+    $self->set_value( "entry_batch",    $Config->{generate}{batch} );
+
+    # server init values
     $self->set_value( "entry_server",   $Config->{database}{server} );
     $self->set_value( "entry_port",     $Config->{database}{port} );
     $self->set_value( "entry_username", $Config->{database}{username} );
     $self->set_value( "entry_password", $Config->{database}{password} );
 
-    # target, query init values
+    # database init values
+    $self->set_value( "entry_db_name", $Config->{database}{db} );
+    $self->set_value( "entry_ensembl", $Config->{database}{ensembl} );
+    $self->set_value( "entry_length_threshold",
+        $Config->{generate}{length_threshold} );
+
+    # axt
     $self->set_value( "entry_target_id",   $Config->{taxon}{target_taxon_id} );
     $self->set_value( "entry_target_name", $Config->{taxon}{target_name} );
     $self->set_value( "entry_query_id",    $Config->{taxon}{query_taxon_id} );
     $self->set_value( "entry_query_name",  $Config->{taxon}{query_name} );
-    $self->set_value( "entry_db_name",     $Config->{database}{db} );
-    $self->set_value( "entry_ensembl",     $Config->{database}{ensembl} );
+    $self->set_value( "entry_dir_align_axt", $Config->{taxon}{dir_align} );
 
-    # generate
-    $self->set_value( "entry_dir_align", $Config->{taxon}{dir_align} );
-    $self->set_value( "entry_length_threshold",
-        $Config->{generate}{length_threshold} );
-    $self->set_value( "entry_parallel", $Config->{generate}{parallel} );
+    # fas
+    $self->set_value( "entry_file_id2name",  $Config->{taxon}{file_id2name} );
+    $self->set_value( "entry_dir_align_fas", $Config->{taxon}{dir_align_fas} );
 
     # insert GC
     $self->set_value( "checkbutton_insert_gc", $Config->{gc}{insert_gc} );
@@ -209,35 +220,14 @@ sub read_config {
     # three-way
     $self->set_value( "entry_first_db",  $Config->{ref}{first_db} );
     $self->set_value( "entry_second_db", $Config->{ref}{second_db} );
-    $self->set_value( "entry_goal_db",   $Config->{ref}{goal_db} );
 
-    # common stat parameter
-    $self->set_value( "entry_common_run", $Config->{stat}{run} );
-    $self->set_value( "entry_common_threshold",
-        $Config->{stat}{sum_threshold} );
-    $self->set_value( "checkbutton_common_jc", $Config->{stat}{jc_correction} );
-    $self->set_value( "checkbutton_common_stamp", $Config->{stat}{time_stamp} );
-    $self->set_value( "checkbutton_common_add_index",
-        $Config->{stat}{add_index_sheet} );
-
-    # gc stat parameter
-    $self->set_value( "entry_gc_run",         $Config->{stat}{run} );
-    $self->set_value( "entry_gc_threshold",   $Config->{stat}{sum_threshold} );
-    $self->set_value( "checkbutton_gc_jc",    $Config->{stat}{jc_correction} );
-    $self->set_value( "checkbutton_gc_stamp", $Config->{stat}{time_stamp} );
-    $self->set_value( "checkbutton_gc_add_index",
-        $Config->{stat}{add_index_sheet} );
-
-    # three stat parameter
-    $self->set_value( "entry_three_run",       $Config->{stat}{run} );
-    $self->set_value( "entry_three_threshold", $Config->{stat}{sum_threshold} );
-    $self->set_value( "checkbutton_three_jc",  $Config->{stat}{jc_correction} );
-    $self->set_value( "checkbutton_three_stamp", $Config->{stat}{time_stamp} );
-    $self->set_value( "checkbutton_three_add_index",
-        $Config->{stat}{add_index_sheet} );
+    # stat parameter
+    $self->set_value( "checkbutton_chart_jc", $Config->{stat}{jc_correction} );
+    $self->set_value( "entry_run_common",     $Config->{stat}{run} );
+    $self->set_value( "entry_run_multi",      $Config->{stat}{run} );
+    $self->set_value( "entry_run_gc",         $Config->{stat}{run} );
 
     # growl parameter
-    $self->set_value( "entry_growl_appname",  $Config->{growl}{appname} );
     $self->set_value( "entry_growl_host",     $Config->{growl}{host} );
     $self->set_value( "entry_growl_password", $Config->{growl}{password} );
     $self->set_value( "checkbutton_growl_starting",
@@ -281,11 +271,9 @@ sub on_imagemenuitem_about_activate {
     Gtk2->show_about_dialog(
         Gtk2::Window->new,
         program_name => 'AlignDB GUI3',
-        version      => '0.7',
-        copyright    => "(C) 2004-2012 WANG, Qiang",
+        version      => '0.8',
+        copyright    => "(C) 2004-2013 WANG, Qiang",
         authors      => ['WANG, Qiang <wangq@nju.edu.cn>'],
-        documenters  => ['WANG, Qiang <wangq@nju.edu.cn>'],
-        artists      => ['WANG, Qiang <wangq@nju.edu.cn>'],
         comments     => "The third generation of GUI interface for AlignDB",
         title        => "About AlignDB GUI3",
         website      => "http://chenlab.nju.edu.cn",
@@ -318,22 +306,29 @@ sub on_toolbutton_process_clicked {
     my $widget = shift;
 
     my $count = $self->count_processes;
+    $self->append_text( "=" x 50 . "\n" );
     $self->append_text( "There are $count process(es) totally.\n", "italic" );
     return unless $count > 0;
 
     for my $proc ( $self->all_processes ) {
         $proc->alive;
-        $self->append_text(
-            Dump {
-                start => scalar localtime $proc->start_time,
-                end   => $proc->end_time
-                ? scalar localtime $proc->end_time
-                : undef,
-                alive => $proc->alive ? 'yes' : 'no',
-                pid   => $proc->pid,
-                cmd   => $proc->{cmd},
-            }
-        );
+        if ( $proc->alive ) {
+            $self->append_text(
+                Dump {
+                    start => scalar localtime $proc->start_time,
+                    pid   => $proc->pid,
+                    cmd   => $proc->{cmd},
+                }
+            );
+        }
+        else {
+            $self->append_text(
+                Dump {
+                    end => scalar localtime $proc->end_time,
+                    cmd => $proc->{cmd},
+                }
+            );
+        }
     }
 
     return;
@@ -344,13 +339,14 @@ sub on_togglebutton_growl_send_toggled {
     my $widget = shift;
 
     $ENV{growl_send}     = $self->get_value("togglebutton_growl_send");
-    $ENV{growl_appname}  = $self->get_value("entry_growl_appname");
     $ENV{growl_host}     = $self->get_value("entry_growl_host");
     $ENV{growl_password} = $self->get_value("entry_growl_password");
     $ENV{growl_starting} = $self->get_value("checkbutton_growl_starting");
     $ENV{growl_ending}   = $self->get_value("checkbutton_growl_ending");
     $ENV{growl_other}    = $self->get_value("checkbutton_growl_other");
 
+    $self->append_text(
+        "Growl message set to [@{[$ENV{growl_send} ? 'ON': 'OFF']}]\n");
     return;
 }
 
@@ -525,6 +521,7 @@ sub dialog_choose_db {
         my ( $target_id,   $query_id )   = $obj->get_taxon_ids;
         my ( $target_name, $query_name ) = $obj->get_names;
 
+        $self->append_text("choose db succeeded\n");
         return {
             target_id   => $target_id,
             query_id    => $query_id,
@@ -533,8 +530,10 @@ sub dialog_choose_db {
             db_name     => $db_name,
         };
     }
-
-    return;
+    else {
+        $self->append_text("choose db failed\n");
+        return;
+    }
 }
 
 #----------------------------#
@@ -568,131 +567,33 @@ sub on_button_load_query_clicked {
     return;
 }
 
-sub on_button_auto_db_name_clicked {
+sub on_button_auto_db_name_axt_clicked {
     my $self   = shift;
     my $widget = shift;
 
     my $target_name = $self->get_value("entry_target_name");
     my $query_name  = $self->get_value("entry_query_name");
-    $self->set_value( "entry_db_name", "$target_name" . "vs" . "$query_name" );
+    my $db_name     = "$target_name" . "vs" . "$query_name";
+    $self->set_value( "entry_db_name", $db_name );
 
+    $self->append_text("db_name set to [$db_name]\n");
     return;
 }
 
-sub on_button_choose_db_clicked {
+sub on_button_auto_db_name_fas_clicked {
     my $self   = shift;
     my $widget = shift;
 
-    my $result = $self->dialog_choose_db;
-    return unless $result;
+    my $dir_align_fas = $self->get_value("entry_dir_align_fas");
 
-    $self->set_value( "entry_target_id",   $result->{target_id} );
-    $self->set_value( "entry_query_id",    $result->{query_id} );
-    $self->set_value( "entry_target_name", $result->{target_name} );
-    $self->set_value( "entry_query_name",  $result->{query_name} );
-    $self->set_value( "entry_db_name",     $result->{db_name} );
+    my $db_name = basename($dir_align_fas);
+    $self->set_value( "entry_db_name", $db_name );
 
+    $self->append_text("db_name set to [$db_name]\n");
     return;
 }
 
-sub on_button_open_dir_align_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $dia = Gtk2::FileChooserDialog->new(
-        'Choose a dir', $self->win, 'select-folder',
-        'gtk-cancel' => 'cancel',
-        'gtk-ok'     => 'ok'
-    );
-
-    $dia->show;
-    $dia->signal_connect(
-        'response' => sub {
-            my ( $dia, $response_id ) = @_;
-            if ( $response_id eq 'ok' ) {
-                my $dir = $dia->get_filename;
-                if ( defined $dir ) {
-                    $self->set_value( "entry_dir_align", $dir );
-                }
-            }
-            $dia->destroy;
-            return FALSE;
-        }
-    );
-
-    return;
-}
-
-sub on_button_auto_common_stat_file_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $db_name = $self->get_value("entry_db_name");
-    my $outfile = "$FindBin::Bin/../stat/$db_name.common.xlsx";
-    $outfile = File::Spec->rel2abs($outfile);
-    $self->set_value( "entry_common_stat_file", $outfile );
-
-    return;
-}
-
-sub on_button_auto_gc_stat_file_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $db_name = $self->get_value("entry_db_name");
-    my $outfile = "$FindBin::Bin/../stat/$db_name.gc.xlsx";
-    $outfile = File::Spec->rel2abs($outfile);
-    $self->set_value( "entry_gc_stat_file", $outfile );
-
-    return;
-}
-
-sub on_button_auto_three_stat_file_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $db_name = $self->get_value("entry_goal_db");
-    my $outfile = "$FindBin::Bin/../stat/$db_name.three.xlsx";
-    $outfile = File::Spec->rel2abs($outfile);
-    $self->set_value( "entry_three_stat_file", $outfile );
-
-    return;
-}
-
-sub on_button_choose_first_db_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $result = $self->dialog_choose_db;
-    return unless $result;
-
-    $self->set_value( "entry_first_db", $result->{db_name} );
-    return;
-}
-
-sub on_button_choose_second_db_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $result = $self->dialog_choose_db;
-    return unless $result;
-
-    $self->set_value( "entry_second_db", $result->{db_name} );
-    return;
-}
-
-sub on_button_choose_goal_db_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $result = $self->dialog_choose_db;
-    return unless $result;
-
-    $self->set_value( "entry_goal_db", $result->{db_name} );
-    return;
-}
-
-sub on_button_auto_goal_db_name_clicked {
+sub on_button_auto_db_name_join_clicked {
     my $self   = shift;
     my $widget = shift;
 
@@ -734,7 +635,177 @@ sub on_button_auto_goal_db_name_clicked {
         . $name_of{$second} . 'ref'
         . $name_of{$outgroup};
 
-    $self->set_value( "entry_goal_db", $goal_db );
+    $self->set_value( "entry_db_name", $goal_db );
+    $self->append_text("db_name set to [$goal_db]\n");
+    return;
+}
+
+sub on_button_choose_db_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $result = $self->dialog_choose_db;
+    return unless $result;
+
+    $self->set_value( "entry_target_id",   $result->{target_id} );
+    $self->set_value( "entry_query_id",    $result->{query_id} );
+    $self->set_value( "entry_target_name", $result->{target_name} );
+    $self->set_value( "entry_query_name",  $result->{query_name} );
+    $self->set_value( "entry_db_name",     $result->{db_name} );
+
+    return;
+}
+
+sub on_button_open_dir_align_axt_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $dia = Gtk2::FileChooserDialog->new(
+        'Choose a dir', $self->win, 'select-folder',
+        'gtk-cancel' => 'cancel',
+        'gtk-ok'     => 'ok'
+    );
+
+    $dia->show;
+    $dia->signal_connect(
+        'response' => sub {
+            my ( $dia, $response_id ) = @_;
+            if ( $response_id eq 'ok' ) {
+                my $dir = $dia->get_filename;
+                if ( defined $dir ) {
+                    $self->set_value( "entry_dir_align_axt", $dir );
+                }
+            }
+            $dia->destroy;
+            return FALSE;
+        }
+    );
+
+    return;
+}
+
+sub on_button_open_file_id2name_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $dia = Gtk2::FileChooserDialog->new(
+        'Choose a file', $self->win, 'open',
+        'gtk-cancel' => 'cancel',
+        'gtk-ok'     => 'ok'
+    );
+
+    $dia->show;
+    $dia->signal_connect(
+        'response' => sub {
+            my ( $dia, $response_id ) = @_;
+            if ( $response_id eq 'ok' ) {
+                my $dir = $dia->get_filename;
+                if ( defined $dir ) {
+                    $self->set_value( "entry_file_id2name", $dir );
+                }
+            }
+            $dia->destroy;
+            return FALSE;
+        }
+    );
+
+    return;
+}
+
+sub on_button_open_dir_align_fas_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $dia = Gtk2::FileChooserDialog->new(
+        'Choose a dir', $self->win, 'select-folder',
+        'gtk-cancel' => 'cancel',
+        'gtk-ok'     => 'ok'
+    );
+
+    $dia->show;
+    $dia->signal_connect(
+        'response' => sub {
+            my ( $dia, $response_id ) = @_;
+            if ( $response_id eq 'ok' ) {
+                my $dir = $dia->get_filename;
+                if ( defined $dir ) {
+                    $self->set_value( "entry_dir_align_fas", $dir );
+                }
+            }
+            $dia->destroy;
+            return FALSE;
+        }
+    );
+
+    return;
+}
+
+sub on_button_auto_stat_file_common_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $db_name = $self->get_value("entry_db_name");
+    my $outfile = "$FindBin::Bin/../stat/$db_name.common.xlsx";
+    $outfile = File::Spec->rel2abs($outfile);
+    $self->set_value( "entry_stat_file_common", $outfile );
+
+    return;
+}
+
+sub on_button_auto_stat_file_gc_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $db_name = $self->get_value("entry_db_name");
+    my $outfile = "$FindBin::Bin/../stat/$db_name.gc.xlsx";
+    $outfile = File::Spec->rel2abs($outfile);
+    $self->set_value( "entry_stat_file_gc", $outfile );
+
+    return;
+}
+
+sub on_button_auto_stat_file_multi_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $db_name = $self->get_value("entry_goal_db");
+    my $outfile = "$FindBin::Bin/../stat/$db_name.multi.xlsx";
+    $outfile = File::Spec->rel2abs($outfile);
+    $self->set_value( "entry_stat_file_multi", $outfile );
+
+    return;
+}
+
+sub on_button_choose_first_db_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $result = $self->dialog_choose_db;
+    return unless $result;
+
+    $self->set_value( "entry_first_db", $result->{db_name} );
+    return;
+}
+
+sub on_button_choose_second_db_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $result = $self->dialog_choose_db;
+    return unless $result;
+
+    $self->set_value( "entry_second_db", $result->{db_name} );
+    return;
+}
+
+sub on_button_choose_goal_db_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $result = $self->dialog_choose_db;
+    return unless $result;
+
+    $self->set_value( "entry_goal_db", $result->{db_name} );
     return;
 }
 
@@ -826,12 +897,13 @@ sub on_button_gen_aligndb_clicked {
 
     my $parallel = $self->get_value("entry_parallel");
 
-    my $target_id        = $self->get_value("entry_target_id");
-    my $target_name      = $self->get_value("entry_target_name");
-    my $query_id         = $self->get_value("entry_query_id");
-    my $query_name       = $self->get_value("entry_query_name");
-    my $dir_align        = $self->get_value("entry_dir_align");
     my $length_threshold = $self->get_value("entry_length_threshold");
+
+    my $target_id   = $self->get_value("entry_target_id");
+    my $target_name = $self->get_value("entry_target_name");
+    my $query_id    = $self->get_value("entry_query_id");
+    my $query_name  = $self->get_value("entry_query_name");
+    my $dir_align   = $self->get_value("entry_dir_align_axt");
 
     my $cmd
         = "perl $FindBin::Bin/../init/gen_alignDB.pl"
@@ -847,7 +919,163 @@ sub on_button_gen_aligndb_clicked {
         . " --parallel $parallel";
 
     $self->exec_cmd($cmd);
+    return;
+}
 
+sub on_button_gen_aligndb_fas_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $server   = $self->get_value("entry_server");
+    my $port     = $self->get_value("entry_port");
+    my $username = $self->get_value("entry_username");
+    my $password = $self->get_value("entry_password");
+    my $db_name  = $self->get_value("entry_db_name");
+
+    my $length_threshold = $self->get_value("entry_length_threshold");
+    my $parallel         = $self->get_value("entry_parallel");
+    my $batch_number     = $self->get_value("entry_batch");
+
+    my $dir_align  = $self->get_value("entry_dir_align_fas");
+    my $file_id_of = $self->get_value("entry_file_id2name");
+
+    my $outgroup = $self->get_value("checkbutton_fas_outgroup");
+    my $block    = $self->get_value("checkbutton_fas_block");
+
+    my $cmd
+        = "perl $FindBin::Bin/../init/gen_alignDB_fas.pl"
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " --db $db_name"
+        . " --dir $dir_align"
+        . " --length $length_threshold"
+        . " --parallel $parallel"
+        . " --batch $batch_number"
+        . " --id $file_id_of"
+        . ( $outgroup ? " --outgroup" : "" )
+        . ( $block    ? " --block"    : "" );
+
+    $self->exec_cmd($cmd);
+    return;
+}
+
+sub on_button_insert_isw_axt_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $server   = $self->get_value("entry_server");
+    my $port     = $self->get_value("entry_port");
+    my $username = $self->get_value("entry_username");
+    my $password = $self->get_value("entry_password");
+    my $db_name  = $self->get_value("entry_db_name");
+
+    my $parallel = $self->get_value("entry_parallel");
+    my $batch    = $self->get_value("entry_batch");
+
+    my $cmd
+        = "perl $FindBin::Bin/../init/insert_isw.pl"
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name"
+        . " --parallel $parallel"
+        . " --batch $batch";
+
+    $self->exec_cmd($cmd);
+    return;
+}
+
+sub on_button_insert_isw_fas_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $server   = $self->get_value("entry_server");
+    my $port     = $self->get_value("entry_port");
+    my $username = $self->get_value("entry_username");
+    my $password = $self->get_value("entry_password");
+    my $db_name  = $self->get_value("entry_db_name");
+
+    my $parallel = $self->get_value("entry_parallel");
+    my $batch    = $self->get_value("entry_batch");
+
+    my $outgroup = $self->get_value("checkbutton_fas_outgroup");
+
+    my $cmd
+        = "perl $FindBin::Bin/../init/insert_isw.pl"
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name"
+        . " --parallel $parallel"
+        . " --batch $batch"
+        . ( $outgroup ? " --outgroup" : "" );
+
+    $self->exec_cmd($cmd);
+    return;
+}
+
+sub on_button_insert_isw_join_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $server   = $self->get_value("entry_server");
+    my $port     = $self->get_value("entry_port");
+    my $username = $self->get_value("entry_username");
+    my $password = $self->get_value("entry_password");
+    my $db_name  = $self->get_value("entry_db_name");
+
+    my $parallel = $self->get_value("entry_parallel");
+    my $batch    = $self->get_value("entry_batch");
+
+    my $cmd
+        = "perl $FindBin::Bin/../init/insert_isw.pl"
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name"
+        . " --parallel $parallel"
+        . " --batch $batch"
+        . " --outgroup";
+
+    $self->exec_cmd($cmd);
+    return;
+}
+
+sub on_button_join_dbs_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $server   = $self->get_value("entry_server");
+    my $port     = $self->get_value("entry_port");
+    my $username = $self->get_value("entry_username");
+    my $password = $self->get_value("entry_password");
+
+    my $first_db  = $self->get_value("entry_first_db");
+    my $second_db = $self->get_value("entry_second_db");
+    my $goal_db   = $self->get_value("entry_db_name");
+
+    my $first    = $self->get_value("combobox_first");
+    my $second   = $self->get_value("combobox_second");
+    my $outgroup = $self->get_value("combobox_outgroup");
+
+    my $cmd
+        = "perl $FindBin::Bin/../extra/join_dbs.pl"
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " --dbs $first_db,$second_db"
+        . " --goal_db $goal_db"
+        . " --target $first"
+        . " --queries $second"
+        . " --outgroup $outgroup";
+
+    $self->exec_cmd($cmd);
     return;
 }
 
@@ -1005,39 +1233,6 @@ sub on_button_upd_segment_clicked {
     return;
 }
 
-sub on_button_join_dbs_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $server   = $self->get_value("entry_server");
-    my $port     = $self->get_value("entry_port");
-    my $username = $self->get_value("entry_username");
-    my $password = $self->get_value("entry_password");
-
-    my $first_db  = $self->get_value("entry_first_db");
-    my $second_db = $self->get_value("entry_second_db");
-    my $goal_db   = $self->get_value("entry_goal_db");
-
-    my $first    = $self->get_value("combobox_first");
-    my $second   = $self->get_value("combobox_second");
-    my $outgroup = $self->get_value("combobox_outgroup");
-
-    my $cmd
-        = "perl $FindBin::Bin/../extra/join_dbs.pl"
-        . " --server=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
-        . " --dbs=$first_db,$second_db"
-        . " --goal_db=$goal_db"
-        . " --outgroup=$outgroup"
-        . " --target=$first"
-        . " --queries=$second";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
 sub on_button_upd_cpg_clicked {
     my $self   = shift;
     my $widget = shift;
@@ -1060,7 +1255,7 @@ sub on_button_upd_cpg_clicked {
     return;
 }
 
-sub on_button_common_stat_clicked {
+sub on_button_stat_common_clicked {
     my $self   = shift;
     my $widget = shift;
 
@@ -1070,9 +1265,11 @@ sub on_button_common_stat_clicked {
     my $password = $self->get_value("entry_password");
     my $db_name  = $self->get_value("entry_db_name");
 
-    my $output    = $self->get_value("entry_common_stat_file");
-    my $run       = $self->get_value("entry_common_run");
-    my $threshold = $self->get_value("entry_common_threshold");
+    my $output = $self->get_value("entry_stat_file_common");
+    my $run    = $self->get_value("entry_run_common");
+
+    my $combine = $self->get_value("entry_stat_combine");
+    my $piece   = $self->get_value("entry_stat_piece");
 
     my $cmd
         = "perl $FindBin::Bin/../stat/common_stat_factory.pl"
@@ -1083,36 +1280,14 @@ sub on_button_common_stat_clicked {
         . " -d $db_name"
         . " -o $output"
         . " -r $run"
-        . " -t $threshold";
+        . ( $combine ? " --combine $combine" : "" )
+        . ( $piece   ? " --piece $piece"     : "" );
 
     $self->exec_cmd($cmd);
     return;
 }
 
-sub on_button_common_chart_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $stat_file = $self->get_value("entry_common_stat_file");
-    return if $^O ne "MSWin32";
-    return if !$stat_file;
-
-    my $jc_correction   = $self->get_value("checkbutton_common_jc");
-    my $time_stamp      = $self->get_value("checkbutton_common_stamp");
-    my $add_index_sheet = $self->get_value("checkbutton_common_add_index");
-
-    my $cmd
-        = "perl $FindBin::Bin/../stat/common_chart_factory.pl"
-        . " -i $stat_file"
-        . " -j $jc_correction"
-        . " -t $time_stamp"
-        . " -a $add_index_sheet";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
-sub on_button_gc_stat_clicked {
+sub on_button_stat_multi_clicked {
     my $self   = shift;
     my $widget = shift;
 
@@ -1122,9 +1297,41 @@ sub on_button_gc_stat_clicked {
     my $password = $self->get_value("entry_password");
     my $db_name  = $self->get_value("entry_db_name");
 
-    my $output    = $self->get_value("entry_gc_stat_file");
-    my $run       = $self->get_value("entry_gc_run");
-    my $threshold = $self->get_value("entry_gc_threshold");
+    my $output = $self->get_value("entry_stat_file_multi");
+    my $run    = $self->get_value("entry_run_multi");
+
+    my $combine = $self->get_value("entry_stat_combine");
+
+    my $cmd
+        = "perl $FindBin::Bin/../stat/multi_stat_factory.pl"
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
+        . " -d $db_name"
+        . " -o $output"
+        . " -r $run"
+        . ( $combine ? " --combine $combine" : "" );
+
+    $self->exec_cmd($cmd);
+    return;
+}
+
+sub on_button_stat_gc_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $server   = $self->get_value("entry_server");
+    my $port     = $self->get_value("entry_port");
+    my $username = $self->get_value("entry_username");
+    my $password = $self->get_value("entry_password");
+    my $db_name  = $self->get_value("entry_db_name");
+
+    my $output = $self->get_value("entry_stat_file_gci");
+    my $run    = $self->get_value("entry_run_gc");
+
+    my $combine = $self->get_value("entry_stat_combine");
+    my $piece   = $self->get_value("entry_stat_piece");
 
     my $cmd
         = "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
@@ -1135,82 +1342,74 @@ sub on_button_gc_stat_clicked {
         . " -d $db_name"
         . " -o $output"
         . " -r $run"
-        . " -t $threshold";
+        . ( $combine ? " --combine $combine" : "" )
+        . ( $piece   ? " --piece $piece"     : "" );
 
     $self->exec_cmd($cmd);
     return;
 }
 
-sub on_button_gc_chart_clicked {
+sub on_button_chart_common_clicked {
     my $self   = shift;
     my $widget = shift;
 
-    my $stat_file = $self->get_value("entry_gc_stat_file");
-    return if $^O ne "MSWin32";
+    my $stat_file = $self->get_value("entry_stat_file_common");
+    if ( $^O ne "MSWin32" ) {
+        $self->append_text("Charting only works under Windows\n");
+        return;
+    }
     return if !$stat_file;
 
-    my $jc_correction   = $self->get_value("checkbutton_gc_jc");
-    my $time_stamp      = $self->get_value("checkbutton_gc_stamp");
-    my $add_index_sheet = $self->get_value("checkbutton_gc_add_index");
+    my $jc_correction = $self->get_value("checkbutton_chart_jc");
+
+    my $cmd
+        = "perl $FindBin::Bin/../stat/common_chart_factory.pl"
+        . " -i $stat_file"
+        . " -j $jc_correction";
+
+    $self->exec_cmd($cmd);
+    return;
+}
+
+sub on_button_chart_multi_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $stat_file = $self->get_value("entry_stat_file_muli");
+    if ( $^O ne "MSWin32" ) {
+        $self->append_text("Charting only works under Windows\n");
+        return;
+    }
+    return if !$stat_file;
+
+    my $jc_correction = $self->get_value("checkbutton_chart_jc");
+
+    my $cmd
+        = "perl $FindBin::Bin/../stat/multi_chart_factory.pl"
+        . " -i $stat_file"
+        . " -j $jc_correction";
+
+    $self->exec_cmd($cmd);
+    return;
+}
+
+sub on_button_chart_gc_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my $stat_file = $self->get_value("entry_stat_file_gc");
+    if ( $^O ne "MSWin32" ) {
+        $self->append_text("Charting only works under Windows\n");
+        return;
+    }
+    return if !$stat_file;
+
+    my $jc_correction = $self->get_value("checkbutton_chart_jc");
 
     my $cmd
         = "perl $FindBin::Bin/../stat/gc_chart_factory.pl"
         . " -i $stat_file"
-        . " -j $jc_correction"
-        . " -t $time_stamp"
-        . " -a $add_index_sheet";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
-sub on_button_three_stat_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $server   = $self->get_value("entry_server");
-    my $port     = $self->get_value("entry_port");
-    my $username = $self->get_value("entry_username");
-    my $password = $self->get_value("entry_password");
-    my $db_name  = $self->get_value("entry_db_name");
-
-    my $output    = $self->get_value("entry_three_stat_file");
-    my $run       = $self->get_value("entry_three_run");
-    my $threshold = $self->get_value("entry_three_threshold");
-
-    my $cmd
-        = "perl $FindBin::Bin/../stat/three_stat_factory.pl"
-        . " -s $server"
-        . " --port $port"
-        . " -u $username"
-        . " --password $password"
-        . " -d $db_name"
-        . " -o $output"
-        . " -r $run"
-        . " -t $threshold";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
-sub on_button_three_chart_clicked {
-    my $self   = shift;
-    my $widget = shift;
-
-    my $stat_file = $self->get_value("entry_three_stat_file");
-    return if $^O ne "MSWin32";
-    return if !$stat_file;
-
-    my $jc_correction   = $self->get_value("checkbutton_three_jc");
-    my $time_stamp      = $self->get_value("checkbutton_three_stamp");
-    my $add_index_sheet = $self->get_value("checkbutton_three_add_index");
-
-    my $cmd
-        = "perl $FindBin::Bin/../stat/three_chart_factory.pl"
-        . " -i $stat_file"
-        . " -j $jc_correction"
-        . " -t $time_stamp"
-        . " -a $add_index_sheet";
+        . " -j $jc_correction";
 
     $self->exec_cmd($cmd);
     return;
