@@ -714,10 +714,34 @@
                               </packing>
                             </child>
                             <child>
+                              <widget class="GtkButton" id="button_db_meta">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="tooltip" translatable="yes">Steps done on this db</property>
+                                <property name="relief">half</property>
+                                <signal name="clicked" handler="on_button_db_meta_clicked"/>
+                                <child>
+                                  <widget class="GtkImage" id="image14">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="stock">gtk-about</property>
+                                    <property name="icon-size">1</property>
+                                  </widget>
+                                </child>
+                              </widget>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">False</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <child>
                               <widget class="GtkButton" id="button_choose_db">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
+                                <property name="tooltip" translatable="yes">Choose db</property>
                                 <property name="relief">half</property>
                                 <signal name="clicked" handler="on_button_choose_db_clicked"/>
                                 <child>
@@ -732,7 +756,7 @@
                               <packing>
                                 <property name="expand">False</property>
                                 <property name="fill">False</property>
-                                <property name="position">1</property>
+                                <property name="position">2</property>
                               </packing>
                             </child>
                           </widget>
@@ -873,6 +897,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="tooltip" translatable="yes">Load common taxons</property>
                             <property name="relief">half</property>
                             <property name="image_position">right</property>
                             <signal name="clicked" handler="on_button_load_query_clicked"/>
@@ -899,6 +924,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="tooltip" translatable="yes">Load common taxons</property>
                             <property name="relief">half</property>
                             <property name="image_position">right</property>
                             <signal name="clicked" handler="on_button_load_target_clicked"/>
@@ -1102,6 +1128,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="tooltip" translatable="yes">Naming db automaticly</property>
                             <property name="relief">half</property>
                             <signal name="clicked" handler="on_button_auto_db_name_axt_clicked"/>
                             <child>
@@ -1366,6 +1393,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="tooltip" translatable="yes">Naming db automaticly</property>
                             <property name="relief">half</property>
                             <signal name="clicked" handler="on_button_auto_db_name_fas_clicked"/>
                             <child>
@@ -1667,6 +1695,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="tooltip" translatable="yes">Naming db automaticly</property>
                             <property name="relief">half</property>
                             <signal name="clicked" handler="on_button_auto_db_name_join_clicked"/>
                             <child>
@@ -2062,10 +2091,9 @@
           </packing>
         </child>
         <child>
-          <widget class="GtkExpander" id="expander_three_way">
+          <widget class="GtkExpander" id="expander_stats">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="expanded">True</property>
             <property name="spacing">2</property>
             <child>
               <widget class="GtkVBox" id="vbox4">
@@ -2222,7 +2250,7 @@
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkNotebook" id="notebook_stat">
+                  <widget class="GtkNotebook" id="notebook_stats">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="tab_pos">left</property>
@@ -2310,6 +2338,7 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
+                                <property name="tooltip" translatable="yes">Naming file automaticly</property>
                                 <property name="relief">half</property>
                                 <property name="image_position">right</property>
                                 <signal name="clicked" handler="on_button_auto_stat_file_common_clicked"/>
@@ -2485,6 +2514,7 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
+                                <property name="tooltip" translatable="yes">Naming file automaticly</property>
                                 <property name="relief">half</property>
                                 <property name="image_position">right</property>
                                 <signal name="clicked" handler="on_button_auto_stat_file_multi_clicked"/>
@@ -2664,6 +2694,7 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
+                                <property name="tooltip" translatable="yes">Naming file automaticly</property>
                                 <property name="relief">half</property>
                                 <property name="image_position">right</property>
                                 <signal name="clicked" handler="on_button_auto_stat_file_gc_clicked"/>

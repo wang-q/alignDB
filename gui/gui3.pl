@@ -350,7 +350,7 @@ sub on_toolbutton_process_clicked {
             );
         }
     }
-    
+
     $self->append_text( "-" x 50 . "\n" );
     $self->append_text( "There are ", "italic" );
     $self->append_text( $count, "bold", "blue" );
@@ -562,9 +562,126 @@ sub dialog_choose_db {
     }
 }
 
+sub dialog_db_meta {
+    my $self = shift;
+
+    my $server   = $self->get_value("entry_server");
+    my $port     = $self->get_value("entry_port");
+    my $username = $self->get_value("entry_username");
+    my $password = $self->get_value("entry_password");
+
+    my $db_name = $self->get_value("entry_db_name");
+
+    # Create the dialog and init two buttons
+    my $dialog = Gtk2::Dialog->new(
+        "Steps done",
+        $self->win, [qw{modal destroy-with-parent}],
+        'gtk-ok'    => 'ok',
+        'gtk-close' => 'close',
+    );
+
+    # This vbox comes with the dialog
+    my $vbox = $dialog->vbox;
+
+    my $model
+        = Gtk2::ListStore->new( 'Glib::Int', 'Glib::String', 'Glib::String' );
+
+    # get dbh
+    my $obj = AlignDB->new(
+        mysql  => "$db_name:$server",
+        user   => $username,
+        passwd => $password,
+    );
+    my $dbh = $obj->dbh;
+
+    # query table meta
+    my $sql = q{
+        SELECT meta_value
+        FROM meta
+        WHERE meta_key LIKE "a_%"
+           OR meta_key LIKE "c_%"
+    };
+    my $sth = $dbh->prepare($sql);
+    $sth->execute;
+
+    # get meta info
+    my $serial;
+    while ( my ($operation) = $sth->fetchrow_array ) {
+        $serial++;
+        my ($time) = $sth->fetchrow_array;
+
+        # The iter is a pointer in the treestore. We use to add data.
+        my $iter = $model->append;
+        $model->set(
+            $iter,
+            0 => $serial,
+            1 => $operation,
+            2 => $time,
+        );
+    }
+
+    my $treeview = Gtk2::TreeView->new_with_model($model);
+
+    # Add columns
+    $treeview->insert_column_with_attributes( 0, "serial",
+        Gtk2::CellRendererText->new,
+        text => 0 );
+    $treeview->insert_column_with_attributes( 1, "operation",
+        Gtk2::CellRendererText->new,
+        text => 1 );
+    $treeview->insert_column_with_attributes( 2, "time",
+        Gtk2::CellRendererText->new,
+        text => 2 );
+    $treeview->get_column(0)->set_sort_column_id(0);
+    $treeview->get_column(1)->set_sort_column_id(1);
+    $treeview->get_column(2)->set_sort_column_id(2);
+
+    # get the Gtk2::TreeSelection of $treeview
+    my $treeselection = $treeview->get_selection;
+    $treeselection->set_mode('single');
+
+    # add TreeView to a scrolledwindow
+    my $sw = Gtk2::ScrolledWindow->new;
+    $sw->set_size_request( 360, 240 );
+    $sw->set_policy( 'automatic', 'automatic' );
+    $sw->add($treeview);
+    $vbox->pack_start( $sw, TRUE, TRUE, 0 );
+    $vbox->show_all;
+
+    my $response = $dialog->run;
+    my ( $operation, $time );
+    if ( $response eq 'ok' ) {
+        my $iter = $treeselection->get_selected;
+        if ( defined $iter ) {
+
+            # we want data at the model's columns where the iter is pointing
+            $operation = $model->get( $iter, 1 );
+            $time      = $model->get( $iter, 2 );
+        }
+    }
+    $dialog->destroy;
+
+    return ( $operation, $time );
+}
+
 #----------------------------#
 # button callback events
 #----------------------------#
+sub on_button_db_meta_clicked {
+    my $self   = shift;
+    my $widget = shift;
+
+    my ( $operation, $time ) = $self->dialog_db_meta;
+
+    if ($operation) {
+        $self->append_text("operation:\t");
+        $self->append_text( "$operation\n", "bold", "blue" );
+        $self->append_text("time:\t\t");
+        $self->append_text( "$time\n", "bold", "blue" );
+    }
+    return;
+}
+
 sub on_button_load_target_clicked {
     my $self   = shift;
     my $widget = shift;
@@ -673,10 +790,6 @@ sub on_button_choose_db_clicked {
     my $result = $self->dialog_choose_db;
     return unless $result;
 
-    $self->set_value( "entry_target_id",   $result->{target_id} );
-    $self->set_value( "entry_query_id",    $result->{query_id} );
-    $self->set_value( "entry_target_name", $result->{target_name} );
-    $self->set_value( "entry_query_name",  $result->{query_name} );
     $self->set_value( "entry_db_name",     $result->{db_name} );
 
     return;
@@ -794,7 +907,7 @@ sub on_button_auto_stat_file_multi_clicked {
     my $self   = shift;
     my $widget = shift;
 
-    my $db_name = $self->get_value("entry_goal_db");
+    my $db_name = $self->get_value("entry_db_name");
     my $outfile = "$FindBin::Bin/../stat/$db_name.multi.xlsx";
     $outfile = File::Spec->rel2abs($outfile);
     $self->set_value( "entry_stat_file_multi", $outfile );
