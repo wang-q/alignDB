@@ -962,7 +962,6 @@ sub on_button_copy_clicked {
 #----------------------------------------------------------#
 # run *.pl events
 #----------------------------------------------------------#
-
 sub on_button_test_clicked {
     my $self   = shift;
     my $widget = shift;
