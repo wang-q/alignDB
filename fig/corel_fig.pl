@@ -12,7 +12,7 @@ use Win32::OLE::Const;
 use Win32::OLE::Variant;
 use Win32::OLE::NLS qw(:LOCALE :DATE);
 use Win32::OLE::Const 'Microsoft Excel';
-use Win32::OLE::Const 'Corel - CorelDRAW 15.0 Type Library';
+use Win32::OLE::Const 'Corel - CorelDRAW';
 
 use Path::Class;
 use Set::Scalar;
