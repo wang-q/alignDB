@@ -34,9 +34,6 @@ sub _insert_ref_sequences {
         my $seq_set       = $align_set->diff($seq_indel_set);
         $info_refs->[$ref_idx]{runlist} = $seq_set->runlist;
         $info_refs->[$ref_idx]{length}  = $seq_set->cardinality;
-
-        # for polarize indels
-        $info_refs->[$ref_idx]{indel_set} = $seq_indel_set;
     }
 
     my $insert = $dbh->prepare(
@@ -57,9 +54,11 @@ sub _insert_ref_sequences {
 }
 
 sub _polarize_indel {
-    my $self          = shift;
-    my $align_id      = shift;
-    my $ref_indel_set = shift;
+    my $self     = shift;
+    my $align_id = shift;
+    my $ref_seq  = shift;
+
+    my $ref_indel_set = find_indel_set($ref_seq);
 
     my $dbh = $self->dbh;
 
@@ -67,18 +66,17 @@ sub _polarize_indel {
     # polarize clear ones
     my $indel_info_sth = $dbh->prepare(
         q{
-        SELECT indel_id, indel_start, indel_end, indel_type, indel_occured
+        SELECT indel_id, indel_start, indel_end, indel_all_seqs
         FROM indel
         WHERE 1 = 1
-        AND indel_type <> 'C'
-        AND indel_occured <> 'unknown'
         AND align_id = ?
         }
     );
     my $update_indel_sth = $dbh->prepare(
         q{
         UPDATE indel
-        SET indel_type = ?,
+        SET indel_ref_seq = ?,
+            indel_type = ?,
             indel_occured = ?,
             indel_freq = ?
         WHERE indel_id = ?
@@ -87,42 +85,77 @@ sub _polarize_indel {
 
     $indel_info_sth->execute($align_id);
     while ( my @row = $indel_info_sth->fetchrow_array ) {
-        my ( $indel_id, $indel_start, $indel_end, $old_indel_type,
-            $old_indel_occured )
-            = @row;
+        my ( $indel_id, $indel_start, $indel_end, $indel_all_seqs ) = @row;
 
-        my $indel_set = AlignDB::IntSpan->new("$indel_start-$indel_end");
+        my @indel_seqs   = split /\|/, $indel_all_seqs;
+        my $indel_length = $indel_end - $indel_start + 1;
+        my $ref_bases    = substr $ref_seq, $indel_start - 1, $indel_length;
 
         my ( $indel_type, $indel_occured, $indel_freq );
 
-        if ( $ref_indel_set->intersect($indel_set)->is_empty ) {
+        my $indel_set = AlignDB::IntSpan->new("$indel_start-$indel_end");
 
-            # ref NNNN
-            #     NNNN
-            #     N--N
-            $indel_type = 'D';
+        # this line is different to AlignDB.pm
+        my @uniq_indel_seqs = uniq(@indel_seqs, $ref_bases);
+
+        # seqs with least '-' char wins
+        my ($indel_seq) = map { $_->[0] }
+            sort { $a->[1] <=> $b->[1] }
+            map { [ $_, tr/-/-/ ] } @uniq_indel_seqs;
+
+        if ( scalar @uniq_indel_seqs < 2 ) {
+            confess "no indel!\n";
         }
-        elsif ( $ref_indel_set->superset($indel_set) ) {
-            my $island = $ref_indel_set->find_islands($indel_start);
-            if ( $island->equal($indel_set) ) {
-
-                # ref N--N
-                #     NNNN
-                #     N--N
-                $indel_type = 'I';
-            }
-            else {
-                # ref N--N
-                #     NNNN
-                #     N-NN
-                $indel_type = 'C';
-            }
+        elsif ( scalar @uniq_indel_seqs > 2 ) {
+            $indel_type = 'C';
+        }
+        elsif ( $indel_seq =~ /-/ ) {
+            $indel_type = 'C';
         }
         else {
-            # ref N-NN
-            #     NNNN
-            #     N--N
-            $indel_type = 'C';
+
+            if ( ( $ref_bases !~ /\-/ ) and ( $indel_seq ne $ref_bases ) ) {
+                # this section should already be judged in previes
+                # uniq_indel_seqs section, but I keep it here for safe
+
+                # reference indel content does not contain '-' and is not equal
+                # to the one of alignment
+                #     AAA
+                #     A-A
+                # ref ACA
+                $indel_type = 'C';
+            }
+            elsif ( $ref_indel_set->intersect($indel_set)->is_not_empty ) {
+                my $island = $ref_indel_set->find_islands($indel_set);
+                if ( $island->equal($indel_set) ) {
+
+                    #     NNNN
+                    #     N--N
+                    # ref N--N
+                    $indel_type = 'I';
+                }
+                else {
+                    # reference indel island is larger or smaller
+                    #     NNNN
+                    #     N-NN
+                    # ref N--N
+                    # or
+                    #     NNNN
+                    #     N--N
+                    # ref N-NN
+                    $indel_type = 'C';
+                }
+            }
+            elsif ( $ref_indel_set->intersect($indel_set)->is_empty ) {
+
+                #     NNNN
+                #     N--N
+                # ref NNNN
+                $indel_type = 'D';
+            }
+            else {
+                confess "Errors when polarizing indel!\n";
+            }
         }
 
         if ( $indel_type eq 'C' ) {
@@ -130,24 +163,19 @@ sub _polarize_indel {
             $indel_freq    = -1;
         }
         else {
-            #       |    I    |  D  new
-            # ------+---------+--------
-            #       |     -   |     N
-            #  I    | N x N o | N x N x
-            #       | - o - x | - o - o
-            # ------+---------+--------
-            #       |     -   |     N
-            #  D    | - x - x | - x - o
-            #  old  | N o N o | N o N x
-            $indel_occured = $old_indel_occured;
-            if ( $old_indel_type eq $indel_type ) {
-                $indel_occured =~ tr/ox/xo/;
+            for my $seq (@indel_seqs) {
+                if ( $seq eq $ref_bases ) {
+                    $indel_occured .= 'x';
+                }
+                else {
+                    $indel_occured .= 'o';
+                    $indel_freq++;
+                }
             }
-            $indel_freq = $indel_occured =~ tr/o/o/;
         }
 
-        $update_indel_sth->execute( $indel_type, $indel_occured, $indel_freq,
-            $align_id );
+        $update_indel_sth->execute( $ref_bases, $indel_type, $indel_occured,
+            $indel_freq, $indel_id );
     }
 
     $update_indel_sth->finish;
@@ -245,7 +273,6 @@ sub add_align {
     my $dbh = $self->dbh;
 
     my $target_idx = 0;
-    my $ref_idx    = -1;
 
     # check align length
     my $align_length = length $seq_refs->[$target_idx];
@@ -255,16 +282,23 @@ sub add_align {
         }
     }
 
-    my $seq_count = scalar @{$seq_refs};
-    if ( $seq_count < 3 ) {
-        confess "Too few sequences [$seq_count]\n";
+    # check seq number
+    my $seq_number = scalar @{$seq_refs};
+    if ( $seq_number < 3 ) {
+        confess "Too few sequences [$seq_number]\n";
+    }
+
+    # check info and seq numbers
+    if ( $seq_number != scalar @{$info_refs} ) {
+        confess "Number of infos is not equal to seqs!\n";
     }
 
     # appoint reference/outgroup
-    my $ref_seq = $seq_refs->[-1];
+    my $ref_idx = $seq_number - 1;
+    my $ref_seq = $seq_refs->[$ref_idx];
 
     # exclude outgroup
-    my $ingroup_seqs = [ @{$seq_refs}[ 0 .. $seq_count - 2 ] ];
+    my $ingroup_seqs = [ @{$seq_refs}[ 0 .. $ref_idx - 1 ] ];
 
     #----------------------------#
     # INSERT INTO align
@@ -290,7 +324,7 @@ sub add_align {
     # INSERT INTO indel
     #----------------------------#
     $self->_insert_indel($align_id);
-    $self->_polarize_indel( $align_id, $info_refs->[$ref_idx]{indel_set} );
+    $self->_polarize_indel( $align_id, $ref_seq );
 
     #----------------------------#
     # INSERT INTO snp
