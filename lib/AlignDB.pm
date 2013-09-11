@@ -143,14 +143,14 @@ sub _insert_set_and_sequence {
 
     my $dbh = $self->dbh;
 
-    my $seq_count    = scalar @{$seq_refs};
+    my $seq_number   = scalar @{$seq_refs};
     my $align_length = length $seq_refs->[0];
 
     my $align_set      = AlignDB::IntSpan->new("1-$align_length");
     my $indel_set      = AlignDB::IntSpan->new;
     my $comparable_set = AlignDB::IntSpan->new;
 
-    for my $i ( 0 .. $seq_count - 1 ) {
+    for my $i ( 0 .. $seq_number - 1 ) {
         my $name = $info_refs->[$i]{name};
         $info_refs->[$i]{align_id} = $align_id;
         $info_refs->[$i]{seq}      = $seq_refs->[$i];
@@ -201,7 +201,7 @@ sub _insert_set_and_sequence {
             VALUES ( NULL, ?, ?, ? )
             }
         );
-        for my $i ( 1 .. $seq_count - 1 ) {
+        for my $i ( 1 .. $seq_number - 1 ) {
             my $seq_id = $self->_insert_seq( $info_refs->[$i] );
             $insert->execute( $seq_id, $info_refs->[$i]{chr_strand}, $i - 1 );
         }
@@ -225,13 +225,13 @@ sub _insert_indel {
         INSERT INTO indel (
             indel_id, prev_indel_id, align_id,
             indel_start, indel_end, indel_length,
-            indel_seq, left_extand, right_extand,
+            indel_seq, indel_all_seqs, left_extand, right_extand,
             indel_gc, indel_freq, indel_occured, indel_type
         )
         VALUES (
             NULL, ?, ?,
             ?, ?, ?,
-            ?, ?, ?,
+            ?, ?, ?, ?,
             ?, ?, ?, ?
         )
         }
@@ -251,6 +251,7 @@ sub _insert_indel {
         for my $seq ( @{$seq_refs} ) {
             push @indel_seqs, ( substr $seq, $indel_start - 1, $indel_length );
         }
+        my $indel_all_seqs = join "|", @indel_seqs;
 
         my $indel_type;
         my @uniq_indel_seqs = uniq(@indel_seqs);
@@ -273,7 +274,7 @@ sub _insert_indel {
             #   'D': means deletion relative to target/first seq
             #        target is ----
             #   'I': means insertion relative to target/first seq
-            #        target is NNNN
+            #        target is AAAA
             if ( $indel_seqs[0] eq $indel_seq ) {
                 $indel_type = 'I';
             }
@@ -309,14 +310,15 @@ sub _insert_indel {
 
         push @indel_sites,
             {
-            start   => $indel_start,
-            end     => $indel_end,
-            length  => $indel_length,
-            seq     => $indel_seq,
-            gc      => $indel_gc,
-            freq    => $indel_freq,
-            occured => $indel_occured,
-            type    => $indel_type,
+            start    => $indel_start,
+            end      => $indel_end,
+            length   => $indel_length,
+            seq      => $indel_seq,
+            all_seqs => $indel_all_seqs,
+            gc       => $indel_gc,
+            freq     => $indel_freq,
+            occured  => $indel_occured,
+            type     => $indel_type,
             };
     }
 
@@ -341,10 +343,11 @@ sub _insert_indel {
     my $prev_indel_id = 0;
     for (@indel_sites) {
         $indel_insert->execute(
-            $prev_indel_id,    $align_id,          $_->{start},
-            $_->{end},         $_->{length},       $_->{seq},
-            $_->{left_extand}, $_->{right_extand}, $_->{gc},
-            $_->{freq},        $_->{occured},      $_->{type},
+            $prev_indel_id, $align_id,         $_->{start},
+            $_->{end},      $_->{length},      $_->{seq},
+            $_->{all_seqs}, $_->{left_extand}, $_->{right_extand},
+            $_->{gc},       $_->{freq},        $_->{occured},
+            $_->{type},
         );
         ($prev_indel_id) = $self->last_insert_id;
     }
@@ -857,12 +860,25 @@ sub add_align {
 
     my $dbh = $self->dbh;
 
+    my $target_idx = 0;
+
     # check align length
-    my $align_length = length $seq_refs->[0];
+    my $align_length = length $seq_refs->[$target_idx];
     for ( @{$seq_refs} ) {
         if ( ( length $_ ) != $align_length ) {
             confess "Sequences should have the same length!\n";
         }
+    }
+
+    # check seq number
+    my $seq_number = scalar @{$seq_refs};
+    if ( $seq_number < 2 ) {
+        confess "Too few sequences [$seq_number]\n";
+    }
+
+    # check info and seq numbers
+    if ( $seq_number != scalar @{$info_refs} ) {
+        confess "Number of infos is not equal to seqs!\n";
     }
 
     #----------------------------#
@@ -870,10 +886,10 @@ sub add_align {
     #----------------------------#
     my $align_id = $self->_insert_align( @{$seq_refs} );
     printf "Prosess align %s in %s %s - %s of %s\n", $align_id,
-        $info_refs->[0]{chr_name},
-        $info_refs->[0]{chr_start},
-        $info_refs->[0]{chr_end},
-        $info_refs->[0]{name};
+        $info_refs->[$target_idx]{chr_name},
+        $info_refs->[$target_idx]{chr_start},
+        $info_refs->[$target_idx]{chr_end},
+        $info_refs->[$target_idx]{name};
 
     #----------------------------#
     # UPDATE align, INSERT INTO sequence, target, queries
@@ -1053,7 +1069,7 @@ sub parse_block_fasta_file {
 
                 }
                 else {
-                    $name = $header;
+                    $name     = $header;
                     $info_ref = {
                         chr_name   => 'chrUn',
                         chr_strand => '+',
@@ -1066,7 +1082,7 @@ sub parse_block_fasta_file {
                 $info_ref->{chr_id}
                     = $self->get_chr_id_hash( $info_ref->{taxon_id} )
                     ->{ $info_ref->{chr_name} };
-                    
+
                 push @{$info_refs}, $info_ref;
             }
 
