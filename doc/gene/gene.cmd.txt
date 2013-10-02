@@ -74,8 +74,7 @@ Runtime 14 seconds.
 #----------------------------------------------------------#
 # 3. update_gene_D.pl
 #----------------------------------------------------------#
-E:\wq\Scripts\alignDB\gene>update_gene_D.pl --aim_db=alignDB --ref_db=S288CvsYJM
-789
+E:\wq\Scripts\alignDB\gene>update_gene_D.pl --aim_db=alignDB --ref_db=S288CvsYJM789
 
 ==============================
 Init alignDB...
