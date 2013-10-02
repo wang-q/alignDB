@@ -1,6 +1,6 @@
 [common-align-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  isw.isw_distance distance,\n  AVG(isw.isw_pi) AVG_pi,\n  COUNT(*)
   COUNT,\n  STD(isw.isw_pi) STD_pi\nFROM indel\n  INNER JOIN isw ON\n    isw.indel_id
   = indel.indel_id\n  INNER JOIN align ON\n    align.align_id = indel.align_id\nGROUP
@@ -41,10 +41,10 @@ where_values: {}
 
 [common-d1_comb_coding-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  AVG(isw.isw_distance) AVG_distance,\n  AVG(isw.isw_pi) AVG_pi,\n
   \ STD(isw.isw_pi) STD_pi,\n  AVG(isw.isw_average_gc) AVG_gc,\n  STD(isw.isw_average_gc)
-  STD_gc,\n  AVG(isw.isw_cv) AVG_gc,\n  STD(isw.isw_cv) STD_gc,\n  COUNT(*) COUNT\nFROM
+  STD_gc,\n  AVG(isw.isw_cv) AVG_cv,\n  STD(isw.isw_cv) STD_cv,\n  COUNT(*) COUNT\nFROM
   isw\nWHERE (isw.isw_coding >= ?)\n  AND (isw.isw_coding <= ?)\n"
 bind:
 - '1'
@@ -66,19 +66,21 @@ select:
 - COUNT(*)
 select_map:
   AVG(isw.isw_average_gc): AVG_gc
-  AVG(isw.isw_cv): AVG_gc
+  AVG(isw.isw_cv): AVG_cv
   AVG(isw.isw_distance): AVG_distance
   AVG(isw.isw_pi): AVG_pi
   COUNT(*): COUNT
   STD(isw.isw_average_gc): STD_gc
-  STD(isw.isw_cv): STD_gc
+  STD(isw.isw_cv): STD_cv
   STD(isw.isw_pi): STD_pi
 select_map_reverse:
+  AVG_cv: AVG(isw.isw_cv)
   AVG_distance: AVG(isw.isw_distance)
-  AVG_gc: AVG(isw.isw_cv)
+  AVG_gc: AVG(isw.isw_average_gc)
   AVG_pi: AVG(isw.isw_pi)
   COUNT: COUNT(*)
-  STD_gc: STD(isw.isw_cv)
+  STD_cv: STD(isw.isw_cv)
+  STD_gc: STD(isw.isw_average_gc)
   STD_pi: STD(isw.isw_pi)
 where:
 - (isw.isw_coding >= ?)
@@ -90,10 +92,10 @@ where_values:
 
 [common-d1_comb_pi_gc_cv-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  AVG(isw.isw_distance) AVG_distance,\n  AVG(isw.isw_pi) AVG_pi,\n
   \ STD(isw.isw_pi) STD_pi,\n  AVG(isw.isw_average_gc) AVG_gc,\n  STD(isw.isw_average_gc)
-  STD_gc,\n  AVG(isw.isw_cv) AVG_gc,\n  STD(isw.isw_cv) STD_gc,\n  COUNT(*) COUNT\nFROM
+  STD_gc,\n  AVG(isw.isw_cv) AVG_cv,\n  STD(isw.isw_cv) STD_cv,\n  COUNT(*) COUNT\nFROM
   isw\n"
 bind: []
 from:
@@ -113,29 +115,31 @@ select:
 - COUNT(*)
 select_map:
   AVG(isw.isw_average_gc): AVG_gc
-  AVG(isw.isw_cv): AVG_gc
+  AVG(isw.isw_cv): AVG_cv
   AVG(isw.isw_distance): AVG_distance
   AVG(isw.isw_pi): AVG_pi
   COUNT(*): COUNT
   STD(isw.isw_average_gc): STD_gc
-  STD(isw.isw_cv): STD_gc
+  STD(isw.isw_cv): STD_cv
   STD(isw.isw_pi): STD_pi
 select_map_reverse:
+  AVG_cv: AVG(isw.isw_cv)
   AVG_distance: AVG(isw.isw_distance)
-  AVG_gc: AVG(isw.isw_cv)
+  AVG_gc: AVG(isw.isw_average_gc)
   AVG_pi: AVG(isw.isw_pi)
   COUNT: COUNT(*)
-  STD_gc: STD(isw.isw_cv)
+  STD_cv: STD(isw.isw_cv)
+  STD_gc: STD(isw.isw_average_gc)
   STD_pi: STD(isw.isw_pi)
 where: []
 where_values: {}
 
 [common-d1_comb_slippage-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  AVG(isw.isw_distance) AVG_distance,\n  AVG(isw.isw_pi) AVG_pi,\n
   \ STD(isw.isw_pi) STD_pi,\n  AVG(isw.isw_average_gc) AVG_gc,\n  STD(isw.isw_average_gc)
-  STD_gc,\n  AVG(isw.isw_cv) AVG_gc,\n  STD(isw.isw_cv) STD_gc,\n  COUNT(*) COUNT\nFROM
+  STD_gc,\n  AVG(isw.isw_cv) AVG_cv,\n  STD(isw.isw_cv) STD_cv,\n  COUNT(*) COUNT\nFROM
   isw\n  INNER JOIN indel ON\n    isw.isw_indel_id = indel.indel_id\nWHERE (indel.indel_slippage
   >= ?)\n  AND (indel.indel_slippage <= ?)\n"
 bind:
@@ -162,19 +166,21 @@ select:
 - COUNT(*)
 select_map:
   AVG(isw.isw_average_gc): AVG_gc
-  AVG(isw.isw_cv): AVG_gc
+  AVG(isw.isw_cv): AVG_cv
   AVG(isw.isw_distance): AVG_distance
   AVG(isw.isw_pi): AVG_pi
   COUNT(*): COUNT
   STD(isw.isw_average_gc): STD_gc
-  STD(isw.isw_cv): STD_gc
+  STD(isw.isw_cv): STD_cv
   STD(isw.isw_pi): STD_pi
 select_map_reverse:
+  AVG_cv: AVG(isw.isw_cv)
   AVG_distance: AVG(isw.isw_distance)
-  AVG_gc: AVG(isw.isw_cv)
+  AVG_gc: AVG(isw.isw_average_gc)
   AVG_pi: AVG(isw.isw_pi)
   COUNT: COUNT(*)
-  STD_gc: STD(isw.isw_cv)
+  STD_cv: STD(isw.isw_cv)
+  STD_gc: STD(isw.isw_average_gc)
   STD_pi: STD(isw.isw_pi)
 where:
 - (indel.indel_slippage >= ?)
@@ -186,7 +192,7 @@ where_values:
 
 [common-d1_combine-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  isw.isw_distance distance,\n  COUNT(*) COUNT,\n  SUM(isw_length)
   SUM_length\nFROM isw\nGROUP BY\n  isw.isw_distance\n"
 bind: []
@@ -215,7 +221,7 @@ where_values: {}
 
 [common-d1_make_combine_coding-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  isw.isw_distance distance,\n  COUNT(*) COUNT\nFROM isw\nWHERE (isw.isw_coding
   >= ?)\n  AND (isw.isw_coding <= ?)\nGROUP BY\n  isw.isw_distance\n"
 bind:
@@ -248,7 +254,7 @@ where_values:
 
 [common-d1_make_combine_slippage-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  isw.isw_distance distance,\n  COUNT(*) COUNT\nFROM isw\n  INNER JOIN
   indel ON\n    isw.isw_indel_id = indel.indel_id\nWHERE (indel.indel_slippage >=
   ?)\n  AND (indel.indel_slippage <= ?)\nGROUP BY\n  isw.isw_distance\n"
@@ -286,7 +292,7 @@ where_values:
 
 [common-d1_pi_avg-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  AVG(isw.isw_distance) AVG_distance,\n  AVG(isw.isw_pi) AVG_pi,\n
   \ COUNT(*) COUNT,\n  STD(isw.isw_pi) STD_pi\nFROM isw\n"
 bind: []
@@ -316,10 +322,10 @@ where_values: {}
 
 [common-d1_pi_gc_cv-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  isw.isw_distance distance,\n  AVG(isw.isw_pi) AVG_pi,\n  STD(isw.isw_pi)
   STD_pi,\n  AVG(isw.isw_average_gc) AVG_gc,\n  STD(isw.isw_average_gc) STD_gc,\n
-  \ AVG(isw.isw_cv) AVG_gc,\n  STD(isw.isw_cv) STD_gc,\n  COUNT(*) COUNT\nFROM isw\nGROUP
+  \ AVG(isw.isw_cv) AVG_cv,\n  STD(isw.isw_cv) STD_cv,\n  COUNT(*) COUNT\nFROM isw\nGROUP
   BY\n  isw.isw_distance\n"
 bind: []
 from:
@@ -341,18 +347,20 @@ select:
 - COUNT(*)
 select_map:
   AVG(isw.isw_average_gc): AVG_gc
-  AVG(isw.isw_cv): AVG_gc
+  AVG(isw.isw_cv): AVG_cv
   AVG(isw.isw_pi): AVG_pi
   COUNT(*): COUNT
   STD(isw.isw_average_gc): STD_gc
-  STD(isw.isw_cv): STD_gc
+  STD(isw.isw_cv): STD_cv
   STD(isw.isw_pi): STD_pi
   isw.isw_distance: distance
 select_map_reverse:
-  AVG_gc: AVG(isw.isw_cv)
+  AVG_cv: AVG(isw.isw_cv)
+  AVG_gc: AVG(isw.isw_average_gc)
   AVG_pi: AVG(isw.isw_pi)
   COUNT: COUNT(*)
-  STD_gc: STD(isw.isw_cv)
+  STD_cv: STD(isw.isw_cv)
+  STD_gc: STD(isw.isw_average_gc)
   STD_pi: STD(isw.isw_pi)
   distance: isw.isw_distance
 where: []
@@ -360,7 +368,7 @@ where_values: {}
 
 [common-dd_group-4]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  CONCAT(isw_type, isw_distance) isw_type_distance,\n  AVG(isw_pi)
   AVG_pi,\n  COUNT(*) COUNT,\n  STD(isw_pi) STD_pi\nFROM isw\nWHERE (isw_type = ?)\n
   \ AND (isw_density >= ?)\n  AND (isw_density <= ?)\n  AND (isw_distance <= (? +
@@ -409,7 +417,7 @@ where_values:
 
 [common-indel_feature_l-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  CONCAT(isw_type, isw_distance) isw_type_distance,\n  AVG(isw.isw_pi)
   AVG_pi,\n  COUNT(*) COUNT,\n  STD(isw.isw_pi) STD_pi\nFROM indel\n  INNER JOIN isw
   ON\n    indel.indel_id = isw.prev_indel_id\nWHERE (isw.isw_density > 9)\n  AND (isw.isw_distance
@@ -456,7 +464,7 @@ where_values:
 
 [common-indel_feature_r-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  CONCAT(isw_type, isw_distance) isw_type_distance,\n  AVG(isw.isw_pi)
   AVG_pi,\n  COUNT(*) COUNT,\n  STD(isw.isw_pi) STD_pi\nFROM indel\n  INNER JOIN isw
   ON\n    indel.indel_id = isw.indel_id\nWHERE (isw.isw_density > 9)\n  AND (isw.isw_distance
@@ -505,7 +513,7 @@ where_values:
 
 [common-indel_length-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  indel_length,\n  COUNT(*) indel_number,\n  AVG(indel_gc) AVG_indel_gc,\n
   \ SUM(indel_length) indel_sum\nFROM indel\nGROUP BY\n  indel_length\n"
 bind: []
@@ -537,7 +545,7 @@ where_values: {}
 
 [common-indel_size_l-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  CONCAT(isw_type, isw_distance) isw_type_distance,\n  AVG(isw.isw_pi)
   AVG_pi,\n  COUNT(*) COUNT,\n  STD(isw.isw_pi) STD_pi\nFROM indel\n  INNER JOIN isw
   ON\n    indel.indel_id = isw.prev_indel_id\nWHERE (isw.isw_density > 9)\n  AND (isw.isw_distance
@@ -584,7 +592,7 @@ where_values:
 
 [common-indel_size_r-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  CONCAT(isw_type, isw_distance) isw_type_distance,\n  AVG(isw.isw_pi)
   AVG_pi,\n  COUNT(*) COUNT,\n  STD(isw.isw_pi) STD_pi\nFROM indel\n  INNER JOIN isw
   ON\n    indel.indel_id = isw.indel_id\nWHERE (isw.isw_density > 9)\n  AND (isw.isw_distance
@@ -633,7 +641,7 @@ where_values:
 
 [ld-indel_ld-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  isw.isw_distance distance,\n  AVG(snp.snp_r) AVG_r,\n  AVG(POWER(snp.snp_r,
   2)) AVG_r2,\n  AVG(snp.snp_dprime) AVG_Dprime,\n  AVG(ABS(snp.snp_dprime)) AVG_Dprime_abs,\n
   \ COUNT(*) COUNT\nFROM isw\n  INNER JOIN indel ON\n    isw.isw_indel_id = indel.indel_id\n
@@ -687,7 +695,7 @@ where_values:
 
 [ld-snps_ld-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  isw.isw_distance distance,\n  AVG(POWER(snp.snp_r, 2)) AVG_r2,\n
   \ AVG(snp.snp_r2_s) AVG_r2_s,\n  AVG(ABS(snp.snp_dprime)) AVG_Dprime_abs,\n  AVG(snp.snp_dprime_abs_s)
   AVG_Dprime_abs_s,\n  AVG(snp.snp_r2_i) AVG_r2_i,\n  AVG(snp.snp_r2_ni) AVG_r2_ni,\n
@@ -755,7 +763,7 @@ where_values:
 
 [multi-distance-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  isw_distance distance,\n  AVG(isw_pi) AVG_D,\n  AVG(isw_d_indel)
   AVG_Di,\n  AVG(isw_d_noindel) AVG_Dni,\n  AVG(isw_d_bii)/2 `AVG_Dbii/2`,\n  AVG(isw_d_bnn)/2
   `AVG_Dbnn/2`,\n  AVG(isw_d_complex) AVG_Dc,\n  AVG(isw_d_indel) / AVG(isw_d_noindel)
@@ -812,7 +820,7 @@ where_values:
 
 [multi-distance2-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  isw_distance distance,\n  AVG(isw_pi) AVG_D,\n  AVG(isw_d_indel2)
   AVG_Di2,\n  AVG(isw_d_noindel2) AVG_Dni2,\n  AVG(isw_d_bii2)/2 `AVG_Dbii2/2`,\n
   \ AVG(isw_d_bnn2)/2 `AVG_Dbnn2/2`,\n  AVG(isw_d_complex2) AVG_Dc2,\n  AVG(isw_d_indel2)
@@ -870,7 +878,7 @@ where_values:
 
 [multi-distance3-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  isw_distance distance,\n  AVG(isw_pi) AVG_D,\n  AVG(isw_d_indel3)
   AVG_Di3,\n  AVG(isw_d_noindel3) AVG_Dni3,\n  AVG(isw_d_bii3)/2 `AVG_Dbii3/2`,\n
   \ AVG(isw_d_bnn3)/2 `AVG_Dbnn3/2`,\n  AVG(isw_d_complex3) AVG_Dc3,\n  AVG(isw_d_indel3)
@@ -928,7 +936,7 @@ where_values:
 
 [multi-indel_length-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  indel_length,\n  COUNT(*) indel_number,\n  AVG(indel_gc) AVG_gc,\n
   \ SUM(indel_length) indel_sum\nFROM indel\nWHERE (indel.indel_slippage = 0)\nGROUP
   BY\n  indel_length\n"
@@ -964,7 +972,7 @@ where_values:
 
 [three-distance-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  isw_distance distance,\n  AVG(isw_pi) AVG_pi,\n  AVG(isw_d_indel)
   AVG_d_indel,\n  AVG(isw_d_noindel) AVG_d_noindel,\n  AVG(isw_d_complex) AVG_d_complex,\n
   \ COUNT(*) COUNT,\n  AVG(isw_d_indel) / AVG(isw_d_noindel) `Di/Dn`\nFROM isw\nWHERE
@@ -1013,7 +1021,7 @@ where_values:
 
 [three-distance_avg-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  AVG(isw_distance) AVG_distance,\n  AVG(isw_pi) AVG_pi,\n  AVG(isw_d_indel)
   AVG_d_indel,\n  AVG(isw_d_noindel) AVG_d_noindel,\n  AVG(isw_d_complex) AVG_d_complex,\n
   \ COUNT(*) COUNT,\n  AVG(isw_d_indel) / AVG(isw_d_noindel) `Di/Dn`\nFROM isw\nWHERE
@@ -1060,7 +1068,7 @@ where_values:
 
 [three-distance_coding-2]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  AVG(isw.isw_distance) AVG_distance,\n  AVG(isw.isw_pi) AVG_pi,\n
   \ AVG(isw.isw_d_indel) AVG_d_indel,\n  AVG(isw.isw_d_noindel) AVG_d_noindel,\n  AVG(isw.isw_d_complex)
   AVG_d_complex,\n  COUNT(*) COUNT,\n  AVG(isw.isw_d_indel) / AVG(isw.isw_d_noindel)
@@ -1115,7 +1123,7 @@ where_values:
 
 [three-distance_total-0]
 ---
-__CLASS__: AlignDB::SQL-0.130080
+__CLASS__: AlignDB::SQL-0.131730
 _sql: "SELECT\n  'Total',\n  AVG(isw_pi) AVG_pi,\n  AVG(isw_d_indel) AVG_d_indel,\n
   \ AVG(isw_d_noindel) AVG_d_noindel,\n  AVG(isw_d_complex) AVG_d_complex,\n  COUNT(*)
   COUNT,\n  AVG(isw_d_indel) / AVG(isw_d_noindel) `Di/Dn`\nFROM isw\nWHERE (isw_distance

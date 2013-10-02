@@ -83,7 +83,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
 {
 
     #----------------------------#
-    # worksheet -- gene_ess, exon_ess, exon_gc
+    # worksheet
     #----------------------------#
     my @sheets = grep {/^ofg/} @sheet_names;
 
