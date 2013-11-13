@@ -91,7 +91,7 @@ elsif ( $run eq 'skeleton' ) {
     @tasks = ( 1 .. 3 );
 }
 elsif ( $run eq 'basic' ) {
-    @tasks = ( 1 .. 5, 21, 40 );
+    @tasks = ( 1 .. 5, 40 );
 }
 elsif ( $run eq 'common' ) {
     @tasks = ( 1 .. 5, 21, 30, 31, 40, 41, 44 );
