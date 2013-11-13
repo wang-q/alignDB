@@ -37,8 +37,6 @@ my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
-my $multi;
-
 my $man  = 0;
 my $help = 0;
 
@@ -141,6 +139,7 @@ ALIGN: for my $align_id (@align_ids) {
 
     $obj->process_message($align_id);
     my ( $target_seq, @query_seqs ) = @{ $obj->get_seqs($align_id) };
+    $_ = uc $_ for ( $target_seq, @query_seqs ) ;
 
     # target runlist
     my $target_set = AlignDB::IntSpan->new($target_runlist);
@@ -152,6 +151,8 @@ EXON: while ( my @row = $exon_sth->fetchrow_array ) {
         my ( $exon_id, $exon_strand, $exon_tl_runlist, $exon_seq,
             $exon_peptide, )
             = @row;
+        
+        $exon_seq = uc $exon_seq;
 
         # extract exon seq in this align
         my $exon_tl_set    = AlignDB::IntSpan->new($exon_tl_runlist);
@@ -162,10 +163,10 @@ EXON: while ( my @row = $exon_sth->fetchrow_array ) {
         if ( index( $exon_seq, $exon_align_seq ) == -1 ) {
             print " " x 4, "Exon sequence does not match alignment\n";
 
-            #print Dump {
-            #    exon_seq       => $exon_seq,
-            #    exon_align_seq => $exon_align_seq
-            #};
+            print Dump {
+                exon_seq       => $exon_seq,
+                exon_align_seq => $exon_align_seq
+            };
             next EXON;
         }
 
