@@ -44,6 +44,8 @@ my $taxon_dir = $Config->{bac}{taxon_dir};
 
 my $working_dir = ".";
 
+my $bat_dir = "d:/wq/Scripts/alignDB";    # Windows alignDB path
+
 my $parent_id = "562,585054";    # E.coli and E. fergusonii
 my $target_id;
 my $outgroup_id;
@@ -83,6 +85,7 @@ GetOptions(
     'password=s'      => \$password,
     'db=s'            => \$db,
     'b|base_dir=s'    => \$base_dir,
+    'bat|bat_dir=s'     => \$bat_dir,
     'x|taxon_dir=s'   => \$taxon_dir,
     'w|working_dir=s' => \$working_dir,
     'p|parent_id=s'   => \$parent_id,
@@ -491,19 +494,20 @@ EOF
 
     # cmd.bat
     $text = <<'EOF';
-REM bac_bz.pl\n";
+REM bac_bz.pl
 REM perl [% stopwatch.cmd_line %]
 
-cd /d [% working_dir %]
-
 REM basicstat
-perl [% findbin %]/../fig/collect_common_basic.pl -d [% working_dir %]
+perl [% bat_dir %]/fig/collect_common_basic.pl -d .
+
+REM common chart
+if exist [% name_str %].common.xlsx perl [% bat_dir %]/stat/common_chart_factory.pl -i [% name_str %].common.xlsx
 
 REM multi chart
-perl [% findbin %]/../stat/multi_chart_factory.pl -i [% findbin %]/../stat/[% name_str %].multi.xlsx
+if exist [% name_str %].multi.xlsx  perl [% bat_dir %]/stat/multi_chart_factory.pl -i [% name_str %].multi.xlsx
 
-REM gc chart\n";
-perl [% findbin %]/../stat/gc_chart_factory.pl --add_trend 1 -i [% findbin %]/../stat/[% name_str %].gc.xlsx\n\n";
+REM gc chart
+if exist [% name_str %].gc.xlsx perl [% bat_dir %]/stat/gc_chart_factory.pl --add_trend 1 -i [% name_str %].gc.xlsx
 
 EOF
     $tt->process(
@@ -511,6 +515,7 @@ EOF
         {   stopwatch     => $stopwatch,
             parallel      => $parallel,
             working_dir   => $working_dir,
+            bat_dir     => $bat_dir,
             findbin       => $FindBin::Bin,
             seq_pair_file => $seq_pair_file,
             name_str      => $name_str,
@@ -627,7 +632,7 @@ perl [% findbin %]/../extra/seq_pair_batch.pl -d 1 --parallel [% parallel %] \
     -f [% seq_pair_file %]  -lt 1000 -r 100-102
 
 #perl [% findbin %]/../extra/seq_pair_batch.pl -d 1 --parallel [% parallel %] \
-#    -f [% seq_pair_file %]  -lt 1000 -r 1,2,21,40
+#    -f [% seq_pair_file %]  -lt 1000 -r 1,2,5,21,40
 
 #----------------------------#
 # mz

@@ -73,12 +73,12 @@ $dbh->{csv_tables}->{t0} = {
     sep_char       => "\t",
     file           => "$gr_dir/prokaryotes.txt",
     skip_first_row => 1,
+    quote_char     => '',
     col_names      => [
-        qw{ Organism_Name BioProject_Accession BioProject_ID Group SubGroup Size
+        qw{ Organism_Name TaxID BioProject_Accession BioProject_ID Group SubGroup Size
             GC Chromosomes_RefSeq Chromosomes_INSDC Plasmids_RefSeq
             Plasmids_INSDC WGS Scaffolds Genes Proteins Release_Date Modify_Date
             Status Center }
-
     ],
 };
 
@@ -87,6 +87,7 @@ $dbh->{csv_tables}->{t1} = {
     sep_char       => "\t",
     file           => "$bp_dir/summary.txt",
     skip_first_row => 1,
+    quote_char     => '',
     col_names      => [
         qw{ Organism_Name TaxID Project_Accession Project_ID Project_Type
             Project_Data_Type Date }
@@ -95,7 +96,7 @@ $dbh->{csv_tables}->{t1} = {
 
 #{
 #    my $query = qq{
-#        SELECT 
+#        SELECT
 #            t0.Status,
 #            t0.Scaffolds,
 #            count(*)
@@ -112,7 +113,7 @@ $dbh->{csv_tables}->{t1} = {
 #        $count++;
 #    }
 #    print "count $count\n";
-#    
+#
 #    exit;
 #    1;
 #}
@@ -140,7 +141,8 @@ $dbh->{csv_tables}->{t1} = {
         WHERE 1 = 1
         AND t0.BioProject_Accession = t1.Project_Accession
     };
-        #AND t0.Organism_Name = t1.Organism_Name
+
+    #AND t0.Organism_Name = t1.Organism_Name
     my $header_sth = $dbh->prepare($query);
     $header_sth->execute;
     $header_sth->finish;

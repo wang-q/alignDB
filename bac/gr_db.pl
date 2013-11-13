@@ -34,7 +34,7 @@ my $server   = $Config->{database}{server};
 my $port     = $Config->{database}{port};
 my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
-my $db       = $Config->{bac}{db};
+my $db       = $Config->{bac}{db_gr};
 
 my $init_sql = "$FindBin::Bin/../bac.sql";
 
