@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     9/12/2013 12:56:12 AM                        */
+/* Created on:     10/2/2013 2:00:07 PM                         */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -66,6 +66,7 @@ create table codingsw
    window_id                      int,
    codingsw_type                  char(8),
    codingsw_distance              int,
+   codingsw_cv                    double,
    primary key (codingsw_id)
 )
 ENGINE = MyISAM;
@@ -201,6 +202,7 @@ create table gsw
    gsw_amplitude                  double,
    gsw_trough_gc                  double,
    gsw_gradient                   double,
+   gsw_cv                         double,
    primary key (gsw_id)
 )
 ENGINE = MyISAM;
@@ -276,6 +278,7 @@ create table isw
    isw_pi                         double,
    isw_target_gc                  double,
    isw_average_gc                 double,
+   isw_cv                         double,
    isw_d_indel                    double,
    isw_d_noindel                  double,
    isw_d_complex                  double,
@@ -350,6 +353,7 @@ create table ofgsw
    window_id                      int,
    ofgsw_type                     char(8),
    ofgsw_distance                 int,
+   ofgsw_cv                       double,
    primary key (ofgsw_id)
 )
 ENGINE = MyISAM;
