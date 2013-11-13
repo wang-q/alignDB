@@ -76,6 +76,7 @@ $excel_obj->jc_correction if $jc_correction;
 #----------------------------------------------------------#
 # draw charts section
 #----------------------------------------------------------#
+my @sheet_names = @{ $excel_obj->sheet_names };
 {
 
     #----------------------------#
@@ -153,6 +154,82 @@ $excel_obj->jc_correction if $jc_correction;
         $option{y_column} = 6;
         $option{y_title}  = "Repeats proportion";
         $option{Top} += $option{Height} + 12.75;
+        $excel_obj->draw_y( $sheet_name, \%option );
+    }
+}
+
+{
+
+    #----------------------------#
+    # worksheet -- dnds
+    #----------------------------#
+    my @sheets = grep {/^combined_dnds/} @sheet_names;
+
+    foreach (@sheets) {
+        my $sheet_name = $_;
+        my %option     = (
+            chart_serial  => 1,
+            x_column      => 1,
+            y_column      => 3,
+            y_last_column => 4,
+            first_row     => 3,
+            last_row      => 18,
+            x_min_scale   => 0,
+            x_max_scale   => 15,
+            x_title       => "Distance to indels (d1)",
+            y_title       => "Syn - Nonsyn",
+            Height        => 200,
+            Width         => 220,
+            Top           => 14.25,
+            Left          => 550,
+        );
+
+        $excel_obj->draw_y( $sheet_name, \%option );
+
+        # chart 2
+        $option{chart_serial}++;
+        $option{y_column}      = 7;
+        $option{y_last_column} = 7;
+        $option{y_title}       = "dn/ds";
+        $option{Top} += $option{Height} + 14.25;
+        $excel_obj->draw_y( $sheet_name, \%option );
+    }
+}
+
+{
+
+    #----------------------------#
+    # worksheet -- dnds
+    #----------------------------#
+    my @sheets = grep {/^dnds_freq/} @sheet_names;
+
+    foreach (@sheets) {
+        my $sheet_name = $_;
+        my %option     = (
+            chart_serial  => 1,
+            x_column      => 1,
+            y_column      => 3,
+            y_last_column => 4,
+            first_row     => 3,
+            last_row      => 8,
+            x_min_scale   => 0,
+            x_max_scale   => 5,
+            x_title       => "Distance to indels (d1)",
+            y_title       => "Syn - Nonsyn",
+            Height        => 200,
+            Width         => 220,
+            Top           => 14.25,
+            Left          => 550,
+        );
+
+        $excel_obj->draw_y( $sheet_name, \%option );
+
+        # chart 2
+        $option{chart_serial}++;
+        $option{y_column}      = 7;
+        $option{y_last_column} = 7;
+        $option{y_title}       = "dn/ds";
+        $option{Top} += $option{Height} + 14.25;
         $excel_obj->draw_y( $sheet_name, \%option );
     }
 }

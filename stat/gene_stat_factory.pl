@@ -29,6 +29,7 @@ my $db       = $Config->{database}{db};
 
 # stat parameter
 my $run     = $Config->{stat}{run};
+my $combine = 0;
 my $outfile = "";
 
 my $man  = 0;
@@ -44,6 +45,7 @@ GetOptions(
     'p|password=s' => \$password,
     'o|output=s'   => \$outfile,
     'r|run=s'      => \$run,
+    'cb|combine=i' => \$combine,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -85,6 +87,11 @@ my $write_obj = AlignDB::WriteExcel->new(
     passwd  => $password,
     outfile => $outfile,
 );
+
+# auto detect combine threshold
+if ( $combine == 0 ) {
+    ($combine) = $write_obj->calc_threshold;
+}
 
 #----------------------------------------------------------#
 # worksheet -- summary_gene
@@ -870,6 +877,138 @@ my $coding_quan = sub {
     }
 };
 
+#----------------------------------------------------------#
+# worksheet --
+#----------------------------------------------------------#
+my $combined_dnds = sub {
+
+    # make combine
+    my @combined;
+    {
+        my $sql_query = q{
+            SELECT isw_distance distance,
+                   COUNT(*) COUNT
+            FROM isw i
+            GROUP BY isw_distance
+        };
+        my $standalone = [ -1, 0 ];
+        my %option = (
+            sql_query  => $sql_query,
+            threshold  => $combine,
+            standalone => $standalone,
+        );
+        @combined = @{ $write_obj->make_combine( \%option ) };
+    }
+
+    #----------------------------------------------------------#
+    # worksheet -- combined_distance
+    #----------------------------------------------------------#
+    {
+        my $sheet_name = 'combined_dnds';
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        {    # write header
+            my @headers = qw{AVG_distance AVG_pi AVG_d_syn AVG_d_nsy AVG_d_stop
+                COUNT dn/ds};
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            my $sql_query = q{
+                SELECT AVG(i.isw_distance) AVG_distance,
+                       AVG(i.isw_pi) AVG_pi,
+                       AVG(i.isw_syn) AVG_d_syn,
+                       AVG(i.isw_nsy) AVG_d_nsy,
+                       AVG(i.isw_stop) AVG_d_stop,
+                       COUNT(*) COUNT,
+                       AVG(i.isw_nsy) / AVG(i.isw_syn)  `dn/ds`
+                FROM isw i
+                WHERE isw_distance IN
+            };
+            my %option = (
+                sql_query => $sql_query,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                combined  => \@combined,
+            );
+            ($sheet_row)
+                = $write_obj->write_content_combine( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    }
+
+};
+
+#----------------------------------------------------------#
+# worksheet -- distance(frequecy)
+#----------------------------------------------------------#
+my $frequency_dnds = sub {
+    unless ( $write_obj->check_column( 'indel', 'indel_freq' ) ) {
+        return;
+    }
+
+    my @freq_levels = ( [ 1, 1, 1 ] );
+
+    my $write_sheet = sub {
+        my ($level) = @_;
+        my $sheet_name = 'dnds_freq_' . $level->[0];
+        my $sheet;
+        my ( $sheet_row, $sheet_col );
+
+        {    # write header
+            my @headers = qw{AVG_distance AVG_pi AVG_d_syn AVG_d_nsy AVG_d_stop
+                COUNT dn/ds};
+            ( $sheet_row, $sheet_col ) = ( 0, 0 );
+            my %option = (
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+                header    => \@headers,
+            );
+            ( $sheet, $sheet_row )
+                = $write_obj->write_header_direct( $sheet_name, \%option );
+        }
+
+        {    # write contents
+            my $sql_query = q{
+                SELECT i.isw_distance distance,
+                       AVG(i.isw_pi) AVG_pi,
+                       AVG(i.isw_syn) AVG_d_syn,
+                       AVG(i.isw_nsy) AVG_d_nsy,
+                       AVG(i.isw_stop) AVG_d_stop,
+                       COUNT(*) COUNT,
+                       AVG(i.isw_nsy) / AVG(i.isw_syn)  `dn/ds`
+                FROM    isw i, indel
+                WHERE i.isw_indel_id = indel.indel_id
+                AND indel.indel_freq >= ?
+                AND indel.indel_freq <= ?
+                GROUP BY isw_distance
+            };
+            my %option = (
+                sql_query  => $sql_query,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1], $level->[2] ],
+            );
+            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        }
+
+        print "Sheet \"$sheet_name\" has been generated.\n";
+    };
+
+    foreach (@freq_levels) {
+        &$write_sheet($_);
+    }
+};
+
 foreach my $n (@tasks) {
     if ( $n == 1 ) { &$summary_gene; next; }
     if ( $n == 2 ) { &$coding_all;   next; }
@@ -877,6 +1016,8 @@ foreach my $n (@tasks) {
     #if ( $n == 4 ) { &$exon_gc;      next; }
     #if ( $n == 5 ) { &$exon_ess;     next; }
     if ( $n == 6 ) { &$coding_quan;  next; }
+    if ( $n == 10 ) { &$combined_dnds;  next; }
+    if ( $n == 11 ) { &$frequency_dnds; next; }
 }
 
 $stopwatch->end_message;
