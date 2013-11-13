@@ -433,18 +433,23 @@ my $indel_list = sub {
 
     {    # write contents
         my $sql_query = q{
-            SELECT  i.align_id, i.indel_id, ta.taxon_id, c.chr_name,
-                    i.indel_start, i.indel_end, i.indel_length, i.indel_seq,
-                    i.indel_gc, i.indel_freq, i.indel_occured, i.indel_type,
-                    i.indel_slippage, i.indel_coding, i.indel_repeats
-            FROM    indel i, align a, sequence se,
-                    target t, chromosome c, taxon ta
-            WHERE   a.align_id = i.align_id AND
-                    a.align_id = se.align_id AND
-                    se.seq_id = t.seq_id AND
-                    se.chr_id = c.chr_id AND
-                    c.taxon_id = ta.taxon_id
-            ORDER BY c.chr_name, se.chr_start
+            SELECT 
+                i.align_id, i.indel_id, a.taxon_id, a.chr_name, i.indel_start,
+                i.indel_end, i.indel_length, i.indel_seq, i.indel_gc,
+                i.indel_freq, i.indel_occured, i.indel_type, i.indel_slippage,
+                i.indel_coding, i.indel_repeats
+            FROM
+                indel i
+                    INNER JOIN
+                (SELECT 
+                    se.align_id, ta.taxon_id, c.chr_name, se.chr_start
+                FROM
+                    sequence se, target t, chromosome c, taxon ta
+                WHERE
+                    se.seq_id = t.seq_id
+                        AND se.chr_id = c.chr_id
+                        AND c.taxon_id = ta.taxon_id) a ON i.align_id = a.align_id
+            ORDER BY a.chr_name , a.chr_start
         };
         my $sth = $dbh->prepare($sql_query);
         $sth->execute();
@@ -494,19 +499,24 @@ my $snp_list = sub {
 
     {    # write contents
         my $sql_query = q{
-            SELECT  s.align_id, s.snp_id, ta.taxon_id, c.chr_name,
-                    s.snp_pos, i.isw_distance,
-                    s.mutant_to, s.snp_freq, s.snp_occured,
-                    s.snp_coding, s.snp_repeats, s.snp_cpg
-            FROM    snp s, align a, isw i, sequence se,
-                    target t, chromosome c, taxon ta
-            WHERE   a.align_id = s.align_id AND
-                    s.isw_id = i.isw_id AND
-                    a.align_id = se.align_id AND
-                    se.seq_id = t.seq_id AND
-                    se.chr_id = c.chr_id AND
-                    c.taxon_id = ta.taxon_id
-            ORDER BY c.chr_name, se.chr_start
+            SELECT 
+                s.align_id, s.snp_id, a.taxon_id, a.chr_name, s.snp_pos,
+                i.isw_distance, s.mutant_to, s.snp_freq, s.snp_occured,
+                s.snp_coding, s.snp_repeats, s.snp_cpg
+            FROM
+                snp s
+                    INNER JOIN
+                (SELECT 
+                    se.align_id, ta.taxon_id, c.chr_name, se.chr_start
+                FROM
+                    sequence se, target t, chromosome c, taxon ta
+                WHERE
+                    se.seq_id = t.seq_id
+                        AND se.chr_id = c.chr_id
+                        AND c.taxon_id = ta.taxon_id) a ON s.align_id = a.align_id
+                    LEFT JOIN
+                isw i ON s.isw_id = i.isw_id
+            ORDER BY a.chr_name , a.chr_start
         };
         my $sth = $dbh->prepare($sql_query);
         $sth->execute();
@@ -522,6 +532,82 @@ my $snp_list = sub {
             ($sheet_row) = $write_obj->write_row_direct(
                 $sheet,
                 {   row       => \@row,
+                    sheet_row => $sheet_row,
+                    sheet_col => $sheet_col,
+                }
+            );
+        }
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
+# worksheet -- snp_codon_list
+#----------------------------------------------------------#
+my $snp_codon_list = sub {
+
+    # if the target column of the target table does not contain
+    #   any values, skip this stat
+    unless ( $write_obj->check_column( 'snp', 'snp_codon_pos' ) ) {
+        return;
+    }
+
+    my $sheet_name = 'snp_codon_list';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers
+            = qw{snp_id name mutant_to freq occured target codon_pos syn nsy };
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT 
+                s.align_id, s.snp_id, a.chr_name, s.snp_pos, s.mutant_to,
+                s.snp_freq, s.snp_occured, s.snp_codon_pos, s.snp_syn, s.snp_nsy
+            FROM
+                snp s
+                    INNER JOIN
+                (SELECT 
+                    se.align_id, ta.taxon_id, c.chr_name, se.chr_start
+                FROM
+                    sequence se, target t, chromosome c, taxon ta
+                WHERE
+                    se.seq_id = t.seq_id
+                        AND se.chr_id = c.chr_id
+                        AND c.taxon_id = ta.taxon_id) a ON s.align_id = a.align_id
+            ORDER BY a.chr_name , a.chr_start
+        };
+        my $sth = $dbh->prepare($sql_query);
+        $sth->execute();
+
+        while ( my @row = $sth->fetchrow_array ) {
+            my $align_id = shift @row;
+            for my $i (2) {
+                my $align_pos = $row[$i];
+                my $chr_pos = $pos_obj->at_target_chr( $align_id, $align_pos );
+                splice @row, $i, 1, $chr_pos;
+            }
+
+            my $name = "$row[1]:$row[2]";
+            my $target = substr $row[5], 0, 1;
+
+            ($sheet_row) = $write_obj->write_row_direct(
+                $sheet,
+                {   row => [
+                        $row[0], $name,   $row[3], $row[4], $row[5],
+                        $target, $row[6], $row[7], $row[8],
+                    ],
                     sheet_row => $sheet_row,
                     sheet_col => $sheet_col,
                 }
@@ -642,11 +728,12 @@ my $strain_list = sub {
 };
 
 foreach my $n (@tasks) {
-    if ( $n == 1 ) { &$indel_basic; next; }
-    if ( $n == 2 ) { &$snp_basic;   next; }
-    if ( $n == 3 ) { &$indel_list;  next; }
-    if ( $n == 4 ) { &$snp_list;    next; }
-    if ( $n == 5 ) { &$strain_list; next; }
+    if ( $n == 1 )  { &$indel_basic;    next; }
+    if ( $n == 2 )  { &$snp_basic;      next; }
+    if ( $n == 3 )  { &$indel_list;     next; }
+    if ( $n == 4 )  { &$snp_list;       next; }
+    if ( $n == 5 )  { &$snp_codon_list; next; }
+    if ( $n == 10 ) { &$strain_list;    next; }
 }
 
 $stopwatch->end_message;
