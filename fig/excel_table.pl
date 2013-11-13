@@ -80,7 +80,7 @@ for my $filename ( sort keys %{$ranges} ) {
 
     # open xls file
     my $efile = file( $base_dir, $filename )->stringify;
-    if (! -e $efile) {
+    if ( !-e $efile ) {
         warn "File not exists: $efile\n";
         next;
     }
