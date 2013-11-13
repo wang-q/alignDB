@@ -11,13 +11,9 @@ my @names = qw{
     Bacillus_cereus
     Bifidobacterium_longum
     Burkholderia_cenocepacia
-    Burkholderia_pseudomallei
     Campylobacter_jejuni
-    Chlamydia_trachomatis
     Clostridium_botulinum
-    Coxiella_burnetii
     Escherichia_coli
-    Francisella_tularensis
     Haemophilus_influenzae
     Helicobacter_pylori
     Lactococcus_lactis
@@ -25,6 +21,7 @@ my @names = qw{
     Listeria_monocytogenes
     Neisseria_meningitidis
     Prochlorococcus_marinus
+    Pseudomonas_aeruginosa
     Pseudomonas_putida
     Rhodopseudomonas_palustris
     Salmonella_enterica
@@ -36,21 +33,42 @@ my @names = qw{
     Streptococcus_suis
     Streptococcus_thermophilus
     Xylella_fastidiosa
-    Yersinia_pestis
-    Yersinia_pseudotuberculosis
     Methanococcus_maripaludis
     Sulfolobus_islandicus
 
     FILTERED
     Bacillus_anthracis
     Burkholderia_mallei
+    Burkholderia_pseudomallei
+    Chlamydia_trachomatis
+    Coxiella_burnetii
+    Francisella_tularensis
     Mycobacterium_tuberculosis
-    Pseudomonas_aeruginosa
     Streptococcus_agalactiae
     Vibrio_cholerae
     Xanthomonas_campestris
     Xanthomonas_oryzae
+    Yersinia_pestis
+    Yersinia_pseudotuberculosis
 };
+
+my @unused = qw{
+    FILTERED
+    Bacillus_anthracis
+    Burkholderia_mallei
+    Burkholderia_pseudomallei
+    Chlamydia_trachomatis
+    Coxiella_burnetii
+    Francisella_tularensis
+    Mycobacterium_tuberculosis
+    Streptococcus_agalactiae
+    Vibrio_cholerae
+    Xanthomonas_campestris
+    Xanthomonas_oryzae
+    Yersinia_pestis
+    Yersinia_pseudotuberculosis
+};
+my %filter = map { $_ => 1 } @unused;
 
 my @data;
 for my $i ( 0 .. $#names ) {
@@ -58,8 +76,7 @@ for my $i ( 0 .. $#names ) {
     my $item = {
         name       => $name,
         text       => join( " ", split /_/, $name ),
-        tag        => 'multi',
-        multi_file => "$name.multi.chart.xlsx",
+        common_file => "$name.common.chart.xlsx",
         gc_file    => "$name.gc.chart.xlsx",
     };
 
@@ -150,7 +167,7 @@ borders:
     bottom: 1
 ranges:
 [% FOREACH item IN data -%]
-  [% item.multi_file %]:
+  [% item.common_file %]:
     basic:
       - copy: B2
         paste: B[% loop.index + 4 %]
@@ -192,6 +209,39 @@ ranges:
 [% END -%]
 EOF
 $tt->process( \$text, { data => \@data, }, 'Table_S_bac.yml' )
+    or die Template->error;
+
+$text = <<'EOF';
+autofit: A:C
+texts:
+  - text: "distance"
+    pos: A1
+  - text: "variable"
+    pos: B1
+  - text: "value"
+    pos: C1
+[% FOREACH item IN data -%]
+[% curser = loop.index * 16 + 2 -%]
+[% idx = 0 -%]
+[% WHILE idx < 16 -%]
+  - text: [% item.name %]
+    pos: B[% curser + idx %]
+[% idx = idx + 1 -%]
+[% END -%]
+[% END -%]
+ranges:
+[% FOREACH item IN data -%]
+[% curser = loop.index * 16 + 2 -%]
+  [% item.multi_file %]:
+    combined_pigccv:
+      - copy: A3:A18
+        paste: A[% curser %]
+      - copy: D3:D18
+        paste: C[% curser %]
+[% END -%]
+EOF
+
+$tt->process( \$text, { data => [ grep { !$filter{ $_->{name} } } @data ], }, 'Table_for_combine.yml' )
     or die Template->error;
 
 __END__

@@ -69,9 +69,8 @@ for my $i ( 0 .. $#names ) {
     my $item = {
         name       => $name,
         text       => join( " ", split /_/, $name ),
-        tag        => 'multi',
         inter      => 0,
-        multi_file => "$name.multi.chart.xlsx",
+        common_file => "$name.common.chart.xlsx",
         gc_file    => "$name.gc.chart.xlsx",
     };
 
@@ -83,12 +82,7 @@ my $text;
 
 $text = <<'EOF';
 [% FOREACH item IN data -%]
-[%  IF item.tag == 'pair';
-        chart = 'common';
-    ELSE;
-        chart = 'multi';
-    END
--%]
+[%   chart = 'common' -%]
 [%  IF item.inter == 1;
         replace = '--replace diversity=divergence';
     ELSE;
@@ -129,8 +123,8 @@ $text = <<'EOF';
 ---
 charts:
 [% FOREACH item IN data -%]
-  [% item.multi_file %]:
-    combined_pigccv:
+  [% item.common_file %]:
+    d1_comb_pi_gc_cv:
       4:
         - [% loop.index % 4 %]
         - [% Math.int(loop.index / 4) %]
@@ -147,7 +141,11 @@ texts:
 [% END -%]
 EOF
 
-$tt->process( \$text, { data => [ grep { !$filter{ $_->{name} } } @data ], },
+#$tt->process( \$text, { data => [ grep { !$filter{ $_->{name} } } @data ], },
+#    'Fig_bac_d1_gc_cv.yml' )
+#    or die Template->error;
+
+$tt->process( \$text, { data => [  @data ], },
     'Fig_bac_d1_gc_cv.yml' )
     or die Template->error;
 
