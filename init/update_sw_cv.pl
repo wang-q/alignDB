@@ -81,11 +81,7 @@ my @align_ids;
     );
 
     # add column
-    $obj->create_column( "codingsw", "codingsw_cv",       "DOUBLE" );
     $obj->create_column( "codingsw", "codingsw_intra_cv", "DOUBLE" );
-    $obj->create_column( "ofgsw",    "ofgsw_cv",          "DOUBLE" );
-    $obj->create_column( "isw",      "isw_cv",            "DOUBLE" );
-    $obj->create_column( "gsw",      "gsw_cv",            "DOUBLE" );
     $obj->create_column( "gsw",      "gsw_intra_cv",      "DOUBLE" );
     print "Table codingsw, ofgsw, isw and gsw altered\n";
 
