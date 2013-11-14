@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     10/2/2013 2:00:07 PM                         */
+/* Created on:     2013/11/14 23:58:19                          */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -198,6 +198,7 @@ create table gsw
    window_id                      int,
    gsw_type                       char(8),
    gsw_distance                   int,
+   gsw_distance_crest             int,
    gsw_wave_length                int,
    gsw_amplitude                  double,
    gsw_trough_gc                  double,

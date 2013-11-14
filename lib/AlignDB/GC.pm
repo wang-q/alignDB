@@ -719,7 +719,7 @@ sub insert_gsw {
         q{
         INSERT INTO gsw (
             gsw_id, extreme_id, prev_extreme_id, window_id,
-            gsw_type, gsw_distance, gsw_wave_length,
+            gsw_type, gsw_distance, gsw_distance_crest, gsw_wave_length,
             gsw_amplitude, gsw_trough_gc, gsw_gradient
         )
         VALUES (
@@ -734,18 +734,6 @@ sub insert_gsw {
         my $ex_id      = $ref->{extreme_id};
         my $prev_ex_id = $ref->{prev_extreme_id};
         my $ex_type    = $ref->{extreme_type};
-
-        # determining $gsw_type here, ascend and descent
-        my $gsw_type;
-        if ( $ex_type eq 'C' ) {    # crest
-            $gsw_type = 'R';        # ascend, right side of trough
-        }
-        elsif ( $ex_type eq 'T' ) {    # trough
-            $gsw_type = 'L';           # descend, left side of trough
-        }
-        else {
-            warn "extreme_type [$ex_type] error\n";
-        }
 
         # bypass the first extreme
         if ( $prev_ex_id == 0 ) {
@@ -764,8 +752,6 @@ sub insert_gsw {
         my $ex_set = AlignDB::IntSpan->new($ex_runlist);
 
         # determining $gsw_density here, which is different from isw_density
-        # and start at "0", because the first windows is within the trough
-        # windows.
         my $half_length = int( $ex_set->cardinality / 2 );
         my $gsw_density
             = int( ( $ex_left_wave_length - $half_length ) / $gsw_size );
@@ -774,16 +760,34 @@ sub insert_gsw {
         my $gsw_wave_length = $ex_left_wave_length;
         my $gsw_amplitude   = $ex_left_amplitude;
         my $gsw_trough_gc   = $ex_type eq 'T' ? $ex_gc : $prev_ex_gc;
+        my $gsw_crest_gc    = $ex_type eq 'T' ? $prev_ex_gc : $ex_gc;
         my $gsw_gradient    = $gsw_amplitude / $ex_left_wave_length;
 
+        # determining $gsw_type here, ascend and descent
+        my $gsw_type;
         my @gsw_windows;
         if ( $ex_type eq 'T' ) {    # push trough to gsw
+            $gsw_type = 'D';        # descend, left of trough£¬right of crest
             push @gsw_windows,
                 {
-                type     => 'M',
-                set      => $ex_set,
-                distance => 0,
+                type           => 'T',
+                set            => $ex_set,
+                distance       => 0,
+                distance_crest => $gsw_density + 1,
                 };
+        }
+        elsif ( $ex_type eq 'C' ) {    # crest
+            $gsw_type = 'A';           # ascend, right of trough, left of crest
+            push @gsw_windows,
+                {
+                type           => 'C',
+                set            => $ex_set,
+                distance       => $gsw_density + 1,
+                distance_crest => 0,
+                };
+        }
+        else {
+            warn "extreme_type [$ex_type] error\n";
         }
 
         {    # More windows will be submitted in the following section
@@ -792,13 +796,13 @@ sub insert_gsw {
             # $sw_start and $sw_end are both index of $comprarable_set
             # $gsw_distance is from 1 to $gsw_density
             # window 0 is trough
-            # ..., L2, L1, M0, R1, R2, ...
+            # ..., D2, D1, T0, A1, A2, ...
             my ( $sw_start, $sw_end );
-            if ( $gsw_type eq 'R' ) {
+            if ( $gsw_type eq 'A' ) {
                 $sw_start = $comparable_set->index( $prev_ex_set->max ) + 1;
                 $sw_end   = $sw_start + $gsw_size - 1;
             }
-            elsif ( $gsw_type eq 'L' ) {
+            elsif ( $gsw_type eq 'D' ) {
                 $sw_end   = $comparable_set->index( $ex_set->min ) - 1;
                 $sw_start = $sw_end - $gsw_size + 1;
             }
@@ -808,16 +812,17 @@ sub insert_gsw {
 
                 push @gsw_windows,
                     {
-                    type     => $gsw_type,
-                    set      => $gsw_set,
-                    distance => $gsw_distance,
+                    type           => $gsw_type,
+                    set            => $gsw_set,
+                    distance       => $gsw_distance,
+                    distance_crest => $gsw_density - $gsw_distance + 1,
                     };
 
-                if ( $gsw_type eq 'R' ) {
+                if ( $gsw_type eq 'A' ) {
                     $sw_start = $sw_end + 1;
                     $sw_end   = $sw_start + $gsw_size - 1;
                 }
-                elsif ( $gsw_type eq 'L' ) {
+                elsif ( $gsw_type eq 'D' ) {
                     $sw_end   = $sw_start - 1;
                     $sw_start = $sw_end - $gsw_size + 1;
                 }
@@ -828,9 +833,11 @@ sub insert_gsw {
                     = $self->insert_window( $align_id, $gsw->{set} );
 
                 $gsw_insert->execute(
-                    $ex_id,         $prev_ex_id,      $cur_window_id,
-                    $gsw->{type},   $gsw->{distance}, $gsw_wave_length,
-                    $gsw_amplitude, $gsw_trough_gc,   $gsw_gradient,
+                    $ex_id,           $prev_ex_id,
+                    $cur_window_id,   $gsw->{type},
+                    $gsw->{distance}, $gsw->{distance_crest},
+                    $gsw_wave_length, $gsw_amplitude,
+                    $gsw_trough_gc,   $gsw_gradient,
                 );
             }
         }
