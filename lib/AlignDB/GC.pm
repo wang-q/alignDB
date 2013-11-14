@@ -724,7 +724,7 @@ sub insert_gsw {
         )
         VALUES (
             NULL, ?, ?, ?,
-            ?, ?, ?,
+            ?, ?, ?, ?,
             ?, ?, ?
         )
         }
