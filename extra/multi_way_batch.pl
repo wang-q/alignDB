@@ -100,10 +100,10 @@ elsif ( $run eq 'gc' ) {
     @tasks = ( 1 .. 5, 10, 21, 30 .. 32, 40 .. 42 );
 }
 elsif ( $run eq 'gene' ) {
-    @tasks = ( 1 .. 5, 10, 20, 21, 30 .. 33, 40 .. 43, 45 );
+    @tasks = ( 1 .. 5, 10, 20, 21, 30 .. 33, 40 .. 44 );
 }
 elsif ( $run eq 'stat' ) {
-    @tasks = ( 40 .. 45 );
+    @tasks = ( 40 .. 44 );
 }
 else {
     $run =~ s/\"\'//s;
@@ -132,8 +132,8 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " --db $db_name"
-        . " --dir $dir_align"
-        . " --length $length_threshold"
+        . " --da $dir_align"
+        . " -lt $length_threshold"
         . " --parallel $parallel"
         . " --batch $batch_number"
         . " --id $file_id_of"
@@ -245,13 +245,6 @@ my $dispatch = {
         . " --password $password"
         . " -d $db_name"
         . " -o $db_name.mvar.xlsx",
-    45 => "perl $FindBin::Bin/../stat/dnds_stat_factory.pl"
-        . " -s $server"
-        . " --port $port"
-        . " -u $username"
-        . " --password $password"
-        . " -d $db_name"
-        . " -o $db_name.dnds.xlsx",
 };
 
 #----------------------------#

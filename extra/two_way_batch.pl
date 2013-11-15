@@ -99,13 +99,13 @@ elsif ( $run eq 'common' ) {
     @tasks = ( 1 .. 5, 21, 30, 31, 40, 41, 44 );
 }
 elsif ( $run eq 'gc' ) {
-    @tasks = ( 1 .. 5, 10, 21, 30 .. 32, 40, 42, 44 );
+    @tasks = ( 1 .. 5, 10, 21, 30 .. 32, 40 .. 42 );
 }
 elsif ( $run eq 'gene' ) {
-    @tasks = ( 1 .. 5, 10, 20, 21, 30 .. 33, 40, 43, 44, 45 );
+    @tasks = ( 1 .. 5, 10, 20, 21, 30 .. 33, 40 .. 44 );
 }
 elsif ( $run eq 'stat' ) {
-    @tasks = ( 40 .. 45 );
+    @tasks = ( 40 .. 44 );
 }
 else {
     $run =~ s/\"\'//s;
@@ -238,13 +238,6 @@ my $dispatch = {
         . " --password $password"
         . " -d $db_name"
         . " -o $db_name.mvar.xlsx",
-    45 => "perl $FindBin::Bin/../stat/dnds_stat_factory.pl"
-        . " -s $server"
-        . " --port $port"
-        . " -u $username"
-        . " --password $password"
-        . " -d $db_name"
-        . " -o $db_name.dnds.xlsx",
 };
 
 #----------------------------#
