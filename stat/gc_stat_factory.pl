@@ -289,6 +289,74 @@ my $distance_to_trough = sub {
 };
 
 #----------------------------------------------------------#
+# worksheet -- distance_to_crest
+#----------------------------------------------------------#
+my $distance_to_crest = sub {
+
+    # make combine
+    my @combined;
+    {
+        my $sql_query = q{
+            SELECT gsw_distance_crest gsw_distance_crest,
+                   COUNT(*) COUNT
+            FROM gsw g
+            WHERE 1 = 1
+            GROUP BY gsw_distance_crest
+        };
+        my $standalone = [];
+        my %option     = (
+            sql_query  => $sql_query,
+            threshold  => $combine,
+            standalone => $standalone,
+            merge_last => 1,
+        );
+        @combined = @{ $write_obj->make_combine( \%option ) };
+    }
+
+    my $sheet_name = 'distance_to_crest';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers
+            = qw{ AVG_distance_to_crest AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  AVG(gsw_distance_crest) distance_to_crest,
+                    AVG(w.window_pi) AVG_pi,
+                    STD(w.window_pi) STD_pi,
+                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                    STD(w.window_indel / w.window_length * 100) STD_indel,
+                    AVG(g.gsw_cv) AVG_cv,
+                    STD(g.gsw_cv) STD_cv,
+                    COUNT(w.window_id) COUNT
+            FROM gsw g, window w
+            WHERE g.window_id = w.window_id
+            AND gsw_distance_crest IN
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            combined  => \@combined,
+        );
+        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
 # worksheet -- wave_length
 #----------------------------------------------------------#
 my $wave_length = sub {
@@ -481,6 +549,74 @@ my $trough_gc = sub {
             FROM gsw g, window w
             WHERE g.window_id = w.window_id
             AND FLOOR(gsw_trough_gc / 0.01) IN 
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            combined  => \@combined,
+        );
+        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+
+};
+
+#----------------------------------------------------------#
+# worksheet -- crest_gc
+#----------------------------------------------------------#
+my $crest_gc = sub {
+
+    # make combine
+    my @combined;
+    {
+        my $sql_query = q{
+            SELECT FLOOR(gsw_crest_gc / 0.01) crest_gc,
+                   COUNT(*) COUNT
+            FROM gsw g
+            GROUP BY FLOOR(gsw_crest_gc / 0.01)
+        };
+        my $standalone = [];
+        my %option     = (
+            sql_query  => $sql_query,
+            threshold  => $combine,
+            standalone => $standalone,
+            merge_last => 1,
+        );
+        @combined = @{ $write_obj->make_combine( \%option ) };
+    }
+
+    my $sheet_name = 'crest_gc';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers
+            = qw{ AVG_crest_gc AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  AVG(FLOOR(gsw_crest_gc / 0.01)) AVG_crest_gc,
+                    AVG(w.window_pi) AVG_pi,
+                    STD(w.window_pi) STD_pi,
+                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                    STD(w.window_indel / w.window_length * 100) STD_indel,
+                    AVG(g.gsw_cv) AVG_cv,
+                    STD(g.gsw_cv) STD_cv,
+                    COUNT(w.window_indel) COUNT
+            FROM gsw g, window w
+            WHERE g.window_id = w.window_id
+            AND FLOOR(gsw_crest_gc / 0.01) IN 
         };
         my %option = (
             sql_query => $sql_query,
@@ -934,6 +1070,74 @@ my $d_trough_gc_series = sub {
             WHERE g.window_id = w.window_id
             AND g.gsw_distance <= 10
             AND g.gsw_trough_gc BETWEEN ? AND ?
+            GROUP BY g.gsw_distance 
+            ORDER BY g.gsw_distance ASC
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            group     => \@levels,
+        );
+        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
+# worksheet -- d_crest_gc_series
+#----------------------------------------------------------#
+my $d_crest_gc_series = sub {
+
+    # find quartiles
+    my @levels;
+    {
+        my $sql_query = q{
+            SELECT g.gsw_crest_gc
+            FROM gsw g
+            WHERE 1 = 1
+        };
+        my %option = ( sql_query => $sql_query, );
+        my $quartiles = $write_obj->quantile_sql( \%option, 4 );
+        $_ = round( $_, 4 ) for @{$quartiles};
+        @levels = (
+            [ $quartiles->[0], $quartiles->[1] ],    # 1/4
+            [ $quartiles->[1], $quartiles->[2] ],    # 2/4
+            [ $quartiles->[2], $quartiles->[3] ],    # 3/4
+            [ $quartiles->[3], $quartiles->[4] ],    # 4/4
+        );
+    }
+
+    my $sheet_name = 'd_crest_gc_series';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {                                                # write header
+        my $query_name = 'd_crest_gc_series';
+        my @headers    = qw{gsw_crest_gc AVG_indel COUNT STD_indel};
+        ( $sheet_row, $sheet_col ) = ( 0, 1 );
+        my %option = (
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            header     => \@headers,
+            query_name => $query_name,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  g.gsw_distance gsw_distance,
+                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                    COUNT(*) COUNT,
+                    STD(w.window_indel / w.window_length * 100) STD_indel
+            FROM    gsw g,
+                    window w
+            WHERE g.window_id = w.window_id
+            AND g.gsw_distance <= 10
+            AND g.gsw_crest_gc BETWEEN ? AND ?
             GROUP BY g.gsw_distance 
             ORDER BY g.gsw_distance ASC
         };
@@ -1799,15 +2003,15 @@ my $segment_summary = sub {
 };
 
 foreach my $n (@tasks) {
-    if ( $n == 1 ) { &$summary;            &$segment_summary; next; }
-    if ( $n == 2 ) { &$distance_to_trough; &$wave_length;     next; }
-    if ( $n == 3 ) { next; }
-    if ( $n == 4 ) { &$amplitude;          &$gradient;        next; }
-    if ( $n == 5 ) { &$trough_gc;          &$window_gc;       next; }
-    if ( $n == 6 ) { next; }
-    if ( $n == 7 ) { &$d_wave_length_series; next; }
-    if ( $n == 8 ) { &$d_amplitude_series;   next; }    #&$d_gradient_series;
-    if ( $n == 9 ) { &$d_gc_series; &$d_trough_gc_series; next; }
+    if ( $n == 1 ) { &$summary;            &$segment_summary;   next; }
+    if ( $n == 2 ) { &$distance_to_trough; &$distance_to_crest; next; }
+    if ( $n == 3 ) { &$wave_length; &$amplitude; &$gradient; next; }
+    if ( $n == 4 ) { next; }
+    if ( $n == 5 ) { &$trough_gc; &$crest_gc; next; }
+    if ( $n == 6 ) { &$window_gc;            next; }
+    if ( $n == 7 ) { &$d_wave_length_series; &$d_amplitude_series; next; }
+    if ( $n == 8 ) { &$d_gc_series;          next; }
+    if ( $n == 9 ) { &$d_trough_gc_series;   &$d_crest_gc_series; next; }
 
     if ( $n == 10 ) { &$segment_gc_indel;     next; }
     if ( $n == 11 ) { &$segment_std_indel;    next; }

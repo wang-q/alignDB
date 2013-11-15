@@ -90,7 +90,8 @@ $excel_obj->jc_correction if $jc_correction;
         x_column     => 1,
         y_column     => 2,
         first_row    => 2,
-        last_row     => 99,
+        last_row     => 17,
+        x_max_scale  => 15,
         x_title      => "Distance to GC trough",
         y_title      => "Nucleotide diversity",
         Height       => 200,
@@ -114,6 +115,33 @@ $excel_obj->jc_correction if $jc_correction;
     $option{y_title}  = "Window CV";
     $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
+
+    #----------------------------#
+    # worksheet -- distance_to_crest
+    #----------------------------#
+    $sheet_name           = 'distance_to_crest';
+    $option{chart_serial} = 1;
+    $option{y_column}     = 2;
+    $option{x_title}      = "Distance to GC crest";
+    $option{y_title}      = "Nucleotide diversity";
+    $option{Top}          = 14.25;
+    $option{x_scale_unit} = 5;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 2
+    $option{chart_serial}++;
+    $option{y_column} = 4;
+    $option{y_title}  = "Indel per 100 bp";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 3
+    $option{chart_serial}++;
+    $option{y_column} = 6;
+    $option{y_title}  = "Window CV";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
 }
 
 {
@@ -225,6 +253,33 @@ $excel_obj->jc_correction if $jc_correction;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     #----------------------------#
+    # worksheet -- crest_gc
+    #----------------------------#
+    $sheet_name           = 'crest_gc';
+    $option{chart_serial} = 1;
+    $option{y_column}     = 2;
+    $option{x_title}      = "Crest GC";
+    $option{y_title}      = "Nucleotide diversity";
+    $option{Top}          = 14.25;
+    $option{x_scale_unit} = 5;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 2
+    $option{chart_serial}++;
+    $option{y_column} = 4;
+    $option{y_title}  = "Indel per 100 bp";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 3
+    $option{chart_serial}++;
+    $option{y_column} = 6;
+    $option{y_title}  = "Window CV";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+
+    #----------------------------#
     # worksheet -- window_gc
     #----------------------------#
     $sheet_name           = 'window_gc';
@@ -314,14 +369,21 @@ $excel_obj->jc_correction if $jc_correction;
     $excel_obj->draw_dd( $sheet_name, \%option );
     
     #----------------------------#
-    # worksheet -- dtrough_gc_series
+    # worksheet -- d_trough_gc_series
     #----------------------------#
     $sheet_name = 'd_trough_gc_series';
     $option{group_name} = [1 .. 4] ;
     $excel_obj->draw_dd( $sheet_name, \%option );
     
     #----------------------------#
-    # worksheet -- dgc_series
+    # worksheet -- d_crest_gc_series
+    #----------------------------#
+    $sheet_name = 'd_crest_gc_series';
+    $option{group_name} = [1 .. 4] ;
+    $excel_obj->draw_dd( $sheet_name, \%option );
+    
+    #----------------------------#
+    # worksheet -- d_gc_series
     #----------------------------#
     $sheet_name = 'd_gc_series';
     $option{group_name} = [1 .. 8] ;
