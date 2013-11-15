@@ -720,12 +720,12 @@ sub insert_gsw {
         INSERT INTO gsw (
             gsw_id, extreme_id, prev_extreme_id, window_id,
             gsw_type, gsw_distance, gsw_distance_crest, gsw_wave_length,
-            gsw_amplitude, gsw_trough_gc, gsw_gradient
+            gsw_amplitude, gsw_trough_gc, gsw_crest_gc, gsw_gradient
         )
         VALUES (
             NULL, ?, ?, ?,
             ?, ?, ?, ?,
-            ?, ?, ?
+            ?, ?, ?, ?
         )
         }
     );
@@ -837,7 +837,8 @@ sub insert_gsw {
                     $cur_window_id,   $gsw->{type},
                     $gsw->{distance}, $gsw->{distance_crest},
                     $gsw_wave_length, $gsw_amplitude,
-                    $gsw_trough_gc,   $gsw_gradient,
+                    $gsw_trough_gc,   $gsw_crest_gc,
+                    $gsw_gradient,
                 );
             }
         }

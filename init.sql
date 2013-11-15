@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     2013/11/14 23:58:19                          */
+/* Created on:     2013/11/16 4:11:44                           */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -202,6 +202,7 @@ create table gsw
    gsw_wave_length                int,
    gsw_amplitude                  double,
    gsw_trough_gc                  double,
+   gsw_crest_gc                   double,
    gsw_gradient                   double,
    gsw_cv                         double,
    primary key (gsw_id)
