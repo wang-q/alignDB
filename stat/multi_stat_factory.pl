@@ -59,7 +59,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 my @tasks;
 
 if ( $run eq 'all' ) {
-    @tasks = ( 1 .. 20 );
+    @tasks = ( 1 .. 50 );
     $outfile = "$db.multi.xlsx" unless $outfile;
 }
 else {
@@ -373,7 +373,7 @@ my $distance3 = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- distance_lengtth
+# worksheet -- distance_length
 #----------------------------------------------------------#
 my $distance_length = sub {
 
@@ -798,6 +798,110 @@ my $indel_length_insdel = sub {
     }
 };
 
+#----------------------------------------------------------#
+# worksheet -- indel_type_gc_10
+#----------------------------------------------------------#
+my $indel_type_gc_10 = sub {
+    my $sheet_name = 'indel_type_gc_10';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    # indel_type groups
+    my @indel_types = ( [ 'Insertion', ['I'] ], [ 'Deletion', ['D'] ], );
+
+    {    # write header
+        my $query_name = 'indel_type_gc_10';
+        my @headers    = qw{indel_length AVG_gc COUNT STD_gc };
+        ( $sheet_row, $sheet_col ) = ( 0, 1 );
+        my %option = (
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            header     => \@headers,
+            query_name => $query_name,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    # write contents
+    for (@indel_types) {
+        $sheet_row++;
+        my $sql_query = q{
+            SELECT  indel_length,
+                    AVG(indel_gc) AVG_indel_gc,
+                    COUNT(*),
+                    STD(indel_gc) STD_indel_gc
+            FROM indel
+            WHERE indel_type = ?
+            AND indel_length <= 10
+            GROUP BY indel_length
+        };
+        my %option = (
+            sql_query  => $sql_query,
+            query_name => $_->[0],
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            bind_value => $_->[1],
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
+# worksheet -- indel_type_gc_100
+#----------------------------------------------------------#
+my $indel_type_gc_100 = sub {
+    my $sheet_name = 'indel_type_gc_100';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    # indel_type groups
+    my @indel_types
+        = ( [ 'Insertion', ['I'] ], [ 'Deletion', ['D'] ], );
+
+    {    # write header
+        my $query_name = 'indel_type_gc_100';
+        my @headers    = qw{indel_length AVG_gc COUNT STD_gc };
+        ( $sheet_row, $sheet_col ) = ( 0, 1 );
+        my %option = (
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            header     => \@headers,
+            query_name => $query_name,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    # write contents
+    for (@indel_types) {
+        $sheet_row++;
+        my $sql_query = q{
+            # indel_length distribution
+            SELECT  CEIL(indel_length / 10) * 10,
+                    AVG(indel_gc) AVG_indel_gc,
+                    COUNT(*),
+                    STD(indel_gc) STD_indel_gc
+            FROM indel
+            WHERE indel_type = ?
+            AND indel_length <= 100
+            GROUP BY CEIL(indel_length / 10)
+        };
+        my %option = (
+            sql_query  => $sql_query,
+            query_name => $_->[0],
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+            bind_value => $_->[1],
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
 my $combined_pigccv = sub {
 
     #----------------------------------------------------------#
@@ -1195,11 +1299,12 @@ foreach my $n (@tasks) {
     if ( $n == 8 )  { &$indel_length;         next; }
     if ( $n == 9 )  { &$indel_length_freq;    next; }
     if ( $n == 10 ) { &$indel_length_insdel;  next; }
-    if ( $n == 11 ) { &$combined_pigccv;      next; }
-    if ( $n == 12 ) { &$frequency_pigccv;     next; }
-    if ( $n == 22 ) { &$di_dn_ttest;          next; }
-    if ( $n == 23 ) { &$frequency_distance2;  next; }
-    if ( $n == 24 ) { &$frequency_distance3;  next; }
+    if ( $n == 11 ) { &$indel_type_gc_10;     &$indel_type_gc_100; next; }
+    if ( $n == 21 ) { &$combined_pigccv;      next; }
+    if ( $n == 22 ) { &$frequency_pigccv;     next; }
+    if ( $n == 52 ) { &$di_dn_ttest;          next; }
+    if ( $n == 53 ) { &$frequency_distance2;  next; }
+    if ( $n == 54 ) { &$frequency_distance3;  next; }
 }
 
 $stopwatch->end_message;

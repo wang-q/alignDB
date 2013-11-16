@@ -202,6 +202,38 @@ my @sheet_names = @{ $excel_obj->sheet_names };
     }
 }
 
+{
+
+    #----------------------------#
+    # worksheet -- indel_type_gc_10
+    #----------------------------#
+    my $sheet_name = 'indel_type_gc_10';
+    my @group_name = qw{Insertion Deletion};
+    my %option     = (
+        chart_serial   => 1,
+        x_title        => "Indel length",
+        y_title        => "GC proportion",
+        Height         => 300,
+        Width          => 390,
+        Top            => 14.25 * 17,
+        Left           => 360,
+        group_name     => \@group_name,
+        section_top    => 2,
+        section_end    => 12,
+        section_length => 11,
+        x_orientation  => 0,
+    );
+
+    $excel_obj->draw_dd( $sheet_name, \%option );
+
+    #----------------------------#
+    # worksheet -- indel_type_gc_100
+    #----------------------------#
+    $sheet_name = 'indel_type_gc_100';
+
+    $excel_obj->draw_dd( $sheet_name, \%option );
+}
+
 #----------------------------------------------------------#
 # POST Processing
 #----------------------------------------------------------#
