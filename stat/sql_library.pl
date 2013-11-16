@@ -18,7 +18,7 @@ use AlignDB::SQL::Library;
 # Object headers in sql_library are named under the following rules:
 #   TYEP-NAME-BINDINGs
 # e.g.: common-distance-0
-#       three-distance-0
+#       multi-distance-0
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -492,124 +492,6 @@ sub ns { return AlignDB::SQL->new; }
     $sql->group( { column => 'isw.isw_distance' } );
 
     $sql_file->set( 'common-align-0', $sql );
-    print $sql->as_sql if $verbose;
-}
-
-#----------------------------------------------------------#
-# three_stat_factory.pl SQL
-#----------------------------------------------------------#
-
-#SELECT isw_distance distance,
-#       AVG(isw_pi) AVG_pi,
-#       AVG(isw_d_indel) AVG_d_indel,
-#       AVG(isw_d_noindel) AVG_d_noindel,
-#       AVG(isw_d_complex) AVG_d_complex,
-#       COUNT(*) COUNT,
-#       AVG(isw_d_indel) / AVG(isw_d_noindel)  `Di/Dn`
-#FROM isw i
-#WHERE isw_distance >= 0
-#AND isw_d_indel IS NOT NULL
-#GROUP BY isw_distance
-{
-    my $sql = ns();
-    $sql->add_select( 'isw_distance',       'distance' );
-    $sql->add_select( 'AVG(isw_pi)',        'AVG_pi' );
-    $sql->add_select( 'AVG(isw_d_indel)',   'AVG_d_indel' );
-    $sql->add_select( 'AVG(isw_d_noindel)', 'AVG_d_noindel' );
-    $sql->add_select( 'AVG(isw_d_complex)', 'AVG_d_complex' );
-    $sql->add_select( 'COUNT(*)',           'COUNT' );
-    $sql->add_select( 'AVG(isw_d_indel) / AVG(isw_d_noindel)', '`Di/Dn`' );
-    $sql->from( ['isw'] );
-    $sql->add_where( 'isw_distance' => \'>= 0' );
-    $sql->add_where( 'isw_d_indel'  => \'IS NOT NULL' );
-    $sql->group( { column => 'isw_distance' } );
-
-    $sql_file->set( 'three-distance-0', $sql );
-    print $sql->as_sql if $verbose;
-}
-
-#SELECT 'Total',
-#       AVG(isw_pi) AVG_pi,
-#       AVG(isw_d_indel) AVG_d_indel,
-#       AVG(isw_d_noindel) AVG_d_noindel,
-#       AVG(isw_d_complex) AVG_d_complex,
-#       COUNT(*) COUNT,
-#       AVG(isw_d_indel) / AVG(isw_d_noindel)  `Di/Dn`
-#FROM isw i
-#WHERE isw_distance >= 0
-#AND isw_d_indel IS NOT NULL
-{
-    my $sql = ns();
-    $sql->select( ['\'Total\''] );
-    $sql->add_select( 'AVG(isw_pi)',        'AVG_pi' );
-    $sql->add_select( 'AVG(isw_d_indel)',   'AVG_d_indel' );
-    $sql->add_select( 'AVG(isw_d_noindel)', 'AVG_d_noindel' );
-    $sql->add_select( 'AVG(isw_d_complex)', 'AVG_d_complex' );
-    $sql->add_select( 'COUNT(*)',           'COUNT' );
-    $sql->add_select( 'AVG(isw_d_indel) / AVG(isw_d_noindel)', '`Di/Dn`' );
-    $sql->from( ['isw'] );
-    $sql->add_where( 'isw_distance' => \'>= 0' );
-    $sql->add_where( 'isw_d_indel'  => \'IS NOT NULL' );
-
-    $sql_file->set( 'three-distance_total-0', $sql );
-    print $sql->as_sql if $verbose;
-}
-
-#SELECT AVG(isw_distance) AVG_distance,
-#       AVG(isw_pi) AVG_pi,
-#       AVG(isw_d_indel) AVG_d_indel,
-#       AVG(isw_d_noindel) AVG_d_noindel,
-#       AVG(isw_d_complex) AVG_d_complex,
-#       COUNT(*) COUNT,
-#       AVG(isw_d_indel) / AVG(isw_d_noindel)  `Di/Dn`
-#FROM isw
-{
-    my $sql = ns();
-    $sql->add_select( 'AVG(isw_distance)',  'AVG_distance' );
-    $sql->add_select( 'AVG(isw_pi)',        'AVG_pi' );
-    $sql->add_select( 'AVG(isw_d_indel)',   'AVG_d_indel' );
-    $sql->add_select( 'AVG(isw_d_noindel)', 'AVG_d_noindel' );
-    $sql->add_select( 'AVG(isw_d_complex)', 'AVG_d_complex' );
-    $sql->add_select( 'COUNT(*)',           'COUNT' );
-    $sql->add_select( 'AVG(isw_d_indel) / AVG(isw_d_noindel)', '`Di/Dn`' );
-    $sql->from( ['isw'] );
-    $sql->add_where( 'isw_distance' => \'>= 0' );
-    $sql->add_where( 'isw_d_indel'  => \'IS NOT NULL' );
-
-    $sql_file->set( 'three-distance_avg-0', $sql );
-    print $sql->as_sql if $verbose;
-}
-
-#SELECT
-#  AVG(isw.isw_distance) AVG_distance,
-#  AVG(isw.isw_pi) AVG_pi,
-#  AVG(isw.isw_d_indel) AVG_d_indel,
-#  AVG(isw.isw_d_noindel) AVG_d_noindel,
-#  AVG(isw.isw_d_complex) AVG_d_complex,
-#  COUNT(*) COUNT,
-#  AVG(isw.isw_d_indel) / AVG(isw.isw_d_noindel) `Di/Dn`
-#FROM isw
-#WHERE (isw.isw_distance >= 0)
-#  AND (isw.isw_d_indel IS NOT NULL)
-#  AND (isw.isw_coding >= ?)
-{
-    my $sql = ns();
-    $sql->add_select( 'AVG(isw.isw_distance)',  'AVG_distance' );
-    $sql->add_select( 'AVG(isw.isw_pi)',        'AVG_pi' );
-    $sql->add_select( 'AVG(isw.isw_d_indel)',   'AVG_d_indel' );
-    $sql->add_select( 'AVG(isw.isw_d_noindel)', 'AVG_d_noindel' );
-    $sql->add_select( 'AVG(isw.isw_d_complex)', 'AVG_d_complex' );
-    $sql->add_select( 'COUNT(*)',               'COUNT' );
-    $sql->add_select( 'AVG(isw.isw_d_indel) / AVG(isw.isw_d_noindel)',
-        '`Di/Dn`' );
-
-    $sql->from( ['isw'] );
-    $sql->add_where( 'isw.isw_distance' => \'>= 0' );
-    $sql->add_where( 'isw.isw_d_indel'  => \'IS NOT NULL' );
-    $sql->add_where( 'isw.isw_coding'   => { op => '>=', value => '1' } );
-    $sql->add_where( 'isw.isw_coding'   => { op => '<=', value => '1' } );
-
-    $sql_file->set( 'three-distance_coding-2', $sql );
     print $sql->as_sql if $verbose;
 }
 
