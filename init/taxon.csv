@@ -530,9 +530,6 @@ taxon_id,genus,species,sub_species,common_name,classification
 218497,Chlamydophila,abortus,S26/3
 264202,Chlamydophila,felis,Fe/C-56
 227941,Chlamydophila,caviae,GPIC
-115713,Chlamydophila,pneumoniae,CWL029
-138677,Chlamydophila,pneumoniae,J138
-182082,Chlamydophila,pneumoniae,TW-183
 331113,Simkania,negevensis,Z
 331635,Chlamydophila,pecorum,E58
 264201,Candidatus Protochlamydia,amoebophila,UWE25
@@ -2733,3 +2730,13 @@ taxon_id,genus,species,sub_species,common_name,classification
 555217,Zymomonas,mobilis,subsp. mobilis ATCC 10988,Zymomonas_mobilis_subsp_mobilis_ATCC_10988,
 579138,Zymomonas,mobilis,subsp. pomaceae ATCC 29192,Zymomonas_mobilis_subsp_pomaceae_ATCC_29192,
 627344,Zymomonas,mobilis,subsp. mobilis ATCC 29191,Zymomonas_mobilis_subsp_mobilis_ATCC_29191,
+902001,Homo,sapiens,NA19700,,
+902006,Homo,sapiens,NA06985,,
+902011,Homo,sapiens,NA18526,,
+902015,Homo,sapiens,NA20845,,
+902019,Homo,sapiens,NA18940,,
+902023,Homo,sapiens,NA19017,,
+902027,Homo,sapiens,NA21732,,
+902031,Homo,sapiens,NA19735,,
+902036,Homo,sapiens,NA20502,,
+902040,Homo,sapiens,NA18501,,
