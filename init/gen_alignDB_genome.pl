@@ -10,6 +10,7 @@ use YAML qw(Dump Load DumpFile LoadFile);
 use File::Find::Rule;
 use File::Basename;
 
+use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(:all);
@@ -43,7 +44,9 @@ my $dir;
 
 my $target;    # target sequence
 
-my $truncated_length = 500_000;
+my $truncated_length = 100_000;
+my $fill             = 50;
+my $min_length       = 5000;
 
 # run in parallel mode
 my $parallel = $Config->{generate}{parallel};
@@ -62,6 +65,8 @@ GetOptions(
     'dir=s'        => \$dir,
     'target=s'     => \$target,
     'length=i'     => \$truncated_length,
+    'fill=i'       => \$fill,
+    'min=i'        => \$min_length,
     'parallel=i'   => \$parallel,
 ) or pod2usage(2);
 
@@ -122,16 +127,58 @@ my $worker = sub {
     my $chr_id  = $id_hash->{$chr_name};
     return unless $chr_id;
 
-    for ( my $pos = 0; $pos < $chr_length; $pos += $truncated_length ) {
-        my $seq = substr( $chr_seq, $pos, $truncated_length );
+    my $ambiguous_set = AlignDB::IntSpan->new;
+    for ( my $pos = 0; $pos < $chr_length; $pos++ ) {
+        my $base = substr $chr_seq, $pos, 1;
+        if ( $base =~ /[^ACGT-]/i ) {
+            $ambiguous_set->add( $pos + 1 );
+        }
+    }
+
+    print "Ambiguous chromosome region for $chr_name:\n    "
+        . $ambiguous_set->runlist . "\n";
+
+    my $valid_set = AlignDB::IntSpan->new("1-$chr_length");
+    $valid_set->subtract($ambiguous_set);
+    $valid_set = $valid_set->fill( $fill - 1 );    # fill gaps smaller than $fill
+
+    print "Valid chromosome region for $chr_name:\n    "
+        . $valid_set->runlist . "\n";
+
+    my @regions;                      # ([start, end], [start, end], ...)
+    for my $set ( $valid_set->sets ) {
+        my $size = $set->size;
+        next if $size < $min_length;
+
+        my @set_regions;
+        my $pos = $set->min;
+        my $max = $set->max;
+        while ( $max - $pos + 1 > $truncated_length ) {
+            push @set_regions, [ $pos, $pos + $truncated_length - 1 ];
+            $pos += $truncated_length;
+        }
+        if ( scalar @set_regions > 0 ) {
+            $set_regions[-1]->[1] = $max;
+        }
+        else {
+            @set_regions = ( [ $pos, $max ] );
+        }
+        push @regions, @set_regions;
+    }
+
+    #print Dump \@regions;
+
+    for my $region (@regions) {
+        my ( $start, $end ) = @{$region};
+        my $seq = substr $chr_seq, $start - 1, $end - $start + 1;
 
         my $info_refs = [
             {   taxon_id   => $target_taxon_id,
                 name       => $target_name,
                 chr_id     => $chr_id,
                 chr_name   => $chr_name,
-                chr_start  => $pos + 1,
-                chr_end    => $pos + length($seq),
+                chr_start  => $start,
+                chr_end    => $end,
                 chr_strand => '+',
                 seq        => $seq,
             },
@@ -139,8 +186,8 @@ my $worker = sub {
                 name       => $target_name,
                 chr_id     => $chr_id,
                 chr_name   => $chr_name,
-                chr_start  => $pos + 1,
-                chr_end    => $pos + length($seq),
+                chr_start  => $start,
+                chr_end    => $end,
                 chr_strand => '+',
                 seq        => $seq,
             },
@@ -201,8 +248,8 @@ __END__
 
 =cut
 
->perl init_alignDB.pl -d athvsself
->perl gen_alignDB_genome.pl -d athvsself -t "3702,Ath" --dir e:\data\alignment\arabidopsis\ath_58\  --parallel 4
+perl init/init_alignDB.pl -d Athvsself
+perl init/gen_alignDB_genome.pl -d Athvsself -t "3702,Ath" --dir /home/wangq/data/alignment/arabidopsis19/ath_65  --parallel 4
 
 >perl init_alignDB.pl -d nipvsself
 >perl gen_alignDB_genome.pl -d nipvsself -t "39947,Nip" --dir e:\data\alignment\rice\nip_58\  --parallel 4
@@ -210,6 +257,6 @@ __END__
 >perl init_alignDB.pl -d 9311vsself
 >perl gen_alignDB_genome.pl -d 9311vsself -t "39946,9311" --dir e:\data\alignment\rice\9311_58\  --parallel 4
 
->perl init_alignDB.pl -d S288Cvsself
->perl gen_alignDB_genome.pl -d S288Cvsself -t "4932,S288C" --dir d:\data\alignment\yeast65\S288C\  --parallel 4
-$perl gen_alignDB_genome.pl -d S288Cvsself -t "4932,S288C" --dir /home/wangq/data/alignment/yeast65/S288C/  --parallel 4
+perl init/init_alignDB.pl -d S288Cvsself
+perl init/gen_alignDB_genome.pl -d S288Cvsself -t "4932,S288C" --dir /home/wangq/data/alignment/yeast65/S288C/  --parallel 4
+perl init/insert_gc.pl -d S288Cvsself --parallel 4
