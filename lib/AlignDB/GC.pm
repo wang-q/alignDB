@@ -36,6 +36,9 @@ has 'alt_level' => ( is => 'rw', isa => 'Bool', default => 0, );
 # use 100 level
 has 'one_level' => ( is => 'rw', isa => 'Bool', default => 0, );
 
+# skip calc mdcw
+has 'skip_mdcw' => ( is => 'rw', isa => 'Bool', default => 0, );
+
 sub insert_segment {
     my $self           = shift;
     my $align_id       = shift;
@@ -185,7 +188,7 @@ sub segment_gc_stat {
         = $gc_mean == 0 || $gc_mean == 1 ? undef
         : $gc_mean <= 0.5 ? $gc_std / $gc_mean
         :                   $gc_std / ( 1 - $gc_mean );
-    my $gc_mdcw = _mdcw(@sliding_gcs);
+    my $gc_mdcw = $self->skip_mdcw ? undef :_mdcw(@sliding_gcs);
 
     return ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw );
 }
@@ -532,10 +535,10 @@ REDO: while (1) {
 
 sub gc_wave {
     my $self           = shift;
-    my $align_id       = shift;
+    my $seqs_ref       = shift;
     my $comparable_set = shift;
 
-    my @seqs = @{ $self->get_seqs($align_id) };
+    my @seqs = @{$seqs_ref};
 
     my $comparable_number = $comparable_set->cardinality;
 
@@ -591,9 +594,9 @@ sub insert_extreme {
     my $half_length  = int( $windows_size / 2 );
 
     my @extreme_site;
-    my @slidings = $self->gc_wave( $align_id, $comparable_set );
-
-    foreach (@slidings) {
+    my $seqs_ref = $self->get_seqs($align_id);
+    my @slidings = $self->gc_wave( $seqs_ref, $comparable_set );
+    for (@slidings) {
         my $flag = $_->{high_low_flag};
         if ( $flag eq 'T' or $flag eq 'C' ) {
             push @extreme_site, $_;
