@@ -12,18 +12,21 @@ use AlignDB::IntSpan;
 use AlignDB::Window;
 use AlignDB::Util qw(:all);
 
-has 'mysql'  => ( is => 'ro', isa => 'Str' );      # e.g. 'alignDB:202.119.43.5'
-has 'server' => ( is => 'ro', isa => 'Str' );      # e.g. '202.119.43.5'
-has 'db'     => ( is => 'ro', isa => 'Str' );      # e.g. 'alignDB'
-has 'user'   => ( is => 'ro', isa => 'Str' );      # database username
-has 'passwd' => ( is => 'ro', isa => 'Str' );      # database password
-has 'dbh'    => ( is => 'ro', isa => 'Object' );   # store database handle here
+has 'mysql'  => ( is => 'ro', isa => 'Str' );    # e.g. 'alignDB:202.119.43.5'
+has 'server' => ( is => 'ro', isa => 'Str' );    # e.g. '202.119.43.5'
+has 'db'     => ( is => 'ro', isa => 'Str' );    # e.g. 'alignDB'
+has 'user'   => ( is => 'ro', isa => 'Str' );    # database username
+has 'passwd' => ( is => 'ro', isa => 'Str' );    # database password
+has 'dbh'    => ( is => 'ro', isa => 'Ref' );    # store database handle here
 has 'window_maker' => ( is => 'ro', isa => 'Object' );   # sliding windows maker
 has 'threshold' => ( is => 'ro', isa => 'Int', default => sub {5_000} );
 
 has 'caching_id' => ( is => 'ro', isa => 'Int' );        # caching seqs
 has 'caching_seqs' =>
     ( is => 'ro', isa => 'ArrayRef[Str]', default => sub { [] } );
+
+# don't connect mysql
+has 'mocking' => ( is => 'ro', isa => 'Bool', default => 0 );
 
 sub BUILD {
     my $self = shift;
@@ -37,6 +40,10 @@ sub BUILD {
     elsif ( $self->server and $self->db ) {
         $self->{mysql} = $self->db . ':' . $self->server;
     }
+    elsif ( $self->mocking ) {
+
+        # do nothing
+    }
     else {
         confess "You should provide either mysql or db-server\n";
     }
@@ -47,9 +54,11 @@ sub BUILD {
     my $server = $self->server;
     my $db     = $self->db;
 
-    my $dbh;
-    $dbh = DBI->connect( "dbi:mysql:$mysql", $user, $passwd )
-        or confess "Cannot connect to MySQL database at $mysql";
+    my $dbh = {};
+    if ( !$self->mocking ) {
+        $dbh = DBI->connect( "dbi:mysql:$mysql", $user, $passwd )
+            or confess "Cannot connect to MySQL database at $mysql";
+    }
     $self->{dbh} = $dbh;
 
     my $window_maker = AlignDB::Window->new;
