@@ -137,7 +137,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         $option{y2_column} = 8;
         $option{y2_title}  = "Window CV";
         $excel_obj->draw_2y( $sheet_name, \%option );
-        delete $option{y_title};
+        delete $option{y2_column};
         delete $option{y2_title};
 
         # chart 2
