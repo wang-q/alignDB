@@ -157,7 +157,6 @@ sub write_row_direct {
     my ( $self, $sheet, $option ) = @_;
 
     # init
-    my $dbh  = $self->dbh;
     my $fmt  = $self->format;
     my @cols = @{ $self->columns };
 
@@ -861,8 +860,8 @@ sub make_combine_piece {
     my $dbh = $self->dbh;
 
     # init parameters
-    my $sql_query  = $option->{sql_query};
-    my $piece  = $option->{piece};
+    my $sql_query = $option->{sql_query};
+    my $piece     = $option->{piece};
 
     # bind value
     my $bind_value = $option->{bind_value};
@@ -878,10 +877,10 @@ sub make_combine_piece {
     while ( my @row = $sth->fetchrow_array ) {
         push @row_count, \@row;
     }
-    
+
     my $sum;
     $sum += $_->[1] for @row_count;
-    my $small_chunk     =  $sum / $piece;
+    my $small_chunk = $sum / $piece;
 
     my @combined;    # return these
     my @temp_combined = ();
@@ -1139,7 +1138,7 @@ sub calc_threshold {
         $combine = 1000;
     }
 
-    return (  $combine, $piece );
+    return ( $combine, $piece );
 }
 
 # instance destructor
@@ -1151,9 +1150,12 @@ sub DESTROY {
     my $workbook = $self->workbook;
     $workbook->close if $workbook;
 
-    # close dbh
-    my $dbh = $self->dbh;
-    $dbh->disconnect if $dbh;
+    if ( !$self->mocking ) {
+
+        # close dbh
+        my $dbh = $self->dbh;
+        $dbh->disconnect if $dbh;
+    }
 }
 
 1;
