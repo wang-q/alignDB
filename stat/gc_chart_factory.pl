@@ -142,6 +142,74 @@ $excel_obj->jc_correction if $jc_correction;
     $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
 
+    #----------------------------#
+    # worksheet -- bed_count_trough
+    #----------------------------#
+    $sheet_name           = 'bed_count_trough';
+    $option{chart_serial} = 1;
+    $option{y_column}     = 2;
+    $option{x_title}      = "Distance to GC trouth";
+    $option{y_title}      = "Nucleotide diversity";
+    $option{Top}          = 14.25;
+    $option{Left}         = 650;
+    $option{x_scale_unit} = 5;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 2
+    $option{chart_serial}++;
+    $option{y_column} = 4;
+    $option{y_title}  = "Indel per 100 bp";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 3
+    $option{chart_serial}++;
+    $option{y_column} = 6;
+    $option{y_title}  = "Window CV";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 4
+    $option{chart_serial}++;
+    $option{y_column} = 8;
+    $option{y_title}  = "BED count";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    #----------------------------#
+    # worksheet -- bed_count_crest
+    #----------------------------#
+    $sheet_name           = 'bed_count_crest';
+    $option{chart_serial} = 1;
+    $option{y_column}     = 2;
+    $option{x_title}      = "Distance to GC crest";
+    $option{y_title}      = "Nucleotide diversity";
+    $option{Top}          = 14.25;
+    $option{Left}         = 650;
+    $option{x_scale_unit} = 5;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 2
+    $option{chart_serial}++;
+    $option{y_column} = 4;
+    $option{y_title}  = "Indel per 100 bp";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 3
+    $option{chart_serial}++;
+    $option{y_column} = 6;
+    $option{y_title}  = "Window CV";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 4
+    $option{chart_serial}++;
+    $option{y_column} = 8;
+    $option{y_title}  = "BED count";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
 }
 
 {
@@ -278,7 +346,6 @@ $excel_obj->jc_correction if $jc_correction;
     $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
 
-
     #----------------------------#
     # worksheet -- window_gc
     #----------------------------#
@@ -314,7 +381,7 @@ $excel_obj->jc_correction if $jc_correction;
     $option{x_title}      = "Gradient";
     $option{y_title}      = "Nucleotide diversity";
     $option{Top}          = 14.25;
-    $option{x_scale_unit}  = 5;
+    $option{x_scale_unit} = 5;
     $excel_obj->draw_y( $sheet_name, \%option );
 
     # chart 2
@@ -351,43 +418,43 @@ $excel_obj->jc_correction if $jc_correction;
         section_length => 12,
         x_orientation  => 0,
     );
-    $option{group_name} = [1 .. 4] ;
+    $option{group_name} = [ 1 .. 4 ];
     $excel_obj->draw_dd( $sheet_name, \%option );
-    
+
     #----------------------------#
     # worksheet -- d_amplitude_series
     #----------------------------#
     $sheet_name = 'd_amplitude_series';
-    $option{group_name} = [1 .. 4] ;
+    $option{group_name} = [ 1 .. 4 ];
     $excel_obj->draw_dd( $sheet_name, \%option );
-    
+
     #----------------------------#
     # worksheet -- d_gradient_series
     #----------------------------#
     $sheet_name = 'd_gradient_series';
-    $option{group_name} = [1 .. 4] ;
+    $option{group_name} = [ 1 .. 4 ];
     $excel_obj->draw_dd( $sheet_name, \%option );
-    
+
     #----------------------------#
     # worksheet -- d_trough_gc_series
     #----------------------------#
     $sheet_name = 'd_trough_gc_series';
-    $option{group_name} = [1 .. 4] ;
+    $option{group_name} = [ 1 .. 4 ];
     $excel_obj->draw_dd( $sheet_name, \%option );
-    
+
     #----------------------------#
     # worksheet -- d_crest_gc_series
     #----------------------------#
     $sheet_name = 'd_crest_gc_series';
-    $option{group_name} = [1 .. 4] ;
+    $option{group_name} = [ 1 .. 4 ];
     $excel_obj->draw_dd( $sheet_name, \%option );
-    
+
     #----------------------------#
     # worksheet -- d_gc_series
     #----------------------------#
-    $sheet_name = 'd_gc_series';
-    $option{group_name} = [1 .. 8] ;
-    $option{section_end} = 12 ;
+    $sheet_name             = 'd_gc_series';
+    $option{group_name}     = [ 1 .. 8 ];
+    $option{section_end}    = 12;
     $option{section_length} = 11;
     $excel_obj->draw_dd( $sheet_name, \%option );
 }
@@ -422,7 +489,6 @@ $excel_obj->jc_correction if $jc_correction;
 
     $excel_obj->draw_dd( $sheet_name, \%option );
 }
-
 
 {
 

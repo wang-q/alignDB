@@ -18,7 +18,6 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 use AlignDB::WriteExcel;
-use AlignDB::Stopwatch;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -339,6 +338,158 @@ my $distance_to_crest = sub {
                     STD(w.window_indel / w.window_length * 100) STD_indel,
                     AVG(g.gsw_cv) AVG_cv,
                     STD(g.gsw_cv) STD_cv,
+                    COUNT(w.window_id) COUNT
+            FROM gsw g, window w
+            WHERE g.window_id = w.window_id
+            AND gsw_distance_crest IN
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            combined  => \@combined,
+        );
+        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
+# worksheet -- bed_count_trough
+#----------------------------------------------------------#
+my $bed_count_trough = sub {
+
+    # if the target column of the target table does not contain
+    #   any values, skip this stat
+    unless ( $write_obj->check_column( 'gsw', 'gsw_bed_count' ) ) {
+        return;
+    }
+
+    # make combine
+    my @combined;
+    {
+        my $sql_query = q{
+            SELECT gsw_distance gsw_distance,
+                   COUNT(*) COUNT
+            FROM gsw g
+            WHERE 1 = 1
+            GROUP BY gsw_distance
+        };
+        my $standalone = [];
+        my %option     = (
+            sql_query  => $sql_query,
+            threshold  => $combine,
+            standalone => $standalone,
+            merge_last => 1,
+        );
+        @combined = @{ $write_obj->make_combine( \%option ) };
+    }
+
+    my $sheet_name = 'bed_count_trough';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers
+            = qw{ AVG_distance AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv AVG_bed STD_bed COUNT };
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  AVG(gsw_distance) distance_to_trough,
+                    AVG(w.window_pi) AVG_pi,
+                    STD(w.window_pi) STD_pi,
+                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                    STD(w.window_indel / w.window_length * 100) STD_indel,
+                    AVG(g.gsw_cv) AVG_cv,
+                    STD(g.gsw_cv) STD_cv,
+                    AVG(g.gsw_bed_count) AVG_bed,
+                    STD(g.gsw_bed_count) STD_bed,
+                    COUNT(w.window_id) COUNT
+            FROM gsw g, window w
+            WHERE g.window_id = w.window_id
+            AND gsw_distance IN
+        };
+        my %option = (
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            combined  => \@combined,
+        );
+        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
+# worksheet -- bed_count_crest
+#----------------------------------------------------------#
+my $bed_count_crest = sub {
+
+    # if the target column of the target table does not contain
+    #   any values, skip this stat
+    unless ( $write_obj->check_column( 'gsw', 'gsw_bed_count' ) ) {
+        return;
+    }
+
+    # make combine
+    my @combined;
+    {
+        my $sql_query = q{
+            SELECT gsw_distance_crest gsw_distance_crest,
+                   COUNT(*) COUNT
+            FROM gsw g
+            WHERE 1 = 1
+            GROUP BY gsw_distance_crest
+        };
+        my $standalone = [];
+        my %option     = (
+            sql_query  => $sql_query,
+            threshold  => $combine,
+            standalone => $standalone,
+            merge_last => 1,
+        );
+        @combined = @{ $write_obj->make_combine( \%option ) };
+    }
+
+    my $sheet_name = 'bed_count_crest';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    {    # write header
+        my @headers
+            = qw{ AVG_distance AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv AVG_bed STD_bed COUNT };
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    {    # write contents
+        my $sql_query = q{
+            SELECT  AVG(gsw_distance_crest) distance_to_crest,
+                    AVG(w.window_pi) AVG_pi,
+                    STD(w.window_pi) STD_pi,
+                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                    STD(w.window_indel / w.window_length * 100) STD_indel,
+                    AVG(g.gsw_cv) AVG_cv,
+                    STD(g.gsw_cv) STD_cv,
+                    AVG(g.gsw_bed_count) AVG_bed,
+                    STD(g.gsw_bed_count) STD_bed,
                     COUNT(w.window_id) COUNT
             FROM gsw g, window w
             WHERE g.window_id = w.window_id
@@ -2006,12 +2157,12 @@ foreach my $n (@tasks) {
     if ( $n == 1 ) { &$summary;            &$segment_summary;   next; }
     if ( $n == 2 ) { &$distance_to_trough; &$distance_to_crest; next; }
     if ( $n == 3 ) { &$wave_length; &$amplitude; &$gradient; next; }
-    if ( $n == 4 ) { next; }
-    if ( $n == 5 ) { &$trough_gc; &$crest_gc; next; }
-    if ( $n == 6 ) { &$window_gc;            next; }
-    if ( $n == 7 ) { &$d_wave_length_series; &$d_amplitude_series; next; }
-    if ( $n == 8 ) { &$d_gc_series;          next; }
-    if ( $n == 9 ) { &$d_trough_gc_series;   &$d_crest_gc_series; next; }
+    if ( $n == 4 ) { &$trough_gc;   &$crest_gc;  next; }
+    if ( $n == 5 ) { &$window_gc;            next; }
+    if ( $n == 6 ) { &$d_wave_length_series; &$d_amplitude_series; next; }
+    if ( $n == 7 ) { &$d_gc_series;          next; }
+    if ( $n == 8 ) { &$d_trough_gc_series;   &$d_crest_gc_series; next; }
+    if ( $n == 9 ) { &$bed_count_trough;     &$bed_count_crest; next; }
 
     if ( $n == 10 ) { &$segment_gc_indel;     next; }
     if ( $n == 11 ) { &$segment_std_indel;    next; }
