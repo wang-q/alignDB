@@ -43,7 +43,7 @@ my $dbname = "alignDB";
 
 my @tags;
 my @types;
-my $style = "center_intact";
+my $style = "center_intact";    # or center
 
 my @files;
 
@@ -268,8 +268,15 @@ my $worker_sw = sub {
         );
 
         for my $ofg (@align_ofgs) {
-            my @rsws = $window_maker->center_intact_window( $align_set,
-                $ofg->{align_start}, $ofg->{align_end} );
+            my @rsws;
+            if ( $style eq 'center_intact' ) {
+                @rsws = $window_maker->center_intact_window( $align_set,
+                    $ofg->{align_start}, $ofg->{align_end} );
+            }
+            elsif ( $style eq 'center' ) {
+                @rsws = $window_maker->center_window( $align_set,
+                    $ofg->{align_start}, $ofg->{align_end} );
+            }
 
             my @ofgsws;
             for my $rsw (@rsws) {
