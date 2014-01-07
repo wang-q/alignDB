@@ -110,6 +110,7 @@ my @jobs;
         $coll_gsw->ensure_index( { 'type'            => 1 } );
         $coll_gsw->ensure_index( { 'distance'        => 1 } );
         $coll_gsw->ensure_index( { 'distance_crest'  => 1 } );
+        $coll_gsw->ensure_index( { 'gradient'        => 1 } );
     }
 }
 
@@ -306,7 +307,8 @@ sub insert_gsw {
         my $gsw_amplitude   = $ex_left_amplitude;
         my $gsw_trough_gc   = $ex_type eq 'T' ? $ex_gc : $prev_ex_gc;
         my $gsw_crest_gc    = $ex_type eq 'T' ? $prev_ex_gc : $ex_gc;
-        my $gsw_gradient    = $gsw_amplitude / $ex_left_wave_length;
+        my $gsw_gradient
+            = int( $gsw_amplitude / $ex_left_wave_length / 0.00001 );
 
         # determining $gsw_type here, ascend and descent
         my $gsw_type;
