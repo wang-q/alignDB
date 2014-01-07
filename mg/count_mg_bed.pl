@@ -186,9 +186,7 @@ my $worker_count = sub {
         printf "    %d beds in this align\n", scalar @beds;
         my $bed_chr_set = AlignDB::IntSpan->new;
         for (@beds) {
-            my $set = AlignDB::IntSpan->new(
-                $_->{chr_start} . '-' . $_->{chr_end} );
-            $bed_chr_set->add($set);
+            $bed_chr_set->add_range( $_->{chr_start}, $_->{chr_end} );
         }
 
         # all gsws in this align
@@ -198,25 +196,7 @@ my $worker_count = sub {
         for my $gsw (@gsws) {
             next if $bed_chr_set->intersect( $gsw->{runlist} )->is_empty;
 
-            my $count = $coll_bed->find(
-                {   'align_id' => $align->{_id},
-                    '$or'      => [
-                        {   'chr_start' => {
-                                '$gte' => $gsw->{chr_start},
-                                '$lte' => $gsw->{chr_end},
-                            }
-                        },
-                        {   'chr_end' => {
-                                '$gte' => $gsw->{chr_start},
-                                '$lte' => $gsw->{chr_end},
-                            }
-                        },
-                        {   'chr_start' => { '$lte' => $gsw->{chr_start}, },
-                            'chr_end'   => { '$gte' => $gsw->{chr_end}, }
-                        },
-                    ]
-                }
-            )->count;
+            my $count = count_bed_in_sw( $coll_bed, $align->{_id}, $gsw );
 
             if ($count) {
                 $gsw_count_of{ $gsw->{_id} } = $count;
@@ -235,25 +215,7 @@ my $worker_count = sub {
                 $ofgsw->{chr_start} . '-' . $ofgsw->{chr_end} );
             next if $bed_chr_set->intersect($ofgsw_set)->is_empty;
 
-            my $count = $coll_bed->find(
-                {   'align_id' => $align->{_id},
-                    '$or'      => [
-                        {   'chr_start' => {
-                                '$gte' => $ofgsw->{chr_start},
-                                '$lte' => $ofgsw->{chr_end},
-                            }
-                        },
-                        {   'chr_end' => {
-                                '$gte' => $ofgsw->{chr_start},
-                                '$lte' => $ofgsw->{chr_end},
-                            }
-                        },
-                        {   'chr_start' => { '$lte' => $ofgsw->{chr_start}, },
-                            'chr_end'   => { '$gte' => $ofgsw->{chr_end}, }
-                        },
-                    ]
-                }
-            )->count;
+            my $count = count_bed_in_sw( $coll_bed, $align->{_id}, $ofgsw );
 
             if ($count) {
                 $ofgsw_count_of{ $ofgsw->{_id} } = $count;
@@ -263,6 +225,12 @@ my $worker_count = sub {
             }
         }
 
+        for my $key ( keys %gsw_count_of ) {
+            $coll_gsw->update(
+                { _id => MongoDB::OID->new( value => $key ) },
+                { '$set' => { bed_count => $gsw_count_of{$key}, } },
+            );
+        }
         for my $key ( keys %ofgsw_count_of ) {
             $coll_ofgsw->update(
                 { _id => MongoDB::OID->new( value => $key ) },
@@ -306,6 +274,49 @@ if ( $run eq "all" or $run eq "count" ) {
 $stopwatch->end_message;
 
 exit;
+
+sub count_bed_in_sw {
+    my $coll     = shift;
+    my $align_id = shift;
+    my $sw       = shift;
+
+    my $count = $coll->find(
+        {   'align_id' => $align_id,
+            '$or'      => [
+
+                # bed    |----|
+                # sw  |----|
+                {   'chr_start' => {
+                        '$gte' => $sw->{chr_start},
+                        '$lte' => $sw->{chr_end},
+                    }
+                },
+
+                # bed |----|
+                # sw    |----|
+                {   'chr_end' => {
+                        '$gte' => $sw->{chr_start},
+                        '$lte' => $sw->{chr_end},
+                    }
+                },
+
+                # bed |--------|
+                # sw    |----|
+                {   'chr_start' => { '$lte' => $sw->{chr_start}, },
+                    'chr_end'   => { '$gte' => $sw->{chr_end}, }
+                },
+
+                # bed   |----|
+                # sw  |--------|
+                {   'chr_start' => { '$gte' => $sw->{chr_start}, },
+                    'chr_end'   => { '$lte' => $sw->{chr_end}, }
+                },
+            ]
+        }
+    )->count;
+
+    return $count;
+}
 
 sub check {
     my $db    = shift;
