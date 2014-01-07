@@ -141,6 +141,34 @@ $excel_obj->jc_correction if $jc_correction;
     $option{y_title}  = "BED count";
     $option{Top} += $option{Height} + 14.25;
     $excel_obj->draw_y( $sheet_name, \%option );
+
+    #----------------------------#
+    # worksheet -- distance_to_crest
+    #----------------------------#
+    $sheet_name           = 'gradient';
+    $option{chart_serial} = 1;
+    $option{y_column}     = 2;
+    $option{last_row}     = 32;
+    $option{x_max_scale}     = 30;
+    $option{x_title}      = "Gradient";
+    $option{y_title}      = "Window GC";
+    $option{Top}          = 14.25;
+    $option{x_scale_unit} = 5;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 2
+    $option{chart_serial}++;
+    $option{y_column} = 3;
+    $option{y_title}  = "Window CV";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
+
+    # chart 3
+    $option{chart_serial}++;
+    $option{y_column} = 4;
+    $option{y_title}  = "BED count";
+    $option{Top} += $option{Height} + 14.25;
+    $excel_obj->draw_y( $sheet_name, \%option );
 }
 
 my @sheet_names = @{ $excel_obj->sheet_names };
@@ -168,10 +196,10 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             Left         => 550,
         );
         $option{x_scale_unit} = 5;
-        $option{y_column}  = 2;
-        $option{y_title}   = "GC proportion";
-        $option{y2_column} = 3;
-        $option{y2_title}  = "Window CV";
+        $option{y_column}     = 2;
+        $option{y_title}      = "GC proportion";
+        $option{y2_column}    = 3;
+        $option{y2_title}     = "Window CV";
         $excel_obj->draw_2y( $sheet_name, \%option );
         delete $option{y2_column};
         delete $option{y2_title};

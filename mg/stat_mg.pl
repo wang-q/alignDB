@@ -81,6 +81,7 @@ my $distance_to_trough = sub {
     my $exists = $coll->find( { gc_cv => { '$exists' => 1 } } )->count;
     if ( !$exists ) {
         print "    gsw.gc_cv doesn't exist\n";
+        print "    Skip sheet $sheet_name\n";
         return;
     }
 
@@ -162,6 +163,7 @@ my $distance_to_crest = sub {
     my $exists = $coll->find( { gc_cv => { '$exists' => 1 } } )->count;
     if ( !$exists ) {
         print "    gsw.gc_cv doesn't exist\n";
+        print "    Skip sheet $sheet_name\n";
         return;
     }
 
@@ -233,6 +235,88 @@ my $distance_to_crest = sub {
 };
 
 #----------------------------------------------------------#
+# worksheet -- gradient
+#----------------------------------------------------------#
+my $gradient = sub {
+    my $sheet_name = 'gradient';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
+
+    my $coll = $db->get_collection('gsw');
+    my $exists = $coll->find( { gc_cv => { '$exists' => 1 } } )->count;
+    if ( !$exists ) {
+        print "    gsw.gc_cv doesn't exist\n";
+        print "    Skip sheet $sheet_name\n";
+        return;
+    }
+
+    {    # write header
+        my @headers = qw{ gradient AVG_gc AVG_cv AVG_bed COUNT };
+        ( $sheet_row, $sheet_col ) = ( 0, 0 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
+    }
+
+    # translated from SQL by http://www.querymongo.com/
+    my $result = $db->run_command(
+        {   group => {
+                'ns'      => "gsw",
+                'key'     => { "gradient" => 1 },
+                'initial' => {
+                    "sumforgc"        => 0,
+                    "sumforgc_cv"     => 0,
+                    "sumforbed_count" => 0,
+                    "count"           => 0,
+                },
+                '$reduce' => q{
+                    function(obj, prev) {
+                        prev.sumforgc += obj.gc;
+                        prev.sumforgc_cv += obj.gc_cv;
+                        prev.sumforbed_count += obj.bed_count;
+                        prev.count++;
+                    }
+                },
+                'finalize' => q{
+                    function(prev) {
+                        prev.averagegc = prev.sumforgc / prev.count;
+                        delete prev.sumforgc;
+                        prev.averagegc_cv = prev.sumforgc_cv / prev.count;
+                        delete prev.sumforgc_cv;
+                        prev.averagebed_count = prev.sumforbed_count / prev.count;
+                        delete prev.sumforbed_count;
+                    }
+                },
+                "condition" => { "gradient" => { '$gte' => 1 } },
+            }
+        }
+    );
+
+    my @retvals
+        = sort { $a->{gradient} <=> $b->{gradient} } @{ $result->{retval} };
+    for (@retvals) {
+        my @row = (
+            $_->{gradient}, $_->{averagegc}, $_->{averagegc_cv},
+            $_->{averagebed_count},
+            $_->{count},
+        );
+        ($sheet_row) = $write_obj->write_row_direct(
+            $sheet,
+            {   row       => \@row,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+            }
+        );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
+};
+
+#----------------------------------------------------------#
 # worksheet -- ofg_all
 #----------------------------------------------------------#
 my $ofg_all = sub {
@@ -244,6 +328,7 @@ my $ofg_all = sub {
     my $exists = $coll->find( { gc_cv => { '$exists' => 1 } } )->count;
     if ( !$exists ) {
         print "    ofgsw.gc_cv doesn't exist\n";
+        print "    Skip sheet $sheet_name\n";
         return;
     }
 
@@ -322,6 +407,7 @@ my $ofg_tag_type = sub {
     my $exists = $coll->find( { gc_cv => { '$exists' => 1 } } )->count;
     if ( !$exists ) {
         print "    ofgsw.gc_cv doesn't exist\n";
+        print "    Skip sheets ofg_tag_type\n";
         return;
     }
 
@@ -448,6 +534,7 @@ my $ofg_tag_type = sub {
 {
     &$distance_to_trough;
     &$distance_to_crest;
+    &$gradient;
     &$ofg_all;
     &$ofg_tag_type;
 }
