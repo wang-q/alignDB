@@ -97,47 +97,23 @@ my $distance_to_trough = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    # translated from SQL by http://www.querymongo.com/
-    my $result = $db->run_command(
-        {   group => {
-                'ns'      => "gsw",
-                'key'     => { "distance" => 1 },
-                'initial' => {
-                    "sumforgc"        => 0,
-                    "sumforgc_cv"     => 0,
-                    "sumforbed_count" => 0,
-                    "count"           => 0,
-                },
-                '$reduce' => q{
-                    function(obj, prev) {
-                        prev.sumforgc += obj.gc;
-                        prev.sumforgc_cv += obj.gc_cv;
-                        prev.sumforbed_count += obj.bed_count;
-                        prev.count++;
-                    }
-                },
-                'finalize' => q{
-                    function(prev) {
-                        prev.averagegc = prev.sumforgc / prev.count;
-                        delete prev.sumforgc;
-                        prev.averagegc_cv = prev.sumforgc_cv / prev.count;
-                        delete prev.sumforgc_cv;
-                        prev.averagebed_count = prev.sumforbed_count / prev.count;
-                        delete prev.sumforbed_count;
-                    }
-                },
-                "condition" => { "distance" => { '$lte' => 20 } }
-            }
-        }
+    my $result = $coll->aggregate(
+        [   { '$match' => { distance => { '$lte' => 20 } } },
+            {   '$group' => {
+                    '_id'       => '$distance',
+                    'avg_gc'    => { '$avg' => '$gc' },
+                    'avg_gc_cv' => { '$avg' => '$gc_cv' },
+                    'avg_bed'   => { '$avg' => '$bed_count' },
+                    'count'     => { '$sum' => 1 },
+                }
+            },
+            { '$sort' => { _id => 1 } },
+        ]
     );
-
-    my @retvals
-        = sort { $a->{distance} <=> $b->{distance} } @{ $result->{retval} };
-    for (@retvals) {
+    for ( @{$result} ) {
         my @row = (
-            $_->{distance}, $_->{averagegc}, $_->{averagegc_cv},
-            $_->{averagebed_count},
-            $_->{count},
+            $_->{_id},     $_->{avg_gc}, $_->{avg_gc_cv},
+            $_->{avg_bed}, $_->{count},
         );
         ($sheet_row) = $write_obj->write_row_direct(
             $sheet,
@@ -179,48 +155,23 @@ my $distance_to_crest = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    # translated from SQL by http://www.querymongo.com/
-    my $result = $db->run_command(
-        {   group => {
-                'ns'      => "gsw",
-                'key'     => { "distance_crest" => 1 },
-                'initial' => {
-                    "sumforgc"        => 0,
-                    "sumforgc_cv"     => 0,
-                    "sumforbed_count" => 0,
-                    "count"           => 0,
-                },
-                '$reduce' => q{
-                    function(obj, prev) {
-                        prev.sumforgc += obj.gc;
-                        prev.sumforgc_cv += obj.gc_cv;
-                        prev.sumforbed_count += obj.bed_count;
-                        prev.count++;
-                    }
-                },
-                'finalize' => q{
-                    function(prev) {
-                        prev.averagegc = prev.sumforgc / prev.count;
-                        delete prev.sumforgc;
-                        prev.averagegc_cv = prev.sumforgc_cv / prev.count;
-                        delete prev.sumforgc_cv;
-                        prev.averagebed_count = prev.sumforbed_count / prev.count;
-                        delete prev.sumforbed_count;
-                    }
-                },
-                "condition" => { "distance_crest" => { '$lte' => 20 } }
-            }
-        }
+    my $result = $coll->aggregate(
+        [   { '$match' => { distance_crest => { '$lte' => 20 } } },
+            {   '$group' => {
+                    '_id'       => '$distance_crest',
+                    'avg_gc'    => { '$avg' => '$gc' },
+                    'avg_gc_cv' => { '$avg' => '$gc_cv' },
+                    'avg_bed'   => { '$avg' => '$bed_count' },
+                    'count'     => { '$sum' => 1 },
+                }
+            },
+            { '$sort' => { _id => 1 } },
+        ]
     );
-
-    my @retvals
-        = sort { $a->{distance_crest} <=> $b->{distance_crest} }
-        @{ $result->{retval} };
-    for (@retvals) {
+    for ( @{$result} ) {
         my @row = (
-            $_->{distance_crest}, $_->{averagegc}, $_->{averagegc_cv},
-            $_->{averagebed_count},
-            $_->{count},
+            $_->{_id},     $_->{avg_gc}, $_->{avg_gc_cv},
+            $_->{avg_bed}, $_->{count},
         );
         ($sheet_row) = $write_obj->write_row_direct(
             $sheet,
@@ -262,47 +213,23 @@ my $gradient = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    # translated from SQL by http://www.querymongo.com/
-    my $result = $db->run_command(
-        {   group => {
-                'ns'      => "gsw",
-                'key'     => { "gradient" => 1 },
-                'initial' => {
-                    "sumforgc"        => 0,
-                    "sumforgc_cv"     => 0,
-                    "sumforbed_count" => 0,
-                    "count"           => 0,
-                },
-                '$reduce' => q{
-                    function(obj, prev) {
-                        prev.sumforgc += obj.gc;
-                        prev.sumforgc_cv += obj.gc_cv;
-                        prev.sumforbed_count += obj.bed_count;
-                        prev.count++;
-                    }
-                },
-                'finalize' => q{
-                    function(prev) {
-                        prev.averagegc = prev.sumforgc / prev.count;
-                        delete prev.sumforgc;
-                        prev.averagegc_cv = prev.sumforgc_cv / prev.count;
-                        delete prev.sumforgc_cv;
-                        prev.averagebed_count = prev.sumforbed_count / prev.count;
-                        delete prev.sumforbed_count;
-                    }
-                },
-                "condition" => { "gradient" => { '$gte' => 1 } },
-            }
-        }
+    my $result = $coll->aggregate(
+        [   { '$match' => { gradient => { '$gte' => 1 } } },
+            {   '$group' => {
+                    '_id'       => '$gradient',
+                    'avg_gc'    => { '$avg' => '$gc' },
+                    'avg_gc_cv' => { '$avg' => '$gc_cv' },
+                    'avg_bed'   => { '$avg' => '$bed_count' },
+                    'count'     => { '$sum' => 1 },
+                }
+            },
+            { '$sort' => { _id => 1 } },
+        ]
     );
-
-    my @retvals
-        = sort { $a->{gradient} <=> $b->{gradient} } @{ $result->{retval} };
-    for (@retvals) {
+    for ( @{$result} ) {
         my @row = (
-            $_->{gradient}, $_->{averagegc}, $_->{averagegc_cv},
-            $_->{averagebed_count},
-            $_->{count},
+            $_->{_id},     $_->{avg_gc}, $_->{avg_gc_cv},
+            $_->{avg_bed}, $_->{count},
         );
         ($sheet_row) = $write_obj->write_row_direct(
             $sheet,
@@ -344,50 +271,23 @@ my $ofg_all = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    # translated from SQL by http://www.querymongo.com/
-    my $result = $db->run_command(
-        {   group => {
-                'ns'      => "ofgsw",
-                'key'     => { "distance" => 1 },
-                'initial' => {
-                    "sumforgc"        => 0,
-                    "sumforgc_cv"     => 0,
-                    "sumforbed_count" => 0,
-                    "count"           => 0,
-                },
-                '$reduce' => q{
-                    function(obj, prev) {
-                        prev.sumforgc += obj.gc;
-                        prev.sumforgc_cv += obj.gc_cv;
-                        prev.sumforbed_count += obj.bed_count;
-                        prev.count++;
-                    }
-                },
-                'finalize' => q{
-                    function(prev) {
-                        prev.averagegc = prev.sumforgc / prev.count;
-                        delete prev.sumforgc;
-                        prev.averagegc_cv = prev.sumforgc_cv / prev.count;
-                        delete prev.sumforgc_cv;
-                        prev.averagebed_count = prev.sumforbed_count / prev.count;
-                        delete prev.sumforbed_count;
-                    }
-                },
-                "condition" => { "distance" => { '$lte' => 20 } }
-            }
-        }
+    my $result = $coll->aggregate(
+        [   { '$match' => { distance => { '$lte' => 20 } } },
+            {   '$group' => {
+                    '_id'       => '$distance',
+                    'avg_gc'    => { '$avg' => '$gc' },
+                    'avg_gc_cv' => { '$avg' => '$gc_cv' },
+                    'avg_bed'   => { '$avg' => '$bed_count' },
+                    'count'     => { '$sum' => 1 },
+                }
+            },
+            { '$sort' => { _id => 1 } },
+        ]
     );
-
-    my @retvals
-        = sort { $a->{distance} <=> $b->{distance} } @{ $result->{retval} };
-    for (@retvals) {
-        if ( $_->{averagebed_count} eq "1.#QNAN" ) {
-            $_->{averagebed_count} = 0;
-        }
+    for ( @{$result} ) {
         my @row = (
-            $_->{distance}, $_->{averagegc}, $_->{averagegc_cv},
-            $_->{averagebed_count},
-            $_->{count},
+            $_->{_id},     $_->{avg_gc}, $_->{avg_gc_cv},
+            $_->{avg_bed}, $_->{count},
         );
         ($sheet_row) = $write_obj->write_row_direct(
             $sheet,
@@ -458,50 +358,23 @@ my $ofg_tag_type = sub {
             };
         }
 
-        # translated from SQL by http://www.querymongo.com/
-        my $result = $db->run_command(
-            {   group => {
-                    'ns'      => "ofgsw",
-                    'key'     => { "distance" => 1 },
-                    'initial' => {
-                        "sumforgc"        => 0,
-                        "sumforgc_cv"     => 0,
-                        "sumforbed_count" => 0,
-                        "count"           => 0,
-                    },
-                    '$reduce' => q{
-                        function(obj, prev) {
-                            prev.sumforgc += obj.gc;
-                            prev.sumforgc_cv += obj.gc_cv;
-                            prev.sumforbed_count += obj.bed_count;
-                            prev.count++;
-                        }
-                    },
-                    'finalize' => q{
-                        function(prev) {
-                            prev.averagegc = prev.sumforgc / prev.count;
-                            delete prev.sumforgc;
-                            prev.averagegc_cv = prev.sumforgc_cv / prev.count;
-                            delete prev.sumforgc_cv;
-                            prev.averagebed_count = prev.sumforbed_count / prev.count;
-                            delete prev.sumforbed_count;
-                        }
-                    },
-                    "condition" => $condition,
-                }
-            }
+        my $result = $coll->aggregate(
+            [   { '$match' => $condition },
+                {   '$group' => {
+                        '_id'       => '$distance',
+                        'avg_gc'    => { '$avg' => '$gc' },
+                        'avg_gc_cv' => { '$avg' => '$gc_cv' },
+                        'avg_bed'   => { '$avg' => '$bed_count' },
+                        'count'     => { '$sum' => 1 },
+                    }
+                },
+                { '$sort' => { _id => 1 } },
+            ]
         );
-
-        my @retvals
-            = sort { $a->{distance} <=> $b->{distance} } @{ $result->{retval} };
-        for (@retvals) {
-            if ( $_->{averagebed_count} eq "1.#QNAN" ) {
-                $_->{averagebed_count} = 0;
-            }
+        for ( @{$result} ) {
             my @row = (
-                $_->{distance}, $_->{averagegc}, $_->{averagegc_cv},
-                $_->{averagebed_count},
-                $_->{count},
+                $_->{_id},     $_->{avg_gc}, $_->{avg_gc_cv},
+                $_->{avg_bed}, $_->{count},
             );
             ($sheet_row) = $write_obj->write_row_direct(
                 $sheet,
@@ -548,6 +421,7 @@ sub get_tags {
     my $result = $db->run_command(
         [   "distinct" => "ofg",
             "key"      => "tag",
+            "query"    => {},
         ]
     );
     my @values = sort @{ $result->{values} };
@@ -561,6 +435,7 @@ sub get_types {
     my $result = $db->run_command(
         [   "distinct" => "ofg",
             "key"      => "type",
+            "query"    => {},
         ]
     );
     my @values = sort @{ $result->{values} };
@@ -581,6 +456,7 @@ sub get_tts {
         my $hash_ref = $_->{_id};
         push @values, $hash_ref->{tag} . '-' . $hash_ref->{type};
     }
+    @values = sort @values;
 
     return \@values;
 }
