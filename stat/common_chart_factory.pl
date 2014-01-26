@@ -77,7 +77,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
 {
 
     #----------------------------#
-    # worksheet -- combined_distance
+    # worksheet -- d?_comb
     #----------------------------#
     my @sheets = grep {/^d\d_comb/} @sheet_names;
     for my $sheet_name (@sheets) {
@@ -95,9 +95,62 @@ my @sheet_names = @{ $excel_obj->sheet_names };
             Top          => 14.25,
             Left         => 520,
         );
-        if ( $sheet_name =~ /density/ ) {
+        if ( $sheet_name =~ /^d2_/ ) {
             $option{x_title}     = "Reciprocal of indel density (d2)";
-            $option{x_max_scale}    = 30;
+            $option{x_max_scale} = 30;
+            $option{last_row}    = 33;
+            $option{x_max_scale} = 30;
+        }
+        $excel_obj->draw_y( $sheet_name, \%option );
+
+        # chart 2
+        $option{chart_serial}++;
+        $option{y_column} = 4;
+        $option{y_title}  = "GC proportion";
+        $option{Top} += $option{Height} + 14.25;
+        $excel_obj->draw_y( $sheet_name, \%option );
+
+        # chart 3
+        $option{chart_serial}++;
+        $option{y_column} = 6;
+        $option{y_title}  = "Window CV";
+        $option{Top} += $option{Height} + 14.25;
+        $excel_obj->draw_y( $sheet_name, \%option );
+
+        # chart 4
+        $option{chart_serial}++;
+        $option{y_column}  = 4;
+        $option{y_title}   = "GC proportion";
+        $option{y2_column} = 6;
+        $option{y2_title}  = "Window CV";
+        $option{Top} += $option{Height} + 14.25;
+        $excel_obj->draw_2y( $sheet_name, \%option );
+    }
+    
+    
+    #----------------------------#
+    # worksheet -- d?_pi_gc_cv
+    #----------------------------#
+    @sheets = grep {/^d\d_pi_gc_cv/} @sheet_names;
+    for my $sheet_name (@sheets) {
+        my %option = (
+            chart_serial => 1,
+            x_column     => 1,
+            y_column     => 2,
+            first_row    => 2, # some data didn't contain -1
+            last_row     => 8,
+            x_min_scale  => 0, # exclude -1
+            x_max_scale  => 5,
+            x_title      => "Distance to indels (d1)",
+            y_title      => "Nucleotide diversity",
+            Height       => 200,
+            Width        => 260,
+            Top          => 14.25,
+            Left         => 520,
+        );
+        if ( $sheet_name =~ /^d2_/ ) {
+            $option{x_title}     = "Reciprocal of indel density (d2)";
+            $option{x_max_scale} = 30;
             $option{last_row}    = 33;
             $option{x_max_scale} = 30;
         }
@@ -129,7 +182,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
 }
 
 {
-    my %option     = (
+    my %option = (
         chart_serial => 1,
         x_column     => 1,
         y_column     => 2,
@@ -190,14 +243,7 @@ my @sheet_names = @{ $excel_obj->sheet_names };
 }
 
 {
-
-    #----------------------------#
-    # worksheet -- indel_size_group
-    #----------------------------#
-    # select worksheet by name
-    my $sheet_name = 'indel_size_group';
-    my @group_name = qw/1--5 6--10 11--50 51--300/;
-    my %option     = (
+    my %option = (
         chart_serial   => 1,
         x_title        => "Distance to indels (d1)",
         y_title        => "Nucleotide diversity",
@@ -205,53 +251,18 @@ my @sheet_names = @{ $excel_obj->sheet_names };
         Width          => 390,
         Top            => 14.25 * 17,
         Left           => 360,
-        group_name     => \@group_name,
         section_top    => 2,
-        section_end    => 15,
-        section_length => 14,
+        section_end    => 8,
+        section_length => 7,
         x_orientation  => 0,
     );
 
-    $excel_obj->draw_dd( $sheet_name, \%option );
-
     #----------------------------#
-    # worksheet -- indel_size_asymmetry
+    # worksheet -- indel_size_group
     #----------------------------#
-    $sheet_name = 'indel_size_asymmetry';
-    @group_name = (
-        "left 1--10 & right 1--10",
-        "left 1--10 & right 11--300",
-        "left 11--300 & right 1--10",
-        "left 11--300 & right 11--300",
-    );
+    my $sheet_name = 'indel_size_group';
+    my @group_name = qw/1--5 6--10 11--50 51--300/;
     $option{group_name} = \@group_name;
-
-    $excel_obj->draw_dd( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- indel_extand_group
-    #----------------------------#
-    $sheet_name = 'indel_extand_group';
-    @group_name = (
-        "0--99",      "100--299", "300--499", "500--999",
-        "1000--1999", "2000--99999",
-    );
-    $option{group_name} = \@group_name;
-
-    $excel_obj->draw_dd( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- indel_extand_asymmetry
-    #----------------------------#
-    $sheet_name = 'indel_extand_asymmetry';
-    @group_name = (
-        "left 0--499 & right 0--499",
-        "left 0--499 & right 500--99999",
-        "left 500--99999 & right 0--499",
-        "left 500--99999 & right 500--99999",
-    );
-    $option{group_name} = \@group_name;
-
     $excel_obj->draw_dd( $sheet_name, \%option );
 
     #----------------------------#
@@ -300,6 +311,63 @@ my @sheet_names = @{ $excel_obj->sheet_names };
     #----------------------------#
     $sheet_name = 'indel_gc_group';
     @group_name = ( "0 <= gc < 0.3", "0.3 <= gc < 0.5", "0.5 <= gc <= 1", );
+    $option{group_name} = \@group_name;
+
+    $excel_obj->draw_dd( $sheet_name, \%option );
+
+}
+
+{
+    my %option = (
+        chart_serial   => 1,
+        x_title        => "Distance to indels (d1)",
+        y_title        => "Nucleotide diversity",
+        Height         => 300,
+        Width          => 390,
+        Top            => 14.25 * 17,
+        Left           => 360,
+        section_top    => 2,
+        section_end    => 15,
+        section_length => 14,
+        x_orientation  => 0,
+    );
+
+    #----------------------------#
+    # worksheet -- indel_size_asymmetry
+    #----------------------------#
+    my $sheet_name = 'indel_size_asymmetry';
+    my @group_name = (
+        "left 1--10 & right 1--10",
+        "left 1--10 & right 11--300",
+        "left 11--300 & right 1--10",
+        "left 11--300 & right 11--300",
+    );
+    $option{group_name} = \@group_name;
+
+    $excel_obj->draw_dd( $sheet_name, \%option );
+
+    #----------------------------#
+    # worksheet -- indel_extand_group
+    #----------------------------#
+    $sheet_name = 'indel_extand_group';
+    @group_name = (
+        "0--99",      "100--299", "300--499", "500--999",
+        "1000--1999", "2000--99999",
+    );
+    $option{group_name} = \@group_name;
+
+    $excel_obj->draw_dd( $sheet_name, \%option );
+
+    #----------------------------#
+    # worksheet -- indel_extand_asymmetry
+    #----------------------------#
+    $sheet_name = 'indel_extand_asymmetry';
+    @group_name = (
+        "left 0--499 & right 0--499",
+        "left 0--499 & right 500--99999",
+        "left 500--99999 & right 0--499",
+        "left 500--99999 & right 500--99999",
+    );
     $option{group_name} = \@group_name;
 
     $excel_obj->draw_dd( $sheet_name, \%option );

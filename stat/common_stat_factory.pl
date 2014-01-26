@@ -241,6 +241,40 @@ my $basic = sub {
         ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
+    {    # write contents
+        my $query_name = 'Target length (coding) (Mb)';
+        my $sql_query  = q{
+            SELECT  SUM(s.seq_length * a.align_coding) / 1000000.00 
+            FROM    sequence s, target t, align a
+            WHERE   s.seq_id = t.seq_id
+            AND     s.align_id = a.align_id
+        };
+        my %option = (
+            query_name => $query_name,
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
+    {    # write contents
+        my $query_name = 'Target length (repeats) (Mb)';
+        my $sql_query  = q{
+            SELECT  SUM(s.seq_length * a.align_repeats) / 1000000.00 
+            FROM    sequence s, target t, align a
+            WHERE   s.seq_id = t.seq_id
+            AND     s.align_id = a.align_id
+        };
+        my %option = (
+            query_name => $query_name,
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+    }
+
     print "Sheet \"$sheet_name\" has been generated.\n";
 };
 
@@ -1050,29 +1084,28 @@ my $indel_size_group = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    my @indel_group = ( [ 1, 5 ], [ 6, 10 ], [ 11, 50 ], [ 51, 300 ], );
+    my @groups = ( [ 1, 5 ], [ 6, 10 ], [ 11, 50 ], [ 51, 300 ], );
 
     {    # write contents
-        my $thaw_sql_R = $sql_file->retrieve('common-indel_size_r-0');
-        $thaw_sql_R->add_where(
-            'indel.indel_length' => { op => '>=', value => '1' } );
-        $thaw_sql_R->add_where(
-            'indel.indel_length' => { op => '<=', value => '5' } );
-
-        my $thaw_sql_L = $sql_file->retrieve('common-indel_size_l-0');
-        $thaw_sql_L->add_where(
-            'indel.indel_length' => { op => '>=', value => '1' } );
-        $thaw_sql_L->add_where(
-            'indel.indel_length' => { op => '<=', value => '5' } );
-
+        my $sql_query = q{
+            SELECT  isw.isw_distance distance,
+                    AVG(isw.isw_pi) AVG_pi,
+                    COUNT(isw.isw_pi) COUNT,
+                    STD(isw.isw_pi) STD_pi
+            FROM    indel INNER JOIN isw ON indel.indel_id = isw.isw_indel_id
+            WHERE   1 = 1
+            AND     isw.isw_distance <= 5
+            AND     indel.indel_length BETWEEN ? AND ?
+            GROUP BY isw.isw_distance
+            ORDER BY isw.isw_distance ASC
+        };
         my %option = (
-            sql_query_1 => $thaw_sql_R->as_sql,
-            sql_query_2 => $thaw_sql_L->as_sql,
-            sheet_row   => $sheet_row,
-            sheet_col   => $sheet_col,
-            group       => \@indel_group,
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            group     => \@groups,
         );
-        ($sheet_row) = $write_obj->write_content_indel( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1179,7 +1212,7 @@ my $indel_extand_group = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    my @indel_group
+    my @groups
         = ( [ 0, 0 ], [ 1, 2 ], [ 3, 4 ], [ 5, 9 ], [ 10, 19 ], [ 20, 999 ], );
 
     {    # write contents
@@ -1200,7 +1233,7 @@ my $indel_extand_group = sub {
             sql_query_2 => $thaw_sql_L->as_sql,
             sheet_row   => $sheet_row,
             sheet_col   => $sheet_col,
-            group       => \@indel_group,
+            group       => \@groups,
         );
         ($sheet_row) = $write_obj->write_content_indel( $sheet, \%option );
     }
@@ -1306,38 +1339,30 @@ my $indel_position_group = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    my @indel_group
+    my @groups
         = ( [ 1, 1, 0, 0 ], [ 1, 1, 1, 1 ], [ 0, 0, 0, 0 ], [ 0, 0, 1, 1 ], );
 
     {    # write contents
-        my $thaw_sql_R = $sql_file->retrieve('common-indel_feature_r-0');
-        $thaw_sql_R->add_where(
-            'indel.indel_coding' => { op => '>=', value => '0' } );
-        $thaw_sql_R->add_where(
-            'indel.indel_coding' => { op => '<=', value => '0' } );
-        $thaw_sql_R->add_where(
-            'indel.indel_repeats' => { op => '>=', value => '0' } );
-        $thaw_sql_R->add_where(
-            'indel.indel_repeats' => { op => '<=', value => '0' } );
-
-        my $thaw_sql_L = $sql_file->retrieve('common-indel_feature_l-0');
-        $thaw_sql_L->add_where(
-            'indel.indel_coding' => { op => '>=', value => '0' } );
-        $thaw_sql_L->add_where(
-            'indel.indel_coding' => { op => '<=', value => '0' } );
-        $thaw_sql_L->add_where(
-            'indel.indel_repeats' => { op => '>=', value => '0' } );
-        $thaw_sql_L->add_where(
-            'indel.indel_repeats' => { op => '<=', value => '0' } );
-
+        my $sql_query = q{
+            SELECT  isw.isw_distance distance,
+                    AVG(isw.isw_pi) AVG_pi,
+                    COUNT(isw.isw_pi) COUNT,
+                    STD(isw.isw_pi) STD_pi
+            FROM    indel INNER JOIN isw ON indel.indel_id = isw.isw_indel_id
+            WHERE   1 = 1
+            AND     isw.isw_distance <= 5
+            AND     indel.indel_coding BETWEEN ? AND ?
+            AND     indel.indel_repeats BETWEEN ? AND ?
+            GROUP BY isw.isw_distance
+            ORDER BY isw.isw_distance ASC
+        };
         my %option = (
-            sql_query_1 => $thaw_sql_R->as_sql,
-            sql_query_2 => $thaw_sql_L->as_sql,
-            sheet_row   => $sheet_row,
-            sheet_col   => $sheet_col,
-            group       => \@indel_group,
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            group     => \@groups,
         );
-        ($sheet_row) = $write_obj->write_content_indel( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1371,30 +1396,29 @@ my $indel_coding_group = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    my @indel_group
+    my @groups
         = ( [ 0, 0 ], [ 1, 1 ], );
 
     {    # write contents
-        my $thaw_sql_R = $sql_file->retrieve('common-indel_feature_r-0');
-        $thaw_sql_R->add_where(
-            'indel.indel_coding' => { op => '>=', value => '0' } );
-        $thaw_sql_R->add_where(
-            'indel.indel_coding' => { op => '<=', value => '0' } );
-
-        my $thaw_sql_L = $sql_file->retrieve('common-indel_feature_l-0');
-        $thaw_sql_L->add_where(
-            'indel.indel_coding' => { op => '>=', value => '0' } );
-        $thaw_sql_L->add_where(
-            'indel.indel_coding' => { op => '<=', value => '0' } );
-
+        my $sql_query = q{
+            SELECT  isw.isw_distance distance,
+                    AVG(isw.isw_pi) AVG_pi,
+                    COUNT(isw.isw_pi) COUNT,
+                    STD(isw.isw_pi) STD_pi
+            FROM    indel INNER JOIN isw ON indel.indel_id = isw.isw_indel_id
+            WHERE   1 = 1
+            AND     isw.isw_distance <= 5
+            AND     indel.indel_coding BETWEEN ? AND ?
+            GROUP BY isw.isw_distance
+            ORDER BY isw.isw_distance ASC
+        };
         my %option = (
-            sql_query_1 => $thaw_sql_R->as_sql,
-            sql_query_2 => $thaw_sql_L->as_sql,
-            sheet_row   => $sheet_row,
-            sheet_col   => $sheet_col,
-            group       => \@indel_group,
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            group     => \@groups,
         );
-        ($sheet_row) = $write_obj->write_content_indel( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1428,30 +1452,28 @@ my $indel_repeat_group = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    my @indel_group
-        = ( [ 0, 0 ], [ 1, 1 ], );
+    my @groups = ( [ 0, 0 ], [ 1, 1 ], );
 
     {    # write contents
-        my $thaw_sql_R = $sql_file->retrieve('common-indel_feature_r-0');
-        $thaw_sql_R->add_where(
-            'indel.indel_repeats' => { op => '>=', value => '0' } );
-        $thaw_sql_R->add_where(
-            'indel.indel_repeats' => { op => '<=', value => '0' } );
-
-        my $thaw_sql_L = $sql_file->retrieve('common-indel_feature_l-0');
-        $thaw_sql_L->add_where(
-            'indel.indel_repeats' => { op => '>=', value => '0' } );
-        $thaw_sql_L->add_where(
-            'indel.indel_repeats' => { op => '<=', value => '0' } );
-
+        my $sql_query = q{
+            SELECT  isw.isw_distance distance,
+                    AVG(isw.isw_pi) AVG_pi,
+                    COUNT(isw.isw_pi) COUNT,
+                    STD(isw.isw_pi) STD_pi
+            FROM    indel INNER JOIN isw ON indel.indel_id = isw.isw_indel_id
+            WHERE   1 = 1
+            AND     isw.isw_distance <= 5
+            AND     indel.indel_repeats BETWEEN ? AND ?
+            GROUP BY isw.isw_distance
+            ORDER BY isw.isw_distance ASC
+        };
         my %option = (
-            sql_query_1 => $thaw_sql_R->as_sql,
-            sql_query_2 => $thaw_sql_L->as_sql,
-            sheet_row   => $sheet_row,
-            sheet_col   => $sheet_col,
-            group       => \@indel_group,
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            group     => \@groups,
         );
-        ($sheet_row) = $write_obj->write_content_indel( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1485,30 +1507,28 @@ my $indel_slip_group = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    my @indel_group
-        = ( [ 0, 0 ], [ 1, 1 ], );
+    my @groups = ( [ 0, 0 ], [ 1, 1 ], );
 
     {    # write contents
-        my $thaw_sql_R = $sql_file->retrieve('common-indel_feature_r-0');
-        $thaw_sql_R->add_where(
-            'indel.indel_slippage' => { op => '>=', value => '0' } );
-        $thaw_sql_R->add_where(
-            'indel.indel_slippage' => { op => '<=', value => '0' } );
-
-        my $thaw_sql_L = $sql_file->retrieve('common-indel_feature_l-0');
-        $thaw_sql_L->add_where(
-            'indel.indel_slippage' => { op => '>=', value => '0' } );
-        $thaw_sql_L->add_where(
-            'indel.indel_slippage' => { op => '<=', value => '0' } );
-
+        my $sql_query = q{
+            SELECT  isw.isw_distance distance,
+                    AVG(isw.isw_pi) AVG_pi,
+                    COUNT(isw.isw_pi) COUNT,
+                    STD(isw.isw_pi) STD_pi
+            FROM    indel INNER JOIN isw ON indel.indel_id = isw.isw_indel_id
+            WHERE   1 = 1
+            AND     isw.isw_distance <= 5
+            AND     indel.indel_slippage BETWEEN ? AND ?
+            GROUP BY isw.isw_distance
+            ORDER BY isw.isw_distance ASC
+        };
         my %option = (
-            sql_query_1 => $thaw_sql_R->as_sql,
-            sql_query_2 => $thaw_sql_L->as_sql,
-            sheet_row   => $sheet_row,
-            sheet_col   => $sheet_col,
-            group       => \@indel_group,
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            group     => \@groups,
         );
-        ($sheet_row) = $write_obj->write_content_indel( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1535,31 +1555,29 @@ my $indel_gc_group = sub {
             = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    my @indel_group = ( [ 0, 0.2999 ], [ 0.3, 0.4999 ], [ 0.5, 1 ], );
+    my @groups = ( [ 0, 0.2999 ], [ 0.3, 0.4999 ], [ 0.5, 1 ], );
 
     {    # write contents
-        my $thaw_sql_R = $sql_file->retrieve('common-indel_size_r-0');
-        $thaw_sql_R->add_where( 'indel.indel_length' => \'>= 10' );
-        $thaw_sql_R->add_where(
-            'indel.indel_gc' => { op => '>=', value => '0' } );
-        $thaw_sql_R->add_where(
-            'indel.indel_gc' => { op => '<=', value => '0' } );
-
-        my $thaw_sql_L = $sql_file->retrieve('common-indel_size_l-0');
-        $thaw_sql_L->add_where( 'indel.indel_length' => \'>= 10' );
-        $thaw_sql_L->add_where(
-            'indel.indel_gc' => { op => '>=', value => '0' } );
-        $thaw_sql_L->add_where(
-            'indel.indel_gc' => { op => '<=', value => '0' } );
-
+        my $sql_query = q{
+            SELECT  isw.isw_distance distance,
+                    AVG(isw.isw_pi) AVG_pi,
+                    COUNT(isw.isw_pi) COUNT,
+                    STD(isw.isw_pi) STD_pi
+            FROM    indel INNER JOIN isw ON indel.indel_id = isw.isw_indel_id
+            WHERE   1 = 1
+            AND     isw.isw_distance <= 5
+            AND     indel.indel_gc BETWEEN ? AND ?
+            AND     indel.indel_length >= 10
+            GROUP BY isw.isw_distance
+            ORDER BY isw.isw_distance ASC
+        };
         my %option = (
-            sql_query_1 => $thaw_sql_R->as_sql,
-            sql_query_2 => $thaw_sql_L->as_sql,
-            sheet_row   => $sheet_row,
-            sheet_col   => $sheet_col,
-            group       => \@indel_group,
+            sql_query => $sql_query,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            group     => \@groups,
         );
-        ($sheet_row) = $write_obj->write_content_indel( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
