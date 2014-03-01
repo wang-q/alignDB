@@ -1108,125 +1108,102 @@ my $combined_pigccv = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- di_dn_ttest (frequecy)
+# worksheet -- di_dn_ttest
 #----------------------------------------------------------#
 my $di_dn_ttest = sub {
-    my @freq_levels = @freqs;
+    my $sheet_name = 'di_dn_ttest';
+    my $sheet;
+    my ( $sheet_row, $sheet_col );
 
-    my $write_sheet = sub {
-        my ($level) = @_;
-        my $sheet_name = 'di_dn_ttest_' . $level->[0];
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers = qw{AVG_distance AVG_D AVG_Di AVG_Dn
-                Di-Dn Di/Dn COUNT P_value};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        my @group_distance = ( [0], [1], [2], [3], [4], [ 5 .. 10 ], );
-
-        my @p_values;
-
-        # ttest
-        {
-            my $sql_query = qq{
-                SELECT s.isw_d_indel, s.isw_d_noindel
-                FROM    isw s, indel i
-                WHERE i.indel_id = s.isw_indel_id
-                AND i.indel_freq = ?
-                AND s.isw_distance >= 0
-                AND s.isw_d_indel IS NOT NULL 
-                AND s.isw_distance IN 
-            };
-
-            foreach (@group_distance) {
-                my @range      = @$_;
-                my $in_list    = '(' . join( ',', @range ) . ')';
-                my $sql_query2 = $sql_query . $in_list;
-                $sql_query2 .= " \nLIMIT 10000"; # prevent to exceed excel limit
-
-                my %option = (
-                    sql_query  => $sql_query2,
-                    bind_value => [ $level->[1] ],
-                );
-                my $ttest   = $write_obj->column_ttest( \%option );
-                my $p_value = $ttest->{t_prob};
-
-                unless ( defined $p_value ) {
-                    $p_value = "NA";
-
-                    my $ttest_sheet_name
-                        = "ttest_"
-                        . $level->[1] . "of"
-                        . $all_freq . "_"
-                        . join( '-', @range[ 0, -1 ] );
-                    my $stat_sheet;
-
-                    my ( $stat_sheet_row, $stat_sheet_col ) = ( 0, 0 );
-                    my %option = (
-                        sheet_row => $stat_sheet_row,
-                        sheet_col => $stat_sheet_col,
-                        header    => [qw{d_indel d_noindel}],
-                    );
-                    ( $stat_sheet, $stat_sheet_row )
-                        = $write_obj->write_header_direct( $ttest_sheet_name,
-                        \%option );
-
-                    %option = (
-                        sql_query  => $sql_query2,
-                        sheet_row  => $stat_sheet_row,
-                        sheet_col  => $stat_sheet_col,
-                        bind_value => [ $level->[1] ],
-                    );
-                    $write_obj->write_content_direct( $stat_sheet, \%option );
-
-                }
-                push @p_values, [$p_value];
-            }
-        }
-
-        {
-            my $sql_query = qq{
-                SELECT  AVG(isw_distance) AVG_distance,
-                        AVG(isw_pi) AVG_D,
-                        AVG(isw_d_indel) AVG_Di,
-                        AVG(isw_d_noindel) AVG_Dn,
-                        AVG(isw_d_indel) - AVG(isw_d_noindel)  `Di-Dn`,
-                        AVG(isw_d_indel)/AVG(isw_d_noindel) `Di/Dn`,
-                        COUNT(*) COUNT
-                FROM    isw s, indel i
-                WHERE s.isw_indel_id = i.indel_id
-                AND i.indel_freq = ?
-                AND s.isw_distance >= 0
-                AND s.isw_d_indel IS NOT NULL 
-                AND s.isw_distance IN 
-            };
-            my %option = (
-                sql_query     => $sql_query,
-                sheet_row     => $sheet_row,
-                sheet_col     => $sheet_col,
-                group         => \@group_distance,
-                append_column => \@p_values,
-                bind_value    => [ $level->[1] ],
-            );
-            ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    };
-
-    foreach (@freq_levels) {
-        &$write_sheet($_);
+    {    # write header
+        my @headers = qw{AVG_distance AVG_D AVG_Di AVG_Dn Di/Dn COUNT P_value};
+        ( $sheet_row, $sheet_col ) = ( 0, 1 );
+        my %option = (
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@headers,
+        );
+        ( $sheet, $sheet_row )
+            = $write_obj->write_header_direct( $sheet_name, \%option );
     }
+
+    my @group_distance = ( [0], [1], [2], [3], [4], [ 5 .. 10 ], [2 .. 5]);
+
+    my @p_values;
+
+    # ttest
+    {
+        my $sql_query = qq{
+            SELECT s.isw_d_indel, s.isw_d_noindel
+            FROM    isw s, indel i
+            WHERE i.indel_id = s.isw_indel_id
+            AND s.isw_distance >= 0
+            AND s.isw_d_indel IS NOT NULL 
+            AND s.isw_distance IN 
+        };
+
+        for (@group_distance) {
+            my @range      = @$_;
+            my $in_list    = '(' . join( ',', @range ) . ')';
+            my $sql_query2 = $sql_query . $in_list;
+            $sql_query2 .= " \nLIMIT 1000000";   # prevent to exceed excel limit
+
+            my %option  = ( sql_query => $sql_query2, );
+            my $ttest   = $write_obj->column_ttest( \%option );
+            my $p_value = $ttest->{t_prob};
+
+            unless ( defined $p_value ) {
+                $p_value = "NA";
+
+                #my $ttest_sheet_name = "ttest_" . join( '-', @range[ 0, -1 ] );
+                #my $stat_sheet;
+                #
+                #my ( $stat_sheet_row, $stat_sheet_col ) = ( 0, 0 );
+                #my %option = (
+                #    sheet_row => $stat_sheet_row,
+                #    sheet_col => $stat_sheet_col,
+                #    header    => [qw{d_indel d_noindel}],
+                #);
+                #( $stat_sheet, $stat_sheet_row )
+                #    = $write_obj->write_header_direct( $ttest_sheet_name,
+                #    \%option );
+                #
+                #%option = (
+                #    sql_query => $sql_query2,
+                #    sheet_row => $stat_sheet_row,
+                #    sheet_col => $stat_sheet_col,
+                #);
+                #$write_obj->write_content_direct( $stat_sheet, \%option );
+            }
+            push @p_values, [$p_value];
+        }
+    }
+
+    {
+        my $sql_query = qq{
+            SELECT  AVG(isw_distance) AVG_distance,
+                    AVG(isw_pi) AVG_D,
+                    AVG(isw_d_indel) AVG_Di,
+                    AVG(isw_d_noindel) AVG_Dn,
+                    AVG(isw_d_indel)/AVG(isw_d_noindel) `Di/Dn`,
+                    COUNT(*) COUNT
+            FROM    isw s, indel i
+            WHERE s.isw_indel_id = i.indel_id
+            AND s.isw_distance >= 0
+            AND s.isw_d_indel IS NOT NULL 
+            AND s.isw_distance IN 
+        };
+        my %option = (
+            sql_query     => $sql_query,
+            sheet_row     => $sheet_row,
+            sheet_col     => $sheet_col,
+            group         => \@group_distance,
+            append_column => \@p_values,
+        );
+        ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
+    }
+
+    print "Sheet \"$sheet_name\" has been generated.\n";
 };
 
 #----------------------------------------------------------#
