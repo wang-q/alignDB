@@ -49,6 +49,12 @@ my $target_id;
 my $outgroup_id;
 my $exclude_ids = '0';
 
+# is self alignment (paralog)
+my $is_self;
+
+# paralog length
+my $paralog_length = 1000;
+
 # use custom name_str
 # working dir and goal db name
 # mysql restrict db name length 64
@@ -93,6 +99,8 @@ GetOptions(
     'e|exclude=s'     => \$exclude_ids,
     'n|name_str=s'    => \$name_str,
     'gr'              => \$gr,
+    'is_self'         => \$is_self,
+    'length=i'        => \$paralog_length,
     'scaffold'        => \$scaffold,
     'parallel=i'      => \$parallel,
 ) or pod2usage(2);
@@ -331,25 +339,44 @@ my @query_ids;
 
 cd [% working_dir %]
 
+[% IF ! redo -%]
 perl [% findbin %]/../taxon/strain_info.pl \
     --file [% working_dir %]/info.csv \
 [% FOREACH id IN query_ids -%]
     --id [% id %] \
 [% END -%]
     --id [% target_id %]
-
+[% END -%]
+    
+[% IF ! is_self -%]
 perl [% findbin %]/../taxon/strain_bz.pl \
     --file [% working_dir %]/info.csv \
     -w [% working_dir %]/.. \
+[% IF ! redo -%]
     --seq_dir [% seq_dir %] \
+[% END -%]
     --name [% name_str %] \
 [% FOREACH id IN query_ids -%]
     -q [% id %] \
 [% END -%]
     -t [% target_id %]
 
-    
-    
+[% ELSE -%]
+perl [% findbin %]/../taxon/strain_bz_self.pl \
+    --file [% working_dir %]/info.csv \
+    -w [% working_dir %]/.. \
+[% IF ! redo -%]
+    --seq_dir [% seq_dir %] \
+[% END -%]
+    --name [% name_str %] \
+    --length [% length %] \
+[% FOREACH id IN query_ids -%]
+    -q [% id %] \
+[% END -%]
+    -t [% target_id %]
+
+[% END -%]
+
 EOF
     $tt->process(
         \$text,
@@ -359,8 +386,27 @@ EOF
             name_str    => $name_str,
             target_id   => $target_id,
             query_ids   => \@query_ids,
+            is_self     => $is_self,
+            length      => $paralog_length,
         },
         File::Spec->catfile( $working_dir, "prepare.sh" )
+    ) or die Template->error;
+
+    $tt->process(
+        \$text,
+        {   findbin     => $FindBin::Bin,
+            working_dir => $working_dir,
+            seq_dir     => $seq_dir,
+            name_str    => $name_str,
+            target_id   => $target_id,
+            query_ids   => \@query_ids,
+            is_self     => $is_self,
+            length      => $paralog_length,
+            redo        => 1,                # If RepeatMasker has been executed
+                                             # don't pass $seq_dir
+                                             # don't gather taxon info
+        },
+        File::Spec->catfile( $working_dir, "redo_prepare.sh" )
     ) or die Template->error;
 
 }
@@ -446,5 +492,5 @@ sub prep_scaff {
 
 __END__
 
-perl bac_bz.pl --base_dir d:\bacteria\bacteria_101015 --parent 562
+perl bac_prepare.pl --base_dir d:\bacteria\bacteria_101015 --parent 562
 perl d:/wq/Scripts/tool/replace.pl -d d:/wq/Scripts/alignDB/bac -p "cmd.bat" -f /home/wangq -r d:/wq
