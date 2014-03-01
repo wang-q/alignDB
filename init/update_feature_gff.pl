@@ -40,10 +40,10 @@ my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
 # support multiply files, seperated by ','
-my $gff_files;
+my @gff_files;
 
 # RepeatMasker generated gff files
-my $rm_gff_files;
+my @rm_gff_files;
 
 # gff version
 my $gff_version = 3;
@@ -65,8 +65,8 @@ GetOptions(
     'u|username=s'   => \$username,
     'p|password=s'   => \$password,
     'd|db=s'         => \$db,
-    'gff_files=s'    => \$gff_files,
-    'rm_gff_files=s' => \$rm_gff_files,
+    'gff_files=s'    => \@gff_files,
+    'rm_gff_files=s' => \@rm_gff_files,
     'gff_version=i'  => \$gff_version,
     'parallel=i'     => \$parallel,
     'batch=i'        => \$batch_number,
@@ -82,7 +82,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 $stopwatch->start_message("Update annotations of $db...");
 
 my $cds_set_of = {};
-for my $file ( grep {defined} split /\,/, $gff_files ) {
+for my $file ( grep {defined} split /\,/, join(",", @gff_files) ) {
     next unless -e $file;
     my $basename = basename( $file, '.gff', '.gff3' );
     print "Loading annotations for [$basename]\n";
@@ -101,7 +101,7 @@ for my $file ( grep {defined} split /\,/, $gff_files ) {
 }
 
 my $repeat_set_of = {};
-for my $file ( grep {defined} split /\,/, $rm_gff_files ) {
+for my $file ( grep {defined} split /\,/, join(",", @rm_gff_files) ) {
     next unless -e $file;
     my $basename = basename( $file, '.rm.gff', '.rm.gff3', '.gff', '.gff3' );
     print "Loading RepeatMasker annotations for [$basename]\n";
