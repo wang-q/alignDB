@@ -7,13 +7,13 @@ use Getopt::Long;
 use Pod::Usage;
 use YAML qw(Dump Load DumpFile LoadFile);
 
+use Path::Class;
+
 use Win32::OLE qw(in);
 use Win32::OLE::Const;
 use Win32::OLE::Variant;
 use Win32::OLE::NLS qw(:LOCALE :DATE);
 use Win32::OLE::Const 'Microsoft Excel';
-
-use Path::Class;
 
 $Win32::OLE::Warn = 2;    # die on errors...
 
@@ -69,6 +69,9 @@ for ( in $newbook->Worksheets ) {
 
 my $sheetname = $file_yaml->basename;
 $sheetname =~ s/[^\w]/_/g;
+if (length $sheetname > 30) {
+    $sheetname = substr $sheetname, 0, 30;
+}
 my $newsheet = $newbook->Worksheets(1);
 $newsheet->{Name} = $sheetname;
 
@@ -154,7 +157,7 @@ for my $i ( @{$borders} ) {
 # Style
 #----------------------------#
 if ( $dispatch->{autofit} ) {
-    $newsheet->UsedRange->Columns->AutoFit;
+    $newsheet->{UsedRange}->{Columns}->AutoFit;
 }
 
 #----------------------------------------------------------#
