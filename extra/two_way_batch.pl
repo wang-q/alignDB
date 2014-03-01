@@ -33,8 +33,8 @@ my $password   = $Config->{database}{password};
 my $db_name    = $Config->{database}{db};
 my $ensembl_db = $Config->{database}{ensembl};
 
-my $gff_files    = '';
-my $rm_gff_files = '';
+my @gff_files;
+my @rm_gff_files;
 
 # alignment
 my $dir_align        = $Config->{taxon}{dir_align};
@@ -73,8 +73,8 @@ GetOptions(
     't|target=s'             => \$target,
     'q|query=s'              => \$query,
     'e|ensembl=s'            => \$ensembl_db,
-    'gff_files=s'            => \$gff_files,
-    'rm_gff_files=s'         => \$rm_gff_files,
+    'gff_files=s'            => \@gff_files,
+    'rm_gff_files=s'         => \@rm_gff_files,
     'parallel=i'             => \$parallel,
     'batch=i'                => \$batch_number,
     'lt|length_threshold=i'  => \$length_threshold,
@@ -117,6 +117,9 @@ else {
         @tasks = grep {/\d/} split /\s/, $run;
     }
 }
+
+my $gff_file = join ",", @gff_files;
+my $rm_gff_file = join ",", @rm_gff_files;
 
 #----------------------------------------------------------#
 # dispatch table
@@ -189,8 +192,8 @@ my $dispatch = {
         . " -d $db_name"
         . " --parallel $parallel"
         . " --batch $batch_number"
-        . " --gff_files $gff_files"
-        . " --rm_gff_files $rm_gff_files",
+        . " --gff_files $gff_file"
+        . " --rm_gff_files $rm_gff_file",
     31 => "perl $FindBin::Bin/../init/update_indel_slippage.pl"
         . " -s $server"
         . " --port $port"
@@ -246,7 +249,7 @@ my $dispatch = {
 
 # use the dispatch template to generate $cmd
 for my $step (@tasks) {
-    if ( $gff_files and $step == 30 ) {
+    if ( @gff_files and $step == 30 ) {
         $step = '30gff';
     }
 

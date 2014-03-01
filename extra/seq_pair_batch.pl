@@ -13,12 +13,10 @@ use File::Spec;
 use Template;
 
 use AlignDB::Run;
-use AlignDB::Stopwatch;
 use AlignDB::IntSpan;
+use AlignDB::Stopwatch;
 
 use FindBin;
-
-$|++;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -45,10 +43,10 @@ my $dir_as_taxon;
 my $task = "0-2,21,40";
 
 # run in parallel mode
-my $parallel = 1;
+my $parallel = $Config->{generate}{parallel};
 
 # number of alignments process in one child process
-my $batch_number = 5;
+my $batch_number = $Config->{generate}{batch};
 
 my $man  = 0;
 my $help = 0;
