@@ -21,6 +21,8 @@ use Template;
 # running options
 my $dir = '.';
 
+my $output;
+
 my $man  = 0;
 my $help = 0;
 
@@ -28,16 +30,22 @@ GetOptions(
     'help|?'  => \$help,
     'man'     => \$man,
     'd|dir=s' => \$dir,
+    'o|output=s' => \$output,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
+
 #----------------------------------------------------------#
 # init
 #----------------------------------------------------------#
+if ( !$output ) {
+    $output = "basicstat";
+}
+
 $dir = File::Spec->rel2abs($dir);
-my $output = File::Spec->catfile( $dir, "basicstat.yml" );
+$output = File::Spec->catfile( $dir, "$output.yml" );
 
 my @xls_files
     = sort grep {/common|multi/i}
