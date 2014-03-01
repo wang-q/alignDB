@@ -44,8 +44,9 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 # filename:sheetname:chart_serial:[x, y] coordinates
 my $dispatch = LoadFile($file_yaml);
 my $charts   = $dispatch->{charts};
-my $texts    = $dispatch->{texts};
 my $ranges   = $dispatch->{ranges};
+my $files    = $dispatch->{files};
+my $texts    = $dispatch->{texts};
 my $x_unit   = $dispatch->{unit}{x} || 50;
 my $y_unit   = $dispatch->{unit}{y} || 37.5;
 
@@ -83,8 +84,8 @@ $doc->{ReferencePoint} = cdrTopLeft;      # selected shape's topleft
 
 # A4 210 * 297 mm
 $cda->{ActivePage}->SetSize( 210, 297 );
-$doc->{DrawingOriginX} = -105;
-$doc->{DrawingOriginY} = 148.5;
+$doc->{DrawingOriginX} = -105 + 5;        
+$doc->{DrawingOriginY} = 148.5 - 5;# give space for texts
 
 #----------------------------------------------------------#
 # Paste every charts
@@ -122,15 +123,19 @@ for my $filename ( sort keys %{$charts} ) {
 
             # copy & paste
             $sheet->ChartObjects($chart_serial)->Copy;
+            sleep 1;
+
             my ( $x, $y )
                 = @{ $charts->{$filename}{$sheetname}{$chart_serial} };
             $layer->PasteSpecial("Enhanced Metafile");
+            sleep 1;
 
             # move the shape
             # leave some spaces
             my $selection = $cda->{ActiveSelection};
             $selection->SetSize( $x_unit * 0.95, $y_unit * 0.95 );
             $selection->SetPosition( $x * $x_unit, -$y * $y_unit );
+            sleep 1;
         }
     }
     $workbook->Close;
@@ -190,6 +195,34 @@ for my $filename ( sort keys %{$ranges} ) {
     }
     $workbook->Close;
 }
+
+## not working
+##----------------------------------------------------------#
+## Import every figure files
+##----------------------------------------------------------#
+#for my $i ( @{$files} ) {
+#    my $name = $i->{name};
+#    my ( $x, $y ) = @{ $i->{pos} };
+#
+#    printf "[file: %s]\n", $name;
+#    
+#    my $ffile = file( $base_dir, $name )->absolute->stringify;
+#    if ( !-e $ffile ) {
+#        warn "File not exists: $ffile\n";
+#        next;
+#    }
+#
+#    $layer->Import({FileName  => $ffile, Filter => cdrAutoSense });
+#    sleep 1;
+#
+#    # move the figure
+#    # leave some spaces
+#    my $selection = $cda->{ActiveSelection};
+#    $selection->SetSize( $x_unit * 0.95, $y_unit * 0.95 );
+#    $selection->SetPosition( $x * $x_unit, -$y * $y_unit );
+#    sleep 1;
+#}
+
 
 #----------------------------------------------------------#
 # Write every texts
