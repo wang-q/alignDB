@@ -8,6 +8,7 @@ use Pod::Usage;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use Path::Class;
+use Set::Scalar;
 
 use Win32::OLE qw(in);
 use Win32::OLE::Const;
@@ -69,7 +70,7 @@ for ( in $newbook->Worksheets ) {
 
 my $sheetname = $file_yaml->basename;
 $sheetname =~ s/[^\w]/_/g;
-if (length $sheetname > 30) {
+if ( length $sheetname > 30 ) {
     $sheetname = substr $sheetname, 0, 30;
 }
 my $newsheet = $newbook->Worksheets(1);
@@ -93,6 +94,18 @@ for my $filename ( sort keys %{$ranges} ) {
     }
     for my $sheetname ( sort keys %{ $ranges->{$filename} } ) {
         printf "[sheet: %s]\n", $sheetname;
+
+        # get sheet
+        my @sheets;
+        for my $sheet ( in $workbook->Worksheets ) {
+            push @sheets, $sheet->{Name};
+        }
+        my $name_set = Set::Scalar->new(@sheets);
+
+        if ( !$name_set->has($sheetname) ) {
+            print " " x 4, "sheet not exists!\n";
+            next;
+        }
         my $sheet = $workbook->Worksheets($sheetname);
         for my $range ( @{ $ranges->{$filename}{$sheetname} } ) {
             printf "[range]\n";
@@ -105,6 +118,9 @@ for my $filename ( sort keys %{$ranges} ) {
             my $paste_range = $newsheet->Range( $range->{paste} );
             $paste_range->Cells(1)->PasteSpecial;
             $paste_range->Merge if $range->{merge};
+
+            # clear clipboard
+            $excel->{CutCopyMode} = 0;
         }
     }
     $workbook->Close;

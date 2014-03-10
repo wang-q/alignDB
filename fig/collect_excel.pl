@@ -9,6 +9,7 @@ use YAML qw(Dump Load DumpFile LoadFile);
 
 use List::MoreUtils qw(any all uniq zip);
 use Path::Class;
+use Set::Scalar;
 
 use Win32::OLE qw(in);
 use Win32::OLE::Const;
@@ -84,15 +85,31 @@ for my $i ( 0 .. $#jobs ) {
     my $filename = $jobs[$i]->[0];
     $filename = file($filename)->absolute->stringify;
     printf "[file: %s]\n", $filename;
-
-    my $sheetname = $jobs[$i]->[1];
-    printf "[sheet: %s]\n", $sheetname;
+    if ( !-e $filename ) {
+        print " " x 4, "File not exists.\n";
+        next;
+    }
 
     # open copy xlsx file
     my $workbook;
     unless ( $workbook = $excel->Workbooks->Open($filename) ) {
         die "Cannot open xls file\n";
     }
+    
+    # get sheet
+    my @sheets;
+    for my $sheet ( in $workbook->Worksheets ) {
+        push @sheets, $sheet->{Name};
+    }
+    my $name_set = Set::Scalar->new(@sheets);
+
+    my $sheetname = $jobs[$i]->[1];
+    printf "[sheet: %s]\n", $sheetname;
+    if ( !$name_set->has($sheetname) ) {
+        print " " x 4, "sheet not exists!\n";
+        next;
+    }
+    
     my $sheet = $workbook->Worksheets($sheetname);
     $sheet->{UsedRange}->copy;
 
@@ -110,6 +127,8 @@ for my $i ( 0 .. $#jobs ) {
 
     # close copy xlsx file
     $workbook->Close;
+    
+    print "\n";
 }
 
 #----------------------------------------------------------#
