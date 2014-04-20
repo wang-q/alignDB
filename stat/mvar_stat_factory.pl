@@ -637,7 +637,8 @@ my $gene_list = sub {
     {    # write header
         my @headers = qw{ gene_id chr_name gene_start gene_end
             gene_stable_id gene_external_name gene_biotype gene_strand
-            gene_is_full gene_multitrans gene_multiexons gene_syn gene_nsy };
+            gene_is_full gene_multitrans gene_multiexons gene_subs gene_indel
+            gene_pi gene_syn gene_nsy };
         ( $sheet_row, $sheet_col ) = ( 0, 0 );
         my %option = (
             sheet_row => $sheet_row,
@@ -651,10 +652,11 @@ my $gene_list = sub {
     {    # write contents
         my $sql_query = q{
             SELECT 
-                w.align_id, g.gene_id, a.chr_name, w.window_start,
-                w.window_end, g.gene_stable_id, g.gene_external_name,
-                g.gene_biotype, g.gene_strand, g.gene_is_full,
-                g.gene_multitrans, g.gene_multiexons, g.gene_syn, g.gene_nsy
+                w.align_id, g.gene_id, a.chr_name, w.window_start, w.window_end,
+                g.gene_stable_id, g.gene_external_name, g.gene_biotype,
+                g.gene_strand, g.gene_is_full, g.gene_multitrans,
+                g.gene_multiexons, w.window_differences, w.window_indel,
+                w.window_pi, g.gene_syn, g.gene_nsy
             FROM
                 gene g
                     INNER JOIN
