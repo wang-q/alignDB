@@ -229,12 +229,14 @@ my $worker_count = sub {
             $coll_gsw->update(
                 { _id => MongoDB::OID->new( value => $key ) },
                 { '$set' => { bed_count => $gsw_count_of{$key}, } },
+                { safe   => 1 },
             );
         }
         for my $key ( keys %ofgsw_count_of ) {
             $coll_ofgsw->update(
                 { _id => MongoDB::OID->new( value => $key ) },
                 { '$set' => { bed_count => $ofgsw_count_of{$key}, } },
+                { safe   => 1 },
             );
         }
     }
