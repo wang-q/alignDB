@@ -1,0 +1,5 @@
+cd /home/wangq/Scripts/alignDB/init
+perl -aln -F"," -e 'print $F[0]' chr_length.csv | uniq | sort -n > chr_taxon.list
+perl -aln -F"," -e 'BEGIN{open $fh, q{<}, q{chr_taxon.list}; @lines = <$fh>; chomp @lines; close $fh;};if (grep {$_ == $F[0]} @lines) {print}' old_taxon.csv > clean_taxon.csv
+
+

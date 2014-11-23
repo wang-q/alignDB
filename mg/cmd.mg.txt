@@ -1,0 +1,562 @@
+
+
+#----------------------------------------------------------#
+# Start mongod
+#----------------------------------------------------------#
+numactl --interleave=all ~/share/mongodb/bin/mongod --dbpath ~/share/mongodb/data/db  --rest --nojournal --directoryperdb
+
+numactl --interleave=all ~/share/mongodb/bin/mongod --dbpath ~/share/mongodb/data/db  --rest --nojournal --directoryperdb
+
+cd ~/Scripts/alignDB
+perl mg/init_mg.pl -d Basic
+
+~/share/mongodb/bin/mongodump --db Basic --out ~/data/mongodb/
+
+#----------------------------------------------------------#
+# GC wave and bed count
+#----------------------------------------------------------#
+
+#----------------------------------------------------------#
+# Human
+#----------------------------------------------------------#
+cd ~/Scripts/alignDB
+
+perl mg/init_mg.pl -d Human
+
+# Runtime 10 minutes and 55 seconds.
+perl mg/gen_mg.pl -d Human -t="9606,human" --dir ~/data/alignment/primates/human_chr/ --length 500000 --parallel 12
+
+rm -fr ~/data/mongodb/Human
+~/share/mongodb/bin/mongodump --db Human --out ~/data/mongodb/
+
+~/share/mongodb/bin/mongo Human_GC --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Human --db Human_GC
+
+# Runtime 2 hours and 26 minutes.
+perl mg/insert_mg_gcwave.pl -d Human_GC --batch 10 --parallel 8
+
+rm -fr ~/data/mongodb/Human_GC
+~/share/mongodb/bin/mongodump --db Human_GC --out ~/data/mongodb/
+
+#----------------------------#
+# FaireSeq
+#----------------------------#
+# about 1 hour
+~/share/mongodb/bin/mongo Human_GC_FaireSeq --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Human_GC --db Human_GC_FaireSeq
+
+# Runtime 7 minutes and 31 seconds.
+perl mg/count_mg_bed.pl -d Human_GC_FaireSeq --parallel 8 --run insert --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireA549Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireAstrocyPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGlioblaPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm12878Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm12891Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm12892Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm18507Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm19239Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireH1hescPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHelas3Ifna4hPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHelas3Ifng4hPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHelas3Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHepg2Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHtr8Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHuvecPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireK562NabutPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireK562OhureaPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireK562Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireMedulloPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireNhbePk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireNhekPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFairePanisletsPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireUrotsaPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireUrotsaUt189Pk.bb.bed
+
+# Runtime 3 hours and 25 minutes.
+perl mg/count_mg_bed.pl -d Human_GC_FaireSeq --parallel 8 --run count
+
+# Runtime 29 minutes and 36 seconds.
+perl mg/stat_mg.pl -d Human_GC_FaireSeq
+
+perl mg/chart_mg.pl -i d:\wq\GC\autochart\131216_encode_bed_count\Human_GC_FaireSeq.mg.xlsx
+
+
+#----------------------------#
+# DnaseSeq
+#----------------------------#
+# 
+~/share/mongodb/bin/mongo Human_GC_DnaseSeq --eval "db.dropDatabase();" 
+time ~/share/mongodb/bin/mongorestore ~/data/mongodb/Human_GC --db Human_GC_DnaseSeq
+
+# Runtime 1 hour and 8 minutes.
+sh mg/dnaseseq_gsw_count.sh
+
+# Runtime 6 hours and 47 minutes.
+perl mg/count_mg_bed.pl -d Human_GC_DnaseSeq --parallel 8 --run count
+
+# Runtime 17 minutes and 54 seconds.
+perl mg/stat_mg.pl -d Human_GC_DnaseSeq
+
+perl mg/chart_mg.pl -i d:\wq\GC\autochart\131216_encode_bed_count\Human_GC_DnaseSeq.mg.xlsx
+
+
+
+
+#----------------------------#
+# TFBS
+#----------------------------#
+# 
+~/share/mongodb/bin/mongo Human_GC_TFBS --eval "db.dropDatabase();" 
+time ~/share/mongodb/bin/mongorestore ~/data/mongodb/Human_GC --db Human_GC_TFBS
+
+# Runtime 27 minutes and 37 seconds.
+sh mg/tfbs_gsw_count.sh
+
+# Runtime 1 hour and 33 minutes.
+perl mg/count_mg_bed.pl -d Human_GC_TFBS --parallel 8 --run count
+
+# Runtime 27 minutes and 1 second.
+perl mg/stat_mg.pl -d Human_GC_TFBS
+
+perl mg/chart_mg.pl -i d:\wq\GC\autochart\131216_encode_bed_count\Human_GC_TFBS.mg.xlsx
+
+
+#----------------------------------------------------------#
+# S288C | windows
+#----------------------------------------------------------#
+cd d:\wq\Scripts\alignDB
+
+# Runtime 24 seconds.
+perl mg/init_mg.pl -d S288C
+
+# Runtime 7 seconds.
+perl mg/gen_mg.pl -d S288C -t "4932,S288C"  --dir d:\data\alignment\self_alignment\S288C\ --length 10000000 --parallel 1
+
+perl mg/gen_mg_mce.pl -d S288C -t "4932,S288C"  --dir d:\data\alignment\self_alignment\S288C\ --length 10000000 --parallel 1
+
+
+# Runtime 2 minutes and 45 seconds.
+perl mg/insert_mg_gcwave.pl -d S288C --batch 1 --parallel 1
+
+
+perl mg/insert_mg_gcwave_mce.pl -d S288C --batch 1 --parallel 1
+
+# Runtime 1 second.
+perl mg/count_mg_bed.pl -d S288C --run insert -f d:/wq/Scripts/alignDB/ofg/spo11/spo11_hot.bed --batch 1 --parallel 1
+# Runtime 1 minute and 16 seconds.
+perl mg/count_mg_bed.pl -d S288C --run count --batch 1 --parallel 1
+
+# Runtime 4 seconds.
+perl mg/stat_mg.pl -d S288C
+
+#----------------------------------------------------------#
+# S288C | linux
+#----------------------------------------------------------#
+cd ~/Scripts/alignDB
+
+perl mg/init_mg.pl -d S288C
+perl mg/gen_mg.pl -d S288C -t "4932,S288C" --dir ~/data/alignment/self_alignment/S288C  --parallel 1
+
+perl mg/gen_mg_mce.pl -d S288C -t "4932,S288C" --dir ~/data/alignment/self_alignment/S288C  --parallel 1
+
+
+# Runtime 2 minutes and 2 seconds.
+perl mg/insert_mg_gcwave.pl -d S288C --batch 1 --parallel 1
+
+perl mg/insert_mg_gcwave_mce.pl -d S288C --batch 1 --parallel 1
+
+# Runtime 1 minute and 3 seconds.
+perl mg/insert_mg_gcwave.pl -d S288C --batch 1 --parallel 2
+
+# Runtime 31 seconds.
+perl mg/insert_mg_gcwave.pl -d S288C --batch 1 --parallel 4
+
+# Runtime 21 seconds.
+perl mg/insert_mg_gcwave.pl -d S288C --batch 1 --parallel 8
+
+# Runtime 18 seconds.
+perl mg/insert_mg_gcwave.pl -d S288C --batch 1 --parallel 12
+
+~/share/mongodb/bin/mongodump --db S288C --out ~/data/mongodb/
+
+#----------------------------#
+# gene part
+#----------------------------#
+perl mg/init_mg.pl -d S288C_part_trans
+perl mg/gen_mg.pl -d S288C_part_trans -t "4932,S288C" --dir ~/data/alignment/self_alignment/S288C --length 10000000 --parallel 8
+
+perl mg/insert_mg_bed.pl -d S288C_part_trans --style center_intact --batch 1 --parallel 8 \
+    --tag t01 --file ~/data/ofg/S288C/orf_genomic_all/orf_genomic_all.01.bed \
+    --tag t02 --file ~/data/ofg/S288C/orf_genomic_all/orf_genomic_all.02.bed \
+    --tag t03 --file ~/data/ofg/S288C/orf_genomic_all/orf_genomic_all.03.bed \
+    --tag t04 --file ~/data/ofg/S288C/orf_genomic_all/orf_genomic_all.04.bed \
+    --tag t05 --file ~/data/ofg/S288C/orf_genomic_all/orf_genomic_all.05.bed \
+    --tag t06 --file ~/data/ofg/S288C/orf_genomic_all/orf_genomic_all.06.bed \
+    --tag t07 --file ~/data/ofg/S288C/orf_genomic_all/orf_genomic_all.07.bed \
+    --tag t08 --file ~/data/ofg/S288C/orf_genomic_all/orf_genomic_all.08.bed \
+    --tag t09 --file ~/data/ofg/S288C/orf_genomic_all/orf_genomic_all.09.bed \
+    --tag t10 --file ~/data/ofg/S288C/orf_genomic_all/orf_genomic_all.10.bed 
+
+# Runtime 1 second.
+perl mg/count_mg_bed.pl -d S288C_part_trans --run insert -f ~/Scripts/alignDB/ofg/spo11/spo11_hot.bed --batch 1 --parallel 1
+# Runtime 1 minute and 16 seconds.
+perl mg/count_mg_bed.pl -d S288C_part_trans --run count --batch 1 --parallel 8
+
+perl mg/stat_mg.pl -d S288C_part_trans
+
+
+#----------------------------------------------------------#
+# Ecoli | windows
+#----------------------------------------------------------#
+cd d:\data\ofg\ecoli\
+perl -F/\t/ -an -e "/^#/ and next; $F[3] == 0 and next; $F[4] == 0 and next; print qq{NC_000913\t$F[3]\t$F[4]\t$F[1]\n}" BindingSiteSet.txt > ecoli.tfbs.bed
+
+cd d:\wq\Scripts\alignDB
+
+perl mg/init_mg.pl -d Ecoli
+
+perl mg/gen_mg.pl -d Ecoli -t "511145,Ecoli"  --dir d:\data\ofg\ecoli\511145\ --length 500000 --parallel 1
+
+perl mg/insert_mg_gcwave.pl -d Ecoli --batch 1 --parallel 1
+
+perl mg/count_mg_bed.pl -d Ecoli --run insert -f d:/data/ofg/ecoli/ecoli.tfbs.bed --batch 1 --parallel 1 --nochr
+perl mg/count_mg_bed.pl -d Ecoli --run count --batch 1 --parallel 1
+
+perl mg/insert_mg_bed.pl -d Ecoli --style center_intact --batch 1 --parallel 1 --nochr --tag RegulonDB -type exp --file d:/data/ofg/ecoli/ecoli.tfbs.bed
+
+perl mg/stat_mg.pl -d Ecoli
+perl mg/chart_mg.pl -i Ecoli.mg.xlsx
+
+
+#----------------------------------------------------------#
+# encode ofgsw
+#----------------------------------------------------------#
+
+#----------------------------------------------------------#
+# Human
+#----------------------------------------------------------#
+
+#----------------------------#
+# FaireSeq
+#----------------------------#
+# 1m46.274s
+~/share/mongodb/bin/mongo Human_BED_FaireSeq --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Human --db Human_BED_FaireSeq
+
+# Runtime 19 hours and 29 minutes.
+perl mg/insert_mg_bed.pl -d Human_BED_FaireSeq --style center_intact --parallel 6 --tag A549 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireA549Pk.bb.bed --tag NHA --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireAstrocyPk.bb.bed --tag GLIOBLA --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGlioblaPk.bb.bed --tag GM12878 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm12878Pk.bb.bed --tag GM12891 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm12891Pk.bb.bed --tag GM12892 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm12892Pk.bb.bed --tag GM18507 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm18507Pk.bb.bed --tag GM19239 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm19239Pk.bb.bed --tag H1HESC --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireH1hescPk.bb.bed --tag HELAS3 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHelas3Ifna4hPk.bb.bed --tag HELAS3 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHelas3Ifng4hPk.bb.bed --tag HELAS3 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHelas3Pk.bb.bed --tag HEPG2 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHepg2Pk.bb.bed --tag HTR8 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHtr8Pk.bb.bed --tag HUVEC --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHuvecPk.bb.bed --tag K562 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireK562NabutPk.bb.bed --tag K562 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireK562OhureaPk.bb.bed --tag K562 --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireK562Pk.bb.bed --tag MEDULLO --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireMedulloPk.bb.bed --tag NHBE --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireNhbePk.bb.bed --tag NHEK --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireNhekPk.bb.bed --tag PANISLETS --file /home/wangq/data/encode/process/wgEncodeOpenChromFairePanisletsPk.bb.bed --tag UROTHEL --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireUrotsaPk.bb.bed --tag UROTHEL --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireUrotsaUt189Pk.bb.bed
+
+perl mg/stat_mg.pl -d Human_BED_FaireSeq --by tag
+
+# total 19 cells, filtering top by 2 and filtering bottom by 2
+perl mg\chart_mg.pl --replace ofg="NDRs(FaireSeq)" -i d:\wq\GC\autochart\131224_(yeast_trans_part)(ecoli_tf)(encode)\Human_BED_FaireSeq.mg.xlsx
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\131224_(yeast_trans_part)(ecoli_tf)(encode)\Human_BED_FaireSeq.mg.xlsx -xl "Distance to NDRs(FaireSeq)" -yl "GC proportion" -xr "A2:A17" -yr "B2:B17"  --y_min 0.35 --y_max 0.5  -rb "ofg_tag" -rs "ofg_all" -fb 2 -ft 2
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\131224_(yeast_trans_part)(ecoli_tf)(encode)\Human_BED_FaireSeq.mg.xlsx -xl "Distance to TF binding sites" -yl "Window CV" -xr "A2:A17" -yr "C2:C17"  --y_min 0.12 --y_max 0.2  -rb "ofg_tag" -rs "ofg_all" -fb 2 -ft 2 --style_red
+
+
+#----------------------------#
+# DnaseSeq
+#----------------------------#
+# 
+~/share/mongodb/bin/mongo Human_BED_DnaseSeq --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Human --db Human_BED_DnaseSeq
+
+# 
+sh mg/dnaseseq_insert_bed.sh
+
+perl mg/stat_mg.pl -d Human_BED_DnaseSeq --by tag
+
+# total 119 cells, filtering top by 12 and filtering bottom by 12
+perl mg\chart_mg.pl --replace ofg="NDRs" -i d:\wq\GC\autochart\131224_(yeast_trans_part)(ecoli_tf)(encode)\Human_BED_DnaseSeq.mg.xlsx
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\131224_(yeast_trans_part)(ecoli_tf)(encode)\Human_BED_DnaseSeq.mg.xlsx -xl "Distance to NDRs" -yl "GC proportion" -xr "A2:A17" -yr "B2:B17"  --y_min 0.44 --y_max 0.60  -rb "ofg_tag" -rs "ofg_all" -fb 12 -ft 12
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\131224_(yeast_trans_part)(ecoli_tf)(encode)\Human_BED_DnaseSeq.mg.xlsx -xl "Distance to NDRs" -yl "Window CV" -xr "A2:A17" -yr "C2:C17"  --y_min 0.12 --y_max 0.2  -rb "ofg_tag" -rs "ofg_all" -fb 12 -ft 12 --style_red
+
+
+
+#----------------------------#
+# TFBS
+#----------------------------#
+# 
+~/share/mongodb/bin/mongo Human_BED_TFBS --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Human --db Human_BED_TFBS
+
+# Runtime 20 hours and 45 minutes.
+sh mg/tfbs_insert_bed.sh
+
+perl mg/stat_mg.pl -d Human_BED_TFBS --by tag -o Human_BED_TFBS.tag.mg.xlsx
+perl mg/stat_mg.pl -d Human_BED_TFBS --by type -o Human_BED_TFBS.type.mg.xlsx
+
+
+# total 73 cells, filtering top by 7 and filtering bottom by 7
+perl mg\chart_mg.pl --replace ofg="TF binding sites" -i  Human_BED_TFBS.tag.mg.xlsx
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\131224_(yeast_trans_part)(ecoli_tf)(encode)\Human_BED_TFBS.tag.mg.xlsx -xl "Distance to TF binding sites(cells)" -yl "GC proportion" -xr "A2:A17" -yr "B2:B17"  --y_min 0.44 --y_max 0.62  -rb "ofg_tag" -rs "ofg_all" -fb 7 -ft 7
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\131224_(yeast_trans_part)(ecoli_tf)(encode)\Human_BED_TFBS.tag.mg.xlsx -xl "Distance to TF binding sites(cells)" -yl "Window CV" -xr "A2:A17" -yr "C2:C17"  --y_min 0.12 --y_max 0.2  -rb "ofg_tag" -rs "ofg_all" -fb 7 -ft 7 --style_red
+
+# total 120 antibodies, filtering top by 12 and filtering bottom by 12
+perl mg\chart_mg.pl --replace ofg="TF binding sites" -i d:\wq\GC\autochart\131224_(yeast_trans_part)(ecoli_tf)(encode)\Human_BED_TFBS.type.mg.xlsx
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\131224_(yeast_trans_part)(ecoli_tf)(encode)\Human_BED_TFBS.type.mg.xlsx -xl "Distance to TF binding sites" -yl "GC proportion" -xr "A2:A17" -yr "B2:B17"  --y_min 0.44 --y_max 0.65  -rb "ofg_type" -rs "ofg_all" -fb 12 -ft 12
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\131224_(yeast_trans_part)(ecoli_tf)(encode)\Human_BED_TFBS.type.mg.xlsx -xl "Distance to TF binding sites" -yl "Window CV" -xr "A2:A17" -yr "C2:C17"  --y_min 0.12 --y_max 0.2  -rb "ofg_type" -rs "ofg_all" -fb 12 -ft 12 --style_red
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\131224_(yeast_trans_part)(ecoli_tf)(encode)\Human_BED_TFBS.type.mg.xlsx -xl "Distance to TF binding sites" -yl "GC proportion" -xr "A2:A17" -yr "B2:B17"  --y_min 0.44 --y_max 0.65  -rb "ofg_type_YY1\b" -rs "NON_EXISTS" --postfix YY1
+
+#----------------------------#
+# Histone
+#----------------------------#
+# 
+~/share/mongodb/bin/mongo Human_BED_Histone --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Human --db Human_BED_Histone
+
+#
+sh mg/histone_insert_bed.sh
+
+perl mg/stat_mg.pl -d Human_BED_Histone --by tag -o Human_BED_Histone.tag.mg.xlsx
+perl mg/stat_mg.pl -d Human_BED_Histone --by type -o Human_BED_Histone.type.mg.xlsx
+
+
+perl mg/stat_mg.pl -d Human_BED_Histone --by tt -o Human_BED_Histone.tt.mg.xlsx
+
+# 
+perl mg\chart_mg.pl --replace ofg="modified histone sites" -i  d:\wq\GC\autochart\140114_apoptosis_histone\Human_BED_Histone.tag.mg.xlsx
+perl fig\corel_fig.pl -i d:\wq\GC\autochart\140114_apoptosis_histone\Fig_encode_histone_cell.yml
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\140114_apoptosis_histone\Human_BED_Histone.tag.mg.xlsx -xl "modified histone sites" -yl "GC proportion" -xr "A2:A17" -yr "B2:B17"  --y_min 0.4 --y_max 0.6  -rb "ofg_tag" -rs "ofg_all"
+
+perl mg\chart_mg.pl --replace ofg="modified histone sites" -i  d:\wq\GC\autochart\140114_apoptosis_histone\Human_BED_Histone.type.mg.xlsx
+perl fig\corel_fig.pl -i d:\wq\GC\autochart\140114_apoptosis_histone\Fig_encode_histone_antibody.yml
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\140114_apoptosis_histone\Human_BED_Histone.type.mg.xlsx -xl "modified histone sites" -yl "GC proportion" -xr "A2:A17" -yr "B2:B17"  --y_min 0.4 --y_max 0.6  -rb "ofg_type" -rs "ofg_all"
+
+
+perl mg\chart_mg.pl --replace ofg="Histone modification sites" -i  d:\wq\GC\autochart\140114_apoptosis_histone\Human_BED_Histone.tt.mg.xlsx
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\140114_apoptosis_histone\Human_BED_Histone.type.mg.xlsx -xl "modified histone sites" -yl "GC proportion" -xr "A2:A17" -yr "B2:B17"  --y_min 0.44 --y_max 0.6  -rb "H3K04ME2|H3K04ME3|H3K09AC|H3K09ACb|H3K27AC|H3K27ME3" -rs "NON_EXISTS"
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\140114_apoptosis_histone\Human_BED_Histone.type.mg.xlsx -xl "modified histone sites" -yl "GC proportion" -xr "A2:A17" -yr "B2:B17"  --y_min 0.44 --y_max 0.6  -rb "H3K04ME2|H3K27ME3" -rs "NON_EXISTS"
+
+
+#----------------------------#
+# AHH002
+#----------------------------#
+# split to small chunks
+cd ~/data/ofg/human/
+mkdir AHH002
+cd AHH002
+wc -l ~/data/ofg/human/AHH002.bed
+split --lines=50000 -d ~/data/ofg/human/AHH002.bed AHH002.
+wc -l AHH002.*
+
+~/share/mongodb/bin/mongo Human_BED_AHH002 --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Human --db Human_BED_AHH002
+
+# Runtime 11 minutes and 40 seconds.
+cd ~/Scripts/alignDB
+perl mg/insert_mg_bed.pl -d Human_BED_AHH002 --style center \
+    -tag AHH002 -f ~/data/ofg/human/AHH002/AHH002.00 \
+    -tag AHH002 -f ~/data/ofg/human/AHH002/AHH002.01 \
+    -tag AHH002 -f ~/data/ofg/human/AHH002/AHH002.02 \
+    -tag AHH002 -f ~/data/ofg/human/AHH002/AHH002.03 \
+    -tag AHH002 -f ~/data/ofg/human/AHH002/AHH002.04 \
+    -tag AHH002 -f ~/data/ofg/human/AHH002/AHH002.05 \
+    --batch 10 --parallel 12
+
+perl mg/stat_mg.pl -d Human_BED_AHH002 --by tag
+
+perl mg\chart_mg.pl --replace ofg="DSBs" -i d:\wq\GC\autochart\140114_apoptosis_histone\Human_BED_AHH002.mg.xlsx
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\140114_apoptosis_histone\Human_BED_AHH002.mg.xlsx -xl "Distance to apoptosis enzyme cleavage" -yl "GC proportion" -xr "A2:A17" -yr "B2:B17"  --y_min 0.4 --y_max 0.55  -rb "NON_EXISTS" -rs "ofg_tag_AHH002"
+
+
+#----------------------------#
+# RepliChip
+#----------------------------#
+# 
+~/share/mongodb/bin/mongo Human_BED_RepliChip --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Human --db Human_BED_RepliChip
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType RepliChip \
+    -d Humanvsself_BED_RepliChip_top5per \
+    --style center_intact \
+    --batch 50 --parallel 12 --dryrun
+
+# Runtime 4 hours and 26 minutes.
+perl mg/insert_mg_bed.pl -d Human_BED_RepliChip --style center_intact --parallel 6 --tag BG02ES --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipBg02esWaveSignalRep1.bigWig.bed --tag BG02ES --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipBg02esWaveSignalRep2.bigWig.bed --tag GM06990 --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipGm06990WaveSignalRep1.bigWig.bed --tag GM06990 --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipGm06990WaveSignalRep2.bigWig.bed --tag H1HESC --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipH1hescWaveSignalRep1.bigWig.bed --tag H1HESC --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipH1hescWaveSignalRep2.bigWig.bed --tag H1HESC --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipH1hescWaveSignalRep3.bigWig.bed --tag H7ES --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipH7esWaveSignalRep1.bigWig.bed --tag H7ES --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipH7esWaveSignalRep2.bigWig.bed --tag H9ES --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipH9esWaveSignalRep1.bigWig.bed --tag HELAS3 --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipHelas3WaveSignalRep1.bigWig.bed --tag IMR90 --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipImr90WaveSignalRep1.bigWig.bed --tag IPSHFIB2IPS4 --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipIpshfib2ips4WaveSignalRep1.bigWig.bed --tag IPSHFIB2IPS4 --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipIpshfib2ips4WaveSignalRep2.bigWig.bed --tag IPSHFIB2IPS5 --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipIpshfib2ips5WaveSignalRep1.bigWig.bed --tag IPSHFIB2IPS5 --file /home/wangq/data/encode/process/wgEncodeFsuRepliChipIpshfib2ips5WaveSignalRep2.bigWig.bed
+
+perl mg/stat_mg.pl -d Human_BED_RepliChip --by tag -o Human_BED_RepliChip.mg.xlsx
+
+# total 9 cells, filtering top by 1 and filtering bottom by 1
+perl mg\chart_mg.pl --replace ofg="Replication origins" -i  d:\wq\GC\autochart\131230_repli\Human_BED_RepliChip.mg.xlsx
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\131230_repli\Human_BED_RepliChip.mg.xlsx -xl "Distance to replication origins" -yl "GC proportion" -xr "A2:A17" -yr "B2:B17" --y_min 0.4 --y_max 0.6 -rb "ofg_tag" -rs "ofg_all"
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\131230_repli\Human_BED_RepliChip.mg.xlsx -xl "Distance to replication origins" -yl "GC proportion" -xr "A2:A17" -yr "C2:C17" --y_min 0.12 --y_max 0.2 -rb "ofg_tag" -rs "ofg_all" -fb 1 -ft 1 --style_red
+
+#----------------------------#
+# RepliChip (old)
+#----------------------------#
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\131230_repli_insert\Humanvsself_BED_RepliChip.ofg.chart.xlsx -xl "Distance to replication origins" -yl "GC proportion" -xr "A2:A17" -yr "F2:F17" --y_min 0.43 --y_max 0.48 -rb "ofg_tag" -rs "ofg_all"
+
+perl fig\ofg_chart.pl -i d:\wq\GC\autochart\131230_repli_insert\Humanvsself_BED_RepliChip.ofg.chart.xlsx -xl "Distance to replication origins" -yl "GC proportion" -xr "A2:A17" -yr "H2:H17" --y_min 0.12 --y_max 0.2 -rb "ofg_tag" -rs "ofg_all" --style_red
+
+
+#----------------------------#
+# RepliSeq peaks
+#----------------------------#
+~/share/mongodb/bin/mongo Human_BED_RepliSeq_peaks --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Human --db Human_BED_RepliSeq_peaks
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --op insert_bed \
+    --dataType RepliSeq \
+    --view Peaks \
+    -d Human_BED_RepliSeq_peaks \
+    --style center_intact \
+    --batch 50 --parallel 12  --dryrun
+
+perl mg/insert_mg_bed.pl -d Human_BED_RepliSeq_peaks --style center_intact --parallel 8 --tag BG02ES --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqBg02esPkRep1.bed.gz.bed --tag BJ --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqBjPkRep1.bed.gz.bed --tag BJ --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqBjPkRep2.bed.gz.bed --tag GM06990 --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqGm06990PkRep1.bed.gz.bed --tag GM12801 --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqGm12801PkRep1.bed.gz.bed --tag GM12812 --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqGm12812PkRep1.bed.gz.bed --tag GM12813 --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqGm12813PkRep1.bed.gz.bed --tag GM12878 --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqGm12878PkRep1.bed.gz.bed --tag HELAS3 --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqHelas3PkRep1.bed.gz.bed --tag HEPG2 --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqHepg2PkRep1.bed.gz.bed --tag HUVEC --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqHuvecPkRep1.bed.gz.bed --tag IMR90 --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqImr90PkRep1.bed.gz.bed --tag K562 --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqK562PkRep1.bed.gz.bed --tag MCF7 --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqMcf7PkRep1.bed.gz.bed --tag NHEK --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqNhekPkRep1.bed.gz.bed --tag SKNSH --type Peaks --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqSknshPkRep1.bed.gz.bed
+
+perl mg/stat_mg.pl -d Human_BED_RepliSeq_peaks --by tag -o Human_BED_RepliSeq_peaks.mg.xlsx
+
+#----------------------------#
+# RepliSeq valleys
+#----------------------------#
+~/share/mongodb/bin/mongo Human_BED_RepliSeq_valleys --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Human --db Human_BED_RepliSeq_valleys
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --op insert_bed \
+    --dataType RepliSeq \
+    --view Valleys \
+    -d Human_BED_RepliSeq_valleys \
+    --style center_intact \
+    --batch 50 --parallel 12  --dryrun
+
+perl mg/insert_mg_bed.pl -d Human_BED_RepliSeq_valleys --style center_intact --parallel 8 --tag BG02ES --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqBg02esValleysRep1.bed.gz.bed --tag BJ --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqBjValleysRep1.bed.gz.bed --tag BJ --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqBjValleysRep2.bed.gz.bed --tag GM06990 --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqGm06990ValleysRep1.bed.gz.bed --tag GM12801 --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqGm12801ValleysRep1.bed.gz.bed --tag GM12812 --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqGm12812ValleysRep1.bed.gz.bed --tag GM12813 --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqGm12813ValleysRep1.bed.gz.bed --tag GM12878 --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqGm12878ValleysRep1.bed.gz.bed --tag HELAS3 --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqHelas3ValleysRep1.bed.gz.bed --tag HEPG2 --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqHepg2ValleysRep1.bed.gz.bed --tag HUVEC --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqHuvecValleysRep1.bed.gz.bed --tag IMR90 --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqImr90ValleysRep1.bed.gz.bed --tag K562 --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqK562ValleysRep1.bed.gz.bed --tag MCF7 --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqMcf7ValleysRep1.bed.gz.bed --tag NHEK --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqNhekValleysRep1.bed.gz.bed --tag SKNSH --type Valleys --file /home/wangq/data/encode/process/wgEncodeUwRepliSeqSknshValleysRep1.bed.gz.bed
+
+perl mg/stat_mg.pl -d Human_BED_RepliSeq_valleys --by tag -o Human_BED_RepliSeq_valleys.mg.xlsx
+
+
+# total 9 cells, filtering top by 1 and filtering bottom by 1
+perl mg\chart_mg.pl --replace ofg="Replication origins" -i  d:\wq\GC\autochart\131230_repli\Human_BED_RepliSeq_peaks.mg.xlsx
+
+perl mg\chart_mg.pl --replace ofg="Replication origins" -i  d:\wq\GC\autochart\131230_repli\Human_BED_RepliSeq_valleys.mg.xlsx
+
+#----------------------------------------------------------#
+# Ath 
+#----------------------------------------------------------#
+cd ~/Scripts/alignDB
+
+perl mg/init_mg.pl -d Ath
+perl mg/gen_mg.pl -d Ath -t "3702,Ath" --dir /home/wangq/data/alignment/arabidopsis19/ath_65 --length 500000 --parallel 6
+
+rm -fr ~/data/mongodb/Ath
+~/share/mongodb/bin/mongodump --db Ath --out ~/data/mongodb/
+
+~/share/mongodb/bin/mongo Ath_GC --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Ath --db Ath_GC
+
+# Runtime 2 minutes and 56 seconds.
+perl mg/insert_mg_gcwave.pl -d Ath_GC --batch 10 --parallel 12
+
+~/share/mongodb/bin/mongodump --db Ath_GC --out ~/data/mongodb/
+
+#----------------------------#
+# TDNA gsw_count
+#----------------------------#
+
+~/share/mongodb/bin/mongo Ath_GC_TDNA --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Ath_GC --db Ath_GC_TDNA
+
+perl mg/count_mg_bed.pl -d Ath_GC_TDNA --parallel 8 --run insert  \
+    -f ~/data/salk/process/ath/T-DNA.CMT.bed  \
+    -f ~/data/salk/process/ath/T-DNA.CSHL.bed \
+    -f ~/data/salk/process/ath/T-DNA.FLAG.bed \
+    -f ~/data/salk/process/ath/T-DNA.GABI.bed \
+    -f ~/data/salk/process/ath/T-DNA.IMAL.bed \
+    -f ~/data/salk/process/ath/T-DNA.MX.bed   \
+    -f ~/data/salk/process/ath/T-DNA.RATM.bed \
+    -f ~/data/salk/process/ath/T-DNA.SAIL.bed \
+    -f ~/data/salk/process/ath/T-DNA.SALK.bed \
+    -f ~/data/salk/process/ath/T-DNA.SK.bed   \
+    -f ~/data/salk/process/ath/T-DNA.WISC.bed
+
+perl mg/count_mg_bed.pl -d Ath_GC_TDNA --parallel 8 --run count
+
+# Runtime 27 minutes and 1 second.
+perl mg/stat_mg.pl -d Ath_GC_TDNA
+
+#----------------------------#
+# TDNA ofgsw
+#----------------------------#
+
+~/share/mongodb/bin/mongo Ath_BED_TDNA --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Ath --db Ath_BED_TDNA
+
+# Runtime 48 minutes and 53 seconds.
+perl mg/insert_mg_bed.pl -d Ath_BED_TDNA --style center --parallel 8  \
+    --tag tdna --type CMT  -f ~/data/salk/process/ath/T-DNA.CMT.bed  \
+    --tag tdna --type CSHL -f ~/data/salk/process/ath/T-DNA.CSHL.bed \
+    --tag tdna --type FLAG -f ~/data/salk/process/ath/T-DNA.FLAG.bed \
+    --tag tdna --type GABI -f ~/data/salk/process/ath/T-DNA.GABI.bed \
+    --tag tdna --type IMAL -f ~/data/salk/process/ath/T-DNA.IMAL.bed \
+    --tag tdna --type MX   -f ~/data/salk/process/ath/T-DNA.MX.bed   \
+    --tag tdna --type RATM -f ~/data/salk/process/ath/T-DNA.RATM.bed \
+    --tag tdna --type SAIL -f ~/data/salk/process/ath/T-DNA.SAIL.bed \
+    --tag tdna --type SALK -f ~/data/salk/process/ath/T-DNA.SALK.bed \
+    --tag tdna --type SK   -f ~/data/salk/process/ath/T-DNA.SK.bed   \
+    --tag tdna --type WISC -f ~/data/salk/process/ath/T-DNA.WISC.bed
+
+
+perl mg/stat_mg.pl -d Ath_BED_TDNA --by type -o Ath_BED_TDNA.mg.xlsx
+
+perl mg\chart_mg.pl --replace ofg="insert sites" -i  d:\wq\GC\autochart\131230_repli_insert\Ath_BED_TDNA.mg.xlsx
+
+#----------------------------#
+# spo11
+#----------------------------#
+cd ~/Scripts/alignDB
+
+perl mg/init_mg.pl -d S288C_spo11
+perl mg/gen_mg.pl -d S288C_spo11 -t "4932,S288C" --dir ~/data/alignment/self_alignment/S288C  --length 10000000 --parallel 8
+
+# Runtime 33 second.
+perl mg/insert_mg_bed.pl -d S288C_spo11 -tag spo11 -f ~/Scripts/alignDB/ofg/spo11/spo11_hot.bed --batch 1 --parallel 8
+
+perl mg/stat_mg.pl -d S288C_spo11 --by tag
+
+perl mg\chart_mg.pl --replace ofg="DSBs" -i d:\wq\GC\autochart\131230_repli_insert\S288C_spo11.mg.xlsx
+
+#----------------------------------------------------------#
+# fly 
+#----------------------------------------------------------#
+cd ~/Scripts/alignDB
+
+perl mg/init_mg.pl -d Dmel
+perl mg/gen_mg.pl -d Dmel -t "7227,Dmel" --dir /home/wangq/data/alignment/dpgp/Dmel_65/ --length 500000 --parallel 8
+
+rm -fr ~/data/mongodb/Dmel
+~/share/mongodb/bin/mongodump --db Dmel --out ~/data/mongodb/
+
+
+#----------------------------#
+# PiggyBac
+#----------------------------#
+~/share/mongodb/bin/mongo Dmel_transposon --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Dmel --db Dmel_transposon
+
+perl mg/insert_mg_bed.pl -d Dmel_transposon --style center --batch 10 --parallel 8 \
+    --tag transposon --type EY       -f ~/data/salk/process/fly/EY.bed \
+    --tag transposon --type MB       -f ~/data/salk/process/fly/MB.bed \
+    --tag transposon --type MI       -f ~/data/salk/process/fly/MI.bed \
+    --tag transposon --type PiggyBac -f ~/data/salk/process/fly/PiggyBac.bed
+
+perl mg/stat_mg.pl -d Dmel_transposon --by type 
+
+perl mg\chart_mg.pl --replace ofg="insert sites" -i d:\wq\GC\autochart\131230_repli_insert\Dmel_transposon.mg.xlsx
+
+#----------------------------------------------------------#
+# mouse 
+#----------------------------------------------------------#
+cd ~/Scripts/alignDB
+
+perl mg/init_mg.pl -d Mouse
+perl mg/gen_mg.pl -d Mouse -t "10090,Mouse" --dir /home/wangq/data/alignment/mouse65/mouse/ --length 500000 --parallel 12
+
+rm -fr ~/data/mongodb/Mouse
+~/share/mongodb/bin/mongodump --db Mouse --out ~/data/mongodb/
+
+#----------------------------#
+# PiggyBac
+#----------------------------#
+~/share/mongodb/bin/mongo Mouse_transposon --eval "db.dropDatabase();" 
+~/share/mongodb/bin/mongorestore ~/data/mongodb/Mouse --db Mouse_transposon
+
+perl mg/insert_mg_bed.pl -d Mouse_transposon --style center --batch 10 --parallel 8  \
+    --tag transposon --type PiggyBac -f ~/data/salk/process/mouse/piggybac.bed \
+    --tag transposon --type SB       -f ~/data/salk/process/mouse/SB.bed
+
+perl mg/stat_mg.pl -d Mouse_transposon --by type 
+
+perl mg\chart_mg.pl --replace ofg="insert sites" -i d:\wq\GC\autochart\131230_repli_insert\Mouse_transposon.mg.xlsx

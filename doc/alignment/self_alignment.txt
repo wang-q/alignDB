@@ -1,0 +1,660 @@
+
+#----------------------------------------------------------#
+# prepare seqs
+#----------------------------------------------------------#
+mkdir ~/data/alignment/self_alignment
+cd ~/data/alignment/self_alignment
+
+cp ~/data/alignment/arabidopsis19/ath_65 ~/data/alignment/self_alignment -R
+mv ~/data/alignment/self_alignment/ath_65 ~/data/alignment/self_alignment/ath
+
+cp ~/data/alignment/dpgp/Dmel_65 ~/data/alignment/self_alignment -R
+mv ~/data/alignment/self_alignment/Dmel_65 ~/data/alignment/self_alignment/Dmel
+
+cp ~/data/alignment/primates/human ~/data/alignment/self_alignment -R
+
+cp ~/data/alignment/mouse65/mouse ~/data/alignment/self_alignment -R
+
+cp ~/data/alignment/rice/nip_65 ~/data/alignment/self_alignment -R
+mv ~/data/alignment/self_alignment/nip_65 ~/data/alignment/self_alignment/nip
+
+cp ~/data/alignment/yeast_combine/S288C ~/data/alignment/self_alignment -R
+
+# delete chrMT
+find . -iname "*MT*" -o -iname "*Mito*" | xargs rm 
+
+# delete chr.sizes
+find . -name "*size*" | xargs rm
+
+# delete chr.2bit
+find . -name "*2bit*" | xargs rm
+
+#----------------------------#
+# soybean
+#----------------------------#
+mkdir ~/data/alignment/self_alignment/soybean
+cd ~/data/alignment/self_alignment/soybean
+
+find /home/wangq/data/ensemblgenomes12_65/plants/fasta/glycine_max/dna/ -name "*dna.toplevel*" | xargs gzip -d -c > toplevel.fa
+~/bin/x86_64/faCount toplevel.fa | perl -aln -e 'next if $F[0] eq 'total'; print $F[0] if $F[1] > 100000; print $F[0] if $F[1] > 10000  and $F[6]/$F[1] < 0.05' | uniq > listFile
+~/bin/x86_64/faSomeRecords toplevel.fa listFile toplevel.filtered.fa
+~/bin/x86_64/faSplit byname toplevel.filtered.fa .
+rm toplevel.fa toplevel.filtered.fa listFile
+
+perl /home/wangq/Scripts/alignDB/util/build_ensembl.pl  -e ~/data/ensemblgenomes12_65/plants/mysql/glycine_max_core_12_65_1/ --initdb --db soybean_65
+perl /home/wangq/Scripts/alignDB/util/write_masked_chr.pl -e soybean_65
+perl /home/wangq/Scripts/alignDB/util/write_masked_chr.pl -y soybean_65_repeat.yml --dir ~/data/alignment/self_alignment/soybean
+
+find . -name "*fa" | xargs rm
+rename 's/\.masked//' *.fa.masked
+rename 's/^/chr/' *.fa
+rm chrUn.fasta
+
+#----------------------------#
+# Brassica rapa
+#----------------------------#
+mkdir ~/data/alignment/self_alignment/Brap
+cd ~/data/alignment/self_alignment/Brap
+
+find /home/wangq/data/ensemblgenomes18_71/plants/fasta/brassica_rapa/dna/ -name "*dna.toplevel*" | xargs gzip -d -c > toplevel.fa
+~/bin/x86_64/faCount toplevel.fa | perl -aln -e 'next if $F[0] eq 'total'; print $F[0] if $F[1] > 100000; print $F[0] if $F[1] > 10000  and $F[6]/$F[1] < 0.05' | uniq > listFile
+~/bin/x86_64/faSomeRecords toplevel.fa listFile toplevel.filtered.fa
+~/bin/x86_64/faSplit byname toplevel.filtered.fa .
+rm toplevel.fa toplevel.filtered.fa listFile
+
+rm Scaffold000*
+
+rename 's/^/chr/' *.fa
+perl -p -i -e '/>/ and s/\>/\>chr/' *.fa
+rename 's/fa$/fasta/' *.fa
+
+RepeatMasker ~/data/alignment/self_alignment/Brap/*.fasta -species brassica -xsmall -s --parallel 4
+
+rename 's/fasta.masked$/fa/' ~/data/alignment/self_alignment/Brap/*.masked
+find ~/data/alignment/self_alignment/Brap/ -type f | grep -v fa$ | xargs rm 
+
+#----------------------------#
+# lyrata
+#----------------------------#
+mkdir ~/data/alignment/self_alignment/lyrata
+cd ~/data/alignment/self_alignment/lyrata
+
+find /home/wangq/data/ensemblgenomes12_65/plants/fasta/arabidopsis_lyrata/dna/ -name "*dna.toplevel*" | xargs gzip -d -c > toplevel.fa
+~/bin/x86_64/faCount toplevel.fa | perl -aln -e 'next if $F[0] eq 'total'; print $F[0] if $F[1] > 100000; print $F[0] if $F[1] > 10000  and $F[6]/$F[1] < 0.05' | uniq > listFile
+~/bin/x86_64/faSomeRecords toplevel.fa listFile toplevel.filtered.fa
+~/bin/x86_64/faSplit byname toplevel.filtered.fa .
+rm toplevel.fa toplevel.filtered.fa listFile
+
+perl /home/wangq/Scripts/alignDB/util/build_ensembl.pl  -e ~/data/ensemblgenomes12_65/plants/mysql/arabidopsis_lyrata_core_12_65_10/ --initdb --db lyrata_65
+perl /home/wangq/Scripts/alignDB/util/write_masked_chr.pl -e lyrata_65
+perl /home/wangq/Scripts/alignDB/util/write_masked_chr.pl -y lyrata_65_repeat.yml --dir ~/data/alignment/self_alignment/lyrata
+
+find . -name "*fa" | xargs rm
+rename 's/\.masked//' *.fa.masked
+rename 's/^/chr/' *.fa
+rm chrUn.fasta
+
+#----------------------------------------------------------#
+# self alignment
+#----------------------------------------------------------#
+cd ~/data/alignment/self_alignment
+
+perl ~/Scripts/blastz/bz.pl --parallel 8 \
+    --is_self \
+    -s set01 -C 0 --noaxt -pb lastz --lastz \
+    -dt ~/data/alignment/self_alignment/S288C \
+    -dq ~/data/alignment/self_alignment/S288C \
+    -dl ~/data/alignment/self_alignment/S288Cvsselfalign
+
+perl ~/Scripts/blastz/lpcna.pl --parallel 8\
+    -dt ~/data/alignment/self_alignment/S288C \
+    -dq ~/data/alignment/self_alignment/S288C \
+    -dl ~/data/alignment/self_alignment/S288Cvsselfalign
+
+# soybean 
+perl ~/Scripts/blastz/part_seq.pl -i ~/data/alignment/self_alignment/soybean \
+    -o ~/data/alignment/self_alignment/soybean_parted \
+    -chunk 10010000 -overlap 10000
+
+perl /home/wangq/Scripts/blastz/bz.pl --parallel 12 \
+    --is_self \
+    -tp -qp \
+    -s set01 -C 0 --noaxt -pb lastz --lastz \
+    -dt ~/data/alignment/self_alignment/soybean_parted \
+    -dq ~/data/alignment/self_alignment/soybean_parted \
+    -dl ~/data/alignment/self_alignment/soybeanvsselfalign
+
+perl /home/wangq/Scripts/blastz/lpcna.pl --parallel 12 \
+    -dt ~/data/alignment/self_alignment/soybean_parted \
+    -dq ~/data/alignment/self_alignment/soybean_parted \
+    -dl ~/data/alignment/self_alignment/soybeanvsselfalign
+
+# lyrata
+
+perl ~/Scripts/blastz/bz.pl --parallel 8 \
+    --is_self \
+    -s set01 -C 0 --noaxt -pb lastz --lastz \
+    -dt ~/data/alignment/self_alignment/lyrata \
+    -dq ~/data/alignment/self_alignment/lyrata \
+    -dl ~/data/alignment/self_alignment/lyratavsselfalign
+
+perl ~/Scripts/blastz/lpcna.pl --parallel 8 \
+    -dt ~/data/alignment/self_alignment/lyrata \
+    -dq ~/data/alignment/self_alignment/lyrata \
+    -dl ~/data/alignment/self_alignment/lyratavsselfalign
+    
+#----------------------------------------------------------#
+# outgroup alignment
+#----------------------------------------------------------#
+perl /home/wangq/Scripts/alignDB/extra/two_way_batch.pl --parallel 12 \
+    -t "4932,S288C" \
+    -q "226125,Spar" \
+    -d S288CvsSpar \
+    -dir /home/wangq/data/alignment/yeast_combine/S288CvsSpar \
+    -e yeast_65 \
+    -lt 1000 --run gc
+
+#----------------------------------------------------------#
+# coverage
+#----------------------------------------------------------#
+cd /home/wangq/Scripts/alignDB/util/
+
+#----------------------------#
+# S288C
+#----------------------------#
+for name in S288Cvsselfalign
+do
+    perl /home/wangq/Scripts/alignDB/slice/gather_info_axt.pl -l 1000 -d ~/data/alignment/self_alignment/$name
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.i.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op xor -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.x.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op union -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.u.yml
+done
+
+for f in 0 1 i x u 
+do
+    perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size ~/data/alignment/self_alignment/S288C/chr.sizes -f S288Cvsselfalign.runlist.$f.yml;
+done
+
+for f in 0 1 i x u 
+do
+    echo;
+    echo $f; 
+    cat S288Cvsselfalign.runlist.$f.yml.csv;
+done > S288C.1000.csv
+
+for f in 0 1 i x u 
+do
+    rm S288Cvsselfalign.runlist.$f.yml;
+    rm S288Cvsselfalign.runlist.$f.yml.csv;
+done 
+
+#----------------------------#
+# Nip
+#----------------------------#
+for name in nipvsselfalign
+do
+    perl /home/wangq/Scripts/alignDB/slice/gather_info_axt.pl -l 2500 -d ~/data/alignment/self_alignment/$name
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.i.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op xor -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.x.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op union -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.u.yml
+done
+
+for f in 0 1 i x u 
+do
+    perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size ~/data/alignment/self_alignment/nip/chr.sizes -f nipvsselfalign.runlist.$f.yml;
+done
+
+for f in 0 1 i x u 
+do
+    echo;
+    echo $f; 
+    cat nipvsselfalign.runlist.$f.yml.csv;
+done > nip.2500.csv
+
+for f in 0 1 i x u 
+do
+    rm nipvsselfalign.runlist.$f.yml;
+    rm nipvsselfalign.runlist.$f.yml.csv;
+done 
+
+#----------------------------#
+# ath
+#----------------------------#
+for name in athvsselfalign
+do
+    perl /home/wangq/Scripts/alignDB/slice/gather_info_axt.pl -l 2500 -d ~/data/alignment/self_alignment/$name
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.i.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op xor -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.x.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op union -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.u.yml
+done
+
+for f in 0 1 i x u 
+do
+    perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size ~/data/alignment/self_alignment/ath/chr.sizes -f athvsselfalign.runlist.$f.yml;
+done
+
+for f in 0 1 i x u 
+do
+    echo;
+    echo $f; 
+    cat athvsselfalign.runlist.$f.yml.csv;
+done > ath.2500.csv
+
+for f in 0 1 i x u 
+do
+    rm athvsselfalign.runlist.$f.yml;
+    rm athvsselfalign.runlist.$f.yml.csv;
+done 
+
+#----------------------------#
+# Brap
+#----------------------------#
+for name in Brapvsselfalign
+do
+    perl /home/wangq/Scripts/alignDB/slice/gather_info_axt.pl -l 2500 -d ~/data/alignment/self_alignment/$name
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.i.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op xor -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.x.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op union -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.u.yml
+done
+
+for f in 0 1 i x u 
+do
+    perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size ~/data/alignment/self_alignment/Brap/chr.sizes -f Brapvsselfalign.runlist.$f.yml;
+done
+
+for f in 0 1 i x u 
+do
+    echo;
+    echo $f; 
+    cat Brapvsselfalign.runlist.$f.yml.csv;
+done > Brap.2500.csv
+
+for f in 0 1 i x u 
+do
+    rm Brapvsselfalign.runlist.$f.yml;
+    rm Brapvsselfalign.runlist.$f.yml.csv;
+done 
+
+#----------------------------#
+# soybean
+#----------------------------#
+for name in soybeanvsselfalign
+do
+    perl /home/wangq/Scripts/alignDB/slice/gather_info_axt.pl -l 2500 -d ~/data/alignment/self_alignment/$name
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.i.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op xor -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.x.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op union -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.u.yml
+done
+
+for f in 0 1 i x u 
+do
+    perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size ~/data/alignment/self_alignment/soybean/chr.sizes -f soybeanvsselfalign.runlist.$f.yml;
+done
+
+for f in 0 1 i x u 
+do
+    echo;
+    echo $f; 
+    cat soybeanvsselfalign.runlist.$f.yml.csv;
+done > soybean.2500.csv
+
+for f in 0 1 i x u 
+do
+    rm soybeanvsselfalign.runlist.$f.yml;
+    rm soybeanvsselfalign.runlist.$f.yml.csv;
+done 
+
+#----------------------------#
+# lyrata
+#----------------------------#
+for name in lyratavsselfalign
+do
+    perl /home/wangq/Scripts/alignDB/slice/gather_info_axt.pl -l 2500 -d ~/data/alignment/self_alignment/$name
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.i.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op xor -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.x.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op union -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.u.yml
+done
+
+for f in 0 1 i x u 
+do
+    perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size ~/data/alignment/self_alignment/lyrata/chr.sizes -f lyratavsselfalign.runlist.$f.yml;
+done
+
+for f in 0 1 i x u 
+do
+    echo;
+    echo $f; 
+    cat lyratavsselfalign.runlist.$f.yml.csv;
+done > lyrata.2500.csv
+
+for f in 0 1 i x u 
+do
+    rm lyratavsselfalign.runlist.$f.yml;
+    rm lyratavsselfalign.runlist.$f.yml.csv;
+done 
+
+
+
+#----------------------------#
+# human
+#----------------------------#
+for name in humanvsselfalign
+do
+    perl /home/wangq/Scripts/alignDB/slice/gather_info_axt.pl -l 2500 -d ~/data/alignment/self_alignment/$name
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.i.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op xor -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.x.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op union -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.u.yml
+done
+
+for f in 0 1 i x u 
+do
+    perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size ~/data/alignment/self_alignment/human/chr.sizes -f humanvsselfalign.runlist.$f.yml;
+done
+
+for f in 0 1 i x u 
+do
+    echo;
+    echo $f; 
+    cat humanvsselfalign.runlist.$f.yml.csv;
+done > human.2500.csv
+
+for f in 0 1 i x u 
+do
+    rm humanvsselfalign.runlist.$f.yml;
+    rm humanvsselfalign.runlist.$f.yml.csv;
+done
+
+#----------------------------#
+# human ucsc
+#----------------------------#
+mkdir humanvsselfucsc
+cp -R ~/data/UCSC/goldenPath/hg19/vsSelf/axtNet/ humanvsselfucsc/
+
+for name in humanvsselfucsc
+do
+    perl /home/wangq/Scripts/alignDB/slice/gather_info_axt.pl -r '(random|hap|Un|M)' -l 2500 -d ~/data/alignment/self_alignment/$name
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.i.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op xor -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.x.yml
+    perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op union -f1 $name.runlist.0.yml -f2 $name.runlist.1.yml -o $name.runlist.u.yml
+done
+
+for f in 0 1 i x u 
+do
+    perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size ~/data/alignment/self_alignment/human/chr.sizes -f humanvsselfucsc.runlist.$f.yml;
+done
+
+for f in 0 1 i x u 
+do
+    echo;
+    echo $f; 
+    cat humanvsselfucsc.runlist.$f.yml.csv;
+done > human_ucsc.2500.csv
+
+for f in 0 1 i x u 
+do
+    rm humanvsselfucsc.runlist.$f.yml;
+    rm humanvsselfucsc.runlist.$f.yml.csv;
+done
+
+perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect -f1 humanvsselfalign.runlist.u.yml -f2 humanvsselfucsc.runlist.u.yml -o human_comparasion.i.yml
+perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size ~/data/alignment/self_alignment/human/chr.sizes -f human_comparasion.i.yml
+
+perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op xor -f1 humanvsselfalign.runlist.u.yml -f2 humanvsselfucsc.runlist.u.yml -o human_comparasion.x.yml
+perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size ~/data/alignment/self_alignment/human/chr.sizes -f human_comparasion.x.yml
+
+#----------------------------------------------------------#
+# paralog
+#----------------------------------------------------------#
+#----------------------------#
+# blastn
+#----------------------------#
+mkdir ~/data/alignment/self_alignment/blast
+cd ~/data/alignment/self_alignment/blast
+
+cp ../S288Cvsselfalign.paralog.fasta .
+~/share/blast/bin/formatdb -p F -o T -i S288Cvsselfalign.paralog.fasta
+~/share/blast/bin/blastall -p blastn -F "m D" -m 0 -b 10 -v 10 -e 1e-3 -a 8 -i S288Cvsselfalign.paralog.fasta -d S288Cvsselfalign.paralog.fasta -o S288Cvsselfalign.paralog.blast
+
+cp ../athvsselfalign.paralog.fasta .
+~/share/blast/bin/formatdb -p F -o T -i athvsselfalign.paralog.fasta
+~/share/blast/bin/blastall -p blastn -F "m D" -m 0 -b 10 -v 10 -e 1e-3 -a 8 -i athvsselfalign.paralog.fasta -d athvsselfalign.paralog.fasta -o athvsselfalign.paralog.blast
+
+cp ../nipvsselfalign.paralog.fasta .
+~/share/blast/bin/formatdb -p F -o T -i nipvsselfalign.paralog.fasta
+~/share/blast/bin/blastall -p blastn -F "m D" -m 0 -b 10 -v 10 -e 1e-3 -a 8 -i nipvsselfalign.paralog.fasta -d nipvsselfalign.paralog.fasta -o nipvsselfalign.paralog.blast
+
+cp ../Brapvsselfalign.paralog.fasta .
+~/share/blast/bin/formatdb -p F -o T -i Brapvsselfalign.paralog.fasta
+~/share/blast/bin/blastall -p blastn -F "m D" -m 0 -b 10 -v 10 -e 1e-3 -a 8 -i Brapvsselfalign.paralog.fasta -d Brapvsselfalign.paralog.fasta -o Brapvsselfalign.paralog.blast
+
+cp ../humanvsselfalign.paralog.fasta .
+~/share/blast/bin/formatdb -p F -o T -i humanvsselfalign.paralog.fasta
+~/share/blast/bin/blastall -p blastn -F "m D" -m 0 -b 10 -v 10 -e 1e-3 -a 8 -i humanvsselfalign.paralog.fasta -d humanvsselfalign.paralog.fasta -o humanvsselfalign.paralog.blast
+
+cp ../humanvsselfucsc.paralog.fasta .
+~/share/blast/bin/formatdb -p F -o T -i humanvsselfucsc.paralog.fasta
+~/share/blast/bin/blastall -p blastn -F "m D" -m 0 -b 10 -v 10 -e 1e-3 -a 12 -i humanvsselfucsc.paralog.fasta -d humanvsselfucsc.paralog.fasta -o humanvsselfucsc.paralog.blast
+
+cp ../lyratavsselfalign.paralog.fasta .
+~/share/blast/bin/formatdb -p F -o T -i lyratavsselfalign.paralog.fasta
+~/share/blast/bin/blastall -p blastn -F "m D" -m 0 -b 10 -v 10 -e 1e-3 -a 12 -i lyratavsselfalign.paralog.fasta -d lyratavsselfalign.paralog.fasta -o lyratavsselfalign.paralog.blast
+
+#~/share/blast/bin/blastall -p blastn -F "m D" -i humanvsselfalign.paralog.100.fasta -d humanvsselfalign.paralog.fasta -b 100 -v 100 -m 0 -e 1e-3 -o humanvsselfalign.paralog.1.blast -a 8
+#~/share/blast/bin/blastall -p blastn -F "m D" -i humanvsselfalign.paralog.100.fasta -d humanvsselfalign.paralog.fasta -b 100 -v 100 -m 7 -e 1e-3 -o humanvsselfalign.paralog.2.blast -a 8
+#~/share/blast/bin/blastall -p blastn -F "m D" -i humanvsselfalign.paralog.100.fasta -d humanvsselfalign.paralog.fasta -b 100 -v 100 -m 9 -e 1e-3 -o humanvsselfalign.paralog.3.blast -a 8
+#~/share/blast/bin/blastall -p blastn -F "m D" -i humanvsselfalign.paralog.100.fasta -d humanvsselfalign.paralog.fasta -b 10  -v 10  -m 0 -e 1e-3 -o humanvsselfalign.paralog.4.blast -a 8
+#~/share/blast/bin/blastall -p blastn -F "m D" -i humanvsselfalign.paralog.100.fasta -d humanvsselfalign.paralog.fasta -b 1   -v 1   -m 0 -e 1e-3 -o humanvsselfalign.paralog.5.blast -a 8
+
+#----------------------------#
+# merge
+#----------------------------#
+cd ~/data/alignment/self_alignment
+
+# S288C
+perl /home/wangq/Scripts/alignDB/slice/blastn_paralog.pl -f blast/S288Cvsselfalign.paralog.blast -m 0
+
+for name in S288Cvsselfalign
+do
+    perl /home/wangq/Scripts/alignDB/slice/merge_node.pl    -v -f $name.match.tsv -f $name.blast.tsv -o $name.merge.yml
+    perl /home/wangq/Scripts/alignDB/slice/paralog_graph.pl -v -f $name.match.tsv -f $name.blast.tsv -m $name.merge.yml -o $name.merge.graph.yml
+    perl /home/wangq/Scripts/alignDB/slice/cc.pl -f $name.merge.graph.yml
+done
+
+#perl d:\wq\Scripts\alignDB\slice\paralog_graph.pl -v -f S288Cvsselfalign.match.tsv -f S288Cvsselfalign.blast.tsv -m S288Cvsselfalign.merge.yml
+#perl d:\wq\Scripts\alignDB\slice\paralog_graph.pl -v -f S288Cvsselfalign.match.tsv -f S288Cvsselfalign.blast.tsv 
+#perl d:\wq\Scripts\alignDB\slice\paralog_graph.pl -v -f S288Cvsselfalign.match.tsv
+#perl d:\wq\Scripts\alignDB\slice\paralog_graph.pl -v -f S288Cvsselfalign.match.tsv -m S288Cvsselfalign.merge.yml
+#perl d:\wq\Scripts\alignDB\slice\paralog_graph.pl -v -f S288Cvsselfalign.blast.tsv
+#perl d:\wq\Scripts\alignDB\slice\paralog_graph.pl -v -f S288Cvsselfalign.blast.tsv -m S288Cvsselfalign.merge.yml
+
+# ath
+perl /home/wangq/Scripts/alignDB/slice/blastn_paralog.pl -f blast/athvsselfalign.paralog.blast -v 0
+
+for name in athvsselfalign
+do
+    perl /home/wangq/Scripts/alignDB/slice/merge_node.pl    -v -f $name.match.tsv -f $name.blast.tsv -o $name.merge.yml
+    perl /home/wangq/Scripts/alignDB/slice/paralog_graph.pl -v -f $name.match.tsv -f $name.blast.tsv -m $name.merge.yml -o $name.merge.graph.yml
+    perl /home/wangq/Scripts/alignDB/slice/cc.pl -f $name.merge.graph.yml
+done
+
+# perl /home/wangq/Scripts/alignDB/slice/paralog_graph.pl -v --merge -g athvsselfalign.blast.graph.yml -o athvsselfalign.merge.graph.yml
+# perl /home/wangq/Scripts/alignDB/slice/cc.pl -f athvsselfalign.merge.graph.yml
+
+# nip
+perl /home/wangq/Scripts/alignDB/slice/blastn_paralog.pl -f blast/nipvsselfalign.paralog.blast -v 0
+
+for name in nipvsselfalign
+do
+    perl /home/wangq/Scripts/alignDB/slice/merge_node.pl    -v -f $name.match.tsv -f $name.blast.tsv -o $name.merge.yml
+    perl /home/wangq/Scripts/alignDB/slice/paralog_graph.pl -v -f $name.match.tsv -f $name.blast.tsv -m $name.merge.yml -o $name.merge.graph.yml
+    perl /home/wangq/Scripts/alignDB/slice/cc.pl -f $name.merge.graph.yml
+done
+
+# Brap
+perl /home/wangq/Scripts/alignDB/slice/blastn_paralog.pl -f blast/Brapvsselfalign.paralog.blast -v 0
+
+for name in Brapvsselfalign
+do
+    perl /home/wangq/Scripts/alignDB/slice/merge_node.pl    -v -f $name.match.tsv -f $name.blast.tsv -o $name.merge.yml
+    perl /home/wangq/Scripts/alignDB/slice/paralog_graph.pl -v -f $name.match.tsv -f $name.blast.tsv -m $name.merge.yml -o $name.merge.graph.yml
+    perl /home/wangq/Scripts/alignDB/slice/cc.pl -f $name.merge.graph.yml
+done
+
+# lyrata
+perl /home/wangq/Scripts/alignDB/slice/blastn_paralog.pl -f blast/lyratavsselfalign.paralog.blast -v 0
+
+for name in lyratavsselfalign
+do
+    perl /home/wangq/Scripts/alignDB/slice/merge_node.pl    -v -f $name.match.tsv -f $name.blast.tsv -o $name.merge.yml
+    perl /home/wangq/Scripts/alignDB/slice/paralog_graph.pl -v -f $name.match.tsv -f $name.blast.tsv -m $name.merge.yml -o $name.merge.graph.yml
+    perl /home/wangq/Scripts/alignDB/slice/cc.pl -f $name.merge.graph.yml
+done
+
+
+# human
+perl /home/wangq/Scripts/alignDB/slice/blastn_paralog.pl -f blast/humanvsselfalign.paralog.blast -v 0
+
+for name in humanvsselfalign
+do
+    perl /home/wangq/Scripts/alignDB/slice/merge_node.pl    -v -f $name.match.tsv -f $name.blast.tsv -o $name.merge.yml
+    perl /home/wangq/Scripts/alignDB/slice/paralog_graph.pl -v -f $name.match.tsv -f $name.blast.tsv -m $name.merge.yml -o $name.merge.graph.yml
+    perl /home/wangq/Scripts/alignDB/slice/cc.pl -f $name.merge.graph.yml
+done
+
+perl /home/wangq/Scripts/alignDB/slice/blastn_paralog.pl -f blast/humanvsselfucsc.paralog.blast -v 0
+
+for name in humanvsselfucsc
+do
+    perl /home/wangq/Scripts/alignDB/slice/merge_node.pl    -v -f $name.match.tsv -f $name.blast.tsv -o $name.merge.yml
+    perl /home/wangq/Scripts/alignDB/slice/paralog_graph.pl -v -f $name.match.tsv -f $name.blast.tsv -m $name.merge.yml -o $name.merge.graph.yml
+    perl /home/wangq/Scripts/alignDB/slice/cc.pl -f $name.merge.graph.yml
+done
+
+
+
+
+
+#----------------------------------------------------------#
+# KaryotypeBand
+#----------------------------------------------------------#
+perl /home/wangq/Scripts/alignDB/util/chr_kary.pl -s 114.212.202.159 \
+    -e nip_65 \
+    --chr 1   \
+    --chr 2   \
+    --chr 3   \
+    --chr 4   \
+    --chr 5   \
+    --chr 6   \
+    --chr 7   \
+    --chr 8   \
+    --chr 9   \
+    --chr 10  \
+    --chr 11  \
+    --chr 12
+
+sh /home/wangq/share/circos/data/karyotype/parse.karyotype chromosome.band.nip_65.txt chr > karyotype.nip_65.txt
+
+# ath centromere position from the follow file:
+# ftp://ftp.arabidopsis.org/home/tair/Sequences/whole_chromosomes/tair9_Assembly_gaps.gff
+chr1 14511722	14803970	
+chr2 3611839	3633423	
+chr3 13589757	13867121	
+chr4 3133664	3133674
+chr5 11194538	11723210	
+
+# Hosouchi, T., Kumekawa, N., Tsuruoka, H. & Kotani, H. Physical Map-Based Sizes of the Centromeric Regions of Arabidopsis thaliana Chromosomes 1, 2, and 3. DNA Res 9, 117¨C121 (2002).
+chr1 p1 1 14200000 gpos50 # 14.2M
+chr1 p1 14200000 15627671 acen
+chr1 q1 15627671 30427671 gpos50 # 14.8M
+chr2 p2 1 3000000 gpos50 # 3.0M
+chr2 p2 3000000 3898289 acen
+chr2 q2 3898289 19698289 gpos50 # 15.8M
+chr3 p3 1 13200000 gpos50 # 13.2M
+chr3 p3 13200000 14459830 acen
+chr3 q3 14459830 23459830 gpos50 # 9M
+chr4 p4 1 3000000 gpos50 # 3M
+chr4 p4 3000000 5085056 acen
+chr4 q4 5085056 18585056 gpos50 # 13.5M
+chr5 p5 1 11100000 gpos50 # 11.1M
+chr5 p5 11100000 12575502 acen
+chr5 q5 12575502 26975502 gpos50# 14.4 M
+
+#----------------------------------------------------------#
+# circos
+#----------------------------------------------------------#
+cd d:\data\alignment\self_alignment
+perl d:\wq\Scripts\alignDB\slice\cc.pl -f athvsselfalign.merge.graph.yml
+move /Y athvsselfalign.merge.graph.yml.cc.link2.txt circos\
+move /Y athvsselfalign.merge.graph.yml.cc.linkN.txt circos\
+
+cd d:\data\alignment\self_alignment\circos
+perl d:\software\bio\circos\circos\bin\circos -noparanoid -conf athvsselfalign.conf
+
+cd d:\data\alignment\self_alignment
+perl d:\wq\Scripts\alignDB\slice\cc.pl -f nipvsselfalign.merge.graph.yml
+move /Y nipvsselfalign.merge.graph.yml.cc.link2.txt circos\
+move /Y nipvsselfalign.merge.graph.yml.cc.linkN.txt circos\
+
+cd d:\data\alignment\self_alignment\circos
+perl d:\software\bio\circos\circos\bin\circos -noparanoid -conf nipvsselfalign.conf
+
+cd d:\data\alignment\self_alignment
+perl d:\wq\Scripts\alignDB\slice\cc.pl -f Brapvsselfalign.merge.graph.yml
+move /Y Brapvsselfalign.merge.graph.yml.cc.link2.txt circos\
+move /Y Brapvsselfalign.merge.graph.yml.cc.linkN.txt circos\
+
+cd d:\data\alignment\self_alignment\circos
+perl d:\software\bio\circos\circos\bin\circos -noparanoid -conf Brapvsselfalign.conf
+
+#perl -n -e "/\S+/ and print" Brapvsselfalign.merge.graph.yml.cc.link2.txt Brapvsselfalign.merge.graph.yml.cc.linkN.txt > Brapvsselfalign.merge.graph.yml.cc.link.txt
+#perl d:\software\bio\circos\circos\tools\bundlelinks\bin\bundlelinks -link Brapvsselfalign.merge.graph.yml.cc.link.txt -max_gap 1000000 > Brapvsselfalign.merge.graph.yml.cc.link.bundle.txt
+#perl d:\software\bio\circos\circos\bin\circos -noparanoid -conf Brapvsselfalign_all.conf
+
+
+#----------------------------#
+# genome blast
+#----------------------------#
+mkdir /home/wangq/data/alignment/self_alignment/S288C_proc
+
+cd /home/wangq/data/alignment/self_alignment/S288C_proc
+
+find /home/wangq/data/alignment/self_alignment/S288C -type f -name "*.fa" \
+    | sort | xargs cat \
+    | perl -nl -e '/^>/ or uc; print' \
+    > S288C.genome.fasta
+    
+formatdb -p F -o T -i S288C.genome.fasta
+
+perl /home/wangq/Scripts/alignDB/taxon/../slice/gather_seq_axt.pl -l 1000 -d /home/wangq/data/alignment/self_alignment/S288Cvsselfalign
+
+blastall -p blastn -F "m D" -m 0 -b 10 -v 10 -e 1e-3 -a 8 -i S288Cvsselfalign.axt.fasta -d S288C.genome.fasta -o S288Cvsselfalign.axt.blast
+
+#----------------------------#
+# paralog sequences
+#----------------------------#
+perl /home/wangq/Scripts/alignDB/taxon/../slice/blastn_genome_location.pl -f S288Cvsselfalign.axt.blast -m 0 -i 90 -c 0.95
+
+#----------------------------#
+# paralog blast
+#----------------------------#
+formatdb -p F -o T -i S288Cvsselfalign.gl.fasta
+
+blastall -p blastn -F "m D" -m 0 -b 10 -v 10 -e 1e-3 -a 8 -i S288Cvsselfalign.gl.fasta -d S288Cvsselfalign.gl.fasta -o S288Cvsselfalign.gl.blast
+
+perl /home/wangq/Scripts/alignDB/taxon/../slice/blastn_paralog.pl -f S288Cvsselfalign.gl.blast -m 0 -i 90 -c 0.9
+
+#----------------------------#
+# merge
+#----------------------------#
+perl /home/wangq/Scripts/alignDB/taxon/../slice/merge_node.pl    -v -f S288Cvsselfalign.blast.tsv -o S288Cvsselfalign.merge.yml -c 0.9
+perl /home/wangq/Scripts/alignDB/taxon/../slice/paralog_graph.pl -v -f S288Cvsselfalign.blast.tsv -m S288Cvsselfalign.merge.yml --nonself -o S288Cvsselfalign.merge.graph.yml
+perl /home/wangq/Scripts/alignDB/taxon/../slice/cc.pl               -f S288Cvsselfalign.merge.graph.yml
+perl /home/wangq/Scripts/alignDB/taxon/../slice/proc_cc_chop.pl     -f S288Cvsselfalign.cc.yml --size /home/wangq/data/alignment/self_alignment/S288C/chr.sizes
+perl /home/wangq/Scripts/alignDB/taxon/../slice/proc_cc_stat.pl     -f S288Cvsselfalign.cc.yml --size /home/wangq/data/alignment/self_alignment/S288C/chr.sizes
+
+#----------------------------#
+# clean
+#----------------------------#
+find /home/wangq/data/alignment/self_alignment/S288C_proc -type f -name "*genome.fasta*" | xargs rm
+find /home/wangq/data/alignment/self_alignment/S288C_proc -type f -name "*gl.fasta*" | xargs rm
+find /home/wangq/data/alignment/self_alignment/S288C_proc -type f -name "*.blast" | xargs rm

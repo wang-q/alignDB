@@ -1,0 +1,16 @@
+select 
+    c.chr_name,
+    a.align_id,
+    w.window_runlist,
+    w.window_coding,
+    s.segment_gc_mean,
+    s.segment_gc_cv
+from
+    segment s, window w, align a, sequence, target, chromosome c
+where 1 = 1
+AND s.window_id = w.window_id
+AND a.align_id = w.align_id
+AND a.align_id = sequence.align_id
+AND sequence.seq_id = target.seq_id
+AND c.chr_id = sequence.chr_id
+order by c.chr_name, a.align_id

@@ -1,0 +1,861 @@
+#----------------------------------------------------------#
+# prepare
+#----------------------------------------------------------#
+
+cd /home/wangq/Scripts/alignDB/ 
+
+# Humanvsself
+perl init/init_alignDB.pl  -d Humanvsself
+perl init/gen_alignDB_genome.pl -d Humanvsself -t="9606,human" --dir /home/wangq/data/alignment/primates/human_chr/ --length 100000 --parallel 12
+perl init/insert_gc.pl -d Humanvsself --parallel 12
+perl gene/insert_gene.pl -d Humanvsself --parallel 12 -e human_65
+ perl init/update_sw_cv.pl -d Humanvsself --parallel 8
+perl init/update_feature.pl -d Humanvsself --parallel 12 -e human_65
+
+
+# HumanvsCGOR
+perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
+    -d HumanvsCGOR -e human_65 \
+    --outgroup \
+    --block --id /home/wangq/data/alignment/primates/id2name.csv \
+    -da /home/wangq/data/alignment/primates/HumanvsCGOR_mft  \
+    -lt 5000 --parallel 12 --run gene
+
+# HumanvsXI
+perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
+    -d HumanvsXI -e human_65 \
+    --block --outgroup \
+    --id /home/wangq/data/alignment/human_cg/id2name.csv \
+    -da /home/wangq/data/alignment/human_cg/fas_mft  \
+    -lt 5000 --parallel 12 --run common
+
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Humanvsself -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d HumanvsCGOR -f /home/wangq/data/encode/db/HumanvsCGOR_BED.dump.sql
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d HumanvsXI -f /home/wangq/data/encode/db/HumanvsXI_BED.dump.sql
+
+#----------------------------------------------------------#
+# style center_intact | Humanvsself
+#----------------------------------------------------------#
+cd /home/wangq/Scripts/alignDB/
+
+perl ofg/insert_bed.pl -d Humanvsself_BED -t peakSeq --style center_intact --batch 50 --parallel 12 -f ~/Scripts/alignDB/yy1.bed
+
+perl init/update_sw_cv.pl -d Humanvsself_BED --batch 50 --parallel 12
+perl init/update_feature.pl -d Humanvsself_BED -e human_65 --batch 50 --parallel 12
+
+# windows
+cd d:\wq\Scripts\alignDB
+perl stat/ofg_stat_factory.pl -d Humanvsself_BED --server 114.212.202.159
+
+#----------------------------------------------------------#
+# style center_intact | HumanvsXI
+#----------------------------------------------------------#
+cd /home/wangq/Scripts/alignDB/
+
+perl ofg/insert_bed.pl -d HumanvsXI_BED -t peakSeq --style center_intact --batch 50 --parallel 12 -f ~/Scripts/alignDB/yy1.bed
+
+perl init/update_sw_cv.pl -d HumanvsXI_BED --batch 50 --parallel 12
+perl init/update_feature.pl -d HumanvsXI_BED -e human_65 --batch 50 --parallel 12
+
+# windows
+cd d:\wq\Scripts\alignDB
+perl stat/ofg_stat_factory.pl -d HumanvsXI_BED --server 114.212.202.159
+
+~/bin/x86_64/bigBedInfo wgEncodeDukeDnase8988T.fdr01peaks.hg19.bb
+~/bin/x86_64/bigBedToBed ~/Scripts/alignDB/wgEncodeDukeDnase8988T.fdr01peaks.hg19.bb 8988T.bed 
+perl ofg/insert_bed.pl -d HumanvsXI_BED -t DnaseSeq --style center_intact --batch 50 --parallel 12 -f ~/Scripts/alignDB/8988T.bed 
+perl init/update_sw_cv.pl -d HumanvsXI_BED --batch 50 --parallel 12
+perl stat/ofg_stat_factory.pl -d HumanvsXI_BED --server 114.212.202.159 -o HumanvsXI_8988T.ofg.xlsx
+
+#----------------------------------------------------------#
+# HumanvsCGOR
+perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
+    -d HumanvsCGOR_BED -e human_65 \
+    --block --id /home/wangq/data/alignment/primates/id2name.csv \
+    -da /home/wangq/data/alignment/primates/HumanvsCGOR_mft  \
+    -lt 5000 --parallel 12 --run basic
+
+# RepliChip
+# download 
+cd /home/wangq/data/encode
+rsync -avzP rsync://hgdownload.cse.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeFsuRepliChip/ ./FsuRepliChip
+rsync -avzP rsync://hgdownload.cse.ucsc.edu/goldenPath/mm9/encodeDCC/wgEncodeFsuRepliChip/ ./FsuRepliChip_mm9
+
+find /home/wangq/data/encode/process/ -name "*RepliChip*" -type f | xargs rm
+
+for f in `find /home/wangq/data/encode/FsuRepliChip/ -name "*.bigWig" -type f `; do \
+    perl /home/wangq/Scripts/alignDB/ofg/prepare_encode.pl --type bigWig --meta /home/wangq/data/encode/FsuRepliChip/files.txt --file $f; \
+done
+
+for f in `find /home/wangq/data/encode/process/ -name "*RepliChip*.bed" -type f `; do \
+    perl -anli -e '$F[4] > 1.3 and print join(qq{\t}, @F)'  $f; \
+done
+
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_RepliChip_top5per
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType RepliChip \
+    -d Humanvsself_BED_RepliChip_top5per \
+    --style center_intact \
+    --batch 50 --parallel 12 
+
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d Humanvsself_BED_RepliChip_top5per --batch 50 --parallel 12
+
+
+perl /home/wangq/Scripts/alignDB/stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_RepliChip_top5per --server 114.212.202.159 -o Humanvsself_BED_RepliChip_top5per.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_RepliChip_top5per.ofg.xlsx
+
+
+#----------------------------#
+# RepliSeq
+#----------------------------#
+
+# download 
+cd /home/wangq/data/encode
+rsync -avzP --exclude="*.bam" --exclude="*.bai" --exclude="*.bai" --exclude="*.fastq" --exclude="*.fastq.tgz" --exclude="*.fastq.gz" rsync://hgdownload.cse.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwRepliSeq/ ./UwRepliSeq 
+
+for f in `find /home/wangq/data/encode/UwRepliSeq/ -name "*.bed.gz" -type f `; do \
+    perl /home/wangq/Scripts/alignDB/ofg/prepare_encode.pl --type bed --meta /home/wangq/data/encode/UwRepliSeq/files.txt --file $f; \
+done
+
+#----------------------------------------------------------#
+# prepare
+#----------------------------------------------------------#
+
+# check downloaded files
+for f in `find /home/wangq/data/encode/DNase-seq/ -name "*.bb" -type f `; do \
+    perl /home/wangq/Scripts/alignDB/ofg/prepare_encode.pl --file $f; \
+done
+
+for f in `find /home/wangq/data/encode/FAIRE/ -name "*.bb" -type f `; do \
+    perl /home/wangq/Scripts/alignDB/ofg/prepare_encode.pl --file $f; \
+done
+
+for f in `find /home/wangq/data/encode/TFBS_SPP/ -name "*.bb" -type f `; do \
+    perl /home/wangq/Scripts/alignDB/ofg/prepare_encode.pl --file $f; \
+done
+
+for f in `find /home/wangq/data/encode/Histone/ -name "*.bb" -type f `; do \
+    perl /home/wangq/Scripts/alignDB/ofg/prepare_encode.pl --file $f; \
+done
+
+# raw stat
+mkdir /home/wangq/data/encode/stat
+cd /home/wangq/data/encode/stat
+rm encode_raw_stat.csv
+perl /home/wangq/Scripts/alignDB/ofg/stat_encode.pl
+
+# db
+mkdir /home/wangq/data/encode/db
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Humanvsself_BED -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d HumanvsCGOR_BED -f /home/wangq/data/encode/db/HumanvsCGOR_BED.dump.sql
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d HumanvsXI       -f /home/wangq/data/encode/db/HumanvsXI_BED.dump.sql
+
+#----------------------------------------------------------#
+# Humanvsself
+#----------------------------------------------------------#
+
+# dup db
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_DnaseSeq
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_FaireSeq
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_TFBS_SPP
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_Histone
+
+# 
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType DnaseSeq \
+    -d Humanvsself_BED_DnaseSeq \
+    --style center_intact \
+    --batch 50 --parallel 12 
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType FaireSeq \
+    -d Humanvsself_BED_FaireSeq \
+    --style center_intact \
+    --batch 50 --parallel 12 
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType TFBS \
+    --count 1000 \
+    -d Humanvsself_BED_TFBS_SPP \
+    --style center_intact \
+    --batch 50 --parallel 12 
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType Histone \
+    -d Humanvsself_BED_Histone \
+    --style center \
+    --batch 50 --parallel 12 --dryrun
+
+perl init/update_sw_cv.pl -d Humanvsself_BED_DnaseSeq --batch 50 --parallel 12
+perl init/update_sw_cv.pl -d Humanvsself_BED_FaireSeq --batch 50 --parallel 12
+perl init/update_sw_cv.pl -d Humanvsself_BED_TFBS_SPP --batch 50 --parallel 12
+
+perl init/update_feature.pl -d Humanvsself_BED_DnaseSeq -e human_65 --batch 50 --parallel 12
+perl init/update_feature.pl -d Humanvsself_BED_FaireSeq -e human_65 --batch 50 --parallel 12
+perl init/update_feature.pl -d Humanvsself_BED_TFBS_SPP -e human_65 --batch 50 --parallel 12
+
+
+# stats
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_DnaseSeq --server 114.212.202.159 -o Humanvsself_BED_DnaseSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_DnaseSeq.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_FaireSeq --server 114.212.202.159 -o Humanvsself_BED_FaireSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_FaireSeq.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_TFBS_SPP --server 114.212.202.159 -o Humanvsself_BED_TFBS_SPP.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_TFBS_SPP.ofg.xlsx
+
+#----------------------------------------------------------#
+# HumanvsCGOR
+#----------------------------------------------------------#
+# dup db
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/HumanvsCGOR_BED.dump.sql -g HumanvsCGOR_BED_DnaseSeq
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/HumanvsCGOR_BED.dump.sql -g HumanvsCGOR_BED_FaireSeq
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/HumanvsCGOR_BED.dump.sql -g HumanvsCGOR_BED_TFBS_SPP
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/HumanvsCGOR_BED.dump.sql -g HumanvsCGOR_BED_Histone
+
+
+
+# 
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType DnaseSeq \
+    -d HumanvsCGOR_BED_DnaseSeq \
+    --style center_intact \
+    --batch 50 --parallel 12 --dryrun
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType FaireSeq \
+    -d HumanvsCGOR_BED_FaireSeq \
+    --style center_intact \
+    --batch 50 --parallel 12 --dryrun
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType TFBS \
+    --count 1000 \
+    -d HumanvsCGOR_BED_TFBS_SPP \
+    --style center_intact \
+    --batch 50 --parallel 12  --dryrun
+
+perl init/update_sw_cv.pl -d HumanvsCGOR_BED_DnaseSeq --batch 50 --parallel 12
+perl init/update_sw_cv.pl -d HumanvsCGOR_BED_FaireSeq --batch 50 --parallel 12
+perl init/update_sw_cv.pl -d HumanvsCGOR_BED_TFBS_SPP --batch 50 --parallel 12
+
+perl init/update_feature.pl -d HumanvsCGOR_BED_DnaseSeq -e human_65 --batch 50 --parallel 12
+perl init/update_feature.pl -d HumanvsCGOR_BED_FaireSeq -e human_65 --batch 50 --parallel 12
+perl init/update_feature.pl -d HumanvsCGOR_BED_TFBS_SPP -e human_65 --batch 50 --parallel 12
+
+# stats
+perl stat/ofg_stat_factory.pl --by tag -d HumanvsCGOR_BED_DnaseSeq --server 114.212.202.159 -o HumanvsCGOR_BED_DnaseSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i HumanvsCGOR_BED_DnaseSeq.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by tag -d HumanvsCGOR_BED_FaireSeq --server 114.212.202.159 -o HumanvsCGOR_BED_FaireSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i HumanvsCGOR_BED_FaireSeq.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by tag -d HumanvsCGOR_BED_TFBS_SPP --server 114.212.202.159 -o HumanvsCGOR_BED_TFBS_SPP.cell.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i HumanvsCGOR_BED_TFBS_SPP.cell.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by type -d HumanvsCGOR_BED_TFBS_SPP --server 114.212.202.159 -o HumanvsCGOR_BED_TFBS_SPP.antibody.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i HumanvsCGOR_BED_TFBS_SPP.antibody.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by tt -d HumanvsCGOR_BED_TFBS_SPP --server 114.212.202.159 -o HumanvsCGOR_BED_TFBS_SPP.cell_antibody.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i HumanvsCGOR_BED_TFBS_SPP.cell_antibody.ofg.xlsx
+
+
+
+#----------------------------------------------------------#
+# cells
+#----------------------------------------------------------#
+#dup
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_cells_DnaseSeq
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_cells_FaireSeq
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_cells_TFBS_SPP
+
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType DnaseSeq \
+    -d Humanvsself_BED_cells_DnaseSeq \
+    --cell A549       \
+    --cell GLIOBLA    \
+    --cell GM12878    \
+    --cell GM12891    \
+    --cell GM12892    \
+    --cell GM18507    \
+    --cell GM19239    \
+    --cell H1HESC     \
+    --cell HELAS3     \
+    --cell HEPG2      \
+    --cell HTR8       \
+    --cell HUVEC      \
+    --cell K562       \
+    --cell MEDULLO    \
+    --cell NHA        \
+    --cell NHEK       \
+    --cell PANISLETS  \
+    --cell UROTHEL    \
+    --style center_intact \
+    --batch 50 --parallel 12 
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType FaireSeq \
+    -d Humanvsself_BED_cells_FaireSeq \
+    --cell A549       \
+    --cell GLIOBLA    \
+    --cell GM12878    \
+    --cell GM12891    \
+    --cell GM12892    \
+    --cell GM18507    \
+    --cell GM19239    \
+    --cell H1HESC     \
+    --cell HELAS3     \
+    --cell HEPG2      \
+    --cell HTR8       \
+    --cell HUVEC      \
+    --cell K562       \
+    --cell MEDULLO    \
+    --cell NHA        \
+    --cell NHEK       \
+    --cell PANISLETS  \
+    --cell UROTHEL    \
+    --style center_intact \
+    --batch 50 --parallel 12 
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType TFBS \
+    --count 1000 \
+    -d Humanvsself_BED_cells_TFBS_SPP \
+    --cell A549       \
+    --cell GLIOBLA    \
+    --cell GM12878    \
+    --cell GM12891    \
+    --cell GM12892    \
+    --cell GM18507    \
+    --cell GM19239    \
+    --cell H1HESC     \
+    --cell HELAS3     \
+    --cell HEPG2      \
+    --cell HTR8       \
+    --cell HUVEC      \
+    --cell K562       \
+    --cell MEDULLO    \
+    --cell NHA        \
+    --cell NHEK       \
+    --cell PANISLETS  \
+    --cell UROTHEL    \
+    --style center_intact \
+    --batch 50 --parallel 12 
+
+
+perl init/update_sw_cv.pl -d Humanvsself_BED_cells_DnaseSeq --batch 50 --parallel 12
+perl init/update_sw_cv.pl -d Humanvsself_BED_cells_FaireSeq --batch 50 --parallel 12
+
+perl init/update_feature.pl -d Humanvsself_BED_cells_DnaseSeq -e human_65 --batch 50 --parallel 12
+perl init/update_feature.pl -d Humanvsself_BED_cells_FaireSeq -e human_65 --batch 50 --parallel 12
+
+
+perl init/update_sw_cv.pl -d Humanvsself_BED_cells_TFBS_SPP --batch 50 --parallel 12
+perl init/update_feature.pl -d Humanvsself_BED_cells_TFBS_SPP -e human_65 --batch 50 --parallel 12
+
+# stats
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_cells_DnaseSeq --server 114.212.202.159 -o Humanvsself_BED_cells_DnaseSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_cells_DnaseSeq.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_cells_FaireSeq --server 114.212.202.159 -o Humanvsself_BED_cells_FaireSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_cells_FaireSeq.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_cells_TFBS_SPP --server 114.212.202.159 -o Humanvsself_BED_cells_TFBS_SPP.cell.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_cells_TFBS_SPP.cell.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by type -d Humanvsself_BED_cells_TFBS_SPP --server 114.212.202.159 -o Humanvsself_BED_cells_TFBS_SPP.antibody.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_cells_TFBS_SPP.antibody.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by tt -d Humanvsself_BED_cells_TFBS_SPP --server 114.212.202.159 -o Humanvsself_BED_cells_TFBS_SPP.cell_antibody.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_cells_TFBS_SPP.cell_antibody.ofg.xlsx
+
+
+
+#----------------------------------------------------------#
+# bed_diff and bed_intersect
+#----------------------------------------------------------#
+
+#----------------------------#
+# merge
+#----------------------------#
+cd /home/wangq/data/encode/bed_op/
+
+# merge_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType DnaseSeq \
+    --cell A549       \
+    --cell GLIOBLA    \
+    --cell GM12878    \
+    --cell GM12891    \
+    --cell GM12892    \
+    --cell GM18507    \
+    --cell GM19239    \
+    --cell H1HESC     \
+    --cell HELAS3     \
+    --cell HEPG2      \
+    --cell HTR8       \
+    --cell HUVEC      \
+    --cell K562       \
+    --cell MEDULLO    \
+    --cell NHA        \
+    --cell NHEK       \
+    --cell PANISLETS  \
+    --cell UROTHEL    \
+    --op merge_to_runlist --remove --dryrun
+
+# merge_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType FaireSeq \
+    --cell A549       \
+    --cell GLIOBLA    \
+    --cell GM12878    \
+    --cell GM12891    \
+    --cell GM12892    \
+    --cell GM18507    \
+    --cell GM19239    \
+    --cell H1HESC     \
+    --cell HELAS3     \
+    --cell HEPG2      \
+    --cell HTR8       \
+    --cell HUVEC      \
+    --cell K562       \
+    --cell MEDULLO    \
+    --cell NHA        \
+    --cell NHEK       \
+    --cell PANISLETS  \
+    --cell UROTHEL    \
+    --op merge_to_runlist --remove --dryrun
+    
+perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size chr.sizes --remove -f ./merge_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml
+perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size chr.sizes --remove -f ./merge_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml
+
+#----------------------------#
+# diff or intersect
+#----------------------------#
+
+mkdir /home/wangq/data/encode/bed_op/diff
+cd /home/wangq/data/encode/bed_op/diff
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType DnaseSeq \
+    --cell A549       \
+    --cell GLIOBLA    \
+    --cell GM12878    \
+    --cell GM12891    \
+    --cell GM12892    \
+    --cell GM18507    \
+    --cell GM19239    \
+    --cell H1HESC     \
+    --cell HELAS3     \
+    --cell HEPG2      \
+    --cell HTR8       \
+    --cell HUVEC      \
+    --cell K562       \
+    --cell MEDULLO    \
+    --cell NHA        \
+    --cell NHEK       \
+    --cell PANISLETS  \
+    --cell UROTHEL    \
+    --name /home/wangq/data/encode/bed_op/merge_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml \
+    --parallel 8 \
+    --op bed_diff --remove --dryrun
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType FaireSeq \
+    --cell A549       \
+    --cell GLIOBLA    \
+    --cell GM12878    \
+    --cell GM12891    \
+    --cell GM12892    \
+    --cell GM18507    \
+    --cell GM19239    \
+    --cell H1HESC     \
+    --cell HELAS3     \
+    --cell HEPG2      \
+    --cell HTR8       \
+    --cell HUVEC      \
+    --cell K562       \
+    --cell MEDULLO    \
+    --cell NHA        \
+    --cell NHEK       \
+    --cell PANISLETS  \
+    --cell UROTHEL    \
+    --name /home/wangq/data/encode/bed_op/merge_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml \
+    --parallel 8 \
+    --op bed_diff --remove --dryrun
+
+
+mkdir /home/wangq/data/encode/bed_op/intersect
+cd /home/wangq/data/encode/bed_op/intersect
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType DnaseSeq \
+    --cell A549       \
+    --cell GLIOBLA    \
+    --cell GM12878    \
+    --cell GM12891    \
+    --cell GM12892    \
+    --cell GM18507    \
+    --cell GM19239    \
+    --cell H1HESC     \
+    --cell HELAS3     \
+    --cell HEPG2      \
+    --cell HTR8       \
+    --cell HUVEC      \
+    --cell K562       \
+    --cell MEDULLO    \
+    --cell NHA        \
+    --cell NHEK       \
+    --cell PANISLETS  \
+    --cell UROTHEL    \
+    --name /home/wangq/data/encode/bed_op/merge_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml \
+    --parallel 12 \
+    --op bed_intersect --remove 
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType FaireSeq \
+    --cell A549       \
+    --cell GLIOBLA    \
+    --cell GM12878    \
+    --cell GM12891    \
+    --cell GM12892    \
+    --cell GM18507    \
+    --cell GM19239    \
+    --cell H1HESC     \
+    --cell HELAS3     \
+    --cell HEPG2      \
+    --cell HTR8       \
+    --cell HUVEC      \
+    --cell K562       \
+    --cell MEDULLO    \
+    --cell NHA        \
+    --cell NHEK       \
+    --cell PANISLETS  \
+    --cell UROTHEL    \
+    --name /home/wangq/data/encode/bed_op/merge_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml \
+    --parallel 12 \
+    --op bed_intersect --remove 
+
+# review path and suffix of column "filename" in .csv
+# bed_diff_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.csv
+# bed_diff_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.csv
+# bed_intersect_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.csv
+# bed_intersect_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.csv
+
+#dup
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_diff_DnaseSeq
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_diff_FaireSeq
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --info /home/wangq/data/encode/bed_op/diff/diff_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.csv \
+    --op insert_bed \
+    -d Humanvsself_BED_diff_DnaseSeq \
+    --style center_intact \
+    --batch 50 --parallel 12 
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --info /home/wangq/data/encode/bed_op/diff/diff_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.csv \
+    --op insert_bed \
+    -d Humanvsself_BED_diff_FaireSeq \
+    --style center_intact \
+    --batch 50 --parallel 12 
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d Humanvsself_BED_diff_DnaseSeq --batch 50 --parallel 12
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d Humanvsself_BED_diff_FaireSeq --batch 50 --parallel 12
+
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d Humanvsself_BED_diff_DnaseSeq -e human_65 --batch 50 --parallel 12
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d Humanvsself_BED_diff_FaireSeq -e human_65 --batch 50 --parallel 12
+
+# stats
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_diff_DnaseSeq --server 114.212.202.159 -o Humanvsself_BED_diff_DnaseSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_diff_DnaseSeq.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_diff_FaireSeq --server 114.212.202.159 -o Humanvsself_BED_diff_FaireSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_diff_FaireSeq.ofg.xlsx
+
+#dup
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_intersect_DnaseSeq
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_intersect_FaireSeq
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --info /home/wangq/data/encode/bed_op/intersect/bed_intersect_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.csv \
+    --op insert_bed \
+    -d Humanvsself_BED_intersect_DnaseSeq \
+    --style center_intact \
+    --batch 50 --parallel 12 
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --info /home/wangq/data/encode/bed_op/intersect/bed_intersect_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.csv \
+    --op insert_bed \
+    -d Humanvsself_BED_intersect_FaireSeq \
+    --style center_intact \
+    --batch 50 --parallel 12 --dryrun
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d Humanvsself_BED_intersect_DnaseSeq --batch 50 --parallel 12
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d Humanvsself_BED_intersect_FaireSeq --batch 50 --parallel 12
+
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d Humanvsself_BED_intersect_DnaseSeq -e human_65 --batch 50 --parallel 12
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d Humanvsself_BED_intersect_FaireSeq -e human_65 --batch 50 --parallel 12
+
+# stats
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_intersect_DnaseSeq --server 114.212.202.159 -o Humanvsself_BED_intersect_DnaseSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_intersect_DnaseSeq.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_intersect_FaireSeq --server 114.212.202.159 -o Humanvsself_BED_intersect_FaireSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_intersect_FaireSeq.ofg.xlsx
+
+#----------------------------#
+# features
+#----------------------------#
+
+# away from gene 
+perl /home/wangq/Scripts/alignDB/slice/write_runlist_feature.pl -d Humanvsself_BED -e human_65 --feature gene --inset "-5000" --invert -lt 1000 --parallel 8
+perl /home/wangq/Scripts/alignDB/slice/merge_runlist.pl -d Humanvsself_BED_gene_inset-5000_invert/
+
+perl /home/wangq/Scripts/alignDB/slice/write_runlist_feature.pl -d Humanvsself_BED -e human_65 --feature gene --inset "-5000" -lt 1000 --parallel 8
+perl /home/wangq/Scripts/alignDB/slice/merge_runlist.pl -d Humanvsself_BED_gene_inset-5000/
+
+perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size chr.sizes -f ./Humanvsself_BED_gene_inset-5000/Humanvsself_BED_gene_inset-5000.yml
+perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size chr.sizes -f ./Humanvsself_BED_gene_inset-5000_invert/Humanvsself_BED_gene_inset-5000_invert.yml
+
+perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size chr.sizes --remove -f /home/wangq/data/encode/bed_op/merge_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml
+perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size chr.sizes --remove -f /home/wangq/data/encode/bed_op/merge_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml
+
+perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect \
+    -f1 /home/wangq/data/encode/bed_op/merge_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml \
+    -f2 /home/wangq/data/encode/bed_op/merge_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml \
+    -o DnaseSeq_FaireSeq_intersect.yml
+perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size chr.sizes --remove -f DnaseSeq_FaireSeq_intersect.yml
+
+perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect --remove \
+    -f1 /home/wangq/data/encode/bed_op/merge_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml \
+    -f2 ./Humanvsself_BED_gene_inset-5000/Humanvsself_BED_gene_inset-5000.yml \
+    -o DnaseSeq_gene_intersect.yml
+perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect --remove \
+    -f1 /home/wangq/data/encode/bed_op/merge_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml \
+    -f2 ./Humanvsself_BED_gene_inset-5000_invert/Humanvsself_BED_gene_inset-5000_invert.yml \
+    -o DnaseSeq_away_gene_intersect.yml
+perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size chr.sizes --remove -f DnaseSeq_gene_intersect.yml
+perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size chr.sizes --remove -f DnaseSeq_away_gene_intersect.yml
+
+perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect --remove \
+    -f1 /home/wangq/data/encode/bed_op/merge_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml \
+    -f2 ./Humanvsself_BED_gene_inset-5000/Humanvsself_BED_gene_inset-5000.yml \
+    -o FaireSeq_gene_intersect.yml
+perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect --remove \
+    -f1 /home/wangq/data/encode/bed_op/merge_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.yml \
+    -f2 ./Humanvsself_BED_gene_inset-5000_invert/Humanvsself_BED_gene_inset-5000_invert.yml \
+    -o FaireSeq_away_gene_intersect.yml
+perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size chr.sizes --remove -f FaireSeq_gene_intersect.yml
+perl /home/wangq/Scripts/alignDB/slice/stat_runlist.pl --size chr.sizes --remove -f FaireSeq_away_gene_intersect.yml
+
+
+#----------------------------#
+# away-gene
+#----------------------------#
+mkdir /home/wangq/data/encode/bed_op/away_gene
+cd /home/wangq/data/encode/bed_op/away_gene
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType DnaseSeq \
+    --cell A549       \
+    --cell GLIOBLA    \
+    --cell GM12878    \
+    --cell GM12891    \
+    --cell GM12892    \
+    --cell GM18507    \
+    --cell GM19239    \
+    --cell H1HESC     \
+    --cell HELAS3     \
+    --cell HEPG2      \
+    --cell HTR8       \
+    --cell HUVEC      \
+    --cell K562       \
+    --cell MEDULLO    \
+    --cell NHA        \
+    --cell NHEK       \
+    --cell PANISLETS  \
+    --cell UROTHEL    \
+    --name /home/wangq/data/encode/bed_op/Humanvsself_BED_gene_inset-5000/Humanvsself_BED_gene_inset-5000.yml \
+    --parallel 8 \
+    --op bed_diff --remove --dryrun
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType FaireSeq \
+    --cell A549       \
+    --cell GLIOBLA    \
+    --cell GM12878    \
+    --cell GM12891    \
+    --cell GM12892    \
+    --cell GM18507    \
+    --cell GM19239    \
+    --cell H1HESC     \
+    --cell HELAS3     \
+    --cell HEPG2      \
+    --cell HTR8       \
+    --cell HUVEC      \
+    --cell K562       \
+    --cell MEDULLO    \
+    --cell NHA        \
+    --cell NHEK       \
+    --cell PANISLETS  \
+    --cell UROTHEL    \
+    --name /home/wangq/data/encode/bed_op/Humanvsself_BED_gene_inset-5000/Humanvsself_BED_gene_inset-5000.yml \
+    --parallel 8 \
+    --op bed_diff --remove --dryrun
+
+#dup
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_away_DnaseSeq
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_away_FaireSeq
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --info /home/wangq/data/encode/bed_op/away_gene/diff_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.csv \
+    --op insert_bed \
+    -d Humanvsself_BED_away_DnaseSeq \
+    --style center_intact \
+    --batch 50 --parallel 8
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --info /home/wangq/data/encode/bed_op/away_gene/diff_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.csv \
+    --op insert_bed \
+    -d Humanvsself_BED_away_FaireSeq \
+    --style center_intact \
+    --batch 50 --parallel 8 
+
+perl init/update_sw_cv.pl -d Humanvsself_BED_away_DnaseSeq --batch 50 --parallel 12
+perl init/update_sw_cv.pl -d Humanvsself_BED_away_FaireSeq --batch 50 --parallel 12
+
+perl init/update_feature.pl -d Humanvsself_BED_away_DnaseSeq -e human_65 --batch 50 --parallel 12
+perl init/update_feature.pl -d Humanvsself_BED_away_FaireSeq -e human_65 --batch 50 --parallel 12
+
+# stats
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_away_DnaseSeq --server 114.212.202.159 -o Humanvsself_BED_away_DnaseSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_away_DnaseSeq.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_away_FaireSeq --server 114.212.202.159 -o Humanvsself_BED_away_FaireSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_away_FaireSeq.ofg.xlsx
+
+
+#----------------------------#
+# near-gene
+#----------------------------#
+
+mkdir /home/wangq/data/encode/bed_op/near_gene
+cd /home/wangq/data/encode/bed_op/near_gene
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType DnaseSeq \
+    --cell A549       \
+    --cell GLIOBLA    \
+    --cell GM12878    \
+    --cell GM12891    \
+    --cell GM12892    \
+    --cell GM18507    \
+    --cell GM19239    \
+    --cell H1HESC     \
+    --cell HELAS3     \
+    --cell HEPG2      \
+    --cell HTR8       \
+    --cell HUVEC      \
+    --cell K562       \
+    --cell MEDULLO    \
+    --cell NHA        \
+    --cell NHEK       \
+    --cell PANISLETS  \
+    --cell UROTHEL    \
+    --name /home/wangq/data/encode/bed_op/Humanvsself_BED_gene_inset-5000_invert/Humanvsself_BED_gene_inset-5000_invert.yml \
+    --parallel 8 \
+    --op bed_diff --remove --dryrun
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --dataType FaireSeq \
+    --cell A549       \
+    --cell GLIOBLA    \
+    --cell GM12878    \
+    --cell GM12891    \
+    --cell GM12892    \
+    --cell GM18507    \
+    --cell GM19239    \
+    --cell H1HESC     \
+    --cell HELAS3     \
+    --cell HEPG2      \
+    --cell HTR8       \
+    --cell HUVEC      \
+    --cell K562       \
+    --cell MEDULLO    \
+    --cell NHA        \
+    --cell NHEK       \
+    --cell PANISLETS  \
+    --cell UROTHEL    \
+    --name /home/wangq/data/encode/bed_op/Humanvsself_BED_gene_inset-5000_invert/Humanvsself_BED_gene_inset-5000_invert.yml \
+    --parallel 8 \
+    --op bed_diff --remove --dryrun
+
+#dup
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_near_DnaseSeq
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql -g Humanvsself_BED_near_FaireSeq
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --info /home/wangq/data/encode/bed_op/near_gene/diff_DnaseSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.csv \
+    --op insert_bed \
+    -d Humanvsself_BED_near_DnaseSeq \
+    --style center_intact \
+    --batch 50 --parallel 12
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --info /home/wangq/data/encode/bed_op/near_gene/diff_FaireSeq_A549_GLIOBLA_GM12878_GM12891_GM12892_GM18507_GM19239_H1HESC_HELAS3_HEPG2_HTR8_HUVEC_K562_MEDULLO_NHA_NHEK_PANISLETS_UROTHEL.csv \
+    --op insert_bed \
+    -d Humanvsself_BED_near_FaireSeq \
+    --style center_intact \
+    --batch 50 --parallel 12
+
+perl init/update_sw_cv.pl -d Humanvsself_BED_near_DnaseSeq --batch 50 --parallel 12
+perl init/update_sw_cv.pl -d Humanvsself_BED_near_FaireSeq --batch 50 --parallel 12
+
+perl init/update_feature.pl -d Humanvsself_BED_near_DnaseSeq -e human_65 --batch 50 --parallel 12
+perl init/update_feature.pl -d Humanvsself_BED_near_FaireSeq -e human_65 --batch 50 --parallel 12
+
+# stats
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_near_DnaseSeq --server 114.212.202.159 -o Humanvsself_BED_near_DnaseSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_near_DnaseSeq.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by tag -d Humanvsself_BED_near_FaireSeq --server 114.212.202.159 -o Humanvsself_BED_near_FaireSeq.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i Humanvsself_BED_near_FaireSeq.ofg.xlsx
+
+
+### fix
+UPDATE Humanvsself_BED_FaireSeq.ofg
+SET   ofg_tag = 'NHA'
+WHERE ofg_tag = 'NH-A'
+
+UPDATE HumanvsCGOR_BED_FaireSeq.ofg
+SET   ofg_tag = 'NHA'
+WHERE ofg_tag = 'NH-A'
+
+
+
+
+#----------------------------#
+# gsw bed count example
+#----------------------------#
+
+# FaireSeq
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/HumanvsCGOR_BED.dump.sql -g HumanvsCGOR_BED_gsw_count
+
+# perl /home/wangq/Scripts/alignDB/ofg/count_bed.pl -d HumanvsCGOR_BED_gsw_count --batch 50 --parallel 12 -f ~/data/encode/process/spp.optimal.wgEncodeHaibTfbsGm12878Yy1V0416101AlnRep0_VS_wgEncodeHaibTfbsGm12878ControlV0416101AlnRep1.bb.bed
+
+perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
+    --op count_bed \
+    --dataType FaireSeq \
+    --count 1000 \
+    -d HumanvsCGOR_BED_gsw_count \
+    --batch 50 --parallel 12 --dryrun
+
+perl init/update_sw_cv.pl -d HumanvsCGOR_BED_gsw_count --batch 50 --parallel 12
+perl init/update_feature.pl -d HumanvsCGOR_BED_gsw_count -e human_65 --batch 50 --parallel 12
+
+

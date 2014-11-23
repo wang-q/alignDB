@@ -1,0 +1,140 @@
+#----------------------------------------------------------#
+# prepare
+#----------------------------------------------------------#
+cd /home/wangq/data/alignment/arabidopsis19/ath_65
+~/bin/x86_64/twoBitToFa chr.2bit ath.fa
+~/bin/x86_64/faSplit byname ath.fa .
+rm ath.fa
+
+cd /home/wangq/Scripts/alignDB/
+perl util/build_ensembl.pl -e /home/wangq/data/ensemblgenomes12_65/plants/mysql/arabidopsis_thaliana_core_12_65_10/ --initdb --db ath_65
+
+# Athvsself
+perl init/init_alignDB.pl  -d Athvsself
+perl init/gen_alignDB_genome.pl -d Athvsself -t="3702,Ath" -a /home/wangq/data/alignment/arabidopsis19/ath_65 --parallel 12
+
+# AthvsLer_0
+perl extra/two_way_batch.pl -d AthvsLer_0 -t="3702,Ath" -q "900207,Ler_0" -da /home/wangq/data/alignment/arabidopsis19/AthvsLer_0 -lt 5000 --parallel 12 --run 1-5
+
+# AthvsXIX
+perl extra/multi_way_batch.pl -d AthvsXIX --block --outgroup --id /home/wangq/data/alignment/arabidopsis19/id2name.csv -da /home/wangq/data/alignment/arabidopsis19/AthvsXIX_mft -lt 5000 --parallel 12 --run 1-5
+
+#----------------------------------------------------------#
+# ath gc and co | style center_intact | Athvsself
+#----------------------------------------------------------#
+cd /home/wangq/Scripts/alignDB/
+perl util/dup_db.pl -d Athvsself -g Athvsself_gcco_center_intact
+
+perl ofg/insert_athgcco.pl -d Athvsself_gcco_center_intact -t gc --style center_intact --batch 10 --parallel 12
+perl ofg/insert_athgcco.pl -d Athvsself_gcco_center_intact -t co --style center_intact --noclean --batch 10 --parallel 12
+
+perl init/update_sw_cv.pl -d Athvsself_gcco_center_intact --batch 10 --parallel 12
+perl init/update_feature.pl -d Athvsself_gcco_center_intact -e ath_65 --batch 10 --parallel 12
+
+# windows
+cd d:\wq\Scripts\alignDB
+perl stat/ofg_stat_factory.pl -d Athvsself_gcco_center_intact --server 114.212.202.159
+
+#----------------------------------------------------------#
+# ath gc and co | style center_intact | AthvsLer_0
+#----------------------------------------------------------#
+cd /home/wangq/Scripts/alignDB/
+perl util/dup_db.pl -d AthvsLer_0 -g AthvsLer_0_gcco_center_intact
+
+perl ofg/insert_athgcco.pl -d AthvsLer_0_gcco_center_intact -t gc --style center_intact --batch 10 --parallel 12
+perl ofg/insert_athgcco.pl -d AthvsLer_0_gcco_center_intact -t co --style center_intact --noclean --batch 10 --parallel 12
+
+perl init/update_sw_cv.pl -d AthvsLer_0_gcco_center_intact --batch 10 --parallel 12
+perl init/update_feature.pl -d AthvsLer_0_gcco_center_intact -e ath_65 --batch 10 --parallel 12
+
+# windows
+cd d:\wq\Scripts\alignDB
+perl stat/ofg_stat_factory.pl -d AthvsLer_0_gcco_center_intact --server 114.212.202.159
+
+#----------------------------------------------------------#
+# ath gc and co | style center_intact | AthvsXIX
+#----------------------------------------------------------#
+cd /home/wangq/Scripts/alignDB/
+perl util/dup_db.pl -d AthvsXIX -g AthvsXIX_gcco_center_intact
+
+perl ofg/insert_athgcco.pl -d AthvsXIX_gcco_center_intact -t gc --style center_intact --multi --batch 10 --parallel 12
+perl ofg/insert_athgcco.pl -d AthvsXIX_gcco_center_intact -t co --style center_intact --noclean --multi --batch 10 --parallel 12
+
+perl init/update_sw_cv.pl -d AthvsXIX_gcco_center_intact --batch 10 --parallel 12
+perl init/update_feature.pl -d AthvsXIX_gcco_center_intact -e ath_65 --multi --batch 10 --parallel 12
+
+# windows
+cd d:\wq\Scripts\alignDB
+perl stat/ofg_stat_factory.pl -d AthvsXIX_gcco_center_intact --server 114.212.202.159
+
+#----------------------------------------------------------#
+# ath gc | style center_intact | AthvsLer_0
+#----------------------------------------------------------#
+cd /home/wangq/Scripts/alignDB/
+perl util/dup_db.pl -d AthvsLer_0 -g AthvsLer_0_gc_center_intact
+
+perl ofg/insert_athgcco.pl -d AthvsLer_0_gc_center_intact -t gc --style center_intact --batch 10 --parallel 12
+
+perl init/update_sw_cv.pl -d AthvsLer_0_gc_center_intact --batch 10 --parallel 12
+perl init/update_feature.pl -d AthvsLer_0_gc_center_intact -e ath_65 --batch 10 --parallel 12
+
+# windows
+cd d:\wq\Scripts\alignDB
+perl stat/ofg_stat_factory.pl -d AthvsLer_0_gc_center_intact --server 114.212.202.159
+
+# deltaG
+perl ofg/insert_athgcco_dG.pl -d AthvsLer_0_gc_center_intact -t gc --style center_intact --batch 10 --parallel 12
+perl init/update_sw_cv.pl -d AthvsLer_0_gc_center_intact --batch 10 --parallel 12
+
+perl ofg_stat_factory.pl -d AthvsLer_0_gc_center_intact -r 5 --server 114.212.202.159
+
+
+#----------------------------------------------------------#
+# ath co | style center_intact | AthvsLer_0
+#----------------------------------------------------------#
+cd /home/wangq/Scripts/alignDB/
+perl util/dup_db.pl -d AthvsLer_0 -g AthvsLer_0_co_center_intact
+
+perl ofg/insert_athgcco.pl -d AthvsLer_0_co_center_intact -t co --style center_intact --batch 10 --parallel 12
+
+perl init/update_sw_cv.pl -d AthvsLer_0_co_center_intact --batch 10 --parallel 12
+perl init/update_feature.pl -d AthvsLer_0_co_center_intact -e ath_65 --batch 10 --parallel 12
+
+# windows
+cd d:\wq\Scripts\alignDB
+perl stat/ofg_stat_factory.pl -d AthvsLer_0_co_center_intact --server 114.212.202.159
+
+#----------------------------------------------------------#
+# ath gc | style center_intact | AthvsXIX
+#----------------------------------------------------------#
+cd /home/wangq/Scripts/alignDB/
+perl util/dup_db.pl -d AthvsXIX -g AthvsXIX_gc_center_intact
+
+perl ofg/insert_athgcco.pl -d AthvsXIX_gc_center_intact -t gc --style center_intact --multi --batch 10 --parallel 12
+
+perl init/update_sw_cv.pl -d AthvsXIX_gc_center_intact --batch 10 --parallel 12
+perl init/update_feature.pl -d AthvsXIX_gc_center_intact -e ath_65 --multi --batch 10 --parallel 12
+
+# windows
+cd d:\wq\Scripts\alignDB
+perl stat/ofg_stat_factory.pl -d AthvsXIX_gc_center_intact --server 114.212.202.159
+
+#----------------------------------------------------------#
+# ath co | style center_intact | AthvsXIX
+#----------------------------------------------------------#
+cd /home/wangq/Scripts/alignDB/
+perl util/dup_db.pl -d AthvsXIX -g AthvsXIX_co_center_intact
+
+perl ofg/insert_athgcco.pl -d AthvsXIX_co_center_intact -t co --style center_intact --multi  --batch 10 --parallel 12
+
+perl init/update_sw_cv.pl -d AthvsXIX_co_center_intact --batch 10 --parallel 12
+perl init/update_feature.pl -d AthvsXIX_co_center_intact -e ath_65 --multi --batch 10 --parallel 12
+
+# windows
+cd d:\wq\Scripts\alignDB
+perl stat/ofg_stat_factory.pl -d AthvsXIX_co_center_intact --server 114.212.202.159
+
+
+forfiles /m S288C*.ofg.xlsx -c "cmd /c perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=hotspots -i @path"
+forfiles /m Ath*.ofg.xlsx -c "cmd /c perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg=DSBs -i @path"
+forfiles /m *.chart.xlsx -c "cmd /c perl d:/wq/Scripts/alignDB/fig/xlsx2xls.pl -d @path"

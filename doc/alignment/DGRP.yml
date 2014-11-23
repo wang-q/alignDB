@@ -1,0 +1,3524 @@
+---
+DGRP-101:
+  SRX020747:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020747/SRR047360/SRR047360.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020747
+    library: IWG_DGRP.101_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-101
+    srp: SRP000694
+    srr:
+      - SRR047360
+    srs: SRS073099
+    srx: SRX020747
+DGRP-105:
+  SRX020745:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020745/SRR047358/SRR047358.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020745
+    library: IWG_DGRP.105_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-105
+    srp: SRP000694
+    srr:
+      - SRR047358
+    srs: SRS073097
+    srx: SRX020745
+DGRP-109:
+  SRX020746:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020746/SRR047359/SRR047359.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020746
+    library: IWG_DGRP.109_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-109
+    srp: SRP000694
+    srr:
+      - SRR047359
+    srs: SRS073098
+    srx: SRX020746
+DGRP-129:
+  SRX020748:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020748/SRR047361/SRR047361.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020748
+    library: IWG_DGRP.129_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-129
+    srp: SRP000694
+    srr:
+      - SRR047361
+    srs: SRS073101
+    srx: SRX020748
+DGRP-136:
+  SRX020753:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020753/SRR047362/SRR047362.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020753
+    library: IWG_DGRP.136_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-136
+    srp: SRP000694
+    srr:
+      - SRR047362
+    srs: SRS073110
+    srx: SRX020753
+DGRP-138:
+  SRX021008:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021008/SRR049254/SRR049254.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021008/SRR049255/SRR049255.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021008
+    library: IWG_DGRP.138_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-138
+    srp: SRP000694
+    srr:
+      - SRR049254
+      - SRR049255
+    srs: SRS073111
+    srx: SRX021008
+DGRP-142:
+  SRX020759:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020759/SRR048922/SRR048922.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020759
+    library: IWG_DGRP.142_000pB
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-142
+    srp: SRP000694
+    srr:
+      - SRR048922
+    srs: SRS073126
+    srx: SRX020759
+DGRP-149:
+  SRX020760:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020760/SRR048923/SRR048923.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020760
+    library: IWG_DGRP.149_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-149
+    srp: SRP000694
+    srr:
+      - SRR048923
+    srs: SRS073127
+    srx: SRX020760
+DGRP-153:
+  SRX021514:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021514/SRR053612/SRR053612.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021514/SRR053613/SRR053613.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021514/SRR053614/SRR053614.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021514
+    library: IWG_DGRP.153_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-153
+    srp: SRP000694
+    srr:
+      - SRR053612
+      - SRR053613
+      - SRR053614
+    srs: SRS074239
+    srx: SRX021514
+DGRP-158:
+  SRX021009:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021009/SRR049304/SRR049304.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021009
+    library: IWG_DGRP.158_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-158
+    srp: SRP000694
+    srr:
+      - SRR049304
+    srs: SRS073369
+    srx: SRX021009
+DGRP-161:
+  SRX020761:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020761/SRR048924/SRR048924.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020761
+    library: IWG_DGRP.161_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-161
+    srp: SRP000694
+    srr:
+      - SRR048924
+    srs: SRS073128
+    srx: SRX020761
+DGRP-176:
+  SRX020762:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020762/SRR048925/SRR048925.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020762
+    library: IWG_DGRP.176_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-176
+    srp: SRP000694
+    srr:
+      - SRR048925
+    srs: SRS073129
+    srx: SRX020762
+  SRX020763:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020763/SRR048926/SRR048926.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020763
+    library: IWG_DGRP.176_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-176
+    srp: SRP000694
+    srr:
+      - SRR048926
+    srs: SRS073129
+    srx: SRX020763
+DGRP-177:
+  SRX021026:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021026/SRR049663/SRR049663.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021026
+    library: IWG_DGRP.177_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-177
+    srp: SRP000694
+    srr:
+      - SRR049663
+    srs: SRS073386
+    srx: SRX021026
+DGRP-181:
+  SRX020912:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020912/SRR048940/SRR048940.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020912/SRR048941/SRR048941.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX020/SRX020912
+    library: IWG_DGRP.181_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-181
+    srp: SRP000694
+    srr:
+      - SRR048940
+      - SRR048941
+    srs: SRS073130
+    srx: SRX020912
+DGRP-195:
+  SRX021039:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021039/SRR049676/SRR049676.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021039
+    library: IWG_DGRP.195-2_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-195
+    srp: SRP000694
+    srr:
+      - SRR049676
+    srs: SRS073431
+    srx: SRX021039
+DGRP-208:
+  SRX005977:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005977/SRR018056/SRR018056.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005977/SRR018057/SRR018057.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005977/SRR018060/SRR018060.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005977/SRR018062/SRR018062.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005977
+    library: IWG_DGRP.DMEL.AA_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-208
+    srp: SRP000694
+    srr:
+      - SRR018056
+      - SRR018057
+      - SRR018060
+      - SRR018062
+    srs: SRS003442
+    srx: SRX005977
+  SRX015853:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015853/SRR034239/SRR034239.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015853/SRR034240/SRR034240.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015853/SRR034241/SRR034241.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015853/SRR034242/SRR034242.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015853/SRR034243/SRR034243.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015853
+    library: 4WG_DMEL.AA_001sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-208
+    srp: SRP000694
+    srr:
+      - SRR034239
+      - SRR034240
+      - SRR034241
+      - SRR034242
+      - SRR034243
+    srs: SRS003442
+    srx: SRX015853
+DGRP-21:
+  SRX021040:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021040/SRR049793/SRR049793.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021040
+    library: IWG_DGRP.21_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-21
+    srp: SRP000694
+    srr:
+      - SRR049793
+    srs: SRS073920
+    srx: SRX021040
+DGRP-217:
+  SRX021041:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021041/SRR049794/SRR049794.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021041
+    library: IWG_DGRP.217-2_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-217
+    srp: SRP000694
+    srr:
+      - SRR049794
+    srs: SRS073921
+    srx: SRX021041
+DGRP-227:
+  SRX021042:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021042/SRR049795/SRR049795.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021042
+    library: IWG_DGRP.227-2_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-227
+    srp: SRP000694
+    srr:
+      - SRR049795
+    srs: SRS073922
+    srx: SRX021042
+DGRP-228:
+  SRX021043:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021043/SRR049796/SRR049796.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021043
+    library: IWG_DGRP.228_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-228
+    srp: SRP000694
+    srr:
+      - SRR049796
+    srs: SRS073923
+    srx: SRX021043
+DGRP-229:
+  SRX021052:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021052/SRR049805/SRR049805.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021052
+    library: IWG_DGRP.229_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-229
+    srp: SRP000694
+    srr:
+      - SRR049805
+    srs: SRS073931
+    srx: SRX021052
+DGRP-233:
+  SRX021061:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021061/SRR049864/SRR049864.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021061
+    library: IWG_DGRP.233_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-233
+    srp: SRP000694
+    srr:
+      - SRR049864
+    srs: SRS073942
+    srx: SRX021061
+DGRP-235:
+  SRX021053:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021053/SRR049806/SRR049806.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021053
+    library: IWG_DGRP.235_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-235
+    srp: SRP000694
+    srr:
+      - SRR049806
+    srs: SRS073932
+    srx: SRX021053
+DGRP-237:
+  SRX023422:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023422/SRR060056/SRR060056.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023422/SRR060057/SRR060057.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023422
+    library: IWG_DGRP.237_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-237
+    srp: SRP000694
+    srr:
+      - SRR060056
+      - SRR060057
+    srs: SRS084987
+    srx: SRX023422
+  SRX023423:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023423/SRR060058/SRR060058.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023423
+    library: IWG_DGRP.237_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-237
+    srp: SRP000694
+    srr:
+      - SRR060058
+    srs: SRS084987
+    srx: SRX023423
+DGRP-239:
+  SRX021054:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021054/SRR049807/SRR049807.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021054
+    library: IWG_DGRP.239-2_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-239
+    srp: SRP000694
+    srr:
+      - SRR049807
+    srs: SRS073933
+    srx: SRX021054
+DGRP-256:
+  SRX021055:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021055/SRR049808/SRR049808.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021055
+    library: IWG_DGRP.256_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-256
+    srp: SRP000694
+    srr:
+      - SRR049808
+    srs: SRS073934
+    srx: SRX021055
+DGRP-26:
+  SRX021056:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021056/SRR049809/SRR049809.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021056/SRR049810/SRR049810.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021056
+    library: IWG_DGRP.26_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-26
+    srp: SRP000694
+    srr:
+      - SRR049809
+      - SRR049810
+    srs: SRS073935
+    srx: SRX021056
+DGRP-28:
+  SRX021782:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021782/SRR054850/SRR054850.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021782
+    library: IWG_DGRP.28-2_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-28
+    srp: SRP000694
+    srr:
+      - SRR054850
+    srs: SRS074461
+    srx: SRX021782
+  SRX021783:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021783/SRR054851/SRR054851.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021783
+    library: IWG_DGRP.28-2_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-28
+    srp: SRP000694
+    srr:
+      - SRR054851
+    srs: SRS074461
+    srx: SRX021783
+DGRP-280:
+  SRX021058:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021058/SRR049812/SRR049812.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021058
+    library: IWG_DGRP.280_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-280
+    srp: SRP000694
+    srr:
+      - SRR049812
+    srs: SRS073937
+    srx: SRX021058
+DGRP-287:
+  SRX021059:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021059/SRR049813/SRR049813.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021059
+    library: IWG_DGRP.287_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-287
+    srp: SRP000694
+    srr:
+      - SRR049813
+    srs: SRS073938
+    srx: SRX021059
+DGRP-301:
+  SRX005978:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005978/SRR018070/SRR018070.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005978/SRR018072/SRR018072.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005978/SRR018074/SRR018074.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005978/SRR018075/SRR018075.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005978
+    library: IWG_DGRP.DMEL.AB_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-301
+    srp: SRP000694
+    srr:
+      - SRR018070
+      - SRR018072
+      - SRR018074
+      - SRR018075
+    srs: SRS003443
+    srx: SRX005978
+DGRP-303:
+  SRX005985:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005985/SRR018084/SRR018084.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005985
+    library: IWG_DGRP.DMEL.30_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-303
+    srp: SRP000694
+    srr:
+      - SRR018084
+    srs: SRS003447
+    srx: SRX005985
+  SRX005986:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005986/SRR018086/SRR018086.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005986/SRR018088/SRR018088.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005986/SRR018090/SRR018090.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005986/SRR018092/SRR018092.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005986/SRR018094/SRR018094.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005986
+    library: IWG_DGRP.DMEL.30_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-303
+    srp: SRP000694
+    srr:
+      - SRR018086
+      - SRR018088
+      - SRR018090
+      - SRR018092
+      - SRR018094
+    srs: SRS003447
+    srx: SRX005986
+DGRP-304:
+  SRX005987:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005987/SRR018096/SRR018096.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005987
+    library: IWG_DGRP.DMEL.AD_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-304
+    srp: SRP000694
+    srr:
+      - SRR018096
+    srs: SRS003448
+    srx: SRX005987
+  SRX005988:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005988/SRR018097/SRR018097.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005988/SRR018098/SRR018098.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005988/SRR018099/SRR018099.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX005/SRX005988
+    library: IWG_DGRP.DMEL.AD_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-304
+    srp: SRP000694
+    srr:
+      - SRR018097
+      - SRR018098
+      - SRR018099
+    srs: SRS003448
+    srx: SRX005988
+  SRX015854:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015854/SRR034244/SRR034244.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015854/SRR034245/SRR034245.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015854/SRR034246/SRR034246.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015854/SRR034247/SRR034247.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015854/SRR034248/SRR034248.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015854
+    library: 4WG_DMEL.AD_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-304
+    srp: SRP000694
+    srr:
+      - SRR034244
+      - SRR034245
+      - SRR034246
+      - SRR034247
+      - SRR034248
+    srs: SRS003448
+    srx: SRX015854
+DGRP-306:
+  SRX006139:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006139/SRR018273/SRR018273.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006139
+    library: IWG_DGRP.DMEL.AE_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-306
+    srp: SRP000694
+    srr:
+      - SRR018273
+    srs: SRS003467
+    srx: SRX006139
+  SRX006140:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006140/SRR018274/SRR018274.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006140/SRR018275/SRR018275.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006140/SRR018276/SRR018276.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006140
+    library: IWG_DGRP.DMEL.AE_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-306
+    srp: SRP000694
+    srr:
+      - SRR018274
+      - SRR018275
+      - SRR018276
+    srs: SRS003467
+    srx: SRX006140
+  SRX015855:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015855/SRR034249/SRR034249.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015855/SRR034250/SRR034250.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015855/SRR034251/SRR034251.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015855/SRR034252/SRR034252.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015855
+    library: 4WG_DMEL.AE_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-306
+    srp: SRP000694
+    srr:
+      - SRR034249
+      - SRR034250
+      - SRR034251
+      - SRR034252
+    srs: SRS003467
+    srx: SRX015855
+  SRX016257:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016257/SRR035057/SRR035057.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016257/SRR035058/SRR035058.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016257/SRR035059/SRR035059.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016257/SRR035074/SRR035074.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016257/SRR035077/SRR035077.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016257
+    library: 4WG_DMEL.36_000sX
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-306
+    srp: SRP000694
+    srr:
+      - SRR035057
+      - SRR035058
+      - SRR035059
+      - SRR035074
+      - SRR035077
+    srs: SRS003467
+    srx: SRX016257
+  SRX016258:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035060/SRR035060.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035061/SRR035061.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035062/SRR035062.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035063/SRR035063.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035064/SRR035064.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035065/SRR035065.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035066/SRR035066.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035067/SRR035067.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035068/SRR035068.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035069/SRR035069.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035070/SRR035070.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035071/SRR035071.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035072/SRR035072.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035073/SRR035073.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035075/SRR035075.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258/SRR035076/SRR035076.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016258
+    library: 4WG_DMEL.36_000sX
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-306
+    srp: SRP000694
+    srr:
+      - SRR035060
+      - SRR035061
+      - SRR035062
+      - SRR035063
+      - SRR035064
+      - SRR035065
+      - SRR035066
+      - SRR035067
+      - SRR035068
+      - SRR035069
+      - SRR035070
+      - SRR035071
+      - SRR035072
+      - SRR035073
+      - SRR035075
+      - SRR035076
+    srs: SRS003467
+    srx: SRX016258
+DGRP-307:
+  SRX006186:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006186/SRR018342/SRR018342.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006186
+    library: IWG_DGRP.DMEL.AF_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-307
+    srp: SRP000694
+    srr:
+      - SRR018342
+    srs: SRS003492
+    srx: SRX006186
+  SRX006187:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006187/SRR018343/SRR018343.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006187
+    library: IWG_DGRP.DMEL.AF_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-307
+    srp: SRP000694
+    srr:
+      - SRR018343
+    srs: SRS003492
+    srx: SRX006187
+  SRX006188:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006188/SRR018344/SRR018344.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006188
+    library: IWG_DGRP.DMEL.AF_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-307
+    srp: SRP000694
+    srr:
+      - SRR018344
+    srs: SRS003492
+    srx: SRX006188
+  SRX015860:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015860/SRR034264/SRR034264.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015860/SRR034265/SRR034265.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015860/SRR034266/SRR034266.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015860/SRR034267/SRR034267.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015860/SRR034268/SRR034268.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015860
+    library: 4WG_DMEL.AF_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-307
+    srp: SRP000694
+    srr:
+      - SRR034264
+      - SRR034265
+      - SRR034266
+      - SRR034267
+      - SRR034268
+    srs: SRS003492
+    srx: SRX015860
+DGRP-309:
+  SRX021060:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021060/SRR049814/SRR049814.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021060
+    library: IWG_DGRP.309-1_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-309
+    srp: SRP000694
+    srr:
+      - SRR049814
+    srs: SRS073939
+    srx: SRX021060
+DGRP-310:
+  SRX021080:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021080/SRR049936/SRR049936.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021080
+    library: IWG_DGRP.310_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-310
+    srp: SRP000694
+    srr:
+      - SRR049936
+    srs: SRS073940
+    srx: SRX021080
+DGRP-313:
+  SRX006275:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006275/SRR018517/SRR018517.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006275
+    library: IWG_DGRP.DMEL.AG_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-313
+    srp: SRP000694
+    srr:
+      - SRR018517
+    srs: SRS004125
+    srx: SRX006275
+  SRX006276:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006276/SRR018518/SRR018518.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006276
+    library: IWG_DGRP.DMEL.AG_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-313
+    srp: SRP000694
+    srr:
+      - SRR018518
+    srs: SRS004125
+    srx: SRX006276
+  SRX006277:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006277/SRR018519/SRR018519.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006277
+    library: IWG_DGRP.DMEL.AG_000sA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-313
+    srp: SRP000694
+    srr:
+      - SRR018519
+    srs: SRS004125
+    srx: SRX006277
+  SRX015856:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015856/SRR034253/SRR034253.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015856/SRR034254/SRR034254.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015856/SRR034255/SRR034255.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015856/SRR034256/SRR034256.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015856
+    library: 4WG_DMEL.AG_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-313
+    srp: SRP000694
+    srr:
+      - SRR034253
+      - SRR034254
+      - SRR034255
+      - SRR034256
+    srs: SRS004125
+    srx: SRX015856
+DGRP-315:
+  SRX006141:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006141/SRR018277/SRR018277.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006141
+    library: IWG_DGRP.DMEL.31_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-315
+    srp: SRP000694
+    srr:
+      - SRR018277
+    srs: SRS003468
+    srx: SRX006141
+  SRX006142:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006142/SRR018278/SRR018278.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006142
+    library: IWG_DGRP.DMEL.31_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-315
+    srp: SRP000694
+    srr:
+      - SRR018278
+    srs: SRS003468
+    srx: SRX006142
+  SRX006143:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006143/SRR018279/SRR018279.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006143
+    library: IWG_DGRP.DMEL.31_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-315
+    srp: SRP000694
+    srr:
+      - SRR018279
+    srs: SRS003468
+    srx: SRX006143
+  SRX015859:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015859/SRR034259/SRR034259.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015859/SRR034260/SRR034260.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015859/SRR034261/SRR034261.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015859/SRR034262/SRR034262.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015859/SRR034263/SRR034263.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015859
+    library: 4WG_DMEL.31_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-315
+    srp: SRP000694
+    srr:
+      - SRR034259
+      - SRR034260
+      - SRR034261
+      - SRR034262
+      - SRR034263
+    srs: SRS003468
+    srx: SRX015859
+DGRP-317:
+  SRX021081:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021081/SRR049937/SRR049937.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021081
+    library: IWG_DGRP.317_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-317
+    srp: SRP000694
+    srr:
+      - SRR049937
+    srs: SRS073941
+    srx: SRX021081
+DGRP-318:
+  SRX021082:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021082/SRR049942/SRR049942.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021082
+    library: IWG_DGRP.318_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-318
+    srp: SRP000694
+    srr:
+      - SRR049942
+    srs: SRS073950
+    srx: SRX021082
+DGRP-320:
+  SRX021063:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021063/SRR049879/SRR049879.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021063
+    library: IWG_DGRP.320_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-320
+    srp: SRP000694
+    srr:
+      - SRR049879
+    srs: SRS073944
+    srx: SRX021063
+DGRP-321:
+  SRX021094:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021094/SRR050147/SRR050147.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021094
+    library: IWG_DGRP.321_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-321
+    srp: SRP000694
+    srr:
+      - SRR050147
+    srs: SRS073955
+    srx: SRX021094
+DGRP-324:
+  SRX006144:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006144/SRR018280/SRR018280.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006144
+    library: IWG_DGRP.DMEL.32_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-324
+    srp: SRP000694
+    srr:
+      - SRR018280
+    srs: SRS003469
+    srx: SRX006144
+  SRX006145:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006145/SRR018281/SRR018281.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006145/SRR018282/SRR018282.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006145/SRR018283/SRR018283.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006145
+    library: IWG_DGRP.DMEL.32_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-324
+    srp: SRP000694
+    srr:
+      - SRR018281
+      - SRR018282
+      - SRR018283
+    srs: SRS003469
+    srx: SRX006145
+  SRX015974:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015974/SRR034413/SRR034413.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015974/SRR034414/SRR034414.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015974/SRR034415/SRR034415.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015974/SRR034416/SRR034416.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015974/SRR034417/SRR034417.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015974
+    library: 4WG_DMEL.32_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-324
+    srp: SRP000694
+    srr:
+      - SRR034413
+      - SRR034414
+      - SRR034415
+      - SRR034416
+      - SRR034417
+    srs: SRS003469
+    srx: SRX015974
+DGRP-325:
+  SRX021793:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021793/SRR054863/SRR054863.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021793/SRR054864/SRR054864.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021793/SRR054865/SRR054865.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021793
+    library: IWG_DGRP.325_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-325
+    srp: SRP000694
+    srr:
+      - SRR054863
+      - SRR054864
+      - SRR054865
+    srs: SRS074466
+    srx: SRX021793
+DGRP-332:
+  SRX021095:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021095/SRR050148/SRR050148.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021095/SRR050149/SRR050149.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021095
+    library: IWG_DGRP.332_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-332
+    srp: SRP000694
+    srr:
+      - SRR050148
+      - SRR050149
+    srs: SRS073956
+    srx: SRX021095
+DGRP-335:
+  SRX006278:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006278/SRR018521/SRR018521.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006278
+    library: IWG_DGRP.DMEL.33_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-335
+    srp: SRP000694
+    srr:
+      - SRR018521
+    srs: SRS004126
+    srx: SRX006278
+  SRX006279:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006279/SRR018522/SRR018522.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006279
+    library: IWG_DGRP.DMEL.33_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-335
+    srp: SRP000694
+    srr:
+      - SRR018522
+    srs: SRS004126
+    srx: SRX006279
+  SRX006280:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006280/SRR018523/SRR018523.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006280
+    library: IWG_DGRP.DMEL.33_000sA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-335
+    srp: SRP000694
+    srr:
+      - SRR018523
+    srs: SRS004126
+    srx: SRX006280
+DGRP-338:
+  SRX021097:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021097/SRR050152/SRR050152.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021097
+    library: IWG_DGRP.338_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-338
+    srp: SRP000694
+    srr:
+      - SRR050152
+    srs: SRS073958
+    srx: SRX021097
+DGRP-350:
+  SRX021100:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021100/SRR050154/SRR050154.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021100
+    library: IWG_DGRP.350_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-350
+    srp: SRP000694
+    srr:
+      - SRR050154
+    srs: SRS073961
+    srx: SRX021100
+DGRP-352:
+  SRX021101:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021101/SRR050155/SRR050155.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021101
+    library: IWG_DGRP.352-2_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-352
+    srp: SRP000694
+    srr:
+      - SRR050155
+    srs: SRS073962
+    srx: SRX021101
+DGRP-356:
+  SRX023833:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023833/SRR060817/SRR060817.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023833
+    library: IWG_DGRP.356-2_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-356
+    srp: SRP000694
+    srr:
+      - SRR060817
+    srs: SRS085330
+    srx: SRX023833
+DGRP-357:
+  SRX006146:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006146/SRR018284/SRR018284.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006146/SRR018285/SRR018285.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006146
+    library: IWG_DGRP.357_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-357
+    srp: SRP000694
+    srr:
+      - SRR018284
+      - SRR018285
+    srs: SRS003470
+    srx: SRX006146
+  SRX006147:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006147/SRR018286/SRR018286.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006147
+    library: IWG_DGRP.357_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-357
+    srp: SRP000694
+    srr:
+      - SRR018286
+    srs: SRS003470
+    srx: SRX006147
+  SRX015861:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015861/SRR034269/SRR034269.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015861/SRR034270/SRR034270.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015861/SRR034271/SRR034271.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015861/SRR034272/SRR034272.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015861/SRR034273/SRR034273.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015861
+    library: 4WG_DMEL.35_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-357
+    srp: SRP000694
+    srr:
+      - SRR034269
+      - SRR034270
+      - SRR034271
+      - SRR034272
+      - SRR034273
+    srs: SRS003470
+    srx: SRX015861
+DGRP-358:
+  SRX006282:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006282/SRR018574/SRR018574.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006282
+    library: IWG_DGRP.DMEL.AL_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-358
+    srp: SRP000694
+    srr:
+      - SRR018574
+    srs: SRS004127
+    srx: SRX006282
+  SRX006283:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006283/SRR018575/SRR018575.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006283/SRR029943/SRR029943.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006283
+    library: IWG_DGRP.DMEL.AL_000sA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-358
+    srp: SRP000694
+    srr:
+      - SRR018575
+      - SRR029943
+    srs: SRS004127
+    srx: SRX006283
+  SRX015862:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015862/SRR034274/SRR034274.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015862/SRR034275/SRR034275.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015862/SRR034276/SRR034276.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015862/SRR034277/SRR034277.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015862/SRR034278/SRR034278.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015862
+    library: 4WG_DMEL.AL_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-358
+    srp: SRP000694
+    srr:
+      - SRR034274
+      - SRR034275
+      - SRR034276
+      - SRR034277
+      - SRR034278
+    srs: SRS004127
+    srx: SRX015862
+DGRP-359:
+  SRX023424:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023424/SRR060059/SRR060059.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023424
+    library: IWG_DGRP.359_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-359
+    srp: SRP000694
+    srr:
+      - SRR060059
+    srs: SRS084988
+    srx: SRX023424
+DGRP-360:
+  SRX006309:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018610/SRR018610.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018611/SRR018611.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018612/SRR018612.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018613/SRR018613.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018614/SRR018614.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018615/SRR018615.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018616/SRR018616.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018617/SRR018617.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018618/SRR018618.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018619/SRR018619.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018620/SRR018620.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018621/SRR018621.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018622/SRR018622.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018623/SRR018623.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018624/SRR018624.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018625/SRR018625.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018626/SRR018626.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018627/SRR018627.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018628/SRR018628.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018629/SRR018629.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018630/SRR018630.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018631/SRR018631.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018632/SRR018632.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018633/SRR018633.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018634/SRR018634.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018635/SRR018635.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309/SRR018636/SRR018636.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006309
+    library: IWG_DGRP.DMEL.36_000sA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-360
+    srp: SRP000694
+    srr:
+      - SRR018610
+      - SRR018611
+      - SRR018612
+      - SRR018613
+      - SRR018614
+      - SRR018615
+      - SRR018616
+      - SRR018617
+      - SRR018618
+      - SRR018619
+      - SRR018620
+      - SRR018621
+      - SRR018622
+      - SRR018623
+      - SRR018624
+      - SRR018625
+      - SRR018626
+      - SRR018627
+      - SRR018628
+      - SRR018629
+      - SRR018630
+      - SRR018631
+      - SRR018632
+      - SRR018633
+      - SRR018634
+      - SRR018635
+      - SRR018636
+    srs: SRS004137
+    srx: SRX006309
+DGRP-362:
+  SRX006287:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006287/SRR029164/SRR029164.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006287
+    library: IWG_DGRP.DMEL.AN_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-362
+    srp: SRP000694
+    srr:
+      - SRR029164
+    srs: SRS004129
+    srx: SRX006287
+  SRX006288:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006288/SRR029165/SRR029165.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006288/SRR029166/SRR029166.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006288
+    library: IWG_DGRP.DMEL.AN_000sA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-362
+    srp: SRP000694
+    srr:
+      - SRR029165
+      - SRR029166
+    srs: SRS004129
+    srx: SRX006288
+DGRP-365:
+  SRX006289:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006289/SRR018579/SRR018579.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006289
+    library: IWG_DGRP.DMEL.AO_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-365
+    srp: SRP000694
+    srr:
+      - SRR018579
+    srs: SRS004130
+    srx: SRX006289
+  SRX006290:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006290/SRR018580/SRR018580.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006290
+    library: IWG_DGRP.DMEL.AO_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-365
+    srp: SRP000694
+    srr:
+      - SRR018580
+    srs: SRS004130
+    srx: SRX006290
+  SRX006291:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006291/SRR018581/SRR018581.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006291
+    library: IWG_DGRP.DMEL.AO_000sA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-365
+    srp: SRP000694
+    srr:
+      - SRR018581
+    srs: SRS004130
+    srx: SRX006291
+  SRX015863:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015863/SRR034279/SRR034279.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015863/SRR034280/SRR034280.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015863/SRR034281/SRR034281.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015863/SRR034282/SRR034282.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015863/SRR034283/SRR034283.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015863
+    library: 4WG_DMEL.AO_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-365
+    srp: SRP000694
+    srr:
+      - SRR034279
+      - SRR034280
+      - SRR034281
+      - SRR034282
+      - SRR034283
+    srs: SRS004130
+    srx: SRX015863
+DGRP-367:
+  SRX021103:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021103/SRR050175/SRR050175.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021103
+    library: IWG_DGRP.367_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-367
+    srp: SRP000694
+    srr:
+      - SRR050175
+    srs: SRS073964
+    srx: SRX021103
+DGRP-370:
+  SRX021104:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021104/SRR050201/SRR050201.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021104
+    library: IWG_DGRP.370_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-370
+    srp: SRP000694
+    srr:
+      - SRR050201
+    srs: SRS073965
+    srx: SRX021104
+DGRP-371:
+  SRX021257:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021257/SRR051602/SRR051602.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021257/SRR051603/SRR051603.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021257
+    library: IWG_DGRP.371_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-371
+    srp: SRP000694
+    srr:
+      - SRR051602
+      - SRR051603
+    srs: SRS074009
+    srx: SRX021257
+DGRP-373:
+  SRX023425:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023425/SRR060060/SRR060060.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023425
+    library: IWG_DGRP.373_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-373
+    srp: SRP000694
+    srr:
+      - SRR060060
+    srs: SRS084989
+    srx: SRX023425
+DGRP-374:
+  SRX023427:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023427/SRR060061/SRR060061.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023427
+    library: IWG_DGRP.374_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-374
+    srp: SRP000694
+    srr:
+      - SRR060061
+    srs: SRS084990
+    srx: SRX023427
+DGRP-375:
+  SRX006148:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006148/SRR018287/SRR018287.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006148/SRR018288/SRR018288.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006148/SRR018289/SRR018289.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006148
+    library: IWG_DGRP.DMEL.AP_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-375
+    srp: SRP000694
+    srr:
+      - SRR018287
+      - SRR018288
+      - SRR018289
+    srs: SRS003471
+    srx: SRX006148
+  SRX006149:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006149/SRR018290/SRR018290.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006149
+    library: IWG_DGRP.DMEL.AP_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-375
+    srp: SRP000694
+    srr:
+      - SRR018290
+    srs: SRS003471
+    srx: SRX006149
+  SRX006150:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006150/SRR018291/SRR018291.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006150
+    library: IWG_DGRP.DMEL.AP_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-375
+    srp: SRP000694
+    srr:
+      - SRR018291
+    srs: SRS003471
+    srx: SRX006150
+  SRX015864:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015864/SRR034284/SRR034284.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015864/SRR034285/SRR034285.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015864/SRR034286/SRR034286.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015864/SRR034287/SRR034287.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015864/SRR034288/SRR034288.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015864
+    library: 4WG_DMEL.AP_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-375
+    srp: SRP000694
+    srr:
+      - SRR034284
+      - SRR034285
+      - SRR034286
+      - SRR034287
+      - SRR034288
+    srs: SRS003471
+    srx: SRX015864
+DGRP-377:
+  SRX023834:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023834/SRR060818/SRR060818.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023834
+    library: IWG_DGRP.377_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-377
+    srp: SRP000694
+    srr:
+      - SRR060818
+    srs: SRS085331
+    srx: SRX023834
+DGRP-379:
+  SRX006292:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006292/SRR018582/SRR018582.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006292
+    library: IWG_DGRP.DMEL.AQ_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-379
+    srp: SRP000694
+    srr:
+      - SRR018582
+    srs: SRS004131
+    srx: SRX006292
+  SRX006293:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006293/SRR018583/SRR018583.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006293/SRR018584/SRR018584.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006293
+    library: IWG_DGRP.DMEL.AQ_000sA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-379
+    srp: SRP000694
+    srr:
+      - SRR018583
+      - SRR018584
+    srs: SRS004131
+    srx: SRX006293
+  SRX015865:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015865/SRR034289/SRR034289.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015865/SRR034290/SRR034290.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015865/SRR034291/SRR034291.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015865/SRR034292/SRR034292.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015865/SRR034293/SRR034293.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015865
+    library: 4WG_DMEL.AQ_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-379
+    srp: SRP000694
+    srr:
+      - SRR034289
+      - SRR034290
+      - SRR034291
+      - SRR034292
+      - SRR034293
+    srs: SRS004131
+    srx: SRX015865
+DGRP-38:
+  SRX025317:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX025/SRX025317/SRR063698/SRR063698.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX025/SRX025317
+    library: IWG_DGRP.38_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-38
+    srp: SRP000694
+    srr:
+      - SRR063698
+    srs: SRS097454
+    srx: SRX025317
+DGRP-380:
+  SRX006300:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006300/SRR018591/SRR018591.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006300/SRR018592/SRR018592.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006300/SRR018593/SRR018593.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006300
+    library: IWG_DGRP.DMEL.AR_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-380
+    srp: SRP000694
+    srr:
+      - SRR018591
+      - SRR018592
+      - SRR018593
+    srs: SRS004133
+    srx: SRX006300
+  SRX006301:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006301/SRR018594/SRR018594.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006301
+    library: IWG_DGRP.DMEL.AR_000sA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-380
+    srp: SRP000694
+    srr:
+      - SRR018594
+    srs: SRS004133
+    srx: SRX006301
+  SRX006302:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006302/SRR018595/SRR018595.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006302
+    library: IWG_DGRP.DMEL.AR_000sA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-380
+    srp: SRP000694
+    srr:
+      - SRR018595
+    srs: SRS004133
+    srx: SRX006302
+  SRX006303:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006303/SRR018596/SRR018596.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006303/SRR018597/SRR018597.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006303
+    library: IWG_DGRP.DMEL.AR_000sA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-380
+    srp: SRP000694
+    srr:
+      - SRR018596
+      - SRR018597
+    srs: SRS004133
+    srx: SRX006303
+  SRX015866:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015866/SRR034294/SRR034294.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015866/SRR034295/SRR034295.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015866/SRR034296/SRR034296.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015866/SRR034297/SRR034297.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015866/SRR034298/SRR034298.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015866
+    library: 4WG_DMEL.AR_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-380
+    srp: SRP000694
+    srr:
+      - SRR034294
+      - SRR034295
+      - SRR034296
+      - SRR034297
+      - SRR034298
+    srs: SRS004133
+    srx: SRX015866
+DGRP-381:
+  SRX021112:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021112/SRR050364/SRR050364.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021112/SRR050365/SRR050365.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021112
+    library: IWG_DGRP.381_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-381
+    srp: SRP000694
+    srr:
+      - SRR050364
+      - SRR050365
+    srs: SRS073974
+    srx: SRX021112
+DGRP-383:
+  SRX021113:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021113/SRR050369/SRR050369.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021113
+    library: IWG_DGRP.383_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-383
+    srp: SRP000694
+    srr:
+      - SRR050369
+    srs: SRS073975
+    srx: SRX021113
+DGRP-386:
+  SRX021797:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021797/SRR054874/SRR054874.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021797
+    library: IWG_DGRP.386_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-386
+    srp: SRP000694
+    srr:
+      - SRR054874
+    srs: SRS074467
+    srx: SRX021797
+  SRX021798:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021798/SRR054875/SRR054875.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021798
+    library: IWG_DGRP.386_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-386
+    srp: SRP000694
+    srr:
+      - SRR054875
+    srs: SRS074467
+    srx: SRX021798
+DGRP-391:
+  SRX006151:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006151/SRR018292/SRR018292.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006151/SRR018293/SRR018293.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006151
+    library: IWG_DGRP.391_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-391
+    srp: SRP000694
+    srr:
+      - SRR018292
+      - SRR018293
+    srs: SRS003472
+    srx: SRX006151
+  SRX006152:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006152/SRR018294/SRR018294.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006152
+    library: IWG_DGRP.391_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-391
+    srp: SRP000694
+    srr:
+      - SRR018294
+    srs: SRS003472
+    srx: SRX006152
+  SRX015867:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015867/SRR034299/SRR034299.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015867/SRR034300/SRR034300.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015867/SRR034301/SRR034301.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015867/SRR034302/SRR034302.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015867/SRR034303/SRR034303.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015867
+    library: 4WG_DMEL.39_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-391
+    srp: SRP000694
+    srr:
+      - SRR034299
+      - SRR034300
+      - SRR034301
+      - SRR034302
+      - SRR034303
+    srs: SRS003472
+    srx: SRX015867
+  SRX023452:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023452/SRR060098/SRR060098.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023452
+    library: IWG_DGRP.391_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-391
+    srp: SRP000694
+    srr:
+      - SRR060098
+    srs: SRS003472
+    srx: SRX023452
+DGRP-392:
+  SRX021157:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021157/SRR050904/SRR050904.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021157
+    library: IWG_DGRP.392_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-392
+    srp: SRP000694
+    srr:
+      - SRR050904
+    srs: SRS073978
+    srx: SRX021157
+DGRP-399:
+  SRX006153:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006153/SRR018295/SRR018295.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006153/SRR018296/SRR018296.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006153
+    library: IWG_DGRP.DMEL.3A_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-399
+    srp: SRP000694
+    srr:
+      - SRR018295
+      - SRR018296
+    srs: SRS003473
+    srx: SRX006153
+  SRX006154:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006154/SRR018297/SRR018297.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006154
+    library: IWG_DGRP.DMEL.3A_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-399
+    srp: SRP000694
+    srr:
+      - SRR018297
+    srs: SRS003473
+    srx: SRX006154
+  SRX015868:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015868/SRR034304/SRR034304.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015868/SRR034305/SRR034305.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015868/SRR034306/SRR034306.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015868/SRR034307/SRR034307.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015868/SRR034308/SRR034308.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX015/SRX015868
+    library: 4WG_DMEL.3A_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-399
+    srp: SRP000694
+    srr:
+      - SRR034304
+      - SRR034305
+      - SRR034306
+      - SRR034307
+      - SRR034308
+    srs: SRS003473
+    srx: SRX015868
+DGRP-40:
+  SRX021235:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021235/SRR051016/SRR051016.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021235
+    library: IWG_DGRP.40_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-40
+    srp: SRP000694
+    srr:
+      - SRR051016
+    srs: SRS073985
+    srx: SRX021235
+DGRP-405:
+  SRX021242:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021242/SRR051569/SRR051569.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021242
+    library: IWG_DGRP.405_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-405
+    srp: SRP000694
+    srr:
+      - SRR051569
+    srs: SRS073990
+    srx: SRX021242
+DGRP-406:
+  SRX021254:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021254/SRR051595/SRR051595.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021254
+    library: IWG_DGRP.406_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-406
+    srp: SRP000694
+    srr:
+      - SRR051595
+    srs: SRS074007
+    srx: SRX021254
+DGRP-409:
+  SRX021243:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021243/SRR051570/SRR051570.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021243
+    library: IWG_DGRP.409_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-409
+    srp: SRP000694
+    srr:
+      - SRR051570
+    srs: SRS073991
+    srx: SRX021243
+DGRP-41:
+  SRX021790:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021790/SRR054861/SRR054861.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021790
+    library: IWG_DGRP.41_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-41
+    srp: SRP000694
+    srr:
+      - SRR054861
+    srs: SRS074464
+    srx: SRX021790
+  SRX021791:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021791/SRR054862/SRR054862.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021791
+    library: IWG_DGRP.41_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-41
+    srp: SRP000694
+    srr:
+      - SRR054862
+    srs: SRS074464
+    srx: SRX021791
+DGRP-42:
+  SRX021255:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021255/SRR051597/SRR051597.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021255
+    library: IWG_DGRP.42_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-42
+    srp: SRP000694
+    srr:
+      - SRR051597
+    srs: SRS074008
+    srx: SRX021255
+DGRP-426:
+  SRX021245:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021245/SRR051571/SRR051571.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021245
+    library: IWG_DGRP.426_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-426
+    srp: SRP000694
+    srr:
+      - SRR051571
+    srs: SRS073995
+    srx: SRX021245
+DGRP-427:
+  SRX006155:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006155/SRR018298/SRR018298.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006155/SRR018299/SRR018299.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006155/SRR018300/SRR018300.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006155
+    library: IWG_DGRP.427_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-427
+    srp: SRP000694
+    srr:
+      - SRR018298
+      - SRR018299
+      - SRR018300
+    srs: SRS003474
+    srx: SRX006155
+  SRX016041:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016041/SRR034495/SRR034495.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016041/SRR034496/SRR034496.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016041/SRR034497/SRR034497.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016041/SRR034498/SRR034498.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016041/SRR034499/SRR034499.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016041
+    library: 4WG_DMEL.42_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-427
+    srp: SRP000694
+    srr:
+      - SRR034495
+      - SRR034496
+      - SRR034497
+      - SRR034498
+      - SRR034499
+    srs: SRS003474
+    srx: SRX016041
+DGRP-437:
+  SRX006156:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006156/SRR018301/SRR018301.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006156/SRR018302/SRR018302.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006156
+    library: IWG_DGRP.DMEL.43_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-437
+    srp: SRP000694
+    srr:
+      - SRR018301
+      - SRR018302
+    srs: SRS003475
+    srx: SRX006156
+  SRX016042:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016042/SRR034500/SRR034500.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016042/SRR034501/SRR034501.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016042/SRR034502/SRR034502.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016042/SRR034503/SRR034503.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016042
+    library: 4WG_DMEL.43_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-437
+    srp: SRP000694
+    srr:
+      - SRR034500
+      - SRR034501
+      - SRR034502
+      - SRR034503
+    srs: SRS003475
+    srx: SRX016042
+DGRP-439:
+  SRX021244:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021244/SRR051596/SRR051596.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021244
+    library: IWG_DGRP.439_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-439
+    srp: SRP000694
+    srr:
+      - SRR051596
+    srs: SRS073994
+    srx: SRX021244
+DGRP-440:
+  SRX021246:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021246/SRR051572/SRR051572.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021246
+    library: IWG_DGRP.440_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-440
+    srp: SRP000694
+    srr:
+      - SRR051572
+    srs: SRS073996
+    srx: SRX021246
+DGRP-441:
+  SRX023835:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023835/SRR060819/SRR060819.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023835
+    library: IWG_DGRP.441_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-441
+    srp: SRP000694
+    srr:
+      - SRR060819
+    srs: SRS085332
+    srx: SRX023835
+DGRP-443:
+  SRX021260:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021260/SRR051606/SRR051606.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021260
+    library: IWG_DGRP.443_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-443
+    srp: SRP000694
+    srr:
+      - SRR051606
+    srs: SRS074012
+    srx: SRX021260
+DGRP-45:
+  SRX021261:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021261/SRR051607/SRR051607.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021261
+    library: IWG_DGRP.45_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-45
+    srp: SRP000694
+    srr:
+      - SRR051607
+    srs: SRS074013
+    srx: SRX021261
+DGRP-461:
+  SRX021262:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021262/SRR051608/SRR051608.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021262
+    library: IWG_DGRP.461_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-461
+    srp: SRP000694
+    srr:
+      - SRR051608
+    srs: SRS074014
+    srx: SRX021262
+DGRP-486:
+  SRX006157:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006157/SRR018303/SRR018303.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006157/SRR018304/SRR018304.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006157
+    library: IWG_DGRP.DMEL.48_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-486
+    srp: SRP000694
+    srr:
+      - SRR018303
+      - SRR018304
+    srs: SRS003476
+    srx: SRX006157
+  SRX016043:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016043/SRR034504/SRR034504.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016043/SRR034505/SRR034505.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016043/SRR034506/SRR034506.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016043/SRR034507/SRR034507.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016043/SRR034508/SRR034508.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016043
+    library: 4WG_DMEL.48_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-486
+    srp: SRP000694
+    srr:
+      - SRR034504
+      - SRR034505
+      - SRR034506
+      - SRR034507
+      - SRR034508
+    srs: SRS003476
+    srx: SRX016043
+DGRP-49:
+  SRX021267:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021267/SRR051613/SRR051613.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021267
+    library: IWG_DGRP.49_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-49
+    srp: SRP000694
+    srr:
+      - SRR051613
+    srs: SRS074020
+    srx: SRX021267
+DGRP-491:
+  SRX021268:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021268/SRR051614/SRR051614.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021268
+    library: IWG_DGRP.491_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-491
+    srp: SRP000694
+    srr:
+      - SRR051614
+    srs: SRS074021
+    srx: SRX021268
+DGRP-492:
+  SRX021270:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021270/SRR051616/SRR051616.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021270
+    library: IWG_DGRP.492_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-492
+    srp: SRP000694
+    srr:
+      - SRR051616
+    srs: SRS074022
+    srx: SRX021270
+DGRP-502:
+  SRX021271:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021271/SRR051617/SRR051617.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021271
+    library: IWG_DGRP.502_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-502
+    srp: SRP000694
+    srr:
+      - SRR051617
+    srs: SRS074023
+    srx: SRX021271
+DGRP-508:
+  SRX021272:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021272/SRR051618/SRR051618.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021272
+    library: IWG_DGRP.508_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-508
+    srp: SRP000694
+    srr:
+      - SRR051618
+    srs: SRS074024
+    srx: SRX021272
+DGRP-509:
+  SRX021273:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021273/SRR051619/SRR051619.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021273
+    library: IWG_DGRP.509_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-509
+    srp: SRP000694
+    srr:
+      - SRR051619
+    srs: SRS074025
+    srx: SRX021273
+DGRP-513:
+  SRX021282:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021282/SRR051634/SRR051634.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021282
+    library: IWG_DGRP.513_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-513
+    srp: SRP000694
+    srr:
+      - SRR051634
+    srs: SRS074033
+    srx: SRX021282
+DGRP-531:
+  SRX021290:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021290/SRR051904/SRR051904.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021290
+    library: IWG_DGRP.531_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-531
+    srp: SRP000694
+    srr:
+      - SRR051904
+    srs: SRS074034
+    srx: SRX021290
+DGRP-535:
+  SRX021293:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021293/SRR051906/SRR051906.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021293
+    library: IWG_DGRP.535_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-535
+    srp: SRP000694
+    srr:
+      - SRR051906
+    srs: SRS074035
+    srx: SRX021293
+DGRP-555:
+  SRX006159:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006159/SRR018307/SRR018307.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006159/SRR018308/SRR018308.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006159
+    library: IWG_DGRP.DMEL.AZ_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-555
+    srp: SRP000694
+    srr:
+      - SRR018307
+      - SRR018308
+    srs: SRS003478
+    srx: SRX006159
+  SRX016072:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016072/SRR034536/SRR034536.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016072/SRR034537/SRR034537.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016072/SRR034538/SRR034538.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016072/SRR034539/SRR034539.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016072/SRR034540/SRR034540.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016072
+    library: 4WG_DMEL.AZ_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-555
+    srp: SRP000694
+    srr:
+      - SRR034536
+      - SRR034537
+      - SRR034538
+      - SRR034539
+      - SRR034540
+    srs: SRS003478
+    srx: SRX016072
+DGRP-563:
+  SRX023836:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023836/SRR060820/SRR060820.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023836
+    library: IWG_DGRP.563_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-563
+    srp: SRP000694
+    srr:
+      - SRR060820
+    srs: SRS085333
+    srx: SRX023836
+DGRP-57:
+  SRX021296:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021296/SRR051898/SRR051898.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021296/SRR051899/SRR051899.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021296
+    library: IWG_DGRP.57_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-57
+    srp: SRP000694
+    srr:
+      - SRR051898
+      - SRR051899
+    srs: SRS074039
+    srx: SRX021296
+DGRP-589:
+  SRX023837:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023837/SRR060821/SRR060821.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023837
+    library: IWG_DGRP.589_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-589
+    srp: SRP000694
+    srr:
+      - SRR060821
+    srs: SRS085334
+    srx: SRX023837
+DGRP-59:
+  SRX021327:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021327/SRR051902/SRR051902.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021327
+    library: IWG_DGRP.59-2_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-59
+    srp: SRP000694
+    srr:
+      - SRR051902
+    srs: SRS074042
+    srx: SRX021327
+DGRP-591:
+  SRX021330:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021330/SRR051905/SRR051905.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021330
+    library: IWG_DGRP.591_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-591
+    srp: SRP000694
+    srr:
+      - SRR051905
+    srs: SRS074044
+    srx: SRX021330
+DGRP-595:
+  SRX021328:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021328/SRR051907/SRR051907.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021328
+    library: IWG_DGRP.595_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-595
+    srp: SRP000694
+    srr:
+      - SRR051907
+    srs: SRS074043
+    srx: SRX021328
+DGRP-639:
+  SRX006160:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006160/SRR018309/SRR018309.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006160
+    library: IWG_DGRP.DMEL.BA_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-639
+    srp: SRP000694
+    srr:
+      - SRR018309
+    srs: SRS003479
+    srx: SRX006160
+  SRX006161:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006161/SRR018310/SRR018310.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006161
+    library: IWG_DGRP.DMEL.BA_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-639
+    srp: SRP000694
+    srr:
+      - SRR018310
+    srs: SRS003479
+    srx: SRX006161
+  SRX016339:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016339/SRR035232/SRR035232.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016339/SRR035233/SRR035233.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016339/SRR035234/SRR035234.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016339/SRR035235/SRR035235.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016339/SRR035236/SRR035236.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016339
+    library: 4WG_DMEL.BA_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-639
+    srp: SRP000694
+    srr:
+      - SRR035232
+      - SRR035233
+      - SRR035234
+      - SRR035235
+      - SRR035236
+    srs: SRS003479
+    srx: SRX016339
+DGRP-642:
+  SRX021331:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021331/SRR051908/SRR051908.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021331
+    library: IWG_DGRP.642 _001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-642
+    srp: SRP000694
+    srr:
+      - SRR051908
+    srs: SRS074045
+    srx: SRX021331
+DGRP-646:
+  SRX021332:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021332/SRR051909/SRR051909.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021332
+    library: IWG_DGRP.646_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-646
+    srp: SRP000694
+    srr:
+      - SRR051909
+    srs: SRS074046
+    srx: SRX021332
+DGRP-69:
+  SRX023449:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023449/SRR060093/SRR060093.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023449/SRR060094/SRR060094.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023449
+    library: IWG_DGRP.69_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-69
+    srp: SRP000694
+    srr:
+      - SRR060093
+      - SRR060094
+    srs: SRS084992
+    srx: SRX023449
+DGRP-703:
+  SRX021508:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021508/SRR053601/SRR053601.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021508
+    library: IWG_DGRP.703_001pB
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-703
+    srp: SRP000694
+    srr:
+      - SRR053601
+    srs: SRS074221
+    srx: SRX021508
+DGRP-705:
+  SRX006162:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006162/SRR018311/SRR018311.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006162/SRR018312/SRR018312.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006162
+    library: IWG_DGRP.DMEL.BB_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-705
+    srp: SRP000694
+    srr:
+      - SRR018311
+      - SRR018312
+    srs: SRS003480
+    srx: SRX006162
+  SRX016134:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016134/SRR034662/SRR034662.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016134/SRR034663/SRR034663.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016134/SRR034664/SRR034664.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016134/SRR034665/SRR034665.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016134/SRR034666/SRR034666.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016134/SRR034667/SRR034667.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016134
+    library: 4WG_DMEL.BB_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-705
+    srp: SRP000694
+    srr:
+      - SRR034662
+      - SRR034663
+      - SRR034664
+      - SRR034665
+      - SRR034666
+      - SRR034667
+    srs: SRS003480
+    srx: SRX016134
+DGRP-707:
+  SRX006163:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006163/SRR018313/SRR018313.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006163/SRR018314/SRR018314.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006163
+    library: IWG_DGRP.DMEL.BC_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-707
+    srp: SRP000694
+    srr:
+      - SRR018313
+      - SRR018314
+    srs: SRS003481
+    srx: SRX006163
+  SRX016135:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016135/SRR034668/SRR034668.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016135/SRR034669/SRR034669.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016135/SRR034670/SRR034670.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016135/SRR034671/SRR034671.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016135/SRR034672/SRR034672.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016135
+    library: 4WG_DMEL.BC_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-707
+    srp: SRP000694
+    srr:
+      - SRR034668
+      - SRR034669
+      - SRR034670
+      - SRR034671
+      - SRR034672
+    srs: SRS003481
+    srx: SRX016135
+DGRP-712:
+  SRX006164:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006164/SRR018315/SRR018315.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006164/SRR018316/SRR018316.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006164
+    library: IWG_DGRP.DMEL.BD_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-712
+    srp: SRP000694
+    srr:
+      - SRR018315
+      - SRR018316
+    srs: SRS003482
+    srx: SRX006164
+  SRX016136:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016136/SRR034680/SRR034680.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016136/SRR034681/SRR034681.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016136/SRR034682/SRR034682.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016136/SRR034683/SRR034683.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016136/SRR034684/SRR034684.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016136
+    library: 4WG_DMEL.BD_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-712
+    srp: SRP000694
+    srr:
+      - SRR034680
+      - SRR034681
+      - SRR034682
+      - SRR034683
+      - SRR034684
+    srs: SRS003482
+    srx: SRX016136
+DGRP-714:
+  SRX006165:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006165/SRR018317/SRR018317.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006165
+    library: IWG_DGRP.DMEL.B1_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-714
+    srp: SRP000694
+    srr:
+      - SRR018317
+    srs: SRS003483
+    srx: SRX006165
+  SRX006166:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006166/SRR018318/SRR018318.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006166
+    library: IWG_DGRP.DMEL.B1_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-714
+    srp: SRP000694
+    srr:
+      - SRR018318
+    srs: SRS003483
+    srx: SRX006166
+  SRX016137:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016137/SRR034744/SRR034744.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016137/SRR034745/SRR034745.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016137/SRR034746/SRR034746.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016137/SRR034747/SRR034747.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016137/SRR034748/SRR034748.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016137/SRR034749/SRR034749.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016137
+    library: 4WG_DMEL.B1_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-714
+    srp: SRP000694
+    srr:
+      - SRR034744
+      - SRR034745
+      - SRR034746
+      - SRR034747
+      - SRR034748
+      - SRR034749
+    srs: SRS003483
+    srx: SRX016137
+DGRP-716:
+  SRX021380:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021380/SRR051957/SRR051957.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021380
+    library: IWG_DGRP.716_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-716
+    srp: SRP000694
+    srr:
+      - SRR051957
+    srs: SRS074107
+    srx: SRX021380
+DGRP-721:
+  SRX021381:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021381/SRR051958/SRR051958.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021381
+    library: IWG_DGRP.721_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-721
+    srp: SRP000694
+    srr:
+      - SRR051958
+    srs: SRS074108
+    srx: SRX021381
+DGRP-727:
+  SRX021382:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021382/SRR051959/SRR051959.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021382/SRR051960/SRR051960.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021382
+    library: IWG_DGRP.727_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-727
+    srp: SRP000694
+    srr:
+      - SRR051959
+      - SRR051960
+    srs: SRS074109
+    srx: SRX021382
+DGRP-73:
+  SRX023450:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023450/SRR060095/SRR060095.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023450
+    library: IWG_DGRP.73-2_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-73
+    srp: SRP000694
+    srr:
+      - SRR060095
+    srs: SRS084993
+    srx: SRX023450
+DGRP-730:
+  SRX006308:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006308/SRR018606/SRR018606.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006308/SRR018607/SRR018607.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006308/SRR018608/SRR018608.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006308/SRR018609/SRR018609.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006308
+    library: IWG_DGRP.DMEL.BF_000sA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-730
+    srp: SRP000694
+    srr:
+      - SRR018606
+      - SRR018607
+      - SRR018608
+      - SRR018609
+    srs: SRS004136
+    srx: SRX006308
+  SRX016138:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016138/SRR034686/SRR034686.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016138/SRR034687/SRR034687.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016138/SRR034688/SRR034688.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016138/SRR034689/SRR034689.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016138
+    library: 4WG_DMEL.BF_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-730
+    srp: SRP000694
+    srr:
+      - SRR034686
+      - SRR034687
+      - SRR034688
+      - SRR034689
+    srs: SRS004136
+    srx: SRX016138
+DGRP-732:
+  SRX006167:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006167/SRR018319/SRR018319.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006167/SRR018320/SRR018320.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006167
+    library: IWG_DGRP.DMEL.BG_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-732
+    srp: SRP000694
+    srr:
+      - SRR018319
+      - SRR018320
+    srs: SRS003484
+    srx: SRX006167
+DGRP-737:
+  SRX023451:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023451/SRR060096/SRR060096.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023451/SRR060097/SRR060097.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023451
+    library: IWG_DGRP.737_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-737
+    srp: SRP000694
+    srr:
+      - SRR060096
+      - SRR060097
+    srs: SRS084994
+    srx: SRX023451
+DGRP-738:
+  SRX021383:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021383/SRR051961/SRR051961.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021383/SRR051962/SRR051962.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021383
+    library: IWG_DGRP.738_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-738
+    srp: SRP000694
+    srr:
+      - SRR051961
+      - SRR051962
+    srs: SRS074110
+    srx: SRX021383
+DGRP-75:
+  SRX021384:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021384/SRR051963/SRR051963.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021384
+    library: IWG_DGRP.75_000pB
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-75
+    srp: SRP000694
+    srr:
+      - SRR051963
+    srs: SRS074111
+    srx: SRX021384
+DGRP-757:
+  SRX021385:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021385/SRR051964/SRR051964.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021385/SRR051965/SRR051965.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021385
+    library: IWG_DGRP.757_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-757
+    srp: SRP000694
+    srr:
+      - SRR051964
+      - SRR051965
+    srs: SRS074112
+    srx: SRX021385
+DGRP-761:
+  SRX021386:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021386/SRR051966/SRR051966.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021386
+    library: IWG_DGRP.761_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-761
+    srp: SRP000694
+    srr:
+      - SRR051966
+    srs: SRS074113
+    srx: SRX021386
+DGRP-765:
+  SRX006168:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006168/SRR018321/SRR018321.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006168
+    library: IWG_DGRP.DMEL.BH_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-765
+    srp: SRP000694
+    srr:
+      - SRR018321
+    srs: SRS003485
+    srx: SRX006168
+  SRX006169:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006169/SRR018322/SRR018322.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006169
+    library: IWG_DGRP.DMEL.BH_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-765
+    srp: SRP000694
+    srr:
+      - SRR018322
+    srs: SRS003485
+    srx: SRX006169
+  SRX016176:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016176/SRR034754/SRR034754.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016176/SRR034755/SRR034755.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016176/SRR034756/SRR034756.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016176/SRR034757/SRR034757.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016176
+    library: 4WG_DMEL.BH_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-765
+    srp: SRP000694
+    srr:
+      - SRR034754
+      - SRR034755
+      - SRR034756
+      - SRR034757
+    srs: SRS003485
+    srx: SRX016176
+DGRP-774:
+  SRX006170:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006170/SRR018323/SRR018323.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006170/SRR018324/SRR018324.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006170
+    library: IWG_DGRP.774_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-774
+    srp: SRP000694
+    srr:
+      - SRR018323
+      - SRR018324
+    srs: SRS003486
+    srx: SRX006170
+  SRX016175:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016175/SRR034750/SRR034750.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016175/SRR034751/SRR034751.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016175/SRR034752/SRR034752.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016175/SRR034753/SRR034753.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016175
+    library: 4WG_DMEL.77_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-774
+    srp: SRP000694
+    srr:
+      - SRR034750
+      - SRR034751
+      - SRR034752
+      - SRR034753
+    srs: SRS003486
+    srx: SRX016175
+DGRP-776:
+  SRX021387:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021387/SRR051967/SRR051967.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021387
+    library: IWG_DGRP.776_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-776
+    srp: SRP000694
+    srr:
+      - SRR051967
+    srs: SRS074114
+    srx: SRX021387
+DGRP-783:
+  SRX023455:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023455/SRR060103/SRR060103.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023455
+    library: IWG_DGRP.783_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-783
+    srp: SRP000694
+    srr:
+      - SRR060103
+    srs: SRS084996
+    srx: SRX023455
+DGRP-786:
+  SRX006171:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006171/SRR018331/SRR018331.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006171/SRR018332/SRR018332.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006171
+    library: IWG_DGRP.786_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-786
+    srp: SRP000694
+    srr:
+      - SRR018331
+      - SRR018332
+    srs: SRS003487
+    srx: SRX006171
+  SRX016177:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016177/SRR034766/SRR034766.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016177/SRR034767/SRR034767.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016177/SRR034768/SRR034768.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016177/SRR034769/SRR034769.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016177/SRR034770/SRR034770.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016177
+    library: 4WG_DMEL.78_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-786
+    srp: SRP000694
+    srr:
+      - SRR034766
+      - SRR034767
+      - SRR034768
+      - SRR034769
+      - SRR034770
+    srs: SRS003487
+    srx: SRX016177
+DGRP-787:
+  SRX021388:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021388/SRR051968/SRR051968.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021388
+    library: IWG_DGRP.787_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-787
+    srp: SRP000694
+    srr:
+      - SRR051968
+    srs: SRS074115
+    srx: SRX021388
+DGRP-790:
+  SRX021389:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021389/SRR051969/SRR051969.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021389
+    library: IWG_DGRP.790_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-790
+    srp: SRP000694
+    srr:
+      - SRR051969
+    srs: SRS074116
+    srx: SRX021389
+DGRP-796:
+  SRX021390:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021390/SRR051970/SRR051970.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021390
+    library: IWG_DGRP.796_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-796
+    srp: SRP000694
+    srr:
+      - SRR051970
+    srs: SRS074117
+    srx: SRX021390
+DGRP-799:
+  SRX006172:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006172/SRR018325/SRR018325.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006172
+    library: IWG_DGRP.DMEL.BK_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-799
+    srp: SRP000694
+    srr:
+      - SRR018325
+    srs: SRS003488
+    srx: SRX006172
+  SRX006173:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006173/SRR018326/SRR018326.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006173
+    library: IWG_DGRP.DMEL.BK_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-799
+    srp: SRP000694
+    srr:
+      - SRR018326
+    srs: SRS003488
+    srx: SRX006173
+  SRX016178:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016178/SRR034771/SRR034771.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016178/SRR034772/SRR034772.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016178/SRR034773/SRR034773.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016178/SRR034774/SRR034774.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016178
+    library: 4WG_DMEL.BK_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-799
+    srp: SRP000694
+    srr:
+      - SRR034771
+      - SRR034772
+      - SRR034773
+      - SRR034774
+    srs: SRS003488
+    srx: SRX016178
+DGRP-801:
+  SRX021391:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021391/SRR051971/SRR051971.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021391
+    library: IWG_DGRP.801_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-801
+    srp: SRP000694
+    srr:
+      - SRR051971
+    srs: SRS074118
+    srx: SRX021391
+DGRP-802:
+  SRX025318:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX025/SRX025318/SRR063699/SRR063699.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX025/SRX025318
+    library: IWG_DGRP.802_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-802
+    srp: SRP000694
+    srr:
+      - SRR063699
+    srs: SRS097455
+    srx: SRX025318
+DGRP-804:
+  SRX021399:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021399/SRR052028/SRR052028.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021399
+    library: IWG_DGRP.804_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-804
+    srp: SRP000694
+    srr:
+      - SRR052028
+    srs: SRS074125
+    srx: SRX021399
+DGRP-805:
+  SRX021400:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021400/SRR052029/SRR052029.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021400
+    library: IWG_DGRP.805_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-805
+    srp: SRP000694
+    srr:
+      - SRR052029
+    srs: SRS074126
+    srx: SRX021400
+DGRP-808:
+  SRX021402:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021402/SRR052049/SRR052049.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021402
+    library: IWG_DGRP.808_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-808
+    srp: SRP000694
+    srr:
+      - SRR052049
+    srs: SRS074128
+    srx: SRX021402
+DGRP-810:
+  SRX021418:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021418/SRR052236/SRR052236.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021418
+    library: IWG_DGRP.810B_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-810
+    srp: SRP000694
+    srr:
+      - SRR052236
+    srs: SRS074129
+    srx: SRX021418
+DGRP-812:
+  SRX021419:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021419/SRR052266/SRR052266.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021419
+    library: IWG_DGRP.812_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-812
+    srp: SRP000694
+    srr:
+      - SRR052266
+    srs: SRS074130
+    srx: SRX021419
+DGRP-818:
+  SRX021478:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021478/SRR052757/SRR052757.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021478
+    library: IWG_DGRP.818_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-818
+    srp: SRP000694
+    srr:
+      - SRR052757
+    srs: SRS074193
+    srx: SRX021478
+DGRP-820:
+  SRX006174:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006174/SRR018329/SRR018329.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006174
+    library: IWG_DGRP.DMEL.BL_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-820
+    srp: SRP000694
+    srr:
+      - SRR018329
+    srs: SRS003489
+    srx: SRX006174
+  SRX006175:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006175/SRR018330/SRR018330.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006175
+    library: IWG_DGRP.DMEL.BL_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-820
+    srp: SRP000694
+    srr:
+      - SRR018330
+    srs: SRS003489
+    srx: SRX006175
+  SRX016179:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016179/SRR034775/SRR034775.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016179/SRR034776/SRR034776.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016179/SRR034777/SRR034777.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016179/SRR034778/SRR034778.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016179
+    library: 4WG_DMEL.BL_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-820
+    srp: SRP000694
+    srr:
+      - SRR034775
+      - SRR034776
+      - SRR034777
+      - SRR034778
+    srs: SRS003489
+    srx: SRX016179
+DGRP-822:
+  SRX021476:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021476/SRR052755/SRR052755.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021476
+    library: IWG_DGRP.822_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-822
+    srp: SRP000694
+    srr:
+      - SRR052755
+    srs: SRS074189
+    srx: SRX021476
+DGRP-83:
+  SRX023456:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023456/SRR060104/SRR060104.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023456
+    library: IWG_DGRP.83_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-83
+    srp: SRP000694
+    srr:
+      - SRR060104
+    srs: SRS084997
+    srx: SRX023456
+DGRP-832:
+  SRX021477:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021477/SRR052756/SRR052756.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021477
+    library: IWG_DGRP.832_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-832
+    srp: SRP000694
+    srr:
+      - SRR052756
+    srs: SRS074192
+    srx: SRX021477
+DGRP-837:
+  SRX021479:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021479/SRR052758/SRR052758.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021479/SRR052759/SRR052759.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021479
+    library: IWG_DGRP.837_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-837
+    srp: SRP000694
+    srr:
+      - SRR052758
+      - SRR052759
+    srs: SRS074198
+    srx: SRX021479
+DGRP-85:
+  SRX021490:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021490/SRR053050/SRR053050.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021490
+    library: IWG_DGRP.85-2_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-85
+    srp: SRP000694
+    srr:
+      - SRR053050
+    srs: SRS074205
+    srx: SRX021490
+DGRP-852:
+  SRX006304:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006304/SRR018598/SRR018598.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006304/SRR018599/SRR018599.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006304/SRR018600/SRR018600.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006304/SRR018601/SRR018601.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006304/SRR018602/SRR018602.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006304
+    library: IWG_DGRP.DMEL.BN_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-852
+    srp: SRP000694
+    srr:
+      - SRR018598
+      - SRR018599
+      - SRR018600
+      - SRR018601
+      - SRR018602
+    srs: SRS004134
+    srx: SRX006304
+  SRX006305:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006305/SRR018603/SRR018603.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006305
+    library: IWG_DGRP.DMEL.BN_000sA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-852
+    srp: SRP000694
+    srr:
+      - SRR018603
+    srs: SRS004134
+    srx: SRX006305
+  SRX016300:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035128/SRR035128.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035129/SRR035129.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035130/SRR035130.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035131/SRR035131.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035132/SRR035132.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035134/SRR035134.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035136/SRR035136.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035137/SRR035137.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035138/SRR035138.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035139/SRR035139.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035140/SRR035140.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035141/SRR035141.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035142/SRR035142.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035143/SRR035143.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035144/SRR035144.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300/SRR035145/SRR035145.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016300
+    library: 4WG_DMEL.BN_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-852
+    srp: SRP000694
+    srr:
+      - SRR035128
+      - SRR035129
+      - SRR035130
+      - SRR035131
+      - SRR035132
+      - SRR035134
+      - SRR035136
+      - SRR035137
+      - SRR035138
+      - SRR035139
+      - SRR035140
+      - SRR035141
+      - SRR035142
+      - SRR035143
+      - SRR035144
+      - SRR035145
+    srs: SRS004134
+    srx: SRX016300
+  SRX016301:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016301/SRR035133/SRR035133.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016301/SRR035135/SRR035135.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016301
+    library: 4WG_DMEL.BN_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-852
+    srp: SRP000694
+    srr:
+      - SRR035133
+      - SRR035135
+    srs: SRS004134
+    srx: SRX016301
+DGRP-855:
+  SRX021563:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021563/SRR054579/SRR054579.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021563
+    library: IWG_DGRP.855_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-855
+    srp: SRP000694
+    srr:
+      - SRR054579
+    srs: SRS074244
+    srx: SRX021563
+DGRP-857:
+  SRX021492:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021492/SRR053056/SRR053056.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021492
+    library: IWG_DGRP.857_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-857
+    srp: SRP000694
+    srr:
+      - SRR053056
+    srs: SRS074207
+    srx: SRX021492
+DGRP-859:
+  SRX006176:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006176/SRR018327/SRR018327.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006176/SRR018328/SRR018328.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX006/SRX006176
+    library: IWG_DGRP.DMEL.BO_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-859
+    srp: SRP000694
+    srr:
+      - SRR018327
+      - SRR018328
+    srs: SRS003490
+    srx: SRX006176
+  SRX016184:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016184/SRR034802/SRR034802.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016184/SRR034803/SRR034803.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016184/SRR034804/SRR034804.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016184/SRR034805/SRR034805.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016184/SRR034806/SRR034806.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX016/SRX016184
+    library: 4WG_DMEL.BO_000sA
+    platform: LS454
+    sample: Drosophila melanogaster DGRP-859
+    srp: SRP000694
+    srr:
+      - SRR034802
+      - SRR034803
+      - SRR034804
+      - SRR034805
+      - SRR034806
+    srs: SRS003490
+    srx: SRX016184
+DGRP-861:
+  SRX021493:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021493/SRR053058/SRR053058.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021493
+    library: IWG_DGRP.861_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-861
+    srp: SRP000694
+    srr:
+      - SRR053058
+    srs: SRS074208
+    srx: SRX021493
+DGRP-879:
+  SRX021494:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021494/SRR053059/SRR053059.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021494
+    library: IWG_DGRP.879_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-879
+    srp: SRP000694
+    srr:
+      - SRR053059
+    srs: SRS074209
+    srx: SRX021494
+DGRP-88:
+  SRX021495:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021495/SRR053072/SRR053072.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021495
+    library: IWG_DGRP.88_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-88
+    srp: SRP000694
+    srr:
+      - SRR053072
+    srs: SRS074211
+    srx: SRX021495
+DGRP-882:
+  SRX021496:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021496/SRR053073/SRR053073.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021496
+    library: IWG_DGRP.882_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-882
+    srp: SRP000694
+    srr:
+      - SRR053073
+    srs: SRS074212
+    srx: SRX021496
+DGRP-884:
+  SRX021498:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021498/SRR053074/SRR053074.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021498
+    library: IWG_DGRP.884_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-884
+    srp: SRP000694
+    srr:
+      - SRR053074
+    srs: SRS074213
+    srx: SRX021498
+DGRP-887:
+  SRX021527:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021527/SRR053621/SRR053621.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021527
+    library: IWG_DGRP.887_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-887
+    srp: SRP000694
+    srr:
+      - SRR053621
+    srs: SRS074240
+    srx: SRX021527
+DGRP-890:
+  SRX021499:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021499/SRR053123/SRR053123.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021499
+    library: IWG_DGRP.890_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-890
+    srp: SRP000694
+    srr:
+      - SRR053123
+    srs: SRS074214
+    srx: SRX021499
+DGRP-892:
+  SRX023838:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023838/SRR060822/SRR060822.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023838
+    library: IWG_DGRP.892_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-892
+    srp: SRP000694
+    srr:
+      - SRR060822
+    srs: SRS085335
+    srx: SRX023838
+DGRP-894:
+  SRX021528:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021528/SRR053622/SRR053622.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021528
+    library: IWG_DGRP.894_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-894
+    srp: SRP000694
+    srr:
+      - SRR053622
+    srs: SRS074241
+    srx: SRX021528
+DGRP-897:
+  SRX023457:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023457/SRR060105/SRR060105.srr
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023457/SRR060106/SRR060106.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX023/SRX023457
+    library: IWG_DGRP.897_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-897
+    srp: SRP000694
+    srr:
+      - SRR060105
+      - SRR060106
+    srs: SRS084998
+    srx: SRX023457
+DGRP-907:
+  SRX021500:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021500/SRR053173/SRR053173.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021500
+    library: IWG_DGRP.907_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-907
+    srp: SRP000694
+    srr:
+      - SRR053173
+    srs: SRS074215
+    srx: SRX021500
+DGRP-908:
+  SRX021501:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021501/SRR053174/SRR053174.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021501
+    library: IWG_DGRP.908_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-908
+    srp: SRP000694
+    srr:
+      - SRR053174
+    srs: SRS074216
+    srx: SRX021501
+DGRP-91:
+  SRX021503:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021503/SRR053433/SRR053433.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021503
+    library: IWG_DGRP.91_000pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-91
+    srp: SRP000694
+    srr:
+      - SRR053433
+    srs: SRS074218
+    srx: SRX021503
+DGRP-911:
+  SRX021502:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021502/SRR053310/SRR053310.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021502
+    library: IWG_DGRP.911_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-911
+    srp: SRP000694
+    srr:
+      - SRR053310
+    srs: SRS074217
+    srx: SRX021502
+DGRP-93:
+  SRX021504:
+    downloads:
+      - ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021504/SRR053434/SRR053434.srr
+    ftp_base: ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX021/SRX021504
+    library: IWG_DGRP.93_001pA
+    platform: Illumina
+    sample: Drosophila melanogaster DGRP-93
+    srp: SRP000694
+    srr:
+      - SRR053434
+    srs: SRS074219
+    srx: SRX021504

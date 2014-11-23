@@ -1,0 +1,31 @@
+
+#----------------------------------------------------------#
+# S288C ensembl65
+#----------------------------------------------------------#
+cd ~/data/alignment/yeast65
+mkdir S288C
+
+cd ~/data/alignment/yeast65/S288C
+find ~/data/ensembl65/saccharomyces_cerevisiae -name "*dna.toplevel*" | xargs gzip -d -c > toplevel.fa
+~/bin/x86_64/faCount toplevel.fa | perl -aln -e 'next if $F[0] eq 'total'; print $F[0] if $F[1] > 100000; print $F[0] if $F[1] > 10000  and $F[6]/$F[1] < 0.05' | uniq > listFile
+~/bin/x86_64/faSomeRecords toplevel.fa listFile toplevel.filtered.fa
+~/bin/x86_64/faSplit byname toplevel.filtered.fa .
+rm toplevel.fa toplevel.filtered.fa listFile
+
+perl ~/Scripts/alignDB/util/build_ensembl.pl --initdb --db yeast_65 --ensembl ~/data/ensembl65/saccharomyces_cerevisiae_core_65_4
+perl ~/Scripts/alignDB/util/write_masked_chr.pl -e yeast_65
+perl ~/Scripts/alignDB/util/write_masked_chr.pl -y yeast_65_repeat.yml --dir ~/data/alignment/yeast65/S288C
+
+find . -name "*fa" | xargs rm
+~/perl5/bin/rename 's/\.masked//' *.fa.masked
+~/perl5/bin/rename 's/^/chr/' *.fa
+
+#----------------------------------------------------------#
+# SGRP fasta header
+#----------------------------------------------------------#
+cd ~/data/alignment/yeast65
+perl -p -i -e '/>/ and s/\>\w+\.(\w+).*/\>$1/' DBVPG6765/*.fa
+perl -p -i -e '/>/ and s/\>\w+\.(\w+).*/\>$1/' SK1/*.fa
+perl -p -i -e '/>/ and s/\>\w+\.(\w+).*/\>$1/' W303/*.fa
+perl -p -i -e '/>/ and s/\>\w+\.(\w+).*/\>$1/' Y55/*.fa
+

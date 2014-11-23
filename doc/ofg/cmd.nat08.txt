@@ -1,0 +1,50 @@
+#----------------------------------------------------------#
+# nat08 style center S288Cvsself
+#----------------------------------------------------------#
+cd /home/wangq/Scripts/alignDB/
+perl init/init_alignDB.pl  -d S288Cvsself_nat08_center
+perl init/gen_alignDB_genome.pl -d S288Cvsself_nat08_center -t "4932,S288C" -a ~/data/alignment/yeast65/S288C --parallel 8
+
+perl ofg/insert_nat08.pl -d S288Cvsself_nat08_center -t gce --style center --batch 1 --parallel 8
+
+perl init/update_sw_cv.pl -d S288Cvsself_nat08_center --batch 1 --parallel 8
+perl init/update_feature.pl -d S288Cvsself_nat08_center -e yeast_65 --batch 1 --parallel 8
+
+# windows
+cd d:\wq\Scripts\alignDB
+perl stat/ofg_stat_factory.pl -d S288Cvsself_nat08_center --server 114.212.202.159
+perl stat/ofg_chart_factory.pl -i S288Cvsself_nat08_center.ofg.xlsx
+
+#----------------------------------------------------------#
+# nat08 style edge S288CvsYJM789
+#----------------------------------------------------------#
+cd /home/wangq/Scripts/alignDB/
+perl init/init_alignDB.pl  -d S288CvsYJM789_nat08_edge
+perl init/gen_alignDB.pl -d S288CvsYJM789_nat08_edge -t "4932,S288C" -q "307796,YJM789" -a ~/data/alignment/yeast65/S288CvsYJM789 -l 10000 --parallel 8
+
+perl ofg/insert_nat08.pl -d S288CvsYJM789_nat08_edge -t gce --style edge --batch 1 --parallel 8
+
+perl init/update_sw_cv.pl -d S288CvsYJM789_nat08_edge --batch 2 --parallel 8
+perl init/update_feature.pl -d S288CvsYJM789_nat08_edge -e yeast_65 --batch 2 --parallel 8
+
+# windows
+cd d:\wq\Scripts\alignDB
+perl stat/ofg_stat_factory.pl -d S288CvsYJM789_nat08_edge --server 114.212.202.159
+perl stat/ofg_chart_factory.pl -i S288CvsYJM789_nat08_edge.ofg.xlsx
+
+#----------------------------------------------------------#
+# nat08 style center S288CvsYJM789
+#----------------------------------------------------------#
+cd /home/wangq/Scripts/alignDB/
+perl init/init_alignDB.pl  -d S288CvsYJM789_nat08_center
+perl init/gen_alignDB.pl -d S288CvsYJM789_nat08_center -t "4932,S288C" -q "307796,YJM789" -a ~/data/alignment/yeast65/S288CvsYJM789 -l 10000 --parallel 8
+
+perl ofg/insert_nat08.pl -d S288CvsYJM789_nat08_center -t gce --style center --batch 2 --parallel 8
+
+perl init/update_sw_cv.pl -d S288CvsYJM789_nat08_center --batch 2 --parallel 8
+perl init/update_feature.pl -d S288CvsYJM789_nat08_center -e yeast_65 --batch 2 --parallel 8
+
+# windows
+cd d:\wq\Scripts\alignDB
+perl stat/ofg_stat_factory.pl -d S288CvsYJM789_nat08_center --server 114.212.202.159
+perl stat/ofg_chart_factory.pl -i S288CvsYJM789_nat08_center.ofg.xlsx

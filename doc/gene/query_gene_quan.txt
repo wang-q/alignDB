@@ -1,0 +1,17 @@
+select 
+    g.gene_stable_id gene,
+    g.gene_feature10 quan,
+    g.gene_feature4 ess,
+    g.gene_feature7 interact,
+    g.gene_feature6 rec,
+    AVG(sw.codingsw_cv) avg_cv,
+    AVG(sw.codingsw_intra_cv) avg_intra_cv
+from
+    gene g, exon e, codingsw sw, window w
+where 1 = 1
+AND g.gene_id = e.gene_id
+AND e.exon_id = sw.exon_id
+AND sw.window_id = w.window_id
+AND sw.codingsw_distance < 0
+AND g.gene_feature10 is not null
+group by g.gene_id

@@ -1,0 +1,365 @@
+#----------------------------------------------------------#
+# prepare
+#----------------------------------------------------------#
+# Athvsself
+perl /home/wangq/Scripts/alignDB/init/init_alignDB.pl  -d Athvsself_tdna
+perl /home/wangq/Scripts/alignDB/init/gen_alignDB_genome.pl -d Athvsself_tdna -t "3702,Ath" --dir /home/wangq/data/alignment/arabidopsis19/ath_65 --length 500000 --parallel 8
+
+# Nipvsself
+perl /home/wangq/Scripts/alignDB/init/init_alignDB.pl  -d Nipvsself_tdna
+perl /home/wangq/Scripts/alignDB/init/gen_alignDB_genome.pl -d Nipvsself_tdna -t "39947,Nip" --dir /home/wangq/data/alignment/rice/nip_65 --length 500000 --parallel 8
+
+# Dmelvsself
+perl /home/wangq/Scripts/alignDB/init/init_alignDB.pl  -d Dmelvsself_transposon
+perl /home/wangq/Scripts/alignDB/init/gen_alignDB_genome.pl -d Dmelvsself_transposon -t "7227,Dmel" --dir /home/wangq/data/alignment/dpgp/Dmel_65/ --length 500000 --parallel 8
+
+# Mousevsself
+perl /home/wangq/Scripts/alignDB/init/init_alignDB.pl  -d Mousevsself_transposon
+perl /home/wangq/Scripts/alignDB/init/gen_alignDB_genome.pl -d Mousevsself_transposon -t "10090,Mouse" --dir /home/wangq/data/alignment/mouse65/mouse/ --length 500000 --parallel 8
+
+# db
+mkdir /home/wangq/data/salk/db
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Athvsself_tdna -f /home/wangq/data/salk/db/Athvsself_tdna.dump.sql
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Nipvsself_tdna -f /home/wangq/data/salk/db/Nipvsself_tdna.dump.sql
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Dmelvsself_transposon -f /home/wangq/data/salk/db/Dmelvsself_transposon.dump.sql
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Mousevsself_transposon -f /home/wangq/data/salk/db/Mousevsself_transposon.dump.sql
+
+# AthvsXVIIIpop
+perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
+    -d AthvsXVIIIpop --block \
+    --id /home/wangq/data/alignment/arabidopsis19/id2name.csv \
+    --dir /home/wangq/data/alignment/arabidopsis19/AthvsXVIIIpop_mft \
+    -lt 5000 --parallel 8 --run 1-5
+
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d AthvsXVIIIpop -f /home/wangq/data/salk/db/AthvsXVIIIpop_tdna.dump.sql
+
+# AthvsXIX
+perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
+    -d AthvsXIX --block --outgroup \
+    --id /home/wangq/data/alignment/arabidopsis19/id2name.csv \
+    --dir /home/wangq/data/alignment/arabidopsis19/AthvsXIX_mft \
+    -lt 5000 --parallel 8 --run 1-5
+
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d AthvsXIX -f /home/wangq/data/salk/db/AthvsXIX_tdna.dump.sql
+
+# DmelvsXXII
+perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
+    -d DmelvsXXII --block --outgroup \
+    --id /home/wangq/data/alignment/dpgp/id2name.csv \
+    --dir  /home/wangq/data/alignment/dpgp/DmelvsXXII_mft  \
+    -lt 5000 --parallel 8 --run 1-5
+
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d DmelvsXXII -f /home/wangq/data/salk/db/DmelvsXXII_transposon.dump.sql
+
+# MousevsXIIS
+perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
+    -d MousevsXIIS -e mouse_65 \
+    --outgroup \
+    --block --id /home/wangq/data/alignment/mouse65/id2name.csv \
+    -da /home/wangq/data/alignment/mouse65/MousevsXIIS_mft  \
+    -lt 5000 --parallel 12 --run 1-5
+
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d MousevsXIIS -f /home/wangq/data/salk/db/MousevsXIIS_transposon.dump.sql
+
+# MousevsXI_pop
+perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
+    -d MousevsXI_pop -e mouse_65 \
+    --block --id /home/wangq/data/alignment/mouse65/id2name.csv \
+    -da /home/wangq/data/alignment/mouse65/MousevsXI_pop_mft  \
+    -lt 5000 --parallel 16 --run 1-5
+
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d MousevsXI_pop -f /home/wangq/data/salk/db/MousevsXI_pop_transposon.dump.sql
+
+# MousevsIV_pop
+perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
+    -d MousevsIV_pop -e mouse_65 \
+    --block --id /home/wangq/data/alignment/mouse65/id2name.csv \
+    -da /home/wangq/data/alignment/mouse65/MousevsIV_pop_mft  \
+    -lt 5000 --parallel 16 --run 1-5
+
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d MousevsIV_pop -f /home/wangq/data/salk/db/MousevsIV_pop_transposon.dump.sql
+
+# NipvsXXIV
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d NipvsXXIV -f /home/wangq/data/salk/db/NipvsXXIV_tdna.dump.sql
+
+#----------------------------------------------------------#
+# tdna to bed
+#----------------------------------------------------------#
+cd ~/Scripts/alignDB/
+
+mkdir /home/wangq/data/salk/process
+
+mkdir /home/wangq/data/salk/process/ath
+for name in CMT CSHL FLAG GABI IMAL MX RATM SAIL SALK SK WISC
+do
+    echo $name;
+    perl ofg/tnda2bed.pl -f ~/data/salk/database/tdnaexpress/T-DNA.$name -o ~/data/salk/process/ath/T-DNA.$name.bed;
+done
+
+perl ofg/tnda2bed.pl -f ~/data/salk/database/tdnaexpress/T-DNA.SALK -o ~/data/salk/process/ath/T-DNA.SALK.bed
+perl ofg/tnda2bed.pl -f ~/data/salk/database/tdnaexpress/T-DNA.SAIL -o ~/data/salk/process/ath/T-DNA.SAIL.bed
+perl ofg/tnda2bed.pl -f ~/data/salk/database/tdnaexpress/T-DNA.FLAG -o ~/data/salk/process/ath/T-DNA.FLAG.bed
+perl ofg/tnda2bed.pl -f ~/data/salk/database/tdnaexpress/T-DNA.GABI -o ~/data/salk/process/ath/T-DNA.GABI.bed
+
+mkdir /home/wangq/data/salk/process/nip
+for name in affjp cirad csiro genoplante gsnu ostid PFG_FSTs rifgp rmd ship trim ucd
+do
+    echo $name;
+    perl ofg/tnda2bed.pl -f ~/data/salk/database/RiceGE/T-DNA.$name -o ~/data/salk/process/nip/T-DNA.$name.bed;
+done
+
+
+
+#----------------------------#
+# fly
+#----------------------------#
+manually create .bed file from http://flypush.imgen.bcm.tmc.edu/pscreen/files/MI-list-2013-04-08.xls (http://flypush.imgen.bcm.tmc.edu/pscreen/)
+~/data/salk/process/fly/MI.bed
+
+cd /home/wangq/data/salk/process/fly
+perl -an -e '$F[0] =~ /het/i and next;$F[0] =~ /chr(2L|2R|3L|3R|X)/i or next;print qq{$F[0]\t$F[1]\t$F[2]\n}' EY_Bellen_2011_UCSC_bed.txt > EY.bed
+perl -an -e '$F[0] =~ /het/i and next;$F[0] =~ /chr(2L|2R|3L|3R|X)/i or next;print qq{$F[0]\t$F[1]\t$F[2]\n}' MB_Bellen_2011_UCSC_bed.txt > MB.bed
+perl -an -e '$F[0] =~ /het/i and next;$F[0] =~ /chr(2L|2R|3L|3R|X)/i or next;print qq{$F[0]\t$F[1]\t$F[2]\n}' PiggyBac_Bellen_2011.bed.txt > PiggyBac.bed
+
+
+
+#----------------------------#
+# mouse
+#----------------------------#
+manually create .bed file from AvailablePBLines.xls (http://idm.fudan.edu.cn/PBmice/UploadPBLines.do?submit=download   register needed)
+remove data on chromosome N_random and Y
+
+~/data/salk/process/mouse/piggybac.bed
+
+TRACER DATABASE
+Dataset   : all public data in the database
+Line count: 1928
+Dump time : 2013-09-25 18:59:12
+
+perl -an -e 'length >= 60 or next; $F[1] =~ /UNK/i and next; print qq{$F[1]\t$F[2]\t$F[2]\n}' ~/data/salk/process/mouse/tracer_dump.txt >  ~/data/salk/process/mouse/SB.bed
+
+#----------------------------------------------------------#
+# style center | Athvsself
+#----------------------------------------------------------#
+cd ~/Scripts/alignDB/
+
+# Athvsself_tdna
+parallel=16
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/salk/db/Athvsself_tdna.dump.sql -g Athvsself_tdna
+
+perl /home/wangq/Scripts/alignDB/ofg/insert_bed.pl -d Athvsself_tdna  --style center --batch 10 --parallel $parallel \
+    --tag tdna --type CMT  -f ~/data/salk/process/ath/T-DNA.CMT.bed  \
+    --tag tdna --type CSHL -f ~/data/salk/process/ath/T-DNA.CSHL.bed \
+    --tag tdna --type FLAG -f ~/data/salk/process/ath/T-DNA.FLAG.bed \
+    --tag tdna --type GABI -f ~/data/salk/process/ath/T-DNA.GABI.bed \
+    --tag tdna --type IMAL -f ~/data/salk/process/ath/T-DNA.IMAL.bed \
+    --tag tdna --type MX   -f ~/data/salk/process/ath/T-DNA.MX.bed   \
+    --tag tdna --type RATM -f ~/data/salk/process/ath/T-DNA.RATM.bed \
+    --tag tdna --type SAIL -f ~/data/salk/process/ath/T-DNA.SAIL.bed \
+    --tag tdna --type SALK -f ~/data/salk/process/ath/T-DNA.SALK.bed \
+    --tag tdna --type SK   -f ~/data/salk/process/ath/T-DNA.SK.bed   \
+    --tag tdna --type WISC -f ~/data/salk/process/ath/T-DNA.WISC.bed
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d Athvsself_tdna --batch 10 --parallel $parallel
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d Athvsself_tdna -e ath_65 --batch 10 --parallel $parallel
+
+perl /home/wangq/Scripts/alignDB/stat/ofg_stat_factory.pl --by tt -d Athvsself_tdna -o Athvsself_tdna.ofg.xlsx
+parallel=
+
+# windows
+cd /d d:\wq\Scripts\alignDB
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg="insert sites" -i Athvsself_tdna.ofg.xlsx
+
+# AthvsXIX
+parallel=16
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/salk/db/AthvsXIX_tdna.dump.sql -g AthvsXIX_tdna
+
+perl /home/wangq/Scripts/alignDB/ofg/insert_bed.pl -d AthvsXIX_tdna  --style center --batch 10 --parallel $parallel \
+    --tag tdna --type CMT -f ~/data/salk/process/ath/T-DNA.CMT.bed \
+    --tag tdna --type CSHL -f ~/data/salk/process/ath/T-DNA.CSHL.bed \
+    --tag tdna --type FLAG -f ~/data/salk/process/ath/T-DNA.FLAG.bed \
+    --tag tdna --type GABI -f ~/data/salk/process/ath/T-DNA.GABI.bed \
+    --tag tdna --type IMAL -f ~/data/salk/process/ath/T-DNA.IMAL.bed \
+    --tag tdna --type MX -f ~/data/salk/process/ath/T-DNA.MX.bed \
+    --tag tdna --type RATM -f ~/data/salk/process/ath/T-DNA.RATM.bed \
+    --tag tdna --type SAIL -f ~/data/salk/process/ath/T-DNA.SAIL.bed \
+    --tag tdna --type SALK -f ~/data/salk/process/ath/T-DNA.SALK.bed \
+    --tag tdna --type SK -f ~/data/salk/process/ath/T-DNA.SK.bed \
+    --tag tdna --type WISC -f ~/data/salk/process/ath/T-DNA.WISC.bed
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d AthvsXIX_tdna --batch 10 --parallel $parallel
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d AthvsXIX_tdna -e ath_65 --batch 10 --parallel $parallel
+
+perl /home/wangq/Scripts/alignDB/stat/ofg_stat_factory.pl --by tt -d AthvsXIX_tdna -o AthvsXIX_tdna.ofg.xlsx
+parallel=
+
+# windows
+cd /d d:\wq\Scripts\alignDB
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg="insert sites" -i AthvsXIX_tdna.ofg.xlsx
+
+# AthvsXVIIIpop
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/salk/db/AthvsXVIIIpop_tdna.dump.sql -g AthvsXVIIIpop_tdna
+
+perl /home/wangq/Scripts/alignDB/ofg/insert_bed.pl -d AthvsXVIIIpop_tdna  --style center --batch 10 --parallel 8 \
+    --tag tdna --type SAIL -f ~/data/salk/process/ath/T-DNA.SAIL.bed \
+    --tag tdna --type SALK -f ~/data/salk/process/ath/T-DNA.SALK.bed \
+    --tag tdna --type FLAG -f ~/data/salk/process/ath/T-DNA.FLAG.bed \
+    --tag tdna --type GABI -f ~/data/salk/process/ath/T-DNA.GABI.bed
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d AthvsXVIIIpop_tdna --batch 10 --parallel 8
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d AthvsXVIIIpop_tdna -e ath_65 --batch 10 --parallel 8
+
+perl /home/wangq/Scripts/alignDB/stat/ofg_stat_factory.pl --by tt -d AthvsXVIIIpop_tdna -o AthvsXVIIIpop_tdna.ofg.xlsx
+
+
+#----------------------------#
+# Nip
+#----------------------------#
+
+# Nipvsself
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/salk/db/Nipvsself_tdna.dump.sql -g Nipvsself_tdna
+
+perl /home/wangq/Scripts/alignDB/ofg/insert_bed.pl -d Nipvsself_tdna --style center --batch 10 --parallel 12 \
+    --tag tdna --type affjp -f ~/data/salk/process/nip/T-DNA.affjp.bed \
+    --tag tdna --type cirad -f ~/data/salk/process/nip/T-DNA.cirad.bed \
+    --tag tdna --type csiro -f ~/data/salk/process/nip/T-DNA.csiro.bed \
+    --tag tdna --type genoplante -f ~/data/salk/process/nip/T-DNA.genoplante.bed \
+    --tag tdna --type gsnu -f ~/data/salk/process/nip/T-DNA.gsnu.bed \
+    --tag tdna --type ostid -f ~/data/salk/process/nip/T-DNA.ostid.bed \
+    --tag tdna --type PFG_FSTs -f ~/data/salk/process/nip/T-DNA.PFG_FSTs.bed \
+    --tag tdna --type rifgp -f ~/data/salk/process/nip/T-DNA.rifgp.bed \
+    --tag tdna --type rmd -f ~/data/salk/process/nip/T-DNA.rmd.bed \
+    --tag tdna --type ship -f ~/data/salk/process/nip/T-DNA.ship.bed \
+    --tag tdna --type trim -f ~/data/salk/process/nip/T-DNA.trim.bed \
+    --tag tdna --type ucd -f ~/data/salk/process/nip/T-DNA.ucd.bed
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d Nipvsself_tdna --batch 10 --parallel 12
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d Nipvsself_tdna -e nip_65 --batch 10 --parallel 12
+
+perl /home/wangq/Scripts/alignDB/stat/ofg_stat_factory.pl --by tt -d Nipvsself_tdna -o Nipvsself_tdna.ofg.xlsx
+
+# windows
+cd /d d:\wq\Scripts\alignDB
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg="insert sites" -i Nipvsself_tdna.ofg.xlsx
+
+# NipvsXXIV
+
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/salk/db/NipvsXXIV_tdna.dump.sql -g NipvsXXIV_tdna
+
+perl /home/wangq/Scripts/alignDB/ofg/insert_bed.pl -d NipvsXXIV_tdna --style center --batch 10 --parallel 12 \
+    --tag tdna --type affjp -f ~/data/salk/process/nip/T-DNA.affjp.bed \
+    --tag tdna --type cirad -f ~/data/salk/process/nip/T-DNA.cirad.bed \
+    --tag tdna --type csiro -f ~/data/salk/process/nip/T-DNA.csiro.bed \
+    --tag tdna --type genoplante -f ~/data/salk/process/nip/T-DNA.genoplante.bed \
+    --tag tdna --type gsnu -f ~/data/salk/process/nip/T-DNA.gsnu.bed \
+    --tag tdna --type ostid -f ~/data/salk/process/nip/T-DNA.ostid.bed \
+    --tag tdna --type PFG_FSTs -f ~/data/salk/process/nip/T-DNA.PFG_FSTs.bed \
+    --tag tdna --type rifgp -f ~/data/salk/process/nip/T-DNA.rifgp.bed \
+    --tag tdna --type rmd -f ~/data/salk/process/nip/T-DNA.rmd.bed \
+    --tag tdna --type ship -f ~/data/salk/process/nip/T-DNA.ship.bed \
+    --tag tdna --type trim -f ~/data/salk/process/nip/T-DNA.trim.bed \
+    --tag tdna --type ucd -f ~/data/salk/process/nip/T-DNA.ucd.bed
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d NipvsXXIV_tdna --batch 10 --parallel 12
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d NipvsXXIV_tdna -e nip_65 --batch 10 --parallel 12
+
+perl /home/wangq/Scripts/alignDB/stat/ofg_stat_factory.pl --by tt -d NipvsXXIV_tdna -o NipvsXXIV_tdna.ofg.xlsx
+
+# windows
+cd /d d:\wq\Scripts\alignDB
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg="insert sites" -i NipvsXXIV_tdna.ofg.xlsx
+
+#----------------------------#
+# fly
+#----------------------------#
+# Dmelvsself_transposon
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/salk/db/Dmelvsself_transposon.dump.sql -g Dmelvsself_transposon_gdp
+
+perl /home/wangq/Scripts/alignDB/ofg/insert_bed.pl -d Dmelvsself_transposon_gdp  --style center --batch 10 --parallel 4 \
+    --tag transposon --type EY -f ~/data/salk/process/fly/EY.bed \
+    --tag transposon --type MB -f ~/data/salk/process/fly/MB.bed \
+    --tag transposon --type MI -f ~/data/salk/process/fly/MI.bed \
+    --tag transposon --type PiggyBac -f ~/data/salk/process/fly/PiggyBac.bed
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d Dmelvsself_transposon_gdp --batch 10 --parallel 4
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d Dmelvsself_transposon_gdp -e fly_65 --batch 10 --parallel 4
+
+# DmelvsXXII_transposon
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/salk/db/DmelvsXXII_transposon.dump.sql -g DmelvsXXII_transposon_gdp
+
+perl /home/wangq/Scripts/alignDB/ofg/insert_bed.pl -d DmelvsXXII_transposon_gdp  --style center --batch 10 --parallel 4 \
+    --tag transposon --type EY -f ~/data/salk/process/fly/EY.bed \
+    --tag transposon --type MB -f ~/data/salk/process/fly/MB.bed \
+    --tag transposon --type MI -f ~/data/salk/process/fly/MI.bed \
+    --tag transposon --type PiggyBac -f ~/data/salk/process/fly/PiggyBac.bed
+
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d DmelvsXXII_transposon_gdp --batch 10 --parallel 4
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d DmelvsXXII_transposon_gdp -e fly_65 --batch 10 --parallel 4
+
+
+# windows
+cd /d d:\wq\Scripts\alignDB
+perl stat/ofg_stat_factory.pl --by tt -d Dmelvsself_transposon_gdp --server 114.212.202.159 -o Dmelvsself_transposon_gdp.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg="insert sites" -i Dmelvsself_transposon_gdp.ofg.xlsx
+
+perl stat/ofg_stat_factory.pl --by tt -d DmelvsXXII_transposon_gdp --server 114.212.202.159 -o DmelvsXXII_transposon_gdp.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg="insert sites" -i DmelvsXXII_transposon_gdp.ofg.xlsx
+
+
+#----------------------------#
+# Mouse
+#----------------------------#
+# Mousevsself_transposon
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/salk/db/Mousevsself_transposon.dump.sql -g Mousevsself_transposon
+
+perl /home/wangq/Scripts/alignDB/ofg/insert_bed.pl -d Mousevsself_transposon  --style center --batch 50 --parallel 12 \
+    --tag transposon --type PiggyBac -f ~/data/salk/process/mouse/piggybac.bed \
+    --tag transposon --type SB -f ~/data/salk/process/mouse/SB.bed
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d Mousevsself_transposon --batch 50 --parallel 12
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d Mousevsself_transposon -e mouse_65 --batch 50 --parallel 12
+
+# MousevsXIIS_transposon
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/salk/db/MousevsXIIS_transposon.dump.sql -g MousevsXIIS_transposon
+
+perl /home/wangq/Scripts/alignDB/ofg/insert_bed.pl -d MousevsXIIS_transposon  --style center --batch 50 --parallel 12 \
+    --tag transposon --type PiggyBac -f ~/data/salk/process/mouse/piggybac.bed \
+    --tag transposon --type SB -f ~/data/salk/process/mouse/SB.bed
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d MousevsXIIS_transposon --batch 50 --parallel 12
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d MousevsXIIS_transposon -e mouse_65 --batch 50 --parallel 12
+
+# MousevsXI_pop_transposon
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/salk/db/MousevsXI_pop_transposon.dump.sql -g MousevsXI_pop_transposon
+
+perl /home/wangq/Scripts/alignDB/ofg/insert_bed.pl -d MousevsXI_pop_transposon  --style center --batch 50 --parallel 12 \
+    --tag transposon --type PiggyBac -f ~/data/salk/process/mouse/piggybac.bed \
+    --tag transposon --type SB -f ~/data/salk/process/mouse/SB.bed
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d MousevsXI_pop_transposon --batch 50 --parallel 12
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d MousevsXI_pop_transposon -e mouse_65 --batch 50 --parallel 12
+
+# MousevsIV_pop_transposon
+perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/salk/db/MousevsIV_pop_transposon.dump.sql -g MousevsIV_pop_transposon
+
+perl /home/wangq/Scripts/alignDB/ofg/insert_bed.pl -d MousevsIV_pop_transposon  --style center --batch 50 --parallel 12 \
+    --tag transposon --type PiggyBac -f ~/data/salk/process/mouse/piggybac.bed \
+    --tag transposon --type SB -f ~/data/salk/process/mouse/SB.bed
+
+perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d MousevsIV_pop_transposon --batch 50 --parallel 12
+perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d MousevsIV_pop_transposon -e mouse_65 --batch 50 --parallel 12
+
+
+# windows
+perl d:/wq/Scripts/alignDB/stat/ofg_stat_factory.pl --by tt -d Mousevsself_transposon --server 114.212.202.159 -o Mousevsself_transposon.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg="insert sites" -i Mousevsself_transposon.ofg.xlsx
+
+perl d:/wq/Scripts/alignDB/stat/ofg_stat_factory.pl --by tt -d MousevsXIIS_transposon --server 114.212.202.159 -o MousevsXIIS_transposon.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg="insert sites" -i MousevsXIIS_transposon.ofg.xlsx
+
+perl d:/wq/Scripts/alignDB/stat/ofg_stat_factory.pl --by tt -d MousevsXI_pop_transposon --server 114.212.202.159 -o MousevsXI_pop_transposon.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg="insert sites" -i MousevsXI_pop_transposon.ofg.xlsx
+
+perl d:/wq/Scripts/alignDB/stat/ofg_stat_factory.pl --by tt -d MousevsIV_pop_transposon --server 114.212.202.159 -o MousevsIV_pop_transposon.ofg.xlsx
+perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg="insert sites" -i MousevsIV_pop_transposon.ofg.xlsx

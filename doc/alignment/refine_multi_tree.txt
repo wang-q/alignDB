@@ -1,0 +1,125 @@
+
+#----------------------------#
+# mouse 12
+#----------------------------#
+cd ~/data/alignment/mouse65/
+
+~/share/phast/bin/tree_doctor 17way.nwk --newick  \
+    --prune PWK_Ph,CAST_Ei,129S5,129S1_SvImJ \
+    > temp1.nwk
+
+~/share/phast/bin/tree_doctor temp1.nwk --newick \
+    --rename "mouse -> C57BL_6J ; Spretus_Ei -> Mus_spretus" \
+    > temp2.nwk
+
+mv temp2.nwk ../multi_tree/mouse_13way.nwk
+rm temp[0-9].nwk
+
+#----------------------------#
+# arabidopsis 19
+#----------------------------#
+cd ~/data/alignment/arabidopsis19/
+
+~/share/phast/bin/tree_doctor 20way.nwk --newick \
+    --rename "ath_65 -> Col_0 ; lyrata_65 -> Arabidopsis_lyrata" \
+    > temp1.nwk
+
+mv temp1.nwk ../multi_tree/arabidopsis_20way.nwk
+rm temp[0-9].nwk
+
+#----------------------------#
+# yeast 8
+#----------------------------#
+cd ~/data/alignment/yeast_combine/
+
+~/share/phast/bin/tree_doctor 17way_ml.nwk --newick  \
+    --prune-all-but S288C,Spar,RM11,YJM789,EC1118,JAY291,Kyokai_no__7,Sigma1278b,T7 \
+    > temp1.nwk
+
+~/share/phast/bin/tree_doctor temp1.nwk --newick \
+    --rename "S288C -> S288c ; RM11 -> RM11_1a ; Spar -> Saccharomyces_paradoxus" \
+    > temp2.nwk
+
+mv temp2.nwk ../multi_tree/yeast_9way.nwk
+rm temp[0-9].nwk
+
+#----------------------------#
+# primates 4
+#----------------------------#
+cd ~/data/alignment/primates/
+
+~/share/phast/bin/tree_doctor primates_11way.nwk --newick  \
+    --prune-all-but human,chimp,gorilla,orangutan,rhesus \
+    > temp1.nwk
+
+mv temp1.nwk ../multi_tree/primates_5way.nwk
+rm temp[0-9].nwk
+
+#----------------------------#
+# japonica 24
+#----------------------------#
+cd ~/data/alignment/rice/
+
+gzip -d -c /home/wangq/data/alignment/rice/NipvsXXIV/chr12.synNet.maf.gz > /home/wangq/data/alignment/rice/NipvsXXIV/chr12.synNet.maf
+perl /home/wangq/Scripts/alignDB/util/maf2fasta.pl \
+    --has_outgroup --id 39947 -p 8 \
+    -i /home/wangq/data/alignment/rice/NipvsXXIV \
+    -o /home/wangq/data/alignment/rice/NipvsXXIV_fasta
+
+find /home/wangq/data/alignment/rice/NipvsXXIV_fasta -type f -size -100k | xargs rm
+
+perl /home/wangq/Scripts/alignDB/util/refine_fasta.pl \
+    --msa mafft -p 8 \
+    -i /home/wangq/data/alignment/rice/NipvsXXIV_fasta \
+    -o /home/wangq/data/alignment/rice/NipvsXXIV_fasta_mft
+
+perl /home/wangq/Scripts/tool/catfasta2phyml.pl -f /home/wangq/data/alignment/rice/NipvsXXIV_fasta_mft/*.fas > /home/wangq/data/alignment/rice/all.fasta
+
+rm /home/wangq/data/alignment/rice/NipvsXXIV/chr12.synNet.maf
+rm -fr /home/wangq/data/alignment/rice/NipvsXXIV_fasta
+rm -fr /home/wangq/data/alignment/rice/NipvsXXIV_fasta_mft
+
+# use MEGA to contruct NJ tree
+# rice_25way.nwk
+
+~/share/phast/bin/tree_doctor rice_25way.nwk --newick \
+    --rename "nip_65 -> Nipponbare ; 9311_65 -> Oryza_sativa_Indica_Group" \
+    > temp1.nwk
+
+mv temp1.nwk ../multi_tree/rice_25way.nwk
+rm temp[0-9].nwk
+
+#----------------------------#
+# fly 22
+#----------------------------#
+cd ~/data/alignment/dpgp/
+
+gzip -d -c /home/wangq/data/alignment/dpgp/DmelvsXXII/chr2L.synNet.maf.gz > /home/wangq/data/alignment/dpgp/DmelvsXXII/chr2L.synNet.maf
+perl /home/wangq/Scripts/alignDB/util/maf2fasta.pl \
+    --has_outgroup --id 7227 -p 8 \
+    -i /home/wangq/data/alignment/dpgp/DmelvsXXII \
+    -o /home/wangq/data/alignment/dpgp/DmelvsXXII_fasta
+
+find /home/wangq/data/alignment/dpgp/DmelvsXXII_fasta -type f -size -200k | xargs rm
+
+perl /home/wangq/Scripts/alignDB/util/refine_fasta.pl \
+    --msa mafft -p 8 \
+    -i /home/wangq/data/alignment/dpgp/DmelvsXXII_fasta \
+    -o /home/wangq/data/alignment/dpgp/DmelvsXXII_fasta_mft
+
+perl /home/wangq/Scripts/tool/catfasta2phyml.pl -f /home/wangq/data/alignment/dpgp/DmelvsXXII_fasta_mft/*.fas > /home/wangq/data/alignment/dpgp/all.fasta
+
+rm /home/wangq/data/alignment/dpgp/DmelvsXXII/chr2L.synNet.maf
+rm -fr /home/wangq/data/alignment/dpgp/DmelvsXXII_fasta
+rm -fr /home/wangq/data/alignment/dpgp/DmelvsXXII_fasta_mft
+
+# use MEGA to contruct NJ tree
+# fly_23way.nwk
+
+~/share/phast/bin/tree_doctor fly_23way.nwk --newick \
+    --rename "Dmel_65 -> Drosophila_melanogaster ; Dsim_65 -> Drosophila_simulans" \
+    > temp1.nwk
+
+mv temp1.nwk ../multi_tree/fly_23way.nwk
+rm temp[0-9].nwk
+
