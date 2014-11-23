@@ -26,11 +26,11 @@ my $stopwatch = AlignDB::Stopwatch->new(
 );
 
 # Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+my $db       = $Config->{database}{db};
 
 my $init_sql = "$FindBin::Bin/../init.sql";
 
@@ -38,14 +38,14 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'init_sql=s' => \$init_sql,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=i'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'i|init_sql=s' => \$init_sql,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -54,16 +54,24 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 # call mysql
 #----------------------------------------------------------#
-my $cmd    = "mysql -h$server -P$port -u$username -p$password ";
-my $drop   = "-e \"DROP DATABASE IF EXISTS $db;\"";
-my $create = "-e \"CREATE DATABASE $db;\"";
+{
+    $stopwatch->block_message("Create DB skeleton");
 
-print "#drop\n" . "$cmd $drop\n";
-system("$cmd $drop");
-print "#create\n" . "$cmd $create\n";
-system("$cmd $create");
-print "#init\n" . "$cmd $db < $init_sql\n";
-system("$cmd $db < $init_sql");
+    my $drh = DBI->install_driver("mysql");    # Driver handle object
+    $drh->func( 'dropdb',   $db, $server, $username, $password, 'admin' );
+    $drh->func( 'createdb', $db, $server, $username, $password, 'admin' );
+
+    #$drh->func( 'reload',   $db, $server, $username, $password, 'admin' );
+
+    my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
+    open my $infh, '<', $init_sql;
+    my $content = do { local $/; <$infh> };
+    close $infh;
+    my @statements = grep {/\w/} split /;/, $content;
+    for (@statements) {
+        $dbh->do($_) or die $dbh->errstr;
+    }
+}
 
 #----------------------------------------------------------#
 # init object
@@ -104,15 +112,11 @@ my $dbh = $obj->dbh;
         }
     );
     $query_sth->execute;
-    while ( my $ref = $query_sth->fetchrow_hashref() ) {
-        my $taxon_id    = $ref->{'taxon_id'};
-        my $genus       = $ref->{'genus'};
-        my $species     = $ref->{'species'};
-        my $common_name = $ref->{'common_name'};
-        print "Found a row: taxon_id = $taxon_id, "
-            . "genus = $genus, "
-            . "species = $species, "
-            . "common_name = $common_name\n";
+    while ( my $ref = $query_sth->fetchrow_hashref ) {
+        printf "Found a row: taxon_id = %s, genus = %s,"
+            . " species = %s, common_name = %s\n",
+            $ref->{taxon_id},
+            $ref->{genus}, $ref->{species}, $ref->{common_name};
     }
     $query_sth->finish;
 }
@@ -135,27 +139,35 @@ my $dbh = $obj->dbh;
     $insert_sth->execute;
     $insert_sth->finish;
 
-    # Now retrieve data from the table.
-    my $sth = $dbh->prepare("SELECT * FROM chromosome");
-    $sth->execute;
-    while ( my $ref = $sth->fetchrow_hashref() ) {
-        my $taxon_id   = $ref->{'taxon_id'};
-        my $chr_name   = $ref->{'chr_name'};
-        my $chr_length = $ref->{'chr_length'};
+    # Now retrieve data from the table
+    my $query_sth = $dbh->prepare(
+        q{
+        SELECT *
+        FROM chromosome
+        }
+    );
+    $query_sth->execute;
+    while ( my $ref = $query_sth->fetchrow_hashref ) {
+        my $taxon_id = $ref->{taxon_id};
         if ( defined $taxon_id and $taxon_id == 31033 ) {
-            print "Found a row: taxon_id = $taxon_id, "
-                . "chr_name = $chr_name, "
-                . "chr_length = $chr_length\n";
+            printf "Found a row: taxon_id = %s,"
+                . " chr_name = %s, chr_length = %s\n",
+                $ref->{taxon_id}, $ref->{chr_name}, $ref->{chr_length};
         }
     }
-    $sth->finish;
+    $query_sth->finish;
 }
 
 $stopwatch->end_message;
 
 # store program running meta info to database
+# this AlignDB object is just for storing meta info
 END {
-    $obj->add_meta_stopwatch($stopwatch);
+    AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    )->add_meta_stopwatch($stopwatch);
 }
 
 __END__
@@ -177,7 +189,7 @@ __END__
         --username      username
         --password      password
         --init_sql      init sql filename
-      
+
 =head1 OPTIONS
 
 =over 8
