@@ -66,6 +66,9 @@ if ($file_dump) {
         print "#dump\n$dump\n\n";
         system($dump);
     }
+    else {
+        print "[$file_dump] exists!\n";
+    }
 }
 else {
     $file_dump = $db . ".dump.sql";
