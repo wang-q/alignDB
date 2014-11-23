@@ -1139,6 +1139,7 @@ my $di_dn_ttest = sub {
             WHERE i.indel_id = s.isw_indel_id
             AND s.isw_distance >= 0
             AND s.isw_d_indel IS NOT NULL 
+            AND (s.isw_d_indel + s.isw_d_noindel != 0)
             AND s.isw_distance IN 
         };
 
@@ -1292,6 +1293,7 @@ my $di_dn_ttest_nonslippage = sub {
             AND s.isw_distance >= 0
             AND s.isw_d_indel IS NOT NULL 
             AND i.indel_slippage = 0
+            AND (s.isw_d_indel + s.isw_d_noindel != 0)
             AND s.isw_distance IN 
         };
         my %option = (
