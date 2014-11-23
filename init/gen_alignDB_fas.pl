@@ -39,7 +39,8 @@ my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
 # dir of alignments
-my $dir_align        = '';
+my $dir_align = '';
+
 # alignments have an outgroup
 my $outgroup;
 
@@ -61,21 +62,21 @@ my $help = 0;
 my $man  = 0;
 
 GetOptions(
-    'help|?'        => \$help,
-    'man'           => \$man,
-    's|server=s'    => \$server,
-    'P|port=i'      => \$port,
-    'u|username=s'  => \$username,
-    'p|password=s'  => \$password,
-    'd|db=s'        => \$db,
+    'help|?'             => \$help,
+    'man'                => \$man,
+    's|server=s'         => \$server,
+    'P|port=i'           => \$port,
+    'u|username=s'       => \$username,
+    'p|password=s'       => \$password,
+    'd|db=s'             => \$db,
     'da|dir|dir_align=s' => \$dir_align,
-    'o|outgroup'    => \$outgroup,
-    'l|lt|length=i' => \$length_threshold,
-    'id|id_of=s'    => \$file_id_of,
-    'block'         => \$block,
-    'parallel=i'    => \$parallel,
-    'batch=i'       => \$batch_number,
-    'gzip'          => \$gzip,
+    'o|outgroup'         => \$outgroup,
+    'l|lt|length=i'      => \$length_threshold,
+    'id|id_of=s'         => \$file_id_of,
+    'block'              => \$block,
+    'parallel=i'         => \$parallel,
+    'batch=i'            => \$batch_number,
+    'gzip'               => \$gzip,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;

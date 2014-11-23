@@ -50,15 +50,15 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'parallel=i' => \$parallel,
-    'batch=i'    => \$batch_number,
+    'help|?'       => \$help,
+    'man'          => \$man,
+    's|server=s'   => \$server,
+    'P|port=i'     => \$port,
+    'd|db=s'       => \$db,
+    'u|username=s' => \$username,
+    'p|password=s' => \$password,
+    'parallel=i'   => \$parallel,
+    'batch=i'      => \$batch_number,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;

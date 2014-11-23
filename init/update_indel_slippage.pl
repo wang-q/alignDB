@@ -207,8 +207,13 @@ my $dbh = $obj->dbh;
 $stopwatch->end_message;
 
 # store program running meta info to database
+# this AlignDB object is just for storing meta info
 END {
-    $obj->add_meta_stopwatch($stopwatch);
+    AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    )->add_meta_stopwatch($stopwatch);
 }
 exit;
 

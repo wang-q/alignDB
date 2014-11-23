@@ -71,7 +71,7 @@ GetOptions(
     'da|dir|dir_align=s' => \$dir_align,
     'target=s'           => \$target,
     'query=s'            => \$query,
-    'l|lt|length=i'        => \$length_threshold,
+    'l|lt|length=i'      => \$length_threshold,
     'parallel=i'         => \$parallel,
     'gzip'               => \$gzip,
 ) or pod2usage(2);
