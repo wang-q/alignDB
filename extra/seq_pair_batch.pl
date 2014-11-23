@@ -31,6 +31,12 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
+# Database init values
+my $server   = $Config->{database}{server};
+my $port     = $Config->{database}{port};
+my $username = $Config->{database}{username};
+my $password = $Config->{database}{password};
+
 my $length_threshold = $Config->{generate}{length_threshold};
 
 # running options
@@ -52,15 +58,19 @@ my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'             => \$help,
-    'man'                => \$man,
-    'b|bz=s'             => \$bz_path,
-    'p|parallel=i'       => \$parallel,
-    'batch=i'            => \$batch_number,
+    'help|?'                => \$help,
+    'man'                   => \$man,
+    's|server=s'            => \$server,
+    'P|port=i'              => \$port,
+    'u|username=s'          => \$username,
+    'p|password=s'          => \$password,
+    'bz=s'                  => \$bz_path,
+    'parallel=i'            => \$parallel,
+    'batch=i'               => \$batch_number,
     'lt|length_threshold=i' => \$length_threshold,
-    'f|pair_file=s'      => \$pair_file,
-    'd|dir_as_taxon=s'   => \$dir_as_taxon,
-    'r|run=s'            => \$task,
+    'f|pair_file=s'         => \$pair_file,
+    'dir_as_taxon'          => \$dir_as_taxon,
+    'r|run=s'               => \$task,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -115,22 +125,44 @@ my $worker = sub {
         0 => "perl $bz_path/bz.pl"
             . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
             . " -s set01 --parallel [% parallel %] -pb lastz --lastz",
-        1 => "perl $FindBin::Bin/../init/init_alignDB.pl" . " --db [% db %] ",
+        1 => "perl $FindBin::Bin/../init/init_alignDB.pl"
+            . " -s $server"
+            . " --port $port"
+            . " -u $username"
+            . " --password $password"
+            . " -d $db",
         2 => "perl $FindBin::Bin/../init/gen_alignDB.pl"
-            . " --db [% db %]"
-            . " -da [% ldir %] [% tq %]"
+            . " -s $server"
+            . " --port $port"
+            . " -u $username"
+            . " --password $password"
+            . " -d $db"
+            . " -da [% ldir %]"
+            . " [% tq %]"
             . " --length   [% lt %]"
-            . " --parallel [% parallel %]",
+            . " --parallel $parallel",
         5 => "perl $FindBin::Bin/../init/insert_isw.pl"
-            . " --db [% db %]"
-            . " --parallel [% parallel %]"
-            . " --batch    [% batch %]",
+            . " -s $server"
+            . " --port $port"
+            . " -u $username"
+            . " --password $password"
+            . " -d $db"
+            . " --parallel $parallel"
+            . " --batch $batch_number",
         21 => "perl $FindBin::Bin/../init/update_sw_cv.pl"
-            . " --db [% db %]"
-            . " --parallel [% parallel %]"
-            . " --batch    [% batch %]",
+            . " -s $server"
+            . " --port $port"
+            . " -u $username"
+            . " --password $password"
+            . " -d $db"
+            . " --parallel $parallel"
+            . " --batch $batch_number",
         40 => "perl $FindBin::Bin/../stat/common_stat_factory.pl"
-            . " --db [% db %]"
+            . " -s $server"
+            . " --port $port"
+            . " -u $username"
+            . " --password $password"
+            . " -d $db"
             . " -o [% common_file %]",
         100 => "perl $bz_path/bz.pl"
             . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
