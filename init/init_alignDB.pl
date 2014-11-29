@@ -32,20 +32,24 @@ my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 my $db       = $Config->{database}{db};
 
-my $init_sql = "$FindBin::Bin/../init.sql";
+my $init_sql   = "$FindBin::Bin/../init.sql";
+my $init_taxon = "$FindBin::Bin/../data/taxon.csv";
+my $init_chr   = "$FindBin::Bin/../data/chr_length.csv";
 
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    's|server=s'   => \$server,
-    'P|port=i'     => \$port,
-    'd|db=s'       => \$db,
-    'u|username=s' => \$username,
-    'p|password=s' => \$password,
-    'i|init_sql=s' => \$init_sql,
+    'help|?'             => \$help,
+    'man'                => \$man,
+    's|server=s'         => \$server,
+    'P|port=i'           => \$port,
+    'd|db=s'             => \$db,
+    'u|username=s'       => \$username,
+    'p|password=s'       => \$password,
+    'sql|init_sql=s'     => \$init_sql,
+    'taxon|init_taxon=s' => \$init_taxon,
+    'chr|init_chr=s'     => \$init_chr,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -89,12 +93,11 @@ my $dbh = $obj->dbh;
 #----------------------------------------------------------#
 # taxon
 #----------------------------------------------------------#
-{
-    my $taxon_file = "$FindBin::Bin/taxon.csv";
-    print "Use $taxon_file to Init table taxon\n";
+if (-f $init_taxon) {
+    print "Use $init_taxon to Init table taxon\n";
 
     my $sql_string = qq{
-        LOAD DATA LOCAL INFILE '$taxon_file'
+        LOAD DATA LOCAL INFILE '$init_taxon'
         INTO TABLE taxon
         FIELDS TERMINATED BY ','
         IGNORE 1 LINES
@@ -124,12 +127,11 @@ my $dbh = $obj->dbh;
 #----------------------------------------------------------#
 # chromosome
 #----------------------------------------------------------#
-{
-    my $chr_file = "$FindBin::Bin/chr_length.csv";
-    print "Use $chr_file to Init table chromosome\n";
+if (-f $init_chr) {
+    print "Use $init_chr to Init table chromosome\n";
 
     my $sql_string = qq{
-        LOAD DATA LOCAL INFILE '$chr_file'
+        LOAD DATA LOCAL INFILE '$init_chr'
         INTO TABLE chromosome
         FIELDS TERMINATED BY ','
         IGNORE 1 LINES
