@@ -39,6 +39,9 @@ my $password = $Config->{database}{password};
 
 my $length_threshold = $Config->{generate}{length_threshold};
 
+# executable file location
+my $kent_bin = "~/bin/x86_64";
+
 # running options
 my $bz_path = "$FindBin::Bin/../../blastz";
 my $pair_file;
@@ -65,6 +68,7 @@ GetOptions(
     'u|username=s'          => \$username,
     'p|password=s'          => \$password,
     'bz=s'                  => \$bz_path,
+    'bin|kent_bin=s'        => \$kent_bin,
     'parallel=i'            => \$parallel,
     'batch=i'               => \$batch_number,
     'lt|length_threshold=i' => \$length_threshold,
@@ -168,9 +172,11 @@ my $worker = sub {
             . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
             . " -s set01 --parallel [% parallel %] --noaxt -pb lastz --lastz",
         101 => "perl $bz_path/lpcna.pl"
+            . " -bin $kent_bin"
             . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
             . " --parallel [% parallel %]",
         102 => "perl $bz_path/amp.pl"
+            . " -bin $kent_bin"
             . " -dt [% tfile %] -dq [% qfile %] -dl [% ldir %]"
             . " -syn --parallel [% parallel %]",
     };
