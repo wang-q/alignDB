@@ -64271,7 +64271,6 @@ taxon_id,chr,length,name,assembly
 4568,NC_021760,116399,Triticum_monococcum
 4572,NC_021762,115773,Triticum_urartu
 157791,chrUn,999999999,Vigna_radiata
-3914,chrUn,999999999,Vigna_angularis
 3917,chrUn,999999999,Vigna_unguiculata
 157791,NC_013843,151271,Vigna_radiata
 3914,NC_021091,151683,Vigna_angularis
@@ -64300,3 +64299,4 @@ taxon_id,chr,length,name,assembly
 559292,chrXIV,784333,Saccharomyces_cerevisiae_S288c
 559292,chrXV,1091291,Saccharomyces_cerevisiae_S288c
 559292,chrXVI,948066,Saccharomyces_cerevisiae_S288c
+3914,chrUn,999999999,Vigna_angularis

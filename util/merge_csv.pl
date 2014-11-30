@@ -7,6 +7,8 @@ use Pod::Usage;
 use Config::Tiny;
 use YAML qw(Dump Load DumpFile LoadFile);
 
+use List::MoreUtils qw(firstidx);
+
 use AlignDB::Stopwatch;
 
 #----------------------------------------------------------#
@@ -66,7 +68,10 @@ my $line_t = [];
         my $id = join( "_", ( split /,/ )[@fields] );
         if ( grep { $_ eq $id } @{$id_m} ) {
             $count_t++;
-            next;
+            my $idx = firstidx { $_ eq $id } @{$id_m};
+            splice @{$id_m}, $idx, 1;
+            my ($line) = splice @{$line_m}, $idx, 1;
+            push @{$line_t}, $line;
         }
         else {
             push @{$line_t}, $_;
