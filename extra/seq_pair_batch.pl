@@ -57,6 +57,9 @@ my $parallel = $Config->{generate}{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{generate}{batch};
 
+my $init_taxon = "$FindBin::Bin/../data/taxon.csv";
+my $init_chr   = "$FindBin::Bin/../data/chr_length.csv";
+
 my $man  = 0;
 my $help = 0;
 
@@ -75,6 +78,8 @@ GetOptions(
     'f|pair_file=s'         => \$pair_file,
     'dir_as_taxon'          => \$dir_as_taxon,
     'r|run=s'               => \$task,
+    'taxon|init_taxon=s'    => \$init_taxon,
+    'chr|init_chr=s'        => \$init_chr,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -134,7 +139,9 @@ my $worker = sub {
             . " --port $port"
             . " -u $username"
             . " --password $password"
-            . " -d $db",
+            . " -d $db"
+            . ( $init_taxon ? " -taxon $init_taxon" : "" )
+            . ( $init_chr   ? " -chr $init_chr"     : "" ),
         2 => "perl $FindBin::Bin/../init/gen_alignDB.pl"
             . " -s $server"
             . " --port $port"
