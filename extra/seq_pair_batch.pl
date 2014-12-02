@@ -43,7 +43,7 @@ my $length_threshold = $Config->{generate}{length_threshold};
 my $kent_bin = "~/bin/x86_64";
 
 # running options
-my $bz_path = "$FindBin::Bin/../../blastz";
+my $bz_path = "$FindBin::Bin/../../egaz";
 my $pair_file;
 
 my $dir_as_taxon;
