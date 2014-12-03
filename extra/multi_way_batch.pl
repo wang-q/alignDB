@@ -55,28 +55,33 @@ my $parallel = $Config->{generate}{parallel};
 # number of alignments process in one child process
 my $batch_number = $Config->{generate}{batch};
 
+my $init_taxon = "$FindBin::Bin/../data/taxon.csv";
+my $init_chr   = "$FindBin::Bin/../data/chr_length.csv";
+
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'                 => \$help,
-    'man'                    => \$man,
-    's|server=s'             => \$server,
-    'P|port=i'               => \$port,
-    'u|username=s'           => \$username,
-    'p|password=s'           => \$password,
-    'd|db=s'                 => \$db_name,
-    'o|outgroup'             => \$outgroup,
-    'da|dir_align=s'         => \$dir_align,
-    'e|ensembl=s'            => \$ensembl_db,
-    'gff_files=s'            => \@gff_files,
-    'rm_gff_files=s'         => \@rm_gff_files,
-    'id|id_of=s'             => \$file_id_of,
-    'block'                  => \$block,
-    'parallel=i'             => \$parallel,
-    'batch=i'                => \$batch_number,
-    'lt|length_threshold=i'  => \$length_threshold,
-    'r|run=s'                => \$run,
+    'help|?'                => \$help,
+    'man'                   => \$man,
+    's|server=s'            => \$server,
+    'P|port=i'              => \$port,
+    'u|username=s'          => \$username,
+    'p|password=s'          => \$password,
+    'd|db=s'                => \$db_name,
+    'o|outgroup'            => \$outgroup,
+    'da|dir_align=s'        => \$dir_align,
+    'e|ensembl=s'           => \$ensembl_db,
+    'gff_files=s'           => \@gff_files,
+    'rm_gff_files=s'        => \@rm_gff_files,
+    'id|id_of=s'            => \$file_id_of,
+    'block'                 => \$block,
+    'parallel=i'            => \$parallel,
+    'batch=i'               => \$batch_number,
+    'lt|length_threshold=i' => \$length_threshold,
+    'r|run=s'               => \$run,
+    'taxon|init_taxon=s'    => \$init_taxon,
+    'chr|init_chr=s'        => \$init_chr,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -116,7 +121,7 @@ else {
     }
 }
 
-my $gff_file = join ",", @gff_files;
+my $gff_file    = join ",", @gff_files;
 my $rm_gff_file = join ",", @rm_gff_files;
 
 #----------------------------------------------------------#
@@ -128,7 +133,9 @@ my $dispatch = {
         . " --port $port"
         . " -u $username"
         . " --password $password"
-        . " -d $db_name",
+        . " -d $db_name"
+        . ( $init_taxon ? " -taxon $init_taxon" : "" )
+        . ( $init_chr   ? " -chr $init_chr"     : "" ),
     2 => "perl $FindBin::Bin/../init/gen_alignDB_fas.pl"
         . " -s $server"
         . " --port $port"
