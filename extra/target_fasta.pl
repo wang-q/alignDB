@@ -58,36 +58,39 @@ my $obj = AlignDB->new(
 
 my $dbh = $obj->dbh;
 
-my $target_id_query = q{
-    SELECT  target_id
-    FROM target t
-};
-my $target_id_query_sth = $dbh->prepare($target_id_query);
-
 my $target_query = q{
-    SELECT  CONCAT(">target_id|", t.target_id),
+    SELECT  tx.common_name,
             c.chr_name,
-            CONCAT(s.chr_start, "-", s.chr_end),
+            s.chr_strand,
+            s.chr_start,
+            s.chr_end,
+            t.target_id,
             s.seq_seq
-    FROM sequence s
-    INNER JOIN target t ON s.seq_id = t.seq_id
-    INNER JOIN chromosome c ON s.chr_id = c.chr_id
-    WHERE t.target_id = ?
+    FROM sequence s, target t, chromosome c, taxon tx
+    WHERE 1 = 1
+    AND s.seq_id = t.seq_id
+    AND s.chr_id = c.chr_id
+    AND c.taxon_id = tx.taxon_id
+    ORDER BY common_name, chr_name, chr_start
 };
 my $target_query_sth = $dbh->prepare($target_query);
 
-# for each chromosome
-$target_id_query_sth->execute;
-while ( my ($target_id) = $target_id_query_sth->fetchrow_array ) {
-    $target_query_sth->execute($target_id);
-    while ( my @row = $target_query_sth->fetchrow_array ) {
-        my $target_seq = pop @row;
-        $target_seq =~ s/-//g;
-        my $head = join "|", @row;
-        print {$outfh} $head,       "\n";
-        print {$outfh} $target_seq, "\n";
-    }
+# for each sequences
+$target_query_sth->execute();
+while ( my @row = $target_query_sth->fetchrow_array ) {
+    my $target_seq = pop @row;
+    $target_seq =~ s/-//g;
+    print {$outfh} ">" . $row[0];
+    print {$outfh} "." . $row[1];
+    print {$outfh} "(" . $row[2] . ")";
+    print {$outfh} ":" . $row[3];
+    print {$outfh} "-" . $row[4];
+    print {$outfh} "|species=" . $row[0];
+    print {$outfh} ";target_id=" . $row[5];
+    print {$outfh} "\n";
+    print {$outfh} $target_seq, "\n";
 }
+
 close $outfh;
 
 print "all done!!!\n";
@@ -102,34 +105,6 @@ __END__
 
 =head1 SYNOPSIS
 
-    target_fasta.pl [options]
-     Options:
-       --help            brief help message
-       --man             full documentation
-       --server          MySQL server IP/Domain name
-       --db              database name
-       --username        username
-       --password        password
-       --output          output filename
-       
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
+    perl target_fasta.pl -d db_name [-o db_name.fasta] 
 
 =cut
