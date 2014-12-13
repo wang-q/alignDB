@@ -1036,18 +1036,6 @@ sub parse_block_fasta_file {
 
             next if length $seqs[0] < $threshold;
 
-            # S288C.chrI(+):27070-29557|species=S288C
-            my $head_qr = qr{
-                ([\w_]+)            # name
-                [\.]                # spacer
-                ((?:chr)?[\w-]+)    # chr name
-                \((.+)\)            # strand
-                [\:]                # spacer
-                (\d+)               # chr start
-                [\_\-]              # spacer
-                (\d+)               # chr end
-            }xi;
-
             #S288C:
             #  chr_end: 667886
             #  chr_id: 265
@@ -1058,36 +1046,8 @@ sub parse_block_fasta_file {
             #  taxon_id: 4932
             my $info_refs = [];
             for my $header (@headers) {
-                $header =~ $head_qr;
-                my $name = $1;
-
-                my $info_ref = {};
-                if ($name) {
-                    $info_ref = {
-                        chr_name   => $2,
-                        chr_strand => $3,
-                        chr_start  => $4,
-                        chr_end    => $5,
-                    };
-                    if ( $info_ref->{chr_strand} eq '1' ) {
-                        $info_ref->{chr_strand} = '+';
-                    }
-                    elsif ( $info_ref->{chr_strand} eq '-1' ) {
-                        $info_ref->{chr_strand} = '-';
-                    }
-
-                }
-                else {
-                    $name     = $header;
-                    $info_ref = {
-                        chr_name   => 'chrUn',
-                        chr_strand => '+',
-                        chr_start  => undef,
-                        chr_end    => undef,
-                    };
-                }
-                $info_ref->{name}     = $name;
-                $info_ref->{taxon_id} = $id_of->{$name};
+                my $info_ref = decode($header);
+                $info_ref->{taxon_id} = $id_of->{ $info_ref->{name} };
                 $info_ref->{chr_id}
                     = $self->get_chr_id_hash( $info_ref->{taxon_id} )
                     ->{ $info_ref->{chr_name} };
