@@ -56,8 +56,7 @@ my $trimmed_fasta = 0;
 my $no_insert     = 0;
 my $crude_only    = 0;
 
-my $block         = 0;    # output blocked fasta
-my $simple_header = 0;    # output simple header
+my $block = 0;    # output blocked fasta
 
 my $reduce_end = 10;
 
@@ -82,7 +81,6 @@ GetOptions(
     'queries=s'      => \$queries,
     'length=i'       => \$length_threshold,
     'block'          => \$block,
-    'simple_header'  => \$simple_header,
     'crude_only'     => \$crude_only,
     'trimmed_fasta'  => \$trimmed_fasta,
     'no_insert'      => \$no_insert,
@@ -133,21 +131,21 @@ my ( @all_dbs, @all_names, @ingroup_names, $target_db );
 
     if ($outgroup) {
         print "Outgroup defined.\n";
-        print "We will produce alignments w/ outgroup.\n";
+        print "We will produce alignments with outgroup.\n";
 
         if ( scalar @all_dbs != scalar @queries + 1 ) {
-            printf "DB %d\tQueries %d\n", scalar @all_dbs, scalar @queries;
-            die "DB number doesn't match with species number\n";
+            printf "DB [%d]\tQueries [%d]\n", scalar @all_dbs, scalar @queries;
+            die "Numbers of DB doesn't match with numbers of strains\n";
         }
         @all_names = ( $target, @queries, $outgroup );
     }
     else {
         print "Outgroup not defined.\n";
-        print "We will produce alignments w/o outgroup.\n";
+        print "We will produce alignments without outgroup.\n";
 
         if ( scalar @all_dbs != scalar @queries ) {
-            printf "DB %d\tQueries %d\n", scalar @all_dbs, scalar @queries;
-            die "DB number doesn't match with species number\n";
+            printf "DB [%d]\tQueries [%d]\n", scalar @all_dbs, scalar @queries;
+            die "Numbers of DB doesn't match with numbers of strains\n";
         }
         @all_names = ( $target, @queries );
     }
@@ -182,9 +180,9 @@ for my $chr_id ( sort keys %{$chr_set_of} ) {
     #----------------------------#
 
     my @segments = $inter_chr_set->spans;
-SEG: for (@segments) {
-        my $seg_start  = $_->[0];
-        my $seg_end    = $_->[1];
+SEG: for my $seg (@segments) {
+        my $seg_start  = $seg->[0];
+        my $seg_end    = $seg->[1];
         my $seg_length = $seg_end - $seg_start + 1;
         next if $seg_length <= $length_threshold;
 
@@ -226,7 +224,7 @@ SEG: for (@segments) {
         # start peusdo-alignment, according to common sequences
         #----------------------------#
         {
-            print " " x 4, "start peusdo-alignment\n";
+            print " " x 4, "peusdo-alignment\n";
             my $error = pseudo_align( $db_info_of, \@all_dbs );
             if ($error) {
                 warn $error, "\n";
@@ -235,10 +233,13 @@ SEG: for (@segments) {
         }
 
         #----------------------------#
-        # build %info_of all_names hash
+        # build $seq_of, $seq_names, $seq_idxs
         #----------------------------#
-        my %info_of;
-        for my $name (@all_names) {
+        my $name_of  = {};    # taxon_id => name
+        my $seq_idxs = [];    # store simplified seq_names
+        my ( $seq_of, $seq_names ) = ( {}, [] );
+        for my $i ( 0 .. @all_names - 1 ) {
+            my $name = $all_names[$i];
             $name =~ /^(\d+)(.+)/;
             my $db_name_idx = $1;
             my $torq        = $2;
@@ -246,7 +247,16 @@ SEG: for (@segments) {
                 die "$torq is not equal to target or query\n";
             }
             my $db_name = $all_dbs[$db_name_idx];
-            $info_of{$name} = $db_info_of->{$db_name}{$torq};
+
+            my $info = $db_info_of->{$db_name}{$torq};
+
+            $name_of->{ $info->{taxon_id} } = $info->{name};
+
+            push @{$seq_idxs}, $i;
+
+            my $header = encode_header($info);
+            push @{$seq_names}, $header;
+            $seq_of->{$i} = $info->{seq};
         }
 
         #----------------------------#
@@ -255,101 +265,58 @@ SEG: for (@segments) {
         #----------------------------#
         if ($crude_only) {
             my $goal_db_crude = "$goal_db.crude";
-            unless ( -e $goal_db_crude ) {
-                mkdir $goal_db_crude, 0777
-                    or die "Cannot create [$goal_db_crude] directory: $!";
-            }
+            mkdir $goal_db_crude, 0777 if !-e $goal_db_crude;
 
-            if ( !$block ) {
-                my $target_taxon_id = $info_of{$target}->{taxon_id};
-                my $outfile
-                    = "./$goal_db_crude/"
-                    . "$chr_name"
-                    . "-$seg_start"
-                    . "-$seg_end" . ".fas";
-                print " " x 4, "$outfile\n";
-                open my $out_fh, '>', $outfile;
-                write_fasta( \%info_of, \@all_names, $out_fh, $simple_header );
-                close $out_fh;
-            }
-            else {
-                my $outfile = "./$goal_db_crude/" . $chr_name . ".fas";
-                print " " x 4, "$outfile\n";
-                open my $out_fh, '>>', $outfile;
-                write_fasta( \%info_of, \@all_names, $out_fh, 0 );
-                print {$out_fh} "\n";
-                close $out_fh;
-            }
+            my $outfile = "./$goal_db_crude/" . $chr_name . ".fas";
+            print " " x 4, "$outfile\n";
+            open my $out_fh, '>>', $outfile;
+            write_fasta_fh( $out_fh, $seq_of, $seq_idxs, $seq_names );
+            print {$out_fh} "\n";
+            close $out_fh;
 
             next SEG;
         }
 
         #----------------------------#
-        # clustalw realign indel_flank region
+        # realign
         #----------------------------#
-        {
-            print " " x 4, "start finding realign region\n";
-            realign( \%info_of, \@all_names, $indel_expand, $indel_join );
+        print " " x 4, "realign regions\n";
+        {    #clustalw realign indel_flank region
+            realign_quick(
+                $seq_of,
+                $seq_idxs,
+                {   indel_expand => $indel_expand,
+                    indel_join   => $indel_join,
+                    aln_prog     => 'clustalw',
+                }
+            );
         }
 
-        #----------------------------#
         # trim header and footer indels
-        #----------------------------#
-        {
-            trim_hf( \%info_of, \@all_names );
-        }
+        trim_pure_dash( $seq_of, $seq_idxs );
 
-        #----------------------------#
         # trim outgroup only sequence
-        #----------------------------#
-        # if intersect is superset of union
-        #   ref    GAAAAC
-        #   target G----C
-        #   query  G----C
         if ($outgroup) {
-            trim_outgroup( \%info_of, \@all_names, \@ingroup_names, $outgroup );
+            trim_outgroup( $seq_of, $seq_idxs );
         }
 
-        #----------------------------#
         # record complex indels and ingroup indels
-        #----------------------------#
-        # if intersect is subset of union
-        #   ref GGAGAC
-        #   tar GGA--C
-        #   que G----C
         if ($outgroup) {
-            record_complex_indel( \%info_of, \@all_names, \@ingroup_names,
-                $outgroup );
+            trim_complex_indel( $seq_of, $seq_idxs );
         }
 
         #----------------------------#
         # output a fasta alignment for further use
         #----------------------------#
         if ($trimmed_fasta) {
-            unless ( -e $goal_db ) {
-                mkdir $goal_db, 0777
-                    or die "Cannot create [$goal_db] directory: $!";
-            }
+            mkdir $goal_db, 0777 if !-e $goal_db;
 
-            if ( !$block ) {
-                my $outfile
-                    = "./$goal_db/"
-                    . "$chr_name"
-                    . "-$seg_start"
-                    . "-$seg_end" . ".fas";
-                print " " x 4, "$outfile\n";
-                open my $out_fh, '>', $outfile;
-                write_fasta( \%info_of, \@all_names, $out_fh, $simple_header );
-                close $out_fh;
-            }
-            else {
-                my $outfile = "./$goal_db/" . $chr_name . ".fas";
-                print " " x 4, "$outfile\n";
-                open my $out_fh, '>>', $outfile;
-                write_fasta( \%info_of, \@all_names, $out_fh, 0 );
-                print {$out_fh} "\n";
-                close $out_fh;
-            }
+            my $outfile = "./$goal_db/" . $chr_name . ".fas";
+            print " " x 4, "$outfile\n";
+            open my $out_fh, '>>', $outfile;
+            write_fasta_fh( $out_fh, $seq_of, $seq_idxs, $seq_names );
+            print {$out_fh} "\n";
+            close $out_fh;
         }
 
         #----------------------------#
@@ -372,22 +339,16 @@ SEG: for (@segments) {
                 );
             }
 
-            my $name_of   = {};
             my $info_refs = [];
             my $seq_refs  = [];
 
-            # join_name : 0target
-            # name      : human
-            for my $join_name (@all_names) {
-                my $taxon_id = $info_of{$join_name}->{taxon_id};
-                $name_of->{$taxon_id} = $info_of{$join_name}->{name};
+            for my $i ( 0 .. @{$seq_names} - 1 ) {
+                my $header = $seq_names->[$i];
+                my $info   = decode_header($header);
+                push @{$info_refs}, $info;
 
-                my $info_ref = $info_of{$join_name};
-                $info_ref->{chr_id}
-                    = $goal_obj->get_chr_id_hash($taxon_id)
-                    ->{ $info_ref->{chr_name} };
-                push @{$info_refs}, $info_ref;
-                push @{$seq_refs},  $info_of{$join_name}->{seq};
+                my $seq = $seq_of->{ $seq_idxs->[$i] };
+                push @{$seq_refs}, $seq;
             }
             $goal_obj->update_names($name_of);
             $goal_obj->add_align( $info_refs, $seq_refs );
@@ -634,276 +595,6 @@ sub pseudo_align {
     }
 }
 
-sub write_fasta {
-    my $info_of       = shift;
-    my $all_names     = shift;
-    my $fh            = shift;
-    my $simple_header = shift;
-
-    for my $name ( @{$all_names} ) {
-        my $name_info = $info_of->{$name};
-        if ($simple_header) {
-            print {$fh} ">" . $name_info->{name};
-            print {$fh} "\n";
-        }
-        else {
-            print {$fh} ">" . $name_info->{name};
-            print {$fh} "." . $name_info->{chr_name};
-            print {$fh} "(" . $name_info->{chr_strand} . ")";
-            print {$fh} ":" . $name_info->{chr_start};
-            print {$fh} "-" . $name_info->{chr_end};
-            print {$fh} "|species=" . $name_info->{name};
-            print {$fh} "\n";
-        }
-        print {$fh} $name_info->{seq}, "\n";
-    }
-
-    return;
-}
-
-#----------------------------#
-# clustalw realign indel_flank region
-#----------------------------#
-sub realign {
-    my $info_of      = shift;
-    my $all_names    = shift;
-    my $indel_expand = shift;
-    my $indel_join   = shift;
-
-    # use AlignDB::IntSpan to find nearby indels
-    #   expand indel by a range of $indel_expand
-
-    my %indel_sets;
-    for ( @{$all_names} ) {
-        $indel_sets{$_} = find_indel_set( $info_of->{$_}{seq}, $indel_expand );
-    }
-
-    my $realign_region = AlignDB::IntSpan->new;
-    my $combinat       = Math::Combinatorics->new(
-        count => 2,
-        data  => $all_names,
-    );
-    while ( my @combo = $combinat->next_combination ) {
-        my $intersect_set = AlignDB::IntSpan->new;
-        my $union_set     = AlignDB::IntSpan->new;
-        $intersect_set
-            = $indel_sets{ $combo[0] }->intersect( $indel_sets{ $combo[1] } );
-        $union_set
-            = $indel_sets{ $combo[0] }->union( $indel_sets{ $combo[1] } );
-
-        for my $span ( $union_set->runlists ) {
-            my $flag_set = $intersect_set->intersect($span);
-            if ( $flag_set->is_not_empty ) {
-                $realign_region->add($span);
-            }
-        }
-    }
-
-    # join adjacent realign regions
-    $realign_region = $realign_region->join_span($indel_join);
-
-    # realign all segments in realign_region
-    my @realign_region_spans = $realign_region->spans;
-    for ( reverse @realign_region_spans ) {
-        my $seg_start = $_->[0];
-        my $seg_end   = $_->[1];
-        my @segments;
-        for ( @{$all_names} ) {
-            my $seg = substr(
-                $info_of->{$_}{seq},
-                $seg_start - 1,
-                $seg_end - $seg_start + 1
-            );
-            push @segments, $seg;
-        }
-
-        my $realign_segments = clustal_align( \@segments );
-
-        for ( @{$all_names} ) {
-            my $seg = shift @$realign_segments;
-            substr(
-                $info_of->{$_}{seq},
-                $seg_start - 1,
-                $seg_end - $seg_start + 1, $seg
-            );
-        }
-    }
-}
-
-#----------------------------#
-# trim header and footer indels
-#----------------------------#
-sub trim_hf {
-    my $info_of   = shift;
-    my $all_names = shift;
-
-    # header indels
-    while (1) {
-        my @first_column;
-        for ( @{$all_names} ) {
-            my $first_base = substr( $info_of->{$_}{seq}, 0, 1 );
-            push @first_column, $first_base;
-        }
-        if ( all { $_ eq '-' } @first_column ) {
-            for (@$all_names) {
-                substr( $info_of->{$_}{seq}, 0, 1, '' );
-            }
-            print " " x 4, "Trim header indel\n";
-        }
-        else {
-            last;
-        }
-    }
-
-    # footer indels
-    while (1) {
-        my (@last_column);
-        for ( @{$all_names} ) {
-            my $last_base = substr( $info_of->{$_}{seq}, -1, 1 );
-            push @last_column, $last_base;
-        }
-        if ( all { $_ eq '-' } @last_column ) {
-            for (@$all_names) {
-                substr( $info_of->{$_}{seq}, -1, 1, '' );
-            }
-            print " " x 4, "Trim footer indel\n";
-        }
-        else {
-            last;
-        }
-    }
-}
-
-#----------------------------#
-# trim outgroup only sequence
-#----------------------------#
-# if intersect is superset of union
-#   ref    GAAAAC
-#   target G----C
-#   query  G----C
-sub trim_outgroup {
-    my $info_of       = shift;
-    my $all_names     = shift;
-    my $ingroup_names = shift;
-    my $outgroup      = shift;
-
-    # add raw_seqs to outgroup info hash
-    $info_of->{$outgroup}{raw_seq} = $info_of->{$outgroup}{seq};
-
-    # don't expand indel set here
-    # last is outgroup
-    my %indel_sets;
-    for my $i ( 0 .. @{$ingroup_names} - 1 ) {
-        my $name = $ingroup_names->[$i];
-        $indel_sets{$name} = find_indel_set( $info_of->{$name}{seq} );
-    }
-
-    # find trim_region
-    my $trim_region = AlignDB::IntSpan->new;
-
-    my $union_set     = AlignDB::IntSpan::union( values %indel_sets );
-    my $intersect_set = AlignDB::IntSpan::intersect( values %indel_sets );
-
-    for my $span ( $union_set->runlists ) {
-        if ( $intersect_set->superset($span) ) {
-            $trim_region->add($span);
-        }
-    }
-
-    # trim all segments in trim_region
-    print " " x 4, "Delete trim region " . $trim_region->runlist . "\n"
-        if $trim_region->is_not_empty;
-    for ( reverse $trim_region->spans ) {
-        my $seg_start = $_->[0];
-        my $seg_end   = $_->[1];
-        for ( @{$all_names} ) {
-            substr(
-                $info_of->{$_}{seq},
-                $seg_start - 1,
-                $seg_end - $seg_start + 1, ''
-            );
-        }
-    }
-
-    #exit;
-}
-
-sub record_complex_indel {
-    my $info_of       = shift;
-    my $all_names     = shift;
-    my $ingroup_names = shift;
-    my $outgroup      = shift;
-
-    my $complex_region = AlignDB::IntSpan->new;
-
-    # don't expand indel set
-    my %indel_sets;
-    for ( @{$all_names} ) {
-        $indel_sets{$_} = find_indel_set( $info_of->{$_}{seq} );
-    }
-    my $outgroup_indel_set = $indel_sets{$outgroup};
-    delete $indel_sets{$outgroup};
-
-    # all ingroup intersect sets are complex region after remove
-    # uniform ingroup indels
-    my $union_set     = AlignDB::IntSpan::union( values %indel_sets );
-    my $intersect_set = AlignDB::IntSpan::intersect( values %indel_sets );
-
-    print " " x 4,
-        "Delete complex trim region " . $intersect_set->runlist . "\n"
-        if $intersect_set->is_not_empty;
-    for ( reverse $intersect_set->spans ) {
-        my $seg_start = $_->[0];
-        my $seg_end   = $_->[1];
-
-        # trim sequence
-        for ( @{$all_names} ) {
-            substr(
-                $info_of->{$_}{seq},
-                $seg_start - 1,
-                $seg_end - $seg_start + 1, ''
-            );
-        }
-
-        # add to complex_region
-        for my $span ( $union_set->runlists ) {
-            my $sub_union_set = AlignDB::IntSpan->new($span);
-            if ( $sub_union_set->superset("$seg_start-$seg_end") ) {
-                $complex_region->merge($sub_union_set);
-            }
-        }
-
-        # modify all related set
-        $union_set = $union_set->banish_span( $seg_start, $seg_end );
-        for ( @{$ingroup_names} ) {
-            $indel_sets{$_}
-                = $indel_sets{$_}->banish_span( $seg_start, $seg_end );
-        }
-        $outgroup_indel_set->banish_span( $seg_start, $seg_end );
-        $complex_region = $complex_region->banish_span( $seg_start, $seg_end );
-    }
-
-    # add ingroup-outgroup complex indels to complex_region
-    for my $name ( @{$ingroup_names} ) {
-        my $outgroup_intersect_set
-            = $outgroup_indel_set->intersect( $indel_sets{$name} );
-        for my $out_span ( $outgroup_intersect_set->runlists ) {
-
-            for my $union_span ( $union_set->runlists ) {
-                my $sub_union_set = AlignDB::IntSpan->new($union_span);
-
-                # union_set > intersect_set
-                if ( $sub_union_set->larger_than($out_span) ) {
-                    $complex_region->merge($sub_union_set);
-                }
-            }
-        }
-    }
-
-    # record complex indel info to $info{$outgroup}
-    $info_of->{$outgroup}{complex} = $complex_region->runlist;
-}
-
 __END__
 
 =head1 NAME
@@ -940,8 +631,29 @@ $ perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11,S288CvsYJM789 \
     --goal_db S288CvsThree --no_insert --trimmed_fasta \
     --outgroup 0query --target 0target --queries 1query,2query
 
-> perl two_way_batch.pl -d S288CvsRM11 -t "4932,S288C" -q "285006,RM11" -da d:\data\alignment\yeast_combine\S288CvsRM11\ -lt 5000 --parallel 4 --run skeleton
-> perl two_way_batch.pl -d S288CvsSpar -t "4932,S288C" -q "226125,Spar" -da d:\data\alignment\yeast_combine\S288CvsSpar\ -lt 5000 --parallel 4 --run skeleton
+# windows
+perl two_way_batch.pl -d S288CvsRM11 -t "4932,S288C" -q "285006,RM11" -da d:\data\alignment\yeast_combine\S288CvsRM11\ -lt 5000 --parallel 4 --run skeleton
+perl two_way_batch.pl -d S288CvsSpar -t "4932,S288C" -q "226125,Spar" -da d:\data\alignment\yeast_combine\S288CvsSpar\ -lt 5000 --parallel 4 --run skeleton
 
-> perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar --target 0target --outgroup 0query --queries 1query --length 5000
-> perl join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11_Spar --target 0target --queries 0query,1query --length 5000
+perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar --target 0target --outgroup 0query --queries 1query --length 5000
+perl join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11_Spar --target 0target --queries 0query,1query --length 5000
+
+# linux/mac
+cd ~/Scripts/alignDB
+
+perl extra/two_way_batch.pl -d S288CvsRM11 -t "4932,S288C" -q "285006,RM11" \
+    -da data/S288CvsRM11 -lt 5000 --parallel 4 --run skeleton
+
+perl extra/two_way_batch.pl -d S288CvsSpar -t "4932,S288C" -q "226125,Spar" \
+    -da data/S288CvsSpar -lt 5000 --parallel 4 --run skeleton
+
+perl extra/join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11_Spar \
+    --target 0target --queries 0query,1query \
+    --no_insert --trimmed_fasta --length 5000
+
+perl extra/join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar \
+    --target 0target --outgroup 0query --queries 1query --length 5000
+
+perl extra/join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11_Spar \
+    --target 0target --queries 0query,1query \
+    --length 5000
