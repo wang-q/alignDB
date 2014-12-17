@@ -8,8 +8,6 @@ use MooseX::AttributeHelpers;
 
 use Gtk2 '-init';
 use Glib qw(TRUE FALSE);
-use Gtk2::GladeXML;
-use Gtk2::Helper;
 
 use Config::Tiny;
 use Proc::Background;
@@ -41,18 +39,18 @@ has 'processes' => (
 sub BUILD {
     my $self = shift;
 
-    # Load the UI from the Glade-2 file
-    my $app = Gtk2::GladeXML->new("$FindBin::Bin/gui3.glade");
-    $self->{app} = $app;
+    # Load the UI
+    $self->{app} = Gtk2::Builder->new;
+    $self->{app}->add_from_file("$FindBin::Bin/gui3.ui");
 
     # Connect signals magically
-    $app->signal_autoconnect_from_package($self);
+    $self->{app}->connect_signals( undef, $self );
 
     $self->read_config;
     $self->fill_combobox;
 
     {    # Init the console textview
-        my $textview   = $app->get_widget('textview_console');
+        my $textview   = $self->{app}->get_object('textview_console');
         my $textbuffer = $textview->get_buffer;
         $self->{text} = $textbuffer;
 
@@ -76,18 +74,17 @@ sub BUILD {
         );
     }
 
-    my $win = $app->get_widget('window_main');
-    $self->{win} = $win;
-    $win->signal_connect( 'delete-event' => sub { Gtk2->main_quit } );
-    $win->show;
+    $self->{win} = $self->{app}->get_object('window_main');
+    $self->{win}->signal_connect( 'delete-event' => sub { Gtk2->main_quit } );
+    $self->{win}->show;
 
     $self->on_togglebutton_growl_send_toggled;
 
     # active notebook_database tab 'Database'
-    $app->get_widget('notebook_database')->set_current_page(2);
+    $self->{app}->get_object('notebook_database')->set_current_page(2);
 
     # set label_db_name color
-    $app->get_widget('label_db_name')
+    $self->{app}->get_object('label_db_name')
         ->set_markup("<span foreground='blue'>db name:</span>");
     Gtk2->main;
     return;
@@ -101,17 +98,17 @@ sub set_value {
     my $name  = shift;
     my $value = shift;
 
-    my $widget = $self->{app}->get_widget($name);
-    my $class  = ref $widget;
+    my $object = $self->{app}->get_object($name);
+    my $class  = ref $object;
 
     if ( $class eq 'Gtk2::Entry' ) {
-        $widget->set_text($value);
+        $object->set_text($value);
     }
     elsif ( $class eq 'Gtk2::CheckButton' ) {
-        $widget->set_active($value);
+        $object->set_active($value);
     }
     elsif ( $class eq 'Gtk2::ToggleButton' ) {
-        $widget->set_active($value);
+        $object->set_active($value);
     }
     else {
         warn "Widget type is [$class]\n";
@@ -125,22 +122,22 @@ sub get_value {
     my $self = shift;
     my $name = shift;
 
-    my $widget = $self->{app}->get_widget($name);
-    my $class  = ref $widget;
+    my $object = $self->{app}->get_object($name);
+    my $class  = ref $object;
 
     my $value;
 
     if ( $class eq 'Gtk2::Entry' ) {
-        $value = $widget->get_text;
+        $value = $object->get_text;
     }
     elsif ( $class eq 'Gtk2::CheckButton' ) {
-        $value = $widget->get_active ? 1 : 0;
+        $value = $object->get_active ? 1 : 0;
     }
     elsif ( $class eq 'Gtk2::ToggleButton' ) {
-        $value = $widget->get_active ? 1 : 0;
+        $value = $object->get_active ? 1 : 0;
     }
     elsif ( $class eq 'Gtk2::ComboBox' ) {
-        $value = $widget->get_active_text;
+        $value = $object->get_active_text;
     }
     else {
         warn "Widget type is [$class]\n";
@@ -256,16 +253,16 @@ sub fill_combobox {
         $model->set( $model->append, 0, $_ );
     }
     for (qw{ combobox_first combobox_second combobox_outgroup }) {
-        my $cb = $self->{app}->get_widget($_);
+        my $cb = $self->{app}->get_object($_);
         $cb->set_model($model);
         my $cr = Gtk2::CellRendererText->new;
         $cb->pack_start( $cr, TRUE );
         $cb->add_attribute( $cr, 'text', 0 );
     }
 
-    $self->{app}->get_widget("combobox_first")->set_active(0);
-    $self->{app}->get_widget("combobox_second")->set_active(1);
-    $self->{app}->get_widget("combobox_outgroup")->set_active(3);
+    $self->{app}->get_object("combobox_first")->set_active(0);
+    $self->{app}->get_object("combobox_second")->set_active(1);
+    $self->{app}->get_object("combobox_outgroup")->set_active(3);
 
     return;
 }
@@ -287,9 +284,8 @@ sub relpath_to_abs {
 #----------------------------#
 # menubar and toolbar events
 #----------------------------#
-sub on_imagemenuitem_about_activate {
-    my $self   = shift;
-    my $widget = shift;
+sub on_toolbutton_about_clicked {
+    my $self = shift;
 
     Gtk2->show_about_dialog(
         Gtk2::Window->new,
@@ -308,25 +304,22 @@ sub on_imagemenuitem_about_activate {
     return;
 }
 
-sub on_imagemenuitem_quit_activate {
-    my $self   = shift;
-    my $widget = shift;
+sub on_toolbutton_quit_clicked {
+    my $self = shift;
 
     Gtk2->main_quit;
     return;
 }
 
 sub on_toolbutton_default_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     $self->read_config;
     return;
 }
 
 sub on_toolbutton_process_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $count = $self->count_processes;
 
@@ -361,8 +354,7 @@ sub on_toolbutton_process_clicked {
 }
 
 sub on_togglebutton_growl_send_toggled {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     $ENV{growl_send}     = $self->get_value("togglebutton_growl_send");
     $ENV{growl_host}     = $self->get_value("entry_growl_host");
@@ -668,8 +660,7 @@ sub dialog_db_meta {
 # button callback events
 #----------------------------#
 sub on_button_db_meta_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my ( $operation, $time ) = $self->dialog_db_meta;
 
@@ -683,8 +674,7 @@ sub on_button_db_meta_clicked {
 }
 
 sub on_button_load_target_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my ( $id, $name ) = $self->dialog_taxon;
 
@@ -697,8 +687,7 @@ sub on_button_load_target_clicked {
 }
 
 sub on_button_load_query_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my ( $id, $name ) = $self->dialog_taxon;
 
@@ -711,8 +700,7 @@ sub on_button_load_query_clicked {
 }
 
 sub on_button_auto_db_name_axt_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $target_name = $self->get_value("entry_target_name");
     my $query_name  = $self->get_value("entry_query_name");
@@ -724,8 +712,7 @@ sub on_button_auto_db_name_axt_clicked {
 }
 
 sub on_button_auto_db_name_fas_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $dir_align_fas = $self->get_value("entry_dir_align_fas");
 
@@ -737,8 +724,7 @@ sub on_button_auto_db_name_fas_clicked {
 }
 
 sub on_button_auto_db_name_join_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $first_db  = $self->get_value("entry_first_db");
     my $second_db = $self->get_value("entry_second_db");
@@ -784,20 +770,18 @@ sub on_button_auto_db_name_join_clicked {
 }
 
 sub on_button_choose_db_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $result = $self->dialog_choose_db;
     return unless $result;
 
-    $self->set_value( "entry_db_name",     $result->{db_name} );
+    $self->set_value( "entry_db_name", $result->{db_name} );
 
     return;
 }
 
 sub on_button_open_dir_align_axt_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $dia = Gtk2::FileChooserDialog->new(
         'Choose a dir', $self->win, 'select-folder',
@@ -824,8 +808,7 @@ sub on_button_open_dir_align_axt_clicked {
 }
 
 sub on_button_open_file_id2name_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $dia = Gtk2::FileChooserDialog->new(
         'Choose a file', $self->win, 'open',
@@ -852,8 +835,7 @@ sub on_button_open_file_id2name_clicked {
 }
 
 sub on_button_open_dir_align_fas_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $dia = Gtk2::FileChooserDialog->new(
         'Choose a dir', $self->win, 'select-folder',
@@ -880,8 +862,7 @@ sub on_button_open_dir_align_fas_clicked {
 }
 
 sub on_button_auto_stat_file_common_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $db_name = $self->get_value("entry_db_name");
     my $outfile = "$FindBin::Bin/../stat/$db_name.common.xlsx";
@@ -892,8 +873,7 @@ sub on_button_auto_stat_file_common_clicked {
 }
 
 sub on_button_auto_stat_file_gc_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $db_name = $self->get_value("entry_db_name");
     my $outfile = "$FindBin::Bin/../stat/$db_name.gc.xlsx";
@@ -904,8 +884,7 @@ sub on_button_auto_stat_file_gc_clicked {
 }
 
 sub on_button_auto_stat_file_multi_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $db_name = $self->get_value("entry_db_name");
     my $outfile = "$FindBin::Bin/../stat/$db_name.multi.xlsx";
@@ -916,8 +895,7 @@ sub on_button_auto_stat_file_multi_clicked {
 }
 
 sub on_button_choose_first_db_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $result = $self->dialog_choose_db;
     return unless $result;
@@ -927,8 +905,7 @@ sub on_button_choose_first_db_clicked {
 }
 
 sub on_button_choose_second_db_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $result = $self->dialog_choose_db;
     return unless $result;
@@ -938,8 +915,7 @@ sub on_button_choose_second_db_clicked {
 }
 
 sub on_button_clear_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $text = $self->text;
     $text->delete( $text->get_start_iter, $text->get_end_iter );
@@ -948,12 +924,11 @@ sub on_button_clear_clicked {
 }
 
 sub on_button_copy_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $text = $self->text;
     $text->select_range( $text->get_start_iter, $text->get_end_iter );
-    my $clip = $self->app->get_widget('textview_console')->get_clipboard;
+    my $clip = $self->app->get_object('textview_console')->get_clipboard;
     $text->copy_clipboard($clip);
 
     return;
@@ -963,8 +938,7 @@ sub on_button_copy_clicked {
 # run *.pl events
 #----------------------------------------------------------#
 sub on_button_test_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -991,8 +965,7 @@ sub on_button_test_clicked {
 }
 
 sub on_button_init_aligndb_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1013,8 +986,7 @@ sub on_button_init_aligndb_clicked {
 }
 
 sub on_button_gen_aligndb_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1050,8 +1022,7 @@ sub on_button_gen_aligndb_clicked {
 }
 
 sub on_button_gen_aligndb_fas_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1089,8 +1060,7 @@ sub on_button_gen_aligndb_fas_clicked {
 }
 
 sub on_button_insert_isw_axt_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1116,8 +1086,7 @@ sub on_button_insert_isw_axt_clicked {
 }
 
 sub on_button_insert_isw_fas_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1146,8 +1115,7 @@ sub on_button_insert_isw_fas_clicked {
 }
 
 sub on_button_insert_isw_join_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1174,8 +1142,7 @@ sub on_button_insert_isw_join_clicked {
 }
 
 sub on_button_join_dbs_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1207,8 +1174,7 @@ sub on_button_join_dbs_clicked {
 }
 
 sub on_button_insert_gc_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1237,8 +1203,7 @@ sub on_button_insert_gc_clicked {
 }
 
 sub on_button_insert_gene_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1264,8 +1229,7 @@ sub on_button_insert_gene_clicked {
 }
 
 sub on_button_upd_swcv_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1289,8 +1253,7 @@ sub on_button_upd_swcv_clicked {
 }
 
 sub on_button_upd_feature_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1317,8 +1280,7 @@ sub on_button_upd_feature_clicked {
 }
 
 sub on_button_upd_slippage_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1339,8 +1301,7 @@ sub on_button_upd_slippage_clicked {
 }
 
 sub on_button_upd_segment_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1361,8 +1322,7 @@ sub on_button_upd_segment_clicked {
 }
 
 sub on_button_upd_cpg_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1383,8 +1343,7 @@ sub on_button_upd_cpg_clicked {
 }
 
 sub on_button_stat_common_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1415,8 +1374,7 @@ sub on_button_stat_common_clicked {
 }
 
 sub on_button_stat_multi_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1445,8 +1403,7 @@ sub on_button_stat_multi_clicked {
 }
 
 sub on_button_stat_gc_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -1477,8 +1434,7 @@ sub on_button_stat_gc_clicked {
 }
 
 sub on_button_chart_common_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $stat_file = $self->get_value("entry_stat_file_common");
     if ( $^O ne "MSWin32" ) {
@@ -1499,8 +1455,7 @@ sub on_button_chart_common_clicked {
 }
 
 sub on_button_chart_multi_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $stat_file = $self->get_value("entry_stat_file_muli");
     if ( $^O ne "MSWin32" ) {
@@ -1521,8 +1476,7 @@ sub on_button_chart_multi_clicked {
 }
 
 sub on_button_chart_gc_clicked {
-    my $self   = shift;
-    my $widget = shift;
+    my $self = shift;
 
     my $stat_file = $self->get_value("entry_stat_file_gc");
     if ( $^O ne "MSWin32" ) {

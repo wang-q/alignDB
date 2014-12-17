@@ -2,8 +2,8 @@
 use strict;
 use warnings;
 
-my $raw_file = "gui3.raw.glade";
-my $clean_file   = "gui3.glade";
+my $raw_file = "gui3.raw.ui";
+my $clean_file   = "gui3.ui";
 
 open my $in_fh, '<', $raw_file;
 open my $out_fh, '>', $clean_file;
