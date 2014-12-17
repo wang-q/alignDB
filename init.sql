@@ -578,7 +578,6 @@ create table taxon
    species                        text,
    sub_species                    text,
    common_name                    text,
-   classification                 text,
    primary key (taxon_id)
 )
 ENGINE = MyISAM;
