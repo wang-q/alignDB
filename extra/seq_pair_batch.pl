@@ -46,7 +46,8 @@ my $kent_bin = "~/bin/x86_64";
 my $bz_path = "$FindBin::Bin/../../egaz";
 my $pair_file;
 
-my $dir_as_taxon;
+my $dir_as_taxon;    # use dir name as taxon_id
+my $file_id_of;      # taxon_id-name mapping file
 
 # running tasks
 my $task = "0-2,21,40";
@@ -77,6 +78,7 @@ GetOptions(
     'lt|length_threshold=i' => \$length_threshold,
     'f|pair_file=s'         => \$pair_file,
     'dir_as_taxon'          => \$dir_as_taxon,
+    'id|id_of=s'            => \$file_id_of,
     'r|run=s'               => \$task,
     'taxon|init_taxon=s'    => \$init_taxon,
     'chr|init_chr=s'        => \$init_chr,
@@ -104,6 +106,16 @@ my ( $volume, $directories, undef ) = File::Spec->splitpath($pair_file);
 my $working_dir = File::Spec->catpath( $volume, $directories );
 
 my @lines = read_file($pair_file);
+my $id_of = {};
+if ($file_id_of) {
+    open my $fh, '<', $file_id_of;
+    while (<$fh>) {
+        chomp;
+        my ( $id, $name ) = split /,/;
+        $id_of->{$name} = $id;
+    }
+    close $fh;
+}
 
 #----------------------------#
 # worker
@@ -123,7 +135,15 @@ my $worker = sub {
 
     my $tq;
     if ($dir_as_taxon) {
-        $tq = " -t=\"$t_base,$t_base\"" . " -q=\"$q_base,$q_base\"";
+        $tq = sprintf " -t=\"%s,%s\" -q=\"%s,%s\"", $t_base, $t_base, $q_base,
+            $q_base;
+    }
+    elsif ($file_id_of) {
+        $tq = sprintf " -t=\"%s,%s\" -q=\"%s,%s\"", $id_of->{$t_base}, $t_base,
+            $id_of->{$q_base}, $q_base;
+    }
+    else {
+        warn "Taxon info not specified.\n";
     }
 
     my $common_file = File::Spec->catfile( $working_dir, "$db.common.xlsx" );
