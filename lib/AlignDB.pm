@@ -1046,7 +1046,7 @@ sub parse_block_fasta_file {
             #  taxon_id: 4932
             my $info_refs = [];
             for my $header (@headers) {
-                my $info_ref = decode($header);
+                my $info_ref = decode_header($header);
                 $info_ref->{taxon_id} = $id_of->{ $info_ref->{name} };
                 $info_ref->{chr_id}
                     = $self->get_chr_id_hash( $info_ref->{taxon_id} )
