@@ -18,6 +18,8 @@ use List::Util qw(reduce);
 use List::MoreUtils qw(zip);
 use Set::Scalar;
 
+use MCE::Flow;
+
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(:all);
@@ -44,20 +46,24 @@ my $yaml_file;
 my $dir_fa;
 my $linelen = 60;
 
+# run in parallel mode
+my $parallel = $Config->{generate}{parallel};
+
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
     'help|?'        => \$help,
     'man'           => \$man,
-    'server=s'      => \$server,
-    'port=i'        => \$port,
-    'username=s'    => \$username,
-    'password=s'    => \$password,
-    'ensembl=s'     => \$ensembl_db,
+    's|server=s'    => \$server,
+    'P|port=i'      => \$port,
+    'u|username=s'  => \$username,
+    'p|password=s'  => \$password,
+    'e|ensembl=s'   => \$ensembl_db,
     'feature=s'     => \$feature,
     'y|yaml_file=s' => \$yaml_file,
     'dir=s'         => \$dir_fa,
+    'parallel=i'    => \$parallel,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -92,25 +98,43 @@ else {
 
     my $slice_adaptor = $db_adaptor->get_SliceAdaptor;
     my @slices        = @{ $slice_adaptor->fetch_all('chromosome') };
-    while ( my $chr_slice = shift @slices ) {
-        my $chr   = $chr_slice->seq_region_name;
-        my $start = $chr_slice->start;
-        my $end   = $chr_slice->end;
+    my @chrs          = sort { $a->{chr_name} cmp $b->{chr_name} } map {
+        {   chr_name  => $_->seq_region_name,
+            chr_start => $_->start,
+            chr_end   => $_->end,
+        }
+    } @slices;
 
-        print "$chr:$start:$end\n";
-        my $slice_set = AlignDB::IntSpan->new("$start-$end");    # repeat set
+    my $worker = sub {
+        my ( $self, $chunk_ref, $chunk_id ) = @_;
+        my $chr = $chunk_ref->[0];
 
-        eval { $ensembl->set_slice( $chr, $start, $end ); };
+        my $chr_runlist = $chr->{chr_start} . "-" . $chr->{chr_end};
+        printf "%s:%s\n", $chr->{chr_name}, $chr_runlist;
+
+        eval {
+            $ensembl->set_slice( $chr->{chr_name}, $chr->{chr_start},
+                $chr->{chr_end} );
+        };
         if ($@) {
             warn "Can't get annotation\n";
-            next;
+            return;
         }
 
         my $slice       = $ensembl->slice;
         my $ftr_chr_set = $slice->{"_$feature\_set"};
 
-        $ftr_of->{$chr} = $ftr_chr_set->runlist;
-    }
+        MCE->gather( $chr->{chr_name}, $ftr_chr_set->runlist );
+    };
+
+    MCE::Flow::init {
+        chunk_size  => 1,
+        max_workers => $parallel,
+    };
+    my %feature_of = mce_flow $worker, \@chrs;
+    MCE::Flow::finish;
+
+    $ftr_of = \%feature_of;
 
     DumpFile( "${ensembl_db}_${feature}.yml", $ftr_of );
 }
@@ -131,10 +155,14 @@ if ($dir_fa) {
     }
     my $file_of = { zip( @chrs, @files ) };
 
-    my @matched_files;
-    for my $ftr_chr ( keys %{$ftr_of} ) {
+    for my $ftr_chr ( keys %{$ftr_of} ) { }
+
+    my $worker = sub {
+        my ( $self, $chunk_ref, $chunk_id ) = @_;
+        my $ftr_chr = $chunk_ref->[0];
+
         my $ftr_chr_cmp = $ftr_chr;
-        if ($ftr_chr_cmp =~ /^chr/) {
+        if ( $ftr_chr_cmp =~ /^chr/ ) {
             $ftr_chr_cmp =~ s/chr//;
         }
 
@@ -143,7 +171,7 @@ if ($dir_fa) {
             sort { $b->[1] <=> $a->[1] }
             map { [ $_, compare( $_, $ftr_chr_cmp ) ] } keys %{$file_of};
 
-        printf "Write masked seq for ftr_chr %8s file_chr %8s\n", $ftr_chr,
+        printf "Write masked seq for ftr_chr [%s]\tfile_chr [%s]\n", $ftr_chr,
             $file_chr;
 
         # feature set
@@ -152,31 +180,39 @@ if ($dir_fa) {
         # seq
         my ( $seq_of, $seq_names ) = read_fasta( $file_of->{$file_chr} );
         my $seq = $seq_of->{ $seq_names->[0] };
-        
+
         my @sets = $ftr_set->sets;
         for my $set (@sets) {
             my $offset = $set->min - 1;
             my $length = $set->size;
-        
+
             my $str = substr $seq, $offset, $length;
             $str = lc $str;
             substr $seq, $offset, $length, $str;
         }
-        
+
         open my $out_fh, '>', $file_of->{$file_chr} . ".masked";
         print {$out_fh} ">chr$ftr_chr\n";
         print {$out_fh} substr( $seq, 0, $linelen, '' ) . "\n" while ($seq);
         close $out_fh;
 
-        push @matched_files, $file_of->{$file_chr};
-    }
+        MCE->gather( $file_of->{$file_chr} );
+    };
+
+    MCE::Flow::init {
+        chunk_size  => 1,
+        max_workers => $parallel,
+    };
+    my @matched_files = mce_flow $worker, [ sort keys %{$ftr_of} ];
+    MCE::Flow::finish;
 
     {    # combine all unmatched filess to chrUn.fasta
         my $fa_set = Set::Scalar->new;
         $fa_set->insert($_) for @files;
         $fa_set->delete($_) for @matched_files;
 
-        printf "There are %d unmatched file\n", $fa_set->size;
+        print "\n";
+        printf "There are %d unmatched file(s)\n", $fa_set->size;
         if ( $fa_set->size ) {
             my $str = join " ", map { basename $_} $fa_set->elements;
             print "We'll combine these files into chrUn.fasta\n";
