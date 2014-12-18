@@ -4,11 +4,11 @@ taxon_id,genus,species,sub_species,common_name
 307796,Saccharomyces,cerevisiae,YJM789,YJM789
 658763,Saccharomyces,cerevisiae,Sigma1278b,Sigma1278b
 226125,Saccharomyces,paradoxus,Spar,Spar
-9606,Homo,sapiens,,Human
-9598,Pan,troglodytes,,Chimp
-9595,Gorilla,gorilla,,Gorilla
-9601,Pongo,abelii,,Orangutan
-9544,Macaca,mulatta,,Rhesus
+9606,Homo,sapiens,Human,Human
+9598,Pan,troglodytes,Chimp,Chimp
+9595,Gorilla,gorilla,Gorilla,Gorilla
+9601,Pongo,abelii,Orangutan,Orangutan
+9544,Macaca,mulatta,Rhesus,Rhesus
 10090,Mus,musculus,,Mouse
 10116,Rattus,norvegicus,,Rat
 7227,Drosophila,melanogaster,Dmel,Dmel
