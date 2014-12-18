@@ -205,7 +205,6 @@ else {
             = "mysqlimport -h$server -P$port -u$username -p$password"
             . " --fields_escaped_by=\\\\"
             . ( $^O eq "MSWin32" ? " --lines-terminated-by=\\r\\n" : "" )
-            . " --use-threads=4"
             . "  $db --local $abs_table_file";
         system($cmd);
 
