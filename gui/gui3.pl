@@ -391,7 +391,7 @@ sub dialog_taxon {
     $vbox->pack_start( $label, FALSE, FALSE, 5 );
 
     # read out normal taxons and put them into listmodel
-    my $file = "$FindBin::Bin/normal_taxon.csv";
+    my $file = "$FindBin::Bin/../data/taxon.csv";
     my $csv = Text::CSV_XS->new( { binary => 1, eol => "\n" } );
     open my $csv_fh, "<", $file or die "$file: $!";
     $csv->getline($csv_fh);    # bypass title line
@@ -400,8 +400,8 @@ sub dialog_taxon {
         = Gtk2::ListStore->new( 'Glib::Int', 'Glib::String', 'Glib::String' );
     while ( my $row = $csv->getline($csv_fh) ) {
         my $id      = $row->[0];
-        my $name    = $row->[1];
-        my $species = $row->[2] . ' ' . $row->[3];
+        my $species = $row->[1] . ' ' . $row->[2];
+        my $name    = $row->[4];
 
         # The iter is a pointer in the treestore. We use to add data.
         my $iter = $model->append;
