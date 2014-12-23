@@ -109,8 +109,8 @@ my $chr_end      = $target_info->{chr_end};
 my $align_length = $target_info->{align_length};
 my $target_set   = AlignDB::IntSpan->new( $target_info->{seq_runlist} );
 
-my $query_info = $obj->get_query_info($align_id);
-my $query_set  = AlignDB::IntSpan->new( $query_info->{seq_runlist} );
+my ($query_info) = $obj->get_queries_info($align_id);
+my $query_set = AlignDB::IntSpan->new( $query_info->{seq_runlist} );
 
 my ( undef, $comparable_set, $indel_set ) = @{ $obj->get_sets($align_id) };
 

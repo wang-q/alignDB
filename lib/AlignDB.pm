@@ -25,6 +25,9 @@ has 'caching_id' => ( is => 'ro', isa => 'Int' );        # caching seqs
 has 'caching_seqs' =>
     ( is => 'ro', isa => 'ArrayRef[Str]', default => sub { [] } );
 
+# target info
+has 'caching_info' => ( is => 'ro', isa => 'HashRef', default => sub { {} } );
+
 # don't connect mysql
 has 'mocking' => ( is => 'ro', isa => 'Bool', default => 0 );
 
@@ -1748,69 +1751,38 @@ sub get_target_info {
     my $self     = shift;
     my $align_id = shift;
 
-    my $dbh = $self->dbh;
+    my $caching_info = $self->caching_info;
 
-    my $query = q{
-        SELECT c.taxon_id,
-               c.chr_id,
-               c.chr_name,
-               c.chr_length,
-               s.chr_start,
-               s.chr_end,
-               s.chr_strand,
-               s.seq_length,
-               s.seq_gc,
-               s.seq_runlist,
-               a.align_length
-        FROM sequence s 
-        INNER JOIN target t ON s.seq_id = t.seq_id
-        LEFT JOIN chromosome c ON s.chr_id = c.chr_id
-        INNER JOIN align a ON s.align_id = a.align_id
-        WHERE s.align_id = ?
-    };
+    if ( !exists $caching_info->{$align_id} ) {
+        my $dbh = $self->dbh;
 
-    my $sth = $dbh->prepare($query);
-    $sth->execute($align_id);
-    my $hash_ref = $sth->fetchrow_hashref;
-    $sth->finish;
+        my $query = q{
+            SELECT c.taxon_id,
+                   c.chr_id,
+                   c.chr_name,
+                   c.chr_length,
+                   s.chr_start,
+                   s.chr_end,
+                   s.chr_strand,
+                   s.seq_length,
+                   s.seq_gc,
+                   s.seq_runlist,
+                   a.align_length
+            FROM sequence s 
+            INNER JOIN target t ON s.seq_id = t.seq_id
+            LEFT JOIN chromosome c ON s.chr_id = c.chr_id
+            INNER JOIN align a ON s.align_id = a.align_id
+            WHERE s.align_id = ?
+        };
 
-    return $hash_ref;
-}
+        my $sth = $dbh->prepare($query);
+        $sth->execute($align_id);
+        my $hash_ref = $sth->fetchrow_hashref;
+        $sth->finish;
+        $caching_info->{$align_id} = $hash_ref;
+    }
 
-# when you are sure the alignDB is pairwise
-sub get_query_info {
-    my $self     = shift;
-    my $align_id = shift;
-
-    my $dbh = $self->dbh;
-
-    my $query = q{
-        SELECT c.taxon_id,
-               c.chr_id,
-               c.chr_name,
-               c.chr_length,
-               s.chr_start,
-               s.chr_end,
-               s.chr_strand,
-               s.seq_length,
-               s.seq_gc,
-               s.seq_runlist,
-               a.align_length,
-               q.query_strand,
-               q.query_position
-        FROM sequence s 
-        INNER JOIN query q ON s.seq_id = q.seq_id
-        LEFT JOIN chromosome c ON s.chr_id = c.chr_id
-        INNER JOIN align a ON s.align_id = a.align_id
-        WHERE s.align_id = ?
-    };
-
-    my $sth = $dbh->prepare($query);
-    $sth->execute($align_id);
-    my $hash_ref = $sth->fetchrow_hashref;
-    $sth->finish;
-
-    return $hash_ref;
+    return $caching_info->{$align_id};
 }
 
 # general purpose
@@ -1975,11 +1947,10 @@ sub process_message {
     my $self     = shift;
     my $align_id = shift;
 
-    my $target_info = $self->get_target_info($align_id);
+    my $info = $self->get_target_info($align_id);
 
-    printf "Prosess align %s in %s %s - %s\n", $align_id,
-        $target_info->{chr_name}, $target_info->{chr_start},
-        $target_info->{chr_end};
+    printf "Prosess align [%s] at %s(%s):%s-%s\n", $align_id, $info->{chr_name},
+        $info->{chr_strand}, $info->{chr_start}, $info->{chr_end};
 
     return;
 }
