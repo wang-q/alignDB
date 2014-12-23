@@ -229,17 +229,6 @@ my @sheet_names = @{ $excel_obj->sheet_names };
 
         $excel_obj->draw_y( $sheet_name, \%option );
     }
-
-    #----------------------------#
-    # worksheet -- align_paralog
-    #----------------------------#
-    my @para_levels = ( 1 .. 9 );
-
-    foreach (@para_levels) {
-        my $sheet_name = "align_paralog_$_";
-
-        $excel_obj->draw_y( $sheet_name, \%option );
-    }
 }
 
 {
