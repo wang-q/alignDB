@@ -78,8 +78,6 @@ sub BUILD {
     $self->{win}->signal_connect( 'delete-event' => sub { Gtk2->main_quit } );
     $self->{win}->show;
 
-    $self->on_togglebutton_growl_send_toggled;
-
     # active notebook_database tab 'Database'
     $self->{app}->get_object('notebook_database')->set_current_page(2);
 
@@ -224,23 +222,14 @@ sub read_config {
         $Config->{gc}{insert_segment} );
 
     # three-way
-    $self->set_value( "entry_first_db",  $Config->{ref}{first_db} );
-    $self->set_value( "entry_second_db", $Config->{ref}{second_db} );
+    $self->set_value( "entry_first_db",  "S288cvsRM11" );
+    $self->set_value( "entry_second_db", "S288cvsSpar" );
 
     # stat parameter
     $self->set_value( "checkbutton_chart_jc", $Config->{stat}{jc_correction} );
     $self->set_value( "entry_run_common",     $Config->{stat}{run} );
     $self->set_value( "entry_run_multi",      $Config->{stat}{run} );
     $self->set_value( "entry_run_gc",         $Config->{stat}{run} );
-
-    # growl parameter
-    $self->set_value( "entry_growl_host",     $Config->{growl}{host} );
-    $self->set_value( "entry_growl_password", $Config->{growl}{password} );
-    $self->set_value( "checkbutton_growl_starting",
-        $Config->{growl}{starting} );
-    $self->set_value( "checkbutton_growl_ending", $Config->{growl}{ending} );
-    $self->set_value( "checkbutton_growl_other",  $Config->{growl}{other} );
-    $self->set_value( "togglebutton_growl_send",  $Config->{growl}{send} );
 
     return;
 }
@@ -350,21 +339,6 @@ sub on_toolbutton_process_clicked {
     $self->append_text( " process(es) totally.\n", "italic" );
     $self->append_text( "-" x 50 . "\n" );
 
-    return;
-}
-
-sub on_togglebutton_growl_send_toggled {
-    my $self = shift;
-
-    $ENV{growl_send}     = $self->get_value("togglebutton_growl_send");
-    $ENV{growl_host}     = $self->get_value("entry_growl_host");
-    $ENV{growl_password} = $self->get_value("entry_growl_password");
-    $ENV{growl_starting} = $self->get_value("checkbutton_growl_starting");
-    $ENV{growl_ending}   = $self->get_value("checkbutton_growl_ending");
-    $ENV{growl_other}    = $self->get_value("checkbutton_growl_other");
-
-    $self->append_text(
-        "Growl message set to [@{[$ENV{growl_send} ? 'ON': 'OFF']}]\n");
     return;
 }
 

@@ -42,7 +42,7 @@ my $username = $Config->{database}{username};
 my $password = $Config->{database}{password};
 
 # ref parameter
-my $length_threshold = $Config->{ref}{length_threshold};
+my $length_threshold = $Config->{generate}{length_threshold} / 2;
 
 # Database info
 # Normal order: TvsO, TvsQ1, TvsQ2
@@ -54,38 +54,30 @@ my $goal_db;
 
 my $trimmed_fasta = 0;
 my $no_insert     = 0;
-my $crude_only    = 0;
 
 my $block = 0;    # output blocked fasta
 
 my $reduce_end = 10;
 
-# realign parameters
-my $indel_expand = $Config->{ref}{indel_expand};
-my $indel_join   = $Config->{ref}{indel_join};
-
 my $man  = 0;
 my $help = 0;
 
 GetOptions(
-    'help|?'         => \$help,
-    'man'            => \$man,
-    's|server=s'     => \$server,
-    'P|port=i'       => \$port,
-    'u|username=s'   => \$username,
-    'p|password=s'   => \$password,
-    'dbs=s'          => \$dbs,
-    'goal_db=s'      => \$goal_db,
-    'outgroup=s'     => \$outgroup,
-    'target=s'       => \$target,
-    'queries=s'      => \$queries,
-    'length=i'       => \$length_threshold,
-    'block'          => \$block,
-    'crude_only'     => \$crude_only,
-    'trimmed_fasta'  => \$trimmed_fasta,
-    'no_insert'      => \$no_insert,
-    'indel_expand=i' => \$indel_expand,
-    'indel_join=i'   => \$indel_join,
+    'help|?'        => \$help,
+    'man'           => \$man,
+    's|server=s'    => \$server,
+    'P|port=i'      => \$port,
+    'u|username=s'  => \$username,
+    'p|password=s'  => \$password,
+    'dbs=s'         => \$dbs,
+    'goal_db=s'     => \$goal_db,
+    'outgroup=s'    => \$outgroup,
+    'target=s'      => \$target,
+    'queries=s'     => \$queries,
+    'length=i'      => \$length_threshold,
+    'block'         => \$block,
+    'trimmed_fasta' => \$trimmed_fasta,
+    'no_insert'     => \$no_insert,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -95,10 +87,6 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 # perl init_alignDB.pl
 #----------------------------------------------------------#
 $stopwatch->start_message("Joining DBs...");
-
-if ($crude_only) {
-    $no_insert = 1;
-}
 
 if ( !$no_insert and $goal_db ) {
     my $cmd
@@ -221,18 +209,6 @@ SEG: for my $seg (@segments) {
         }
 
         #----------------------------#
-        # start peusdo-alignment, according to common sequences
-        #----------------------------#
-        {
-            print " " x 4, "peusdo-alignment\n";
-            my $error = pseudo_align( $db_info_of, \@all_dbs );
-            if ($error) {
-                warn $error, "\n";
-                next SEG;
-            }
-        }
-
-        #----------------------------#
         # build $seq_of, $seq_names, $seq_idxs
         #----------------------------#
         my $name_of  = {};    # taxon_id => name
@@ -260,37 +236,10 @@ SEG: for my $seg (@segments) {
         }
 
         #----------------------------#
-        # output peusdo-aligned fasta, need be refined later
-        # skip all processing thereafter
-        #----------------------------#
-        if ($crude_only) {
-            my $goal_db_crude = "$goal_db.crude";
-            mkdir $goal_db_crude, 0777 if !-e $goal_db_crude;
-
-            my $outfile = "./$goal_db_crude/" . $chr_name . ".fas";
-            print " " x 4, "$outfile\n";
-            open my $out_fh, '>>', $outfile;
-            write_fasta_fh( $out_fh, $seq_of, $seq_idxs, $seq_names );
-            print {$out_fh} "\n";
-            close $out_fh;
-
-            next SEG;
-        }
-
-        #----------------------------#
         # realign
         #----------------------------#
         print " " x 4, "realign regions\n";
-        {    #clustalw realign indel_flank region
-            realign_quick(
-                $seq_of,
-                $seq_idxs,
-                {   indel_expand => $indel_expand,
-                    indel_join   => $indel_join,
-                    aln_prog     => 'clustalw',
-                }
-            );
-        }
+        realign_all( $seq_of, $seq_idxs );
 
         # trim header and footer indels
         trim_pure_dash( $seq_of, $seq_idxs );
@@ -543,56 +492,25 @@ sub build_seq {
     return;
 }
 
-sub pseudo_align {
-    my $db_info_of = shift;
-    my $all_dbs    = shift;
+#----------------------------#
+# realign all seqs
+#----------------------------#
+sub realign_all {
+    my $seq_of    = shift;
+    my $seq_names = shift;
 
-    my $pos_count = 0;
-    while (1) {
-        $pos_count++;
-        my $max_length = 0;
-        for my $db_name ( @{$all_dbs} ) {
-            $max_length = max( $max_length,
-                length $db_info_of->{$db_name}{target}{seq} );
-        }
-        if ( $pos_count >= $max_length ) {
-            last;
-        }
-
-        my @target_bases;
-        for my $db_name ( @{$all_dbs} ) {
-            push @target_bases,
-                substr( $db_info_of->{$db_name}{target}{seq},
-                $pos_count - 1, 1 );
-        }
-
-        if ( all { $_ eq $target_bases[0] } @target_bases ) {
-            next;
-        }
-        elsif ( all { $_ ne '-' } @target_bases ) {
-            return " " x 8 . "align error in $pos_count, [@target_bases]\n";
-        }
-
-        # insert a '-' in current position
-        for ( 0 .. @{$all_dbs} - 1 ) {
-            my $db_name = $all_dbs->[$_];
-            if ( $target_bases[$_] eq '-' ) {
-                next;
-            }
-            else {
-                substr(
-                    $db_info_of->{$db_name}{target}{seq},
-                    $pos_count - 1,
-                    0, '-'
-                );
-                substr(
-                    $db_info_of->{$db_name}{query}{seq},
-                    $pos_count - 1,
-                    0, '-'
-                );
-            }
-        }
+    my @seqs;
+    for ( @{$seq_names} ) {
+        push @seqs, $seq_of->{$_};
     }
+
+    my $realigned_seqs = multi_align( \@seqs, 'mafft' );
+
+    for my $i ( 0 .. scalar @{$seq_names} - 1 ) {
+        $seq_of->{ $seq_names->[$i] } = uc $realigned_seqs->[$i];
+    }
+
+    return;
 }
 
 __END__
@@ -641,13 +559,13 @@ perl join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11_Spar --targ
 # linux/mac
 cd ~/Scripts/alignDB
 
-perl extra/two_way_batch.pl -d S288CvsRM11 -t "4932,S288C" -q "285006,RM11" \
+perl extra/two_way_batch.pl -d S288CvsRM11 -t "559292,S288C" -q "285006,RM11" \
     -da data/S288CvsRM11 -lt 5000 --parallel 4 --run skeleton
 
-perl extra/two_way_batch.pl -d S288CvsSpar -t "4932,S288C" -q "226125,Spar" \
+perl extra/two_way_batch.pl -d S288CvsSpar -t "559292,S288C" -q "226125,Spar" \
     -da data/S288CvsSpar -lt 5000 --parallel 4 --run skeleton
 
-perl extra/join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11_Spar \
+perl extra/join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11Spar \
     --target 0target --queries 0query,1query \
     --no_insert --trimmed_fasta --length 5000
 
