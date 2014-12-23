@@ -399,6 +399,10 @@ my $summary = sub {
 # worksheet -- pi_gc_cv
 #----------------------------------------------------------#
 my $pi_gc_cv = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
+
     {
         my $sheet_name = 'd1_pi_gc_cv';
         my $sheet;
@@ -467,6 +471,9 @@ my $pi_gc_cv = sub {
 # worksheet -- comb_pi_gc_cv
 #----------------------------------------------------------#
 my $comb_pi_gc_cv = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
 
     # make combine
     my @combined;
@@ -568,6 +575,10 @@ my $comb_pi_gc_cv = sub {
 # worksheet -- group_distance
 #----------------------------------------------------------#
 my $group_distance = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
+
     my $sheet_name = 'group_distance';
     my $sheet;
     my ( $sheet_row, $sheet_col );
@@ -642,6 +653,10 @@ my $group_distance = sub {
 # worksheet -- group_density
 #----------------------------------------------------------#
 my $group_density = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
+
     my $sheet_name = 'group_density';
     my $sheet;
     my ( $sheet_row, $sheet_col );
@@ -973,6 +988,9 @@ my $comb_slippage = sub {
 };
 
 my $dd_group = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
 
     #----------------------------------------------------------#
     # worksheet -- dd_group
@@ -1067,6 +1085,10 @@ my $dd_group = sub {
 # worksheet -- indel_size_group
 #----------------------------------------------------------#
 my $indel_size_group = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
+
     my $sheet_name = 'indel_size_group';
     my $sheet;
     my ( $sheet_row, $sheet_col );
@@ -1115,6 +1137,10 @@ my $indel_size_group = sub {
 # worksheet -- indel_size_asymmetry
 #----------------------------------------------------------#
 my $indel_size_asymmetry = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
+
     my $sheet_name = 'indel_size_asymmetry';
     my $sheet;
     my ( $sheet_row, $sheet_col );
@@ -1195,6 +1221,10 @@ my $indel_size_asymmetry = sub {
 # worksheet -- indel_extand_group
 #----------------------------------------------------------#
 my $indel_extand_group = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
+
     my $sheet_name = 'indel_extand_group';
     my $sheet;
     my ( $sheet_row, $sheet_col );
@@ -1245,6 +1275,10 @@ my $indel_extand_group = sub {
 # worksheet -- indel_extand_asymmetry
 #----------------------------------------------------------#
 my $indel_extand_asymmetry = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
+
     my $sheet_name = 'indel_extand_asymmetry';
     my $sheet;
     my ( $sheet_row, $sheet_col );
@@ -1322,6 +1356,10 @@ my $indel_extand_asymmetry = sub {
 # worksheet -- indel_position_group
 #----------------------------------------------------------#
 my $indel_position_group = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
+
     my $sheet_name = 'indel_position_group';
     my $sheet;
     my ( $sheet_row, $sheet_col );
@@ -1538,6 +1576,10 @@ my $indel_slip_group = sub {
 # worksheet -- indel_gc_group
 #----------------------------------------------------------#
 my $indel_gc_group = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
+
     my $sheet_name = 'indel_gc_group';
     my $sheet;
     my ( $sheet_row, $sheet_col );
@@ -1822,6 +1864,10 @@ my $snp_base_change = sub {
 # worksheet -- distance_snp
 #----------------------------------------------------------#
 my $distance_snp = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
+
     my $sheet_name = 'distance_snp';
     my $sheet;
     my ( $sheet_row, $sheet_col );
@@ -1877,6 +1923,10 @@ my $distance_snp = sub {
 # worksheet -- density_snp
 #----------------------------------------------------------#
 my $density_snp = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
+
     my $sheet_name = 'density_snp';
     my $sheet;
     my ( $sheet_row, $sheet_col );
