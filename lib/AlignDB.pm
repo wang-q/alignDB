@@ -1004,7 +1004,7 @@ sub parse_axt_file {
 # blocked fasta format
 sub parse_block_fasta_file {
     my $self   = shift;
-    my $infile = shift;
+    my $in_file = shift;
     my $opt    = shift;
 
     my $id_of     = $opt->{id_of};
@@ -1013,11 +1013,12 @@ sub parse_block_fasta_file {
 
     my $in_fh;
     if ( !$gzip ) {
-        open $in_fh, '<', $infile;
+        open $in_fh, '<', $in_file;
     }
     else {
-        $in_fh = IO::Zlib->new( $infile, "rb" );
+        $in_fh = IO::Zlib->new( $in_file, "rb" );
     }
+
     my $content = '';
     while ( my $line = <$in_fh> ) {
         if ( $line =~ /^\s+$/ and $content =~ /\S/ ) {

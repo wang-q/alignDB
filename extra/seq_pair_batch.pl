@@ -100,8 +100,8 @@ my @tasks;
 }
 
 # The server has 16 cpu cores
-if ($parallel > 6) {
-    $parallel = 6;
+if ($parallel > 4) {
+    $parallel = 4;
 }
 
 #----------------------------------------------------------#
