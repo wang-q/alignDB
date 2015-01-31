@@ -113,7 +113,7 @@ exit;
 sub get_seq_faidx {
     my $samtools = shift;
     my $genome   = shift;
-    my $location = shift;
+    my $location = shift; # I:1-100
 
     my $cmd = sprintf "%s faidx %s %s", $samtools, $genome, $location;
     open my $fh_pipe, '-|', $cmd;
@@ -179,9 +179,9 @@ __END__
     check_header.pl - check genome location in (blocked) fasta headers
 
 =head1 SYNOPSIS
+
     perl check_header.pl --in I.net.axt.fas -g S288c.fasta --detail
 
-    check_header.pl [options]
       Options:
         --help              brief help message
         --man               full documentation
