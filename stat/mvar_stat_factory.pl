@@ -586,7 +586,6 @@ my $snp_codon_list = sub {
                     se.seq_id = t.seq_id
                         AND se.chr_id = c.chr_id
                         AND c.taxon_id = ta.taxon_id) a ON s.align_id = a.align_id
-            WHERE s.exon_id IS NOT NULL
             ORDER BY a.chr_name, a.chr_start
         };
         my $sth = $dbh->prepare($sql_query);
