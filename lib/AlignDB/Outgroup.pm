@@ -304,11 +304,12 @@ sub add_align {
     # INSERT INTO align
     #----------------------------#
     my $align_id = $self->_insert_align( @{$ingroup_seqs} );
-    printf "Prosess align %s in %s %s - %s of %s\n", $align_id,
+    printf "Prosess align [%s] at %s.%s(%s):%s-%s\n", $align_id,
+        $info_refs->[$target_idx]{name},
         $info_refs->[$target_idx]{chr_name},
+        $info_refs->[$target_idx]{chr_strand},
         $info_refs->[$target_idx]{chr_start},
-        $info_refs->[$target_idx]{chr_end},
-        $info_refs->[$target_idx]{name};
+        $info_refs->[$target_idx]{chr_end};
 
     #----------------------------#
     # UPDATE align, INSERT INTO sequence, target, queries
