@@ -8,7 +8,7 @@ use YAML qw(Dump Load DumpFile LoadFile);
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use AlignDB::Kaks;
+use AlignDB::KaKs;
 
 #----------------------------------------------------------#
 # GetOpt section
