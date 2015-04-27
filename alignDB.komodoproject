@@ -5,7 +5,7 @@
 </file>
 <file id="FC2D8887-A572-4708-9347-A3B7E0201186" idref="2F4C9C2F-1B5F-4C5F-8D51-CDF98E96256C" url="gui/alignDBGUI_ui.pm">
 </file>
-<preference-set idref="4BE9AD75-E438-40E4-AB97-06779CA580C3">
+<preference-set idref="4BE9AD75-E438-40E4-AB97-06779CA580C3" id="project" preftype="project">
   <string relative="path" id="import_dirname"></string>
   <string id="import_exclude_matches">*.*~;*.bak;*.tmp;CVS;.#*;*.pyo;*.pyc;.svn;*%25*;*.xls;alignDB.kpf</string>
   <string id="import_include_matches">*.pm;*.pl;*.t;*.sql;*.ini;*.yaml</string>
@@ -13,6 +13,7 @@
   <boolean id="import_recursive">1</boolean>
   <string id="import_type">useFolders</string>
   <string id="lastTestPlanName_pref">New test plan #1</string>
+  <long id="prefs_version">1</long>
 <preference-set id="testPlans">
 <preference-set id="New test plan #1">
   <string id="command_line"></string>

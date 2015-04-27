@@ -122,7 +122,7 @@ READ: while ( my $line = <$in_fh> ) {
                 $seq_of->{$name} = uc $seq;
             }
 
-            # S288C.chrXIV(1):763984-765396|species=S288C
+            # S288C.chrXIV(+):763984-765396|species=S288C
             my $target_str = $seq_names->[$nth];
             print "Processing $target_str\n";
 
@@ -381,7 +381,7 @@ __END__
     add_vcf2fa.pl - convert vcf to a new sequence in block fasta files
 
 =head1 SYNOPSIS
-    perl add_vcf2fa.pl  -i d:\data\alignment\yeast65\S288CvsXVIIIGE10m_mafft\ -f d:\data\yeast10000\ref\S288C.vcf
+    perl add_vcf2fa.pl  -i ~/data/alignment/yeast_combine/S288CvsIII_mft -f ~/data/yeast10000/ref/S288C.vcf
 
     add_vcf2fa.pl [options]
       Options:
