@@ -6,7 +6,7 @@ package AlignDB::GUI;
 use Moose;
 use MooseX::AttributeHelpers;
 
-use Gtk2 '-init';
+use Gtk3 '-init';
 use Glib qw(TRUE FALSE);
 
 use Config::Tiny;
@@ -40,7 +40,7 @@ sub BUILD {
     my $self = shift;
 
     # Load the UI
-    $self->{app} = Gtk2::Builder->new;
+    $self->{app} = Gtk3::Builder->new;
     $self->{app}->add_from_file("$FindBin::Bin/gui3.ui");
 
     # Connect signals magically
@@ -75,16 +75,13 @@ sub BUILD {
     }
 
     $self->{win} = $self->{app}->get_object('window_main');
-    $self->{win}->signal_connect( 'delete-event' => sub { Gtk2->main_quit } );
+    $self->{win}->signal_connect( 'delete-event' => sub { Gtk3->main_quit } );
     $self->{win}->show;
-
-    # active notebook_database tab 'Database'
-    $self->{app}->get_object('notebook_database')->set_current_page(2);
 
     # set label_db_name color
     $self->{app}->get_object('label_db_name')
         ->set_markup("<span foreground='blue'>db name:</span>");
-    Gtk2->main;
+    Gtk3->main;
     return;
 }
 
@@ -99,13 +96,13 @@ sub set_value {
     my $object = $self->{app}->get_object($name);
     my $class  = ref $object;
 
-    if ( $class eq 'Gtk2::Entry' ) {
+    if ( $class eq 'Gtk3::Entry' ) {
         $object->set_text($value);
     }
-    elsif ( $class eq 'Gtk2::CheckButton' ) {
+    elsif ( $class eq 'Gtk3::CheckButton' ) {
         $object->set_active($value);
     }
-    elsif ( $class eq 'Gtk2::ToggleButton' ) {
+    elsif ( $class eq 'Gtk3::ToggleButton' ) {
         $object->set_active($value);
     }
     else {
@@ -125,16 +122,16 @@ sub get_value {
 
     my $value;
 
-    if ( $class eq 'Gtk2::Entry' ) {
+    if ( $class eq 'Gtk3::Entry' ) {
         $value = $object->get_text;
     }
-    elsif ( $class eq 'Gtk2::CheckButton' ) {
+    elsif ( $class eq 'Gtk3::CheckButton' ) {
         $value = $object->get_active ? 1 : 0;
     }
-    elsif ( $class eq 'Gtk2::ToggleButton' ) {
+    elsif ( $class eq 'Gtk3::ToggleButton' ) {
         $value = $object->get_active ? 1 : 0;
     }
-    elsif ( $class eq 'Gtk2::ComboBox' ) {
+    elsif ( $class eq 'Gtk3::ComboBox' ) {
         $value = $object->get_active_text;
     }
     else {
@@ -188,7 +185,6 @@ sub read_config {
 
     # parallel init values
     $self->set_value( "entry_parallel", $Config->{generate}{parallel} );
-    $self->set_value( "entry_batch",    $Config->{generate}{batch} );
 
     # server init values
     $self->set_value( "entry_server",   $Config->{database}{server} );
@@ -225,26 +221,20 @@ sub read_config {
     $self->set_value( "entry_first_db",  "S288cvsRM11" );
     $self->set_value( "entry_second_db", "S288cvsSpar" );
 
-    # stat parameter
-    $self->set_value( "checkbutton_chart_jc", $Config->{stat}{jc_correction} );
-    $self->set_value( "entry_run_common",     $Config->{stat}{run} );
-    $self->set_value( "entry_run_multi",      $Config->{stat}{run} );
-    $self->set_value( "entry_run_gc",         $Config->{stat}{run} );
-
     return;
 }
 
 sub fill_combobox {
     my $self = shift;
 
-    my $model = Gtk2::ListStore->new('Glib::String');
+    my $model = Gtk3::ListStore->new('Glib::String');
     for (qw{ 0target 0query 1target 1query }) {
         $model->set( $model->append, 0, $_ );
     }
     for (qw{ combobox_first combobox_second combobox_outgroup }) {
         my $cb = $self->{app}->get_object($_);
         $cb->set_model($model);
-        my $cr = Gtk2::CellRendererText->new;
+        my $cr = Gtk3::CellRendererText->new;
         $cb->pack_start( $cr, TRUE );
         $cb->add_attribute( $cr, 'text', 0 );
     }
@@ -276,15 +266,15 @@ sub relpath_to_abs {
 sub on_toolbutton_about_clicked {
     my $self = shift;
 
-    Gtk2->show_about_dialog(
-        Gtk2::Window->new,
+    Gtk3->show_about_dialog(
+        Gtk3::Window->new,
         program_name => 'AlignDB GUI3',
-        version      => '0.8',
-        copyright    => "(C) 2004-2013 WANG, Qiang",
-        authors      => ['WANG, Qiang <wangq@nju.edu.cn>'],
+        version      => '0,9',
+        copyright    => "(C) 2004-2015 WANG, Qiang",
+        authors      => ['Qiang Wang <wangq@nju.edu.cn>'],
         comments     => "The third generation of GUI interface for AlignDB",
         title        => "About AlignDB GUI3",
-        website      => "http://chenlab.nju.edu.cn",
+        website      => "http://ega.nju.edu.cn",
         wrap_license => TRUE,
         license =>
             "This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.\n",
@@ -296,7 +286,7 @@ sub on_toolbutton_about_clicked {
 sub on_toolbutton_quit_clicked {
     my $self = shift;
 
-    Gtk2->main_quit;
+    Gtk3->main_quit;
     return;
 }
 
@@ -349,20 +339,16 @@ sub dialog_taxon {
     my $self = shift;
 
     # Create the dialog and init two buttons
-    my $dialog = Gtk2::Dialog->new(
+    my $dialog = Gtk3::Dialog->new(
         "Load taxon...",
         $self->win, [qw{modal destroy-with-parent}],
         'gtk-ok'    => 'ok',
         'gtk-close' => 'close',
     );
 
-    # This vbox comes with the dialog
-    my $vbox = $dialog->vbox;
-
-    my $label = Gtk2::Label->new("Choose a taxon:");
+    my $label = Gtk3::Label->new("Choose a taxon:");
     $label->set_alignment( 0, 0.5 );
     $label->set_justify('left');
-    $vbox->pack_start( $label, FALSE, FALSE, 5 );
 
     # read out normal taxons and put them into listmodel
     my $file = "$FindBin::Bin/../data/taxon.csv";
@@ -371,7 +357,7 @@ sub dialog_taxon {
     $csv->getline($csv_fh);    # bypass title line
 
     my $model
-        = Gtk2::ListStore->new( 'Glib::Int', 'Glib::String', 'Glib::String' );
+        = Gtk3::ListStore->new( 'Glib::Int', 'Glib::String', 'Glib::String' );
     while ( my $row = $csv->getline($csv_fh) ) {
         my $id      = $row->[0];
         my $species = $row->[1] . ' ' . $row->[2];
@@ -388,34 +374,40 @@ sub dialog_taxon {
     }
     close $csv_fh;
 
-    my $treeview = Gtk2::TreeView->new_with_model($model);
+    my $treeview = Gtk3::TreeView->new_with_model($model);
 
     # Add columns
     $treeview->insert_column_with_attributes( 0, "id",
-        Gtk2::CellRendererText->new,
+        Gtk3::CellRendererText->new,
         text => 0 );
     $treeview->insert_column_with_attributes( 1, "name",
-        Gtk2::CellRendererText->new,
+        Gtk3::CellRendererText->new,
         text => 1 );
     $treeview->insert_column_with_attributes( 2, "species",
-        Gtk2::CellRendererText->new,
+        Gtk3::CellRendererText->new,
         text => 2 );
     $treeview->get_column(0)->set_sort_column_id(0);
     $treeview->get_column(1)->set_sort_column_id(1);
     $treeview->get_column(2)->set_sort_column_id(2);
 
-    # get the Gtk2::TreeSelection of $treeview
+    # get the Gtk3::TreeSelection of $treeview
     my $treeselection = $treeview->get_selection;
     $treeselection->set_mode('single');
 
     # add TreeView to a scrolledwindow
-    my $sw = Gtk2::ScrolledWindow->new;
+    my $sw = Gtk3::ScrolledWindow->new;
     $sw->set_size_request( 360, 240 );
     $sw->set_policy( 'automatic', 'automatic' );
     $sw->add($treeview);
+    
+    # Create a vbox
+    my $vbox = Gtk3::Box->new( 'vertical', 5);
+    $vbox->pack_start( $label, FALSE, FALSE, 5 );
     $vbox->pack_start( $sw, TRUE, TRUE, 0 );
-    $vbox->show_all;
+    $dialog->get_content_area()->add($vbox);
+    $dialog->show_all;
 
+    # get response
     my $response = $dialog->run;
     my ( $id, $name );
     if ( $response eq 'ok' ) {
@@ -436,20 +428,16 @@ sub dialog_choose_db {
     my $self = shift;
 
     # Create the dialog and init two buttons
-    my $dialog = Gtk2::Dialog->new(
+    my $dialog = Gtk3::Dialog->new(
         "Choose DB...",
         $self->win, [qw{modal destroy-with-parent}],
         'gtk-ok'    => 'ok',
         'gtk-close' => 'close',
     );
 
-    # This vbox comes with the dialog
-    my $vbox = $dialog->vbox;
-
-    my $label = Gtk2::Label->new("Choose an AlignDB database:");
+    my $label = Gtk3::Label->new("Choose an AlignDB database:");
     $label->set_alignment( 0, 0.5 );
     $label->set_justify('left');
-    $vbox->pack_start( $label, FALSE, FALSE, 5 );
 
     my $server   = $self->get_value("entry_server");
     my $port     = $self->get_value("entry_port");
@@ -465,32 +453,38 @@ sub dialog_choose_db {
         . ' -e "SHOW DATABASES"';
     my @dbs = grep {/vs/} split "\n", `$cmd`;
 
-    my $model = Gtk2::ListStore->new('Glib::String');
+    my $model = Gtk3::ListStore->new('Glib::String');
     for (@dbs) {
         my $iter = $model->append;
         $model->set( $iter, 0 => $_, );
     }
 
-    my $treeview = Gtk2::TreeView->new_with_model($model);
+    my $treeview = Gtk3::TreeView->new_with_model($model);
 
     # Add columns
     $treeview->insert_column_with_attributes( 0, "DB name",
-        Gtk2::CellRendererText->new,
+        Gtk3::CellRendererText->new,
         text => 0 );
     $treeview->get_column(0)->set_sort_column_id(0);
 
-    # get the Gtk2::TreeSelection of $treeview
+    # get the Gtk3::TreeSelection of $treeview
     my $treeselection = $treeview->get_selection;
     $treeselection->set_mode('single');
 
     # add TreeView to a scrolledwindow
-    my $sw = Gtk2::ScrolledWindow->new;
+    my $sw = Gtk3::ScrolledWindow->new;
     $sw->set_size_request( 360, 240 );
     $sw->set_policy( 'automatic', 'automatic' );
     $sw->add($treeview);
+    
+    # Create a vbox
+    my $vbox = Gtk3::Box->new( 'vertical', 5);
+    $vbox->pack_start( $label, FALSE, FALSE, 5 );
     $vbox->pack_start( $sw, TRUE, TRUE, 0 );
-    $vbox->show_all;
+    $dialog->get_content_area()->add($vbox);
+    $dialog->show_all;
 
+    # get response
     my $response = $dialog->run;
     my $db_name;
     if ( $response eq 'ok' ) {
@@ -539,81 +533,86 @@ sub dialog_db_meta {
     my $db_name = $self->get_value("entry_db_name");
 
     # Create the dialog and init two buttons
-    my $dialog = Gtk2::Dialog->new(
+    my $dialog = Gtk3::Dialog->new(
         "Steps done",
         $self->win, [qw{modal destroy-with-parent}],
         'gtk-ok'    => 'ok',
         'gtk-close' => 'close',
     );
 
-    # This vbox comes with the dialog
-    my $vbox = $dialog->vbox;
-
     my $model
-        = Gtk2::ListStore->new( 'Glib::Int', 'Glib::String', 'Glib::String' );
+        = Gtk3::ListStore->new( 'Glib::Int', 'Glib::String', 'Glib::String' );
 
-    # get dbh
-    my $obj = AlignDB->new(
-        mysql  => "$db_name:$server",
-        user   => $username,
-        passwd => $password,
-    );
-    my $dbh = $obj->dbh;
-
-    # query table meta
-    my $sql = q{
-        SELECT meta_value
-        FROM meta
-        WHERE meta_key LIKE "a_%"
-           OR meta_key LIKE "c_%"
-    };
-    my $sth = $dbh->prepare($sql);
-    $sth->execute;
-
-    # get meta info
-    my $serial;
-    while ( my ($operation) = $sth->fetchrow_array ) {
-        $serial++;
-        my ($time) = $sth->fetchrow_array;
-
-        # The iter is a pointer in the treestore. We use to add data.
-        my $iter = $model->append;
-        $model->set(
-            $iter,
-            0 => $serial,
-            1 => $operation,
-            2 => $time,
+    # retrieve data for $model
+    {
+        # get dbh
+        my $obj = AlignDB->new(
+            mysql  => "$db_name:$server",
+            user   => $username,
+            passwd => $password,
         );
+        my $dbh = $obj->dbh;
+
+        # query table meta
+        my $sql = q{
+            SELECT meta_value
+            FROM meta
+            WHERE meta_key LIKE "a_%"
+               OR meta_key LIKE "c_%"
+        };
+        my $sth = $dbh->prepare($sql);
+        $sth->execute;
+
+        # get meta info
+        my $serial;
+        while ( my ($operation) = $sth->fetchrow_array ) {
+            $serial++;
+            my ($time) = $sth->fetchrow_array;
+
+            # The iter is a pointer in the treestore. We use to add data.
+            my $iter = $model->append;
+            $model->set(
+                $iter,
+                0 => $serial,
+                1 => $operation,
+                2 => $time,
+            );
+        }
     }
 
-    my $treeview = Gtk2::TreeView->new_with_model($model);
+    my $treeview = Gtk3::TreeView->new_with_model($model);
 
     # Add columns
     $treeview->insert_column_with_attributes( 0, "serial",
-        Gtk2::CellRendererText->new,
+        Gtk3::CellRendererText->new,
         text => 0 );
     $treeview->insert_column_with_attributes( 1, "operation",
-        Gtk2::CellRendererText->new,
+        Gtk3::CellRendererText->new,
         text => 1 );
     $treeview->insert_column_with_attributes( 2, "time",
-        Gtk2::CellRendererText->new,
+        Gtk3::CellRendererText->new,
         text => 2 );
     $treeview->get_column(0)->set_sort_column_id(0);
     $treeview->get_column(1)->set_sort_column_id(1);
     $treeview->get_column(2)->set_sort_column_id(2);
 
-    # get the Gtk2::TreeSelection of $treeview
+    # get the Gtk3::TreeSelection of $treeview
     my $treeselection = $treeview->get_selection;
     $treeselection->set_mode('single');
 
     # add TreeView to a scrolledwindow
-    my $sw = Gtk2::ScrolledWindow->new;
+    my $sw = Gtk3::ScrolledWindow->new;
     $sw->set_size_request( 360, 240 );
     $sw->set_policy( 'automatic', 'automatic' );
     $sw->add($treeview);
-    $vbox->pack_start( $sw, TRUE, TRUE, 0 );
-    $vbox->show_all;
 
+    # Create a vbox
+    my $vbox = Gtk3::Box->new( 'vertical', 5);
+    $vbox->pack_start( $sw, TRUE, TRUE, 0 );
+    $dialog->get_content_area()->add($vbox);
+    $dialog->show_all;
+
+    # get response
     my $response = $dialog->run;
     my ( $operation, $time );
     if ( $response eq 'ok' ) {
@@ -757,7 +756,7 @@ sub on_button_choose_db_clicked {
 sub on_button_open_dir_align_axt_clicked {
     my $self = shift;
 
-    my $dia = Gtk2::FileChooserDialog->new(
+    my $dia = Gtk3::FileChooserDialog->new(
         'Choose a dir', $self->win, 'select-folder',
         'gtk-cancel' => 'cancel',
         'gtk-ok'     => 'ok'
@@ -784,7 +783,7 @@ sub on_button_open_dir_align_axt_clicked {
 sub on_button_open_file_id2name_clicked {
     my $self = shift;
 
-    my $dia = Gtk2::FileChooserDialog->new(
+    my $dia = Gtk3::FileChooserDialog->new(
         'Choose a file', $self->win, 'open',
         'gtk-cancel' => 'cancel',
         'gtk-ok'     => 'ok'
@@ -811,7 +810,7 @@ sub on_button_open_file_id2name_clicked {
 sub on_button_open_dir_align_fas_clicked {
     my $self = shift;
 
-    my $dia = Gtk2::FileChooserDialog->new(
+    my $dia = Gtk3::FileChooserDialog->new(
         'Choose a dir', $self->win, 'select-folder',
         'gtk-cancel' => 'cancel',
         'gtk-ok'     => 'ok'
@@ -893,17 +892,6 @@ sub on_button_clear_clicked {
 
     my $text = $self->text;
     $text->delete( $text->get_start_iter, $text->get_end_iter );
-
-    return;
-}
-
-sub on_button_copy_clicked {
-    my $self = shift;
-
-    my $text = $self->text;
-    $text->select_range( $text->get_start_iter, $text->get_end_iter );
-    my $clip = $self->app->get_object('textview_console')->get_clipboard;
-    $text->copy_clipboard($clip);
 
     return;
 }
@@ -1006,7 +994,6 @@ sub on_button_gen_aligndb_fas_clicked {
 
     my $length_threshold = $self->get_value("entry_length_threshold");
     my $parallel         = $self->get_value("entry_parallel");
-    my $batch_number     = $self->get_value("entry_batch");
 
     my $dir_align  = $self->get_value("entry_dir_align_fas");
     my $file_id_of = $self->get_value("entry_file_id2name");
@@ -1024,7 +1011,6 @@ sub on_button_gen_aligndb_fas_clicked {
         . " --dir $dir_align"
         . " --length $length_threshold"
         . " --parallel $parallel"
-        . " --batch $batch_number"
         . " --id $file_id_of"
         . ( $outgroup ? " --outgroup" : "" )
         . ( $block    ? " --block"    : "" );
@@ -1043,7 +1029,6 @@ sub on_button_insert_isw_axt_clicked {
     my $db_name  = $self->get_value("entry_db_name");
 
     my $parallel = $self->get_value("entry_parallel");
-    my $batch    = $self->get_value("entry_batch");
 
     my $cmd
         = "perl $FindBin::Bin/../init/insert_isw.pl"
@@ -1052,8 +1037,7 @@ sub on_button_insert_isw_axt_clicked {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . " --parallel $parallel"
-        . " --batch $batch";
+        . " --parallel $parallel";
 
     $self->exec_cmd($cmd);
     return;
@@ -1069,7 +1053,6 @@ sub on_button_insert_isw_fas_clicked {
     my $db_name  = $self->get_value("entry_db_name");
 
     my $parallel = $self->get_value("entry_parallel");
-    my $batch    = $self->get_value("entry_batch");
 
     my $outgroup = $self->get_value("checkbutton_fas_outgroup");
 
@@ -1081,7 +1064,6 @@ sub on_button_insert_isw_fas_clicked {
         . " --password $password"
         . " -d $db_name"
         . " --parallel $parallel"
-        . " --batch $batch"
         . ( $outgroup ? " --outgroup" : "" );
 
     $self->exec_cmd($cmd);
@@ -1098,7 +1080,6 @@ sub on_button_insert_isw_join_clicked {
     my $db_name  = $self->get_value("entry_db_name");
 
     my $parallel = $self->get_value("entry_parallel");
-    my $batch    = $self->get_value("entry_batch");
 
     my $cmd
         = "perl $FindBin::Bin/../init/insert_isw.pl"
@@ -1108,7 +1089,6 @@ sub on_button_insert_isw_join_clicked {
         . " --password $password"
         . " -d $db_name"
         . " --parallel $parallel"
-        . " --batch $batch"
         . " --outgroup";
 
     $self->exec_cmd($cmd);
@@ -1417,12 +1397,9 @@ sub on_button_chart_common_clicked {
     }
     return if !$stat_file;
 
-    my $jc_correction = $self->get_value("checkbutton_chart_jc");
-
     my $cmd
         = "perl $FindBin::Bin/../stat/common_chart_factory.pl"
-        . " -i $stat_file"
-        . " -j $jc_correction";
+        . " -i $stat_file";
 
     $self->exec_cmd($cmd);
     return;
@@ -1438,12 +1415,9 @@ sub on_button_chart_multi_clicked {
     }
     return if !$stat_file;
 
-    my $jc_correction = $self->get_value("checkbutton_chart_jc");
-
     my $cmd
         = "perl $FindBin::Bin/../stat/multi_chart_factory.pl"
-        . " -i $stat_file"
-        . " -j $jc_correction";
+        . " -i $stat_file";
 
     $self->exec_cmd($cmd);
     return;
@@ -1459,12 +1433,9 @@ sub on_button_chart_gc_clicked {
     }
     return if !$stat_file;
 
-    my $jc_correction = $self->get_value("checkbutton_chart_jc");
-
     my $cmd
         = "perl $FindBin::Bin/../stat/gc_chart_factory.pl"
-        . " -i $stat_file"
-        . " -j $jc_correction";
+        . " -i $stat_file";
 
     $self->exec_cmd($cmd);
     return;
