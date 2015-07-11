@@ -59,7 +59,7 @@ $db->drop;
 # taxon
 #----------------------------------------------------------#
 {
-    my $file = "$FindBin::Bin/../init/taxon.csv";
+    my $file = "$FindBin::Bin/../data/taxon.csv";
     print "Use $file to Init table taxon\n";
 
     my $coll = $db->get_collection('taxon');
@@ -93,7 +93,7 @@ $db->drop;
 # chromosome
 #----------------------------------------------------------#
 {
-    my $file = "$FindBin::Bin/../init/chr_length.csv";
+    my $file = "$FindBin::Bin/../data/chr_length.csv";
     print "Use $file to Init table chromosome\n";
 
     my $coll_chr   = $db->get_collection('chromosome');

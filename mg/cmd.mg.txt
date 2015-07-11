@@ -3,9 +3,7 @@
 #----------------------------------------------------------#
 # Start mongod
 #----------------------------------------------------------#
-numactl --interleave=all ~/share/mongodb/bin/mongod --dbpath ~/share/mongodb/data/db  --rest --nojournal --directoryperdb
-
-numactl --interleave=all ~/share/mongodb/bin/mongod --dbpath ~/share/mongodb/data/db  --rest --nojournal --directoryperdb
+numactl --interleave=all ~/share/mongodb/bin/mongod --config ~/share/mongodb/mongod.cnf
 
 cd ~/Scripts/alignDB
 perl mg/init_mg.pl -d Basic
@@ -23,7 +21,8 @@ cd ~/Scripts/alignDB
 
 perl mg/init_mg.pl -d Human
 
-# Runtime 10 minutes and 55 seconds.
+# mongodb-2.6            Runtime 10 minutes and 55 seconds.
+# mongodb-3.0-wiredTiger Runtime 11 minutes and 20 seconds.
 perl mg/gen_mg.pl -d Human -t="9606,human" --dir ~/data/alignment/primates/human_chr/ --length 500000 --parallel 12
 
 rm -fr ~/data/mongodb/Human
@@ -32,7 +31,8 @@ rm -fr ~/data/mongodb/Human
 ~/share/mongodb/bin/mongo Human_GC --eval "db.dropDatabase();" 
 ~/share/mongodb/bin/mongorestore ~/data/mongodb/Human --db Human_GC
 
-# Runtime 2 hours and 26 minutes.
+# mongodb-2.6            Runtime 2 hours and 26 minutes.
+# mongodb-3.0-wiredTiger Runtime 1 hour and 19 minutes.
 perl mg/insert_mg_gcwave.pl -d Human_GC --batch 10 --parallel 8
 
 rm -fr ~/data/mongodb/Human_GC
@@ -41,17 +41,21 @@ rm -fr ~/data/mongodb/Human_GC
 #----------------------------#
 # FaireSeq
 #----------------------------#
-# about 1 hour
+# mongodb-2.6            About 1 hour
+# mongodb-3.0-wiredTiger 23m59.890s; 18m18s spent on restoring indexes for collection Human_GC_FaireSeq.gsw
 ~/share/mongodb/bin/mongo Human_GC_FaireSeq --eval "db.dropDatabase();" 
-~/share/mongodb/bin/mongorestore ~/data/mongodb/Human_GC --db Human_GC_FaireSeq
+time ~/share/mongodb/bin/mongorestore ~/data/mongodb/Human_GC --db Human_GC_FaireSeq
 
-# Runtime 7 minutes and 31 seconds.
+# mongodb-2.6            Runtime 7 minutes and 31 seconds.
+# mongodb-3.0-wiredTiger Runtime 7 minutes and 13 seconds
 perl mg/count_mg_bed.pl -d Human_GC_FaireSeq --parallel 8 --run insert --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireA549Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireAstrocyPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGlioblaPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm12878Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm12891Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm12892Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm18507Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireGm19239Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireH1hescPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHelas3Ifna4hPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHelas3Ifng4hPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHelas3Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHepg2Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHtr8Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireHuvecPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireK562NabutPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireK562OhureaPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireK562Pk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireMedulloPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireNhbePk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireNhekPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFairePanisletsPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireUrotsaPk.bb.bed --file /home/wangq/data/encode/process/wgEncodeOpenChromFaireUrotsaUt189Pk.bb.bed
 
-# Runtime 3 hours and 25 minutes.
+# mongodb-2.6            Runtime 3 hours and 25 minutes.
+# mongodb-3.0-wiredTiger Runtime 1 hour and 17 minutes.
 perl mg/count_mg_bed.pl -d Human_GC_FaireSeq --parallel 8 --run count
 
-# Runtime 29 minutes and 36 seconds.
+# mongodb-2.6            Runtime 29 minutes and 36 seconds.
+# mongodb-3.0-wiredTiger Runtime 5 minutes and 1 second.
 perl mg/stat_mg.pl -d Human_GC_FaireSeq
 
 perl mg/chart_mg.pl -i d:\wq\GC\autochart\131216_encode_bed_count\Human_GC_FaireSeq.mg.xlsx
@@ -103,57 +107,58 @@ perl mg/chart_mg.pl -i d:\wq\GC\autochart\131216_encode_bed_count\Human_GC_TFBS.
 cd d:\wq\Scripts\alignDB
 
 # Runtime 24 seconds.
-perl mg/init_mg.pl -d S288C
+perl mg/init_mg.pl -d S288c
 
 # Runtime 7 seconds.
-perl mg/gen_mg.pl -d S288C -t "4932,S288C"  --dir d:\data\alignment\self_alignment\S288C\ --length 10000000 --parallel 1
+perl mg/gen_mg.pl -d S288c -t "559292,S288c"  --dir d:\data\alignment\self_alignment\S288C\ --length 10000000 --parallel 1
 
-perl mg/gen_mg_mce.pl -d S288C -t "4932,S288C"  --dir d:\data\alignment\self_alignment\S288C\ --length 10000000 --parallel 1
+perl mg/gen_mg_mce.pl -d S288c -t "559292,S288c"  --dir d:\data\alignment\self_alignment\S288C\ --length 10000000 --parallel 1
 
 
 # Runtime 2 minutes and 45 seconds.
-perl mg/insert_mg_gcwave.pl -d S288C --batch 1 --parallel 1
+perl mg/insert_mg_gcwave.pl -d S288c --batch 1 --parallel 1
 
 
-perl mg/insert_mg_gcwave_mce.pl -d S288C --batch 1 --parallel 1
+perl mg/insert_mg_gcwave_mce.pl -d S288c --batch 1 --parallel 1
 
 # Runtime 1 second.
-perl mg/count_mg_bed.pl -d S288C --run insert -f d:/wq/Scripts/alignDB/ofg/spo11/spo11_hot.bed --batch 1 --parallel 1
+perl mg/count_mg_bed.pl -d S288c --run insert -f d:/Scripts/alignDB/ofg/spo11/spo11_hot.bed --batch 1 --parallel 1
+
 # Runtime 1 minute and 16 seconds.
-perl mg/count_mg_bed.pl -d S288C --run count --batch 1 --parallel 1
+perl mg/count_mg_bed.pl -d S288c --run count --batch 1 --parallel 1
 
 # Runtime 4 seconds.
-perl mg/stat_mg.pl -d S288C
+perl mg/stat_mg.pl -d S288c
 
 #----------------------------------------------------------#
 # S288C | linux
 #----------------------------------------------------------#
 cd ~/Scripts/alignDB
 
-perl mg/init_mg.pl -d S288C
-perl mg/gen_mg.pl -d S288C -t "4932,S288C" --dir ~/data/alignment/self_alignment/S288C  --parallel 1
+perl mg/init_mg.pl -d S288c
+perl mg/gen_mg.pl -d S288c -t "559292,S288c" --dir ~/data/alignment/self_alignment/S288C  --parallel 1
 
-perl mg/gen_mg_mce.pl -d S288C -t "4932,S288C" --dir ~/data/alignment/self_alignment/S288C  --parallel 1
+perl mg/gen_mg_mce.pl -d S288c -t "559292,S288c" --dir ~/data/alignment/self_alignment/S288C  --parallel 1
 
 
 # Runtime 2 minutes and 2 seconds.
-perl mg/insert_mg_gcwave.pl -d S288C --batch 1 --parallel 1
+perl mg/insert_mg_gcwave.pl -d S288c --batch 1 --parallel 1
 
-perl mg/insert_mg_gcwave_mce.pl -d S288C --batch 1 --parallel 1
+perl mg/insert_mg_gcwave_mce.pl -d S288c --batch 1 --parallel 1
 
 # Runtime 1 minute and 3 seconds.
-perl mg/insert_mg_gcwave.pl -d S288C --batch 1 --parallel 2
+perl mg/insert_mg_gcwave.pl -d S288c --batch 1 --parallel 2
 
 # Runtime 31 seconds.
-perl mg/insert_mg_gcwave.pl -d S288C --batch 1 --parallel 4
+perl mg/insert_mg_gcwave.pl -d S288c --batch 1 --parallel 4
 
 # Runtime 21 seconds.
-perl mg/insert_mg_gcwave.pl -d S288C --batch 1 --parallel 8
+perl mg/insert_mg_gcwave.pl -d S288c --batch 1 --parallel 8
 
 # Runtime 18 seconds.
-perl mg/insert_mg_gcwave.pl -d S288C --batch 1 --parallel 12
+perl mg/insert_mg_gcwave.pl -d S288c --batch 1 --parallel 12
 
-~/share/mongodb/bin/mongodump --db S288C --out ~/data/mongodb/
+~/share/mongodb/bin/mongodump --db S288c --out ~/data/mongodb/
 
 #----------------------------#
 # gene part
