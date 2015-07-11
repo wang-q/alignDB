@@ -517,7 +517,7 @@ sub dialog_choose_db {
         };
     }
     else {
-        $self->append_text("choose db failed\n");
+        $self->append_text("choose db closed\n");
         return;
     }
 }
@@ -1150,32 +1150,6 @@ sub on_button_insert_gc_clicked {
         . " -d $db_name"
         . " --insert_gc $insert_gc"
         . " --insert_segment $insert_segment"
-        . " --parallel $parallel";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
-sub on_button_insert_gene_clicked {
-    my $self = shift;
-
-    my $server   = $self->get_value("entry_server");
-    my $port     = $self->get_value("entry_port");
-    my $username = $self->get_value("entry_username");
-    my $password = $self->get_value("entry_password");
-    my $db_name  = $self->get_value("entry_db_name");
-    my $ensembl  = $self->get_value("entry_ensembl");
-
-    my $parallel = $self->get_value("entry_parallel");
-
-    my $cmd
-        = "perl $FindBin::Bin/../gene/insert_gene.pl"
-        . " -s $server"
-        . " --port $port"
-        . " -u $username"
-        . " --password $password"
-        . " -d $db_name"
-        . " -e $ensembl"
         . " --parallel $parallel";
 
     $self->exec_cmd($cmd);
