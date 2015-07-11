@@ -69,7 +69,7 @@ if ($file_dump) {
     if ( $file_dump =~ /\.gz$/ ) {
         if ( !$gzip ) {
             print
-                "The file [$file_dump] seems like a gzipped file, set --gzip ON.";
+                "The file [$file_dump] seems like a gzipped file, set --gzip ON.\n";
             $gzip++;
         }
     }
@@ -77,7 +77,7 @@ if ($file_dump) {
         if ($gzip) {
             print "The name of file [$file_dump] doesn't end with '.gz'.\n";
             print "Append '.gz' to it.\n";
-            $file_dump += '.gz';
+            $file_dump .= '.gz';
             print "It's [$file_dump] now.\n";
         }
     }
@@ -116,7 +116,7 @@ if ($file_dump) {
 }
 else {
     $file_dump = $db . ".dump.sql";
-    $file_dump += '.gz' if $gzip;
+    $file_dump .= '.gz' if $gzip;
 
     my $dump;
     if ($gzip) {
@@ -175,4 +175,7 @@ dup_db.pl - Duplicate a database or dump to a gzipped file
         --goal              dup db name
         --gzip              dump file is gzipped
 
+    perl dup_db.pl -d S288CvsRM11 -z # S288CvsRM11.dump.sql.gz
+    perl dup_db.pl -f S288CvsRM11.dump.sql.gz -g S288CvsRM11_dup
+    
 =cut
