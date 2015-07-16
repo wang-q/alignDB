@@ -12,8 +12,9 @@ $MongoDB::BSON::looks_like_number = 1;
 $MongoDB::BSON::utf8_flag_on      = 0;
 use MongoDB::OID;
 
+use MCE;
+
 use AlignDB::IntSpan;
-use AlignDB::Run;
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(:all);
 
@@ -73,6 +74,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 #----------------------------------------------------------#
 $stopwatch->start_message("Update GC tables of $dbname...");
 
+# retrieve all _id from align
 my @jobs;
 {
     my $mongo = MongoDB::MongoClient->new(
@@ -82,12 +84,8 @@ my @jobs;
     );
     my $db = $mongo->get_database($dbname);
 
-    my $coll    = $db->get_collection('align');
-    my @objects = $coll->find->all;
-    while ( scalar @objects ) {
-        my @batching = splice @objects, 0, $batch_number;
-        push @jobs, [@batching];
-    }
+    my $coll = $db->get_collection('align');
+    @jobs = $coll->find->all;
 
     {
         my $coll_extreme = $db->get_collection('extreme');
@@ -118,8 +116,13 @@ my @jobs;
 # worker
 #----------------------------------------------------------#
 my $worker = sub {
-    my $job    = shift;
-    my @aligns = @$job;
+    my ( $self, $chunk_ref, $chunk_id ) = @_;
+    my @aligns = @{$chunk_ref};
+    
+    my $wid = MCE->wid;
+
+    my $inner_watch = AlignDB::Stopwatch->new;
+    $inner_watch->block_message("* Process task [$chunk_id] by worker #$wid");
 
     # wait forever for responses
     my $mongo = MongoDB::MongoClient->new(
@@ -160,18 +163,17 @@ my $worker = sub {
         insert_gsw( $obj, $db, $align, $seq );
     }
 
+    $inner_watch->block_message( "* Task [$chunk_id] has been processed.",
+        "duration" );
+
     return;
 };
 
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
-my $run = AlignDB::Run->new(
-    parallel => $parallel,
-    jobs     => \@jobs,
-    code     => $worker,
-);
-$run->run;
+my $mce = MCE->new( max_workers => $parallel, chunk_size => $batch_number, );
+$mce->forchunk( \@jobs, $worker, );   
 
 $stopwatch->end_message;
 

@@ -15,8 +15,9 @@ $MongoDB::BSON::looks_like_number = 1;
 $MongoDB::BSON::utf8_flag_on      = 0;
 use MongoDB::OID;
 
+use MCE;
+
 use AlignDB::IntSpan;
-use AlignDB::Run;
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(:all);
 
@@ -102,10 +103,14 @@ printf "\n----Total .fa Files: %4s----\n\n", scalar @files;
 # worker
 #----------------------------------------------------------#
 my $worker = sub {
-    my $infile = shift;
+    my ( $self, $chunk_ref, $chunk_id ) = @_;
+    my $infile = $chunk_ref->[0];
+    
+    my $wid = MCE->wid;
 
     my $inner_watch = AlignDB::Stopwatch->new;
-    $inner_watch->block_message("Process $infile...");
+    $inner_watch->block_message(
+        "* Process task [$chunk_id] by worker #$wid\n* File [$infile]...");
 
     my $db = MongoDB::MongoClient->new(
         host          => $server,
@@ -216,12 +221,8 @@ my $worker = sub {
 #----------------------------------------------------------#
 # start
 #----------------------------------------------------------#
-my $run = AlignDB::Run->new(
-    parallel => $parallel,
-    jobs     => \@files,
-    code     => $worker,
-);
-$run->run;
+my $mce = MCE->new( max_workers => $parallel, );
+$mce->foreach( \@files, $worker, ); # foreach implies chunk_size => 1.
 
 # indexing
 {
