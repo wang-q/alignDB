@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
 use Getopt::Long;
 use Pod::Usage;
@@ -80,7 +81,7 @@ $db->drop;
     print "There are @{[$coll->count]} documents in collection taxon\n";
 
     # a test
-    my $result = $coll->find_one( { 'common_name' => 'human' } );
+    my $result = $coll->find_one( { 'common_name' => 'Human' } );
     if ($result) {
         printf
             "Found a row: \n\ttaxon_id = %s, genus = %s, species = %s, common_name = %s\n\n",
@@ -130,7 +131,7 @@ $db->drop;
         "There are @{[$coll_chr->count]} documents in collection chromosome\n";
 
     # a test
-    my $result = $coll_chr->find_one( { 'taxon.taxon_id' => 31033 } );
+    my $result = $coll_chr->find_one( { 'taxon.taxon_id' => 3702 } );
     if ($result) {
         printf
             "Found a row: \n\ttaxon_id = %s, chr_name = %s, chr_length = %s\n\n",

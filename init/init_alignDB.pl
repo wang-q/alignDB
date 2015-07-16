@@ -68,8 +68,6 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
     $drh->func( 'dropdb',   $db, $server, $username, $password, 'admin' );
     $drh->func( 'createdb', $db, $server, $username, $password, 'admin' );
 
-    #$drh->func( 'reload',   $db, $server, $username, $password, 'admin' );
-
     my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
     open my $infh, '<', $init_sql;
     my $content = do { local $/; <$infh> };
