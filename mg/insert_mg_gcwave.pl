@@ -118,7 +118,7 @@ my @jobs;
 my $worker = sub {
     my ( $self, $chunk_ref, $chunk_id ) = @_;
     my @aligns = @{$chunk_ref};
-    
+
     my $wid = MCE->wid;
 
     my $inner_watch = AlignDB::Stopwatch->new;
@@ -159,7 +159,10 @@ my $worker = sub {
 
         my $seq = $coll_seq->find_one( { _id => $align->{seq_id} } )->{seq};
 
+        print "    Insert gc extremes\n";
         insert_extreme( $obj, $db, $align, $seq );
+
+        print "    Insert gc sliding windows\n";
         insert_gsw( $obj, $db, $align, $seq );
     }
 
@@ -173,7 +176,7 @@ my $worker = sub {
 # start update
 #----------------------------------------------------------#
 my $mce = MCE->new( max_workers => $parallel, chunk_size => $batch_number, );
-$mce->forchunk( \@jobs, $worker, );   
+$mce->forchunk( \@jobs, $worker, );
 
 $stopwatch->end_message;
 
@@ -185,11 +188,9 @@ sub insert_extreme {
     my $align = shift;
     my $seq   = shift;
 
-    print "    Insert gc extremes\n";
-
-    my $align_set = AlignDB::IntSpan->new( "1-" . $align->{length} );
+    my $comparable_set = AlignDB::IntSpan->new( "1-" . $align->{length} );
     my @extreme_site;
-    my @slidings = $obj->gc_wave( [$seq], $align_set );
+    my @slidings = $obj->gc_wave( [$seq], $comparable_set );
     for my $s (@slidings) {
         my $flag = $s->{high_low_flag};
 
@@ -211,9 +212,10 @@ sub insert_extreme {
     for ( my $i = 0; $i < scalar @extreme_site; $i++ ) {
 
         # wave_length
-        my $extreme_set             = $extreme_site[$i]->{set};
-        my $extreme_middle_left     = $extreme_set->at($half_length);
-        my $extreme_middle_left_idx = $align_set->index($extreme_middle_left);
+        my $extreme_set         = $extreme_site[$i]->{set};
+        my $extreme_middle_left = $extreme_set->at($half_length);
+        my $extreme_middle_left_idx
+            = $comparable_set->index($extreme_middle_left);
         my $left_wave_length
             = $extreme_middle_left_idx - $prev_extreme_middle_right_idx + 1;
         $prev_extreme_middle_right_idx = $extreme_middle_left_idx + 1;
@@ -227,14 +229,15 @@ sub insert_extreme {
     }
 
     # right
-    my $next_extreme_middle_left_idx = $align_set->cardinality;
+    my $next_extreme_middle_left_idx = $comparable_set->cardinality;
     my $next_extreme_gc              = $slidings[-1]->{gc};
     for ( my $i = scalar @extreme_site - 1; $i >= 0; $i-- ) {
 
         # wave_length
-        my $extreme_set              = $extreme_site[$i]->{set};
-        my $extreme_middle_right     = $extreme_set->at( $half_length + 1 );
-        my $extreme_middle_right_idx = $align_set->index($extreme_middle_right);
+        my $extreme_set          = $extreme_site[$i]->{set};
+        my $extreme_middle_right = $extreme_set->at( $half_length + 1 );
+        my $extreme_middle_right_idx
+            = $comparable_set->index($extreme_middle_right);
         my $right_wave_length
             = $next_extreme_middle_left_idx - $extreme_middle_right_idx + 1;
         $next_extreme_middle_left_idx = $extreme_middle_right_idx - 1;
@@ -273,8 +276,7 @@ sub insert_gsw {
     my $align = shift;
     my $seq   = shift;
 
-    print "    Insert gc sliding windows\n";
-    my $align_set = AlignDB::IntSpan->new( "1-" . $align->{length} );
+    my $comparable_set = AlignDB::IntSpan->new( "1-" . $align->{length} );
 
     my $coll_extreme = $db->get_collection('extreme');
     my $coll_gsw     = $db->get_collection('gsw');
@@ -348,16 +350,16 @@ sub insert_gsw {
             # ..., D2, D1, T0, A1, A2, ...
             my ( $sw_start, $sw_end );
             if ( $gsw_type eq 'A' ) {
-                $sw_start = $align_set->index( $prev_ex_set->max ) + 1;
+                $sw_start = $comparable_set->index( $prev_ex_set->max ) + 1;
                 $sw_end   = $sw_start + $gsw_size - 1;
             }
             elsif ( $gsw_type eq 'D' ) {
-                $sw_end   = $align_set->index( $ex_set->min ) - 1;
+                $sw_end   = $comparable_set->index( $ex_set->min ) - 1;
                 $sw_start = $sw_end - $gsw_size + 1;
             }
 
             for my $gsw_distance ( 1 .. $gsw_density ) {
-                my $gsw_set = $align_set->slice( $sw_start, $sw_end );
+                my $gsw_set = $comparable_set->slice( $sw_start, $sw_end );
 
                 push @gsw_windows,
                     {
@@ -405,7 +407,7 @@ sub insert_gsw {
 
                 # gsw cv
                 my $resize_set
-                    = center_resize( $gsw->{set}, $align_set,
+                    = _center_resize( $gsw->{set}, $comparable_set,
                     $stat_segment_size );
                 if ( !$resize_set ) {
                     print "    Can't resize window!\n";
@@ -430,7 +432,7 @@ sub insert_gsw {
     return;
 }
 
-sub center_resize {
+sub _center_resize {
     my $old_set    = shift;
     my $parent_set = shift;
     my $resize     = shift;
@@ -461,24 +463,19 @@ __END__
 
 =head1 NAME
 
-    insert_mg_gcwave.pl - Add GC ralated tables to alignDB
+insert_mg_gcwave.pl - Add GC ralated tables to alignDB
 
 =head1 SYNOPSIS
 
-# S288C | linux
-~/share/mongodb/bin/mongo --eval "db.dropDatabase()" S288C
-~/share/mongodb/bin/mongorestore ~/data/mongodb/basic --db S288C
-perl mg/gen_mg.pl -d S288C -t "4932,S288C" --dir ~/data/alignment/self_alignment/S288C  --parallel 1
-
-# Runtime 21 seconds.
-perl mg/insert_mg_gcwave.pl -d S288C --batch 1 --parallel 8
-
-~/share/mongodb/bin/mongodump --db S288C --out ~/data/mongodb/
-
-# Runtime 1 minute and 41 seconds.
-~/share/mongodb/bin/mongo --eval "db.dropDatabase()" S288C
-~/share/mongodb/bin/mongorestore ~/data/mongodb/S288C --db S288C
-perl mg/update_mg_sw_cv.pl -d S288C --batch 1 --parallel 2
+    # S288c
+    perl mg/init_mg.pl -d S288c
+    perl mg/gen_mg.pl -d S288c -t "559292,S288c" --dir ~/data/alignment/yeast_combine/S288C  --parallel 1
+    
+    # Runtime 21 seconds.
+    perl mg/insert_mg_gcwave.pl -d S288c --batch 1 --parallel 4
+    
+    # Runtime 1 minute and 41 seconds.
+    perl mg/update_mg_sw_cv.pl -d S288c --batch 1 --parallel 4
 
 =cut
 
