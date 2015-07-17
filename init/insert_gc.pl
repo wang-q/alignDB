@@ -7,6 +7,7 @@ use Pod::Usage;
 use Config::Tiny;
 use YAML qw(Dump Load DumpFile LoadFile);
 
+use AlignDB::GC;
 use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
@@ -14,7 +15,6 @@ use AlignDB::Stopwatch;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
-use AlignDB::GC;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -125,8 +125,7 @@ my $worker = sub {
         user   => $username,
         passwd => $password,
     );
-    AlignDB::GC->meta->apply($obj);
-    my %opt = (
+    my $obj_gc = AlignDB::GC->new(
         wave_window_size => $wave_window_size,
         wave_window_step => $wave_window_step,
         vicinal_size     => $vicinal_size,
@@ -135,17 +134,13 @@ my $worker = sub {
         stat_window_size => $stat_window_size,
         stat_window_step => $stat_window_step,
     );
-    for my $key ( sort keys %opt ) {
-        $obj->$key( $opt{$key} );
-    }
 
     # Database handler
     my $dbh = $obj->dbh;
 
     # alignments' chromosomal location, target_seq and query_seq
     my $align_seq_query = q{
-        SELECT  a.align_length,
-                a.align_comparable_runlist
+        SELECT  a.align_comparable_runlist
         FROM    align a
         WHERE   a.align_id = ?
     };
@@ -155,18 +150,15 @@ my $worker = sub {
     for my $align_id (@align_ids) {
         $obj->process_message($align_id);
         $align_seq_sth->execute($align_id);
-        my ( $align_length, $comparable_runlist )
-            = $align_seq_sth->fetchrow_array;
+        my ($comparable_runlist) = $align_seq_sth->fetchrow_array;
 
         # comparable runlist
         my $comparable_set = AlignDB::IntSpan->new($comparable_runlist);
-        my $seqs_ref       = $obj->get_seqs($align_id);
 
         if ($insert_gc) {
-            insert_extreme( $obj, $dbh, $align_id, $seqs_ref, $comparable_set,
-                $align_length );
+            insert_extreme( $obj_gc, $obj, $align_id, $comparable_set );
 
-            insert_gsw( $obj, $dbh, $align_id, $comparable_set );
+            insert_gsw( $obj_gc, $obj, $align_id, $comparable_set );
         }
 
         if ($insert_segment) {
@@ -178,7 +170,7 @@ my $worker = sub {
                 $style = 'one_level';
 
             }
-            insert_segment( $obj, $dbh, $align_id, $comparable_set, $style );
+            insert_segment( $obj_gc, $obj, $align_id, $comparable_set, $style );
         }
     }
 
@@ -209,15 +201,16 @@ END {
 exit;
 
 sub insert_extreme {
+    my $obj_gc         = shift;
     my $obj            = shift;
-    my $dbh            = shift;
     my $align_id       = shift;
-    my $seqs_ref       = shift;
     my $comparable_set = shift;
-    my $align_length   = shift;
+
+    my $dbh      = $obj->dbh;
+    my $seqs_ref = $obj->get_seqs($align_id);
 
     my @extreme_site;
-    my @slidings = $obj->gc_wave( $seqs_ref, $comparable_set );
+    my @slidings = $obj_gc->gc_wave( $seqs_ref, $comparable_set );
     for my $s (@slidings) {
         my $flag = $s->{high_low_flag};
         if ( $flag eq 'T' or $flag eq 'C' ) {
@@ -226,7 +219,7 @@ sub insert_extreme {
     }
 
     # get extreme sliding windows' sizes
-    my $windows_size = $obj->wave_window_size;
+    my $windows_size = $obj_gc->wave_window_size;
     my $half_length  = int( $windows_size / 2 );
 
     # left
@@ -310,13 +303,15 @@ sub insert_extreme {
 }
 
 sub insert_gsw {
+    my $obj_gc         = shift;
     my $obj            = shift;
-    my $dbh            = shift;
     my $align_id       = shift;
     my $comparable_set = shift;
 
+    my $dbh = $obj->dbh;
+
     # get gc sliding windows' sizes
-    my $gsw_size = $obj->gsw_size;
+    my $gsw_size = $obj_gc->gsw_size;
 
     # extreme_id & prev_extreme_id
     my $fetch_ex_id = $dbh->prepare(
@@ -479,37 +474,34 @@ sub insert_gsw {
 }
 
 sub insert_segment {
+    my $obj_gc         = shift;
     my $obj            = shift;
-    my $dbh            = shift;
     my $align_id       = shift;
     my $comparable_set = shift;
     my $style          = shift || 'normal';
 
+    my $dbh = $obj->dbh;
+
     my @segment_levels;
-
-    if ( $style eq 'alt_level' ) {
-
-    }
-    @segment_levels
-        = ( [ 1, 5000, 5000 ], [ 2, 1000, 1000 ], [ 3, 500, 500 ], );
-
-    if ( $obj->alt_level ) {
+    if ( $style eq "alt_level" ) {
         @segment_levels = reverse map { [ $_, $_ * 100, $_ * 100 ] }
             ( 2 .. 10, 20, 30, 40, 50 );
     }
-
-    if ( $obj->one_level ) {
+    elsif ( $style eq "one_level" ) {
         @segment_levels = ( [ 100, 100, 100 ] );
+    }
+    else {
+        @segment_levels
+            = ( [ 1, 5000, 5000 ], [ 2, 1000, 1000 ], [ 3, 500, 500 ], );
     }
 
     for (@segment_levels) {
-
         my $segment_type = $_->[0];
         my $segment_size = $_->[1];
         my $segment_step = $_->[2];
 
         my @segment_site
-            = $obj->segment( $comparable_set, $segment_size, $segment_step );
+            = $obj_gc->segment( $comparable_set, $segment_size, $segment_step );
 
         # prepare segment_insert
         my $segment_sql = qq{
@@ -534,16 +526,16 @@ sub insert_segment {
 
             my $seqs_ref = $obj->get_seqs($align_id);
 
-            if ( !$obj->one_level ) {
+            if ( $style ne "one_level" ) {
                 my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-                    = $obj->segment_gc_stat( $seqs_ref, $segment_set );
+                    = $obj_gc->segment_gc_stat( $seqs_ref, $segment_set );
 
                 $segment_insert->execute( $cur_window_id, $segment_type,
                     $gc_mean, $gc_std, $gc_cv, $gc_mdcw );
             }
             else {
                 my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-                    = $obj->segment_gc_stat_one( $seqs_ref, $comparable_set,
+                    = $obj_gc->segment_gc_stat_one( $seqs_ref, $comparable_set,
                     $segment_set );
 
                 $segment_insert->execute( $cur_window_id, $segment_type,
@@ -560,7 +552,7 @@ __END__
 
 =head1 NAME
 
-    insert_gc.pl - Add GC ralated tables to alignDB
+insert_gc.pl - Add GC ralated tables to alignDB
 
 =head1 SYNOPSIS
 

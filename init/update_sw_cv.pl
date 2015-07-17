@@ -7,6 +7,7 @@ use Pod::Usage;
 use Config::Tiny;
 use YAML qw(Dump Load DumpFile LoadFile);
 
+use AlignDB::GC;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(:all);
@@ -14,7 +15,6 @@ use AlignDB::Util qw(:all);
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
-use AlignDB::GC;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -107,14 +107,10 @@ my $worker = sub {
         user   => $username,
         passwd => $password,
     );
-    AlignDB::GC->meta->apply($obj);
-    my %opt = (
+    my $obj_gc = AlignDB::GC->new(
         stat_window_size => $stat_window_size,
         stat_window_step => $stat_window_step,
     );
-    for my $key ( sort keys %opt ) {
-        $obj->$key( $opt{$key} );
-    }
 
     # Database handler
     my $dbh = $obj->dbh;
@@ -207,9 +203,9 @@ my $worker = sub {
 
             my $seqs_ref = $obj->get_seqs($align_id);
             my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-                = $obj->segment_gc_stat( $seqs_ref, $resize_set );
+                = $obj_gc->segment_gc_stat( $seqs_ref, $resize_set );
             my ( undef, undef, $gc_intra_cv, undef )
-                = $obj->segment_gc_stat( $seqs_ref, $window_set, 20, 20 );
+                = $obj_gc->segment_gc_stat( $seqs_ref, $window_set, 20, 20 );
             $codingsw_update_sth->execute( $gc_cv, $gc_intra_cv, $codingsw_id );
         }
 
@@ -224,7 +220,7 @@ my $worker = sub {
 
             my $seqs_ref = $obj->get_seqs($align_id);
             my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-                = $obj->segment_gc_stat( $seqs_ref, $resize_set );
+                = $obj_gc->segment_gc_stat( $seqs_ref, $resize_set );
             $ofgsw_update_sth->execute( $gc_cv, $ofgsw_id );
         }
 
@@ -239,7 +235,7 @@ my $worker = sub {
 
             my $seqs_ref = $obj->get_seqs($align_id);
             my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-                = $obj->segment_gc_stat( $seqs_ref, $resize_set );
+                = $obj_gc->segment_gc_stat( $seqs_ref, $resize_set );
             $isw_update_sth->execute( $gc_cv, $isw_id );
         }
 
@@ -254,9 +250,9 @@ my $worker = sub {
 
             my $seqs_ref = $obj->get_seqs($align_id);
             my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-                = $obj->segment_gc_stat( $seqs_ref, $resize_set );
+                = $obj_gc->segment_gc_stat( $seqs_ref, $resize_set );
             my ( undef, undef, $gc_intra_cv, undef )
-                = $obj->segment_gc_stat( $seqs_ref, $window_set, 20, 20 );
+                = $obj_gc->segment_gc_stat( $seqs_ref, $window_set, 20, 20 );
             $gsw_update_sth->execute( $gc_cv, $gc_intra_cv, $gsw_id );
         }
     }
