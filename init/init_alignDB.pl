@@ -176,6 +176,7 @@ if ( -f $init_chr ) {
             printf "Found a row: taxon_id = %s,"
                 . " chr_name = %s, chr_length = %s\n",
                 $ref->{taxon_id}, $ref->{chr_name}, $ref->{chr_length};
+            last;
         }
     }
     $query_sth->finish;
