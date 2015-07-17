@@ -41,7 +41,7 @@ sub BUILD {
 
     # Load the UI
     $self->{app} = Gtk3::Builder->new;
-    $self->{app}->add_from_file("$FindBin::Bin/gui3.ui");
+    $self->{app}->add_from_file("$FindBin::Bin/ui.xml");
 
     # Connect signals magically
     $self->{app}->connect_signals( undef, $self );
