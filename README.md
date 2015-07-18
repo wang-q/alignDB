@@ -1,10 +1,13 @@
 # alignDB: Analyze the relationship between indels and substitutions in genomes
 
-## STEPS starting from .axt files (two-way)
+* [STEPS starting from .axt files (two-way)](#steps-starting-from-axt-files-two-way)
+* [two-way batch](#two-way-batch)
 
 ```
 cd ~/Scripts/alignDB
 ```
+
+## STEPS starting from .axt files (two-way)
 
 1. `perl init/init_alignDB.pl -d S288cvsRM11`
 
@@ -222,4 +225,15 @@ cd ~/Scripts/alignDB
     End at: Sat Jul 18 00:12:08 2015
     Runtime 28 seconds.
     ==============================
+    ```
+
+## two-way batch
+
+    ```bash
+    perl extra/two_way_batch.pl \
+        -d S288cvsRM11 \
+        -t "559292,S288c" -q "285006,RM11" \
+        -da data/S288CvsRM11 \
+        -e yeast_65 \
+        -lt 5000 --parallel 2
     ```
