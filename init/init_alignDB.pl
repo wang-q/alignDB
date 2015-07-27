@@ -64,18 +64,17 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 {
     $stopwatch->block_message("Create DB skeleton");
 
-    my $drh = DBI->install_driver("mysql");    # Driver handle object
-    $drh->func( 'dropdb',   $db, $server, $username, $password, 'admin' );
-    $drh->func( 'createdb', $db, $server, $username, $password, 'admin' );
+    $ENV{MYSQL_PWD} = $password;
+    my $cmd    = "mysql -h$server -P$port -u$username ";
+    my $drop   = "-e \"DROP DATABASE IF EXISTS $db;\"";
+    my $create = "-e \"CREATE DATABASE $db;\"";
 
-    my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
-    open my $infh, '<', $init_sql;
-    my $content = do { local $/; <$infh> };
-    close $infh;
-    my @statements = grep {/\w/} split /;/, $content;
-    for (@statements) {
-        $dbh->do($_) or die $dbh->errstr;
-    }
+    print "#drop\n" . "$cmd $drop\n";
+    system("$cmd $drop");
+    print "#create\n" . "$cmd $create\n";
+    system("$cmd $create");
+    print "#init\n" . "$cmd $db < $init_sql\n";
+    system("$cmd $db < $init_sql");
 }
 
 #----------------------------------------------------------#

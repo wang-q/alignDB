@@ -166,15 +166,16 @@ else {
 
         $stopwatch->block_message("SQL file: $sql_file");
 
-        my $cmd    = "mysql -h$server -P$port -u$username -p$password ";
+        $ENV{MYSQL_PWD} = $password;
+        my $cmd    = "mysql -h$server -P$port -u$username ";
         my $drop   = "-e \"DROP DATABASE IF EXISTS $db;\"";
         my $create = "-e \"CREATE DATABASE $db;\"";
 
-        print "#drop\n" . "$cmd $drop\n";
+        print "#drop\n";
         system("$cmd $drop");
-        print "#create\n" . "$cmd $create\n";
+        print "#create\n";
         system("$cmd $create");
-        print "#init\n" . "$cmd $db < $sql_file\n";
+        print "#init\n";
         system("$cmd $db < $sql_file");
     }
 
@@ -196,10 +197,10 @@ else {
         $abs_table_file = rel2abs( $abs_table_file, $archive->extract_path );
 
         # ensembl suggest use --fields_escaped_by=\\
-        # 
+        #
         # Archive::Extract convert line endings from \n to \r\n, so last fields
         # was attached a \r
-        # 
+        #
         # Add --lines-terminated-by="\r\n" on Win32
         my $cmd
             = "mysqlimport -h$server -P$port -u$username -p$password"
