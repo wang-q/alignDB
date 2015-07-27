@@ -48,6 +48,11 @@ GetOptions(
 pod2usage(1) if $help;
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
+if (! -e $infile) {
+    warn "[$infile] doesn't exist.\n";
+    exit;
+}
+
 #----------------------------------------------------------#
 # Init section
 #----------------------------------------------------------#

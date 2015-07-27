@@ -41,9 +41,19 @@ GetOptions(
 pod2usage(1) if $help;
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
+if (! -e $infile) {
+    warn "[$infile] doesn't exist.\n";
+    exit;
+}
+
 #----------------------------------------------------------#
 # Init section
 #----------------------------------------------------------#
+if (! -e $infile) {
+    warn "[$infile] doesn't exist.\n";
+    exit;
+}
+
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Processing $infile...");
 
