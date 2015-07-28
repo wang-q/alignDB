@@ -18,7 +18,7 @@ use AlignDB::Stopwatch;
 my $file_target;
 my $file_merge;
 
-my @fields = (0);
+my @fields;
 
 my $man  = 0;
 my $help = 0;
@@ -36,6 +36,10 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
 for ( $file_target, $file_merge ) {
     die "Can't find file [$_]\n" unless -e $_;
+}
+
+if ( !scalar @fields ) {
+    @fields = (0);
 }
 
 #----------------------------------------------------------#
