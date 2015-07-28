@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
 use Getopt::Long;
 use Pod::Usage;
@@ -9,16 +10,16 @@ use YAML qw(Dump Load DumpFile LoadFile);
 
 use List::MoreUtils qw(firstidx);
 
-use AlignDB::Stopwatch;
-
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-
 my $file_target;
 my $file_merge;
 
 my @fields;
+
+my $concat;
+my $stdout;
 
 my $man  = 0;
 my $help = 0;
@@ -29,6 +30,8 @@ GetOptions(
     't|ft=s'     => \$file_target,
     'm|fm=s'     => \$file_merge,
     'f|fields=s' => \@fields,
+    'concat'     => \$concat,
+    'stdout'     => \$stdout,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -75,7 +78,15 @@ my $line_t = [];
             my $idx = firstidx { $_ eq $id } @{$id_m};
             splice @{$id_m}, $idx, 1;
             my ($line) = splice @{$line_m}, $idx, 1;
-            push @{$line_t}, $line;
+
+            my $newline;
+            if ($concat) {
+                $newline = "$_,$line";
+            }
+            else {
+                $newline = $line;
+            }
+            push @{$line_t}, $newline;
         }
         else {
             push @{$line_t}, $_;
@@ -84,9 +95,19 @@ my $line_t = [];
     close $fh;
 }
 
-# write target
-{
+#----------------------------#
+# write outputs
+#----------------------------#
+if ( !$concat ) {
     push @{$line_t}, @{$line_m};
+}
+
+if ($stdout) {
+    for ( @{$line_t} ) {
+        print $_, "\n";
+    }
+}
+else {
     open my $fh, '>', $file_target;
     for ( @{$line_t} ) {
         print {$fh} $_, "\n";
@@ -94,8 +115,10 @@ my $line_t = [];
     close $fh;
 }
 
-print "Remove [$count_t] lines from $file_target\n";
-print "Add [$count_m] lines from $file_merge\n";
+printf STDERR "%s [%s] lines from %s\n", $concat ? "Concat" : "Remove",
+    $count_t,
+    $file_target;
+printf STDERR "Add [%s] lines from %s\n", $count_m, $file_merge;
 
 exit;
 
@@ -104,7 +127,7 @@ __END__
 
 =head1 NAME
 
-    merge_csv.pl - Merge two csv files based on @fields
+merge_csv.pl - Merge two csv files based on @fields
 
 =head1 SYNOPSIS
 
@@ -112,9 +135,11 @@ __END__
       Options:
         --help              brief help message
         --man               full documentation
-        -t, --ft            target file (output)
-        -m, --fm            merge file
-        -f, --fields        fields
+        -t, --ft STR        target file (output)
+        -m, --fm SRT        merge file
+        -f, --fields @INT   fields as identifies
+        --concat            do concat other than merge
+        --stdout            write outputs to stdout instead of the target file
 
     perl merge_csv.pl -t ../init/taxon.csv -m d:\data\alignment\yeast_combine\taxon.csv 
     perl merge_csv.pl -t ../init/chr_length.csv -m d:\data\alignment\yeast_combine\chr_length.csv
