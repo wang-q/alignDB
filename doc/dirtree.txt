@@ -42,8 +42,6 @@
         |-multi_way_batch.pl                      |   298 lines |      8.6K
         |-random_SD.pl                            |   105 lines |     1.97K
         |-random_db                               |    99 lines |     1.94K
-        |-seq_pair.csv                            |   100 lines |    10.24K
-        |-seq_pair_batch.pl                       |   258 lines |     7.31K
         |-snp_ttest.pl                            |   577 lines |    17.42K
         |-target_fasta.pl                         |   110 lines |      2.5K
         |-test_wwwblast.pl                        |   158 lines |     4.45K
