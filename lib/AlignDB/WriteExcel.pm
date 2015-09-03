@@ -799,7 +799,7 @@ sub make_combine {
     # merge_last
     my $merge_last = $option->{merge_last};
     unless ( defined $merge_last ) {
-        $merge_last = 0;
+        $merge_last = 1;
     }
 
     # init DBI query
