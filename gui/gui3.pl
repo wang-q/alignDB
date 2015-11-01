@@ -399,7 +399,7 @@ sub dialog_taxon {
     $sw->set_size_request( 360, 240 );
     $sw->set_policy( 'automatic', 'automatic' );
     $sw->add($treeview);
-    
+
     # Create a vbox
     my $vbox = Gtk3::Box->new( 'vertical', 5);
     $vbox->pack_start( $label, FALSE, FALSE, 5 );
@@ -476,7 +476,7 @@ sub dialog_choose_db {
     $sw->set_size_request( 360, 240 );
     $sw->set_policy( 'automatic', 'automatic' );
     $sw->add($treeview);
-    
+
     # Create a vbox
     my $vbox = Gtk3::Box->new( 'vertical', 5);
     $vbox->pack_start( $label, FALSE, FALSE, 5 );
