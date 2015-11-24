@@ -7,18 +7,17 @@ package AlignDB::GUI;
 use Moose;
 use MooseX::AttributeHelpers;
 
+use Config::Tiny;
+use FindBin;
+use YAML qw(Dump Load DumpFile LoadFile);
+
 use Gtk3 '-init';
 use Glib qw(TRUE FALSE);
 
-use Config::Tiny;
-use Proc::Background;
 use Path::Tiny;
-use File::Spec;
-use File::Basename;
+use Proc::Background;
 use Text::CSV_XS;
-use YAML qw(Dump Load DumpFile LoadFile);
 
-use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 
@@ -653,7 +652,7 @@ sub on_button_auto_db_name_fas_clicked {
 
     my $dir_align_fas = $self->get_value("entry_dir_align_fas");
 
-    my $db_name = basename($dir_align_fas);
+    my $db_name = path($dir_align_fas)->basename;
     $self->set_value( "entry_db_name", $db_name );
 
     $self->append_text("db_name set to [$db_name]\n");
@@ -799,8 +798,7 @@ sub on_button_auto_stat_file_common_clicked {
     my $self = shift;
 
     my $db_name = $self->get_value("entry_db_name");
-    my $outfile = "$FindBin::Bin/../stat/$db_name.common.xlsx";
-    $outfile = File::Spec->rel2abs($outfile);
+    my $outfile = path($FindBin::Bin, '..', 'stat', "$db_name.common.xlsx")->absolute->stringify;
     $self->set_value( "entry_stat_file_common", $outfile );
 
     return;
@@ -810,8 +808,7 @@ sub on_button_auto_stat_file_gc_clicked {
     my $self = shift;
 
     my $db_name = $self->get_value("entry_db_name");
-    my $outfile = "$FindBin::Bin/../stat/$db_name.gc.xlsx";
-    $outfile = File::Spec->rel2abs($outfile);
+    my $outfile = path($FindBin::Bin, '..', 'stat', "$db_name.gc.xlsx")->absolute->stringify;
     $self->set_value( "entry_stat_file_gc", $outfile );
 
     return;
@@ -821,8 +818,7 @@ sub on_button_auto_stat_file_multi_clicked {
     my $self = shift;
 
     my $db_name = $self->get_value("entry_db_name");
-    my $outfile = "$FindBin::Bin/../stat/$db_name.multi.xlsx";
-    $outfile = File::Spec->rel2abs($outfile);
+    my $outfile = path($FindBin::Bin, '..', 'stat', "$db_name.multi.xlsx")->absolute->stringify;
     $self->set_value( "entry_stat_file_multi", $outfile );
 
     return;
