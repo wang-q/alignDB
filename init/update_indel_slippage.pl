@@ -1,23 +1,22 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use AlignDB::Stopwatch;
 
-use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -26,33 +25,37 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-#motif-repeat parameters
+update_indel_slippage.pl - Add additional slippage-like info to alignDB
+                            1 for slippage-like and 0 for non
+
+=head1 SYNOPSIS
+
+    perl update_indel_slippage.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+
+=cut
+
+# motif-repeat parameters
 my $min_reps = {
     1 => 4,    # mononucl. with >= 4 repeats
 };
 
-my $man  = 0;
-my $help = 0;
-
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    's|server=s'   => \$server,
-    'P|port=s'     => \$port,
-    'd|db=s'       => \$db,
-    'u|username=s' => \$username,
-    'p|password=s' => \$password,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server       = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port         = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db           = $Config->{database}{db} ),
+    'username|u=s' => \( my $username     = $Config->{database}{username} ),
+    'password|p=s' => \( my $password     = $Config->{database}{password} ),
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # init
@@ -218,22 +221,3 @@ END {
 exit;
 
 __END__
-
-=head1 NAME
-
-    update_indel_slippage.pl - Add additional slippage-like info to alignDB
-                                 1 for slippage-like and 0 for non
-
-=head1 SYNOPSIS
-
-    update_indel_slippage.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-
-=cut
-

@@ -1,17 +1,17 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
 
-use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 use AlignDB::Outgroup;
@@ -19,8 +19,7 @@ use AlignDB::Outgroup;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -29,40 +28,37 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-# alignments have an outgroup
-my $outgroup;
+insert_isw.pl - Update indel-sliding windows
 
-# run in parallel mode
-my $parallel = $Config->{generate}{parallel};
+=head1 SYNOPSIS
 
-# number of alignments process in one child process
-my $batch_number = $Config->{generate}{batch};
+    perl insert_isw.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --outgroup  -o          alignments have an outgroup
+        --parallel      INT     run in parallel mode
+        --batch         INT     number of alignments in one child process
 
-my $man  = 0;
-my $help = 0;
+=cut
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    's|server=s'   => \$server,
-    'P|port=i'     => \$port,
-    'd|db=s'       => \$db,
-    'u|username=s' => \$username,
-    'p|password=s' => \$password,
-    'o|outgroup'   => \$outgroup,
-    'parallel=i'   => \$parallel,
-    'batch=i'      => \$batch_number,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server       = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port         = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db           = $Config->{database}{db} ),
+    'username|u=s' => \( my $username     = $Config->{database}{username} ),
+    'password|p=s' => \( my $password     = $Config->{database}{password} ),
+    'outgroup|o'   => \my $outgroup,
+    'parallel=i'   => \( my $parallel     = $Config->{generate}{parallel} ),
+    'batch=i'      => \( my $batch_number = $Config->{generate}{batch} ),
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # init
@@ -151,21 +147,3 @@ END {
 exit;
 
 __END__
-
-=head1 NAME
-
-    insert_ssw.pl - Update snp-sliding windows (for three-way alignments)
-
-=head1 SYNOPSIS
-
-    insert_ssw.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --port              MySQL server port
-        --db                database name
-        --username          username
-        --password          password
-
-=cut

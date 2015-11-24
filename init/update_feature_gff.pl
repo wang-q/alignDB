@@ -1,10 +1,11 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use Bio::Tools::GFF;
@@ -15,15 +16,13 @@ use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
 
-use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -32,48 +31,42 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-# support multiply files, seperated by ','
-my @gff_files;
+update_feature_gff.pl - Add annotation info to alignDB with gff annotations
 
-# RepeatMasker generated gff files
-my @rm_gff_files;
+=head1 SYNOPSIS
+
+    perl update_feature_gff.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --gff           STR     gff files, multiply files seperated by ,
+        --rm_gff        STR     RepeatMasker generated gff files
+        --parallel      INT     run in parallel mode
+        --batch         INT     number of alignments in one child process
+
+=cut
 
 # gff version
 my $gff_version = 3;
 
-# run in parallel mode
-my $parallel = $Config->{generate}{parallel};
-
-# number of alignments process in one child process
-my $batch_number = $Config->{generate}{batch};
-
-my $man  = 0;
-my $help = 0;
-
 GetOptions(
-    'help|?'         => \$help,
-    'man'            => \$man,
-    's|server=s'     => \$server,
-    'P|port=i'       => \$port,
-    'u|username=s'   => \$username,
-    'p|password=s'   => \$password,
-    'd|db=s'         => \$db,
-    'gff_files=s'    => \@gff_files,
-    'rm_gff_files=s' => \@rm_gff_files,
-    'gff_version=i'  => \$gff_version,
-    'parallel=i'     => \$parallel,
-    'batch=i'        => \$batch_number,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server       = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port         = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db           = $Config->{database}{db} ),
+    'username|u=s' => \( my $username     = $Config->{database}{username} ),
+    'password|p=s' => \( my $password     = $Config->{database}{password} ),
+    'gff=s'        => \( my @gff_files ),
+    'rm_gff=s'     => \( my @rm_gff_files ),
+    'parallel=i'   => \( my $parallel     = $Config->{generate}{parallel} ),
+    'batch=i'      => \( my $batch_number = $Config->{generate}{batch} ),
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # init
@@ -82,9 +75,9 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 $stopwatch->start_message("Update annotations of $db...");
 
 my $cds_set_of = {};
-for my $file ( grep {defined} split /\,/, join(",", @gff_files) ) {
+for my $file ( grep {defined} split /\,/, join( ",", @gff_files ) ) {
     next unless -e $file;
-    my $basename = basename( $file, '.gff', '.gff3' );
+    my $basename = basename( $file, '.gff3', '.gff' );
     print "Loading annotations for [$basename]\n";
     my $gff_obj = Bio::Tools::GFF->new(
         -file        => $file,
@@ -101,9 +94,9 @@ for my $file ( grep {defined} split /\,/, join(",", @gff_files) ) {
 }
 
 my $repeat_set_of = {};
-for my $file ( grep {defined} split /\,/, join(",", @rm_gff_files) ) {
+for my $file ( grep {defined} split /\,/, join( ",", @rm_gff_files ) ) {
     next unless -e $file;
-    my $basename = basename( $file, '.rm.gff', '.rm.gff3', '.gff', '.gff3' );
+    my $basename = basename( $file, '.rm.gff3', '.rm.gff', '.gff3', '.gff' );
     print "Loading RepeatMasker annotations for [$basename]\n";
     my $gff_obj = Bio::Tools::GFF->new(
         -file        => $file,
@@ -287,24 +280,18 @@ UPDATE: for my $align_id (@align_ids) {
             my $align_chr_runlist = "$align_chr_start-$align_chr_end";
 
             # feature protions and runlists
-            my ($align_coding,      $align_repeats,
-                $align_cds_runlist, $align_repeat_runlist
-            );
+            my ( $align_coding, $align_repeats, $align_cds_runlist, $align_repeat_runlist );
 
             if ( $cds_set_of->{$chr_name} ) {
-                $align_coding = feature_portion( $cds_set_of->{$chr_name},
-                    $align_chr_runlist );
+                $align_coding = feature_portion( $cds_set_of->{$chr_name}, $align_chr_runlist );
                 $align_cds_runlist
-                    = $cds_set_of->{$chr_name}
-                    ->map_set( sub { $align_pos{$_} } )->runlist;
+                    = $cds_set_of->{$chr_name}->map_set( sub { $align_pos{$_} } )->runlist;
             }
 
             if ( $repeat_set_of->{$chr_name} ) {
-                $align_repeats = feature_portion( $repeat_set_of->{$chr_name},
-                    $align_chr_runlist );
+                $align_repeats = feature_portion( $repeat_set_of->{$chr_name}, $align_chr_runlist );
                 $align_repeat_runlist
-                    = $repeat_set_of->{$chr_name}
-                    ->map_set( sub { $align_pos{$_} } )->runlist;
+                    = $repeat_set_of->{$chr_name}->map_set( sub { $align_pos{$_} } )->runlist;
             }
 
             $align_feature_sth->execute( $align_coding, $align_repeats, undef,
@@ -328,17 +315,14 @@ UPDATE: for my $align_id (@align_ids) {
                 # feature protions
                 my ( $indel_coding, $indel_repeats );
                 if ( $cds_set_of->{$chr_name} ) {
-                    $indel_coding = feature_portion( $cds_set_of->{$chr_name},
-                        $indel_chr_runlist );
+                    $indel_coding = feature_portion( $cds_set_of->{$chr_name}, $indel_chr_runlist );
                 }
                 if ( $repeat_set_of->{$chr_name} ) {
                     $indel_repeats
-                        = feature_portion( $repeat_set_of->{$chr_name},
-                        $indel_chr_runlist );
+                        = feature_portion( $repeat_set_of->{$chr_name}, $indel_chr_runlist );
                 }
 
-                $indel_feature_sth->execute( $indel_coding, $indel_repeats,
-                    $indel_id, );
+                $indel_feature_sth->execute( $indel_coding, $indel_repeats, $indel_id, );
                 $indel_feature_sth->finish;
             }
 
@@ -357,17 +341,14 @@ UPDATE: for my $align_id (@align_ids) {
                     # feature protions
                     my ( $isw_coding, $isw_repeats );
                     if ( $cds_set_of->{$chr_name} ) {
-                        $isw_coding = feature_portion( $cds_set_of->{$chr_name},
-                            $isw_chr_runlist );
+                        $isw_coding = feature_portion( $cds_set_of->{$chr_name}, $isw_chr_runlist );
                     }
                     if ( $repeat_set_of->{$chr_name} ) {
                         $isw_repeats
-                            = feature_portion( $repeat_set_of->{$chr_name},
-                            $isw_chr_runlist );
+                            = feature_portion( $repeat_set_of->{$chr_name}, $isw_chr_runlist );
                     }
 
-                    $isw_feature_sth->execute( $isw_coding, $isw_repeats,
-                        $isw_id, );
+                    $isw_feature_sth->execute( $isw_coding, $isw_repeats, $isw_id, );
                 }
 
                 $isw_feature_sth->finish;
@@ -388,17 +369,13 @@ UPDATE: for my $align_id (@align_ids) {
                 # feature protions
                 my ( $snp_coding, $snp_repeats );
                 if ( $cds_set_of->{$chr_name} ) {
-                    $snp_coding
-                        = $cds_set_of->{$chr_name}->member($snp_chr_pos);
+                    $snp_coding = $cds_set_of->{$chr_name}->member($snp_chr_pos);
                 }
                 if ( $repeat_set_of->{$chr_name} ) {
-                    $snp_repeats
-                        = feature_portion( $repeat_set_of->{$chr_name},
-                        $snp_chr_pos );
+                    $snp_repeats = feature_portion( $repeat_set_of->{$chr_name}, $snp_chr_pos );
                 }
 
-                $snp_feature_sth->execute( $snp_coding, $snp_repeats, $snp_id,
-                );
+                $snp_feature_sth->execute( $snp_coding, $snp_repeats, $snp_id, );
             }
 
             $snp_feature_sth->finish;
@@ -419,17 +396,14 @@ UPDATE: for my $align_id (@align_ids) {
                 # feature protions
                 my ( $window_coding, $window_repeats );
                 if ( $cds_set_of->{$chr_name} ) {
-                    $window_coding = feature_portion( $cds_set_of->{$chr_name},
-                        $window_chr_set );
+                    $window_coding = feature_portion( $cds_set_of->{$chr_name}, $window_chr_set );
                 }
                 if ( $repeat_set_of->{$chr_name} ) {
                     $window_repeats
-                        = feature_portion( $repeat_set_of->{$chr_name},
-                        $window_chr_set );
+                        = feature_portion( $repeat_set_of->{$chr_name}, $window_chr_set );
                 }
 
-                $window_update_sth->execute( $window_coding, $window_repeats,
-                    $window_id, );
+                $window_update_sth->execute( $window_coding, $window_repeats, $window_id, );
             }
 
             $window_update_sth->finish;
@@ -485,23 +459,3 @@ sub feature_portion {
 }
 
 __END__
-
-=head1 NAME
-
-    update_feature_gff.pl - Add annotation info to alignDB with gff annotations
-
-=head1 SYNOPSIS
-
-    update_feature_gff.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-        --gff               gff files, support multiply file, seperated by ,
-        --parallel          run in parallel mode
-        --batch             number of alignments process in one child process
-
-=cut
