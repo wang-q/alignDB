@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
 package AlignDB::GUI;
 use Moose;
@@ -11,6 +12,7 @@ use Glib qw(TRUE FALSE);
 
 use Config::Tiny;
 use Proc::Background;
+use Path::Tiny;
 use File::Spec;
 use File::Basename;
 use Text::CSV_XS;
@@ -62,9 +64,7 @@ sub BUILD {
         # create a mark at the end of the buffer, with right gravity,
         # so that when you insert text, the mark always stays on
         # the right (at the end).
-        my $end_mark
-            = $textbuffer->create_mark( 'end', $textbuffer->get_end_iter,
-            FALSE );
+        my $end_mark = $textbuffer->create_mark( 'end', $textbuffer->get_end_iter, FALSE );
 
         # every time we insert text, scroll to that mark.
         $textbuffer->signal_connect(
@@ -193,29 +193,24 @@ sub read_config {
     $self->set_value( "entry_password", $Config->{database}{password} );
 
     # database init values
-    $self->set_value( "entry_db_name", $Config->{database}{db} );
-    $self->set_value( "entry_ensembl", $Config->{database}{ensembl} );
-    $self->set_value( "entry_length_threshold",
-        $Config->{generate}{length_threshold} );
+    $self->set_value( "entry_db_name",          $Config->{database}{db} );
+    $self->set_value( "entry_ensembl",          $Config->{database}{ensembl} );
+    $self->set_value( "entry_length_threshold", $Config->{generate}{length_threshold} );
 
     # axt
-    $self->set_value( "entry_target_id",   $Config->{taxon}{target_taxon_id} );
-    $self->set_value( "entry_target_name", $Config->{taxon}{target_name} );
-    $self->set_value( "entry_query_id",    $Config->{taxon}{query_taxon_id} );
-    $self->set_value( "entry_query_name",  $Config->{taxon}{query_name} );
-    $self->set_value( "entry_dir_align_axt",
-        $self->relpath_to_abs( $Config->{taxon}{dir_align} ) );
+    $self->set_value( "entry_target_id",     $Config->{taxon}{target_taxon_id} );
+    $self->set_value( "entry_target_name",   $Config->{taxon}{target_name} );
+    $self->set_value( "entry_query_id",      $Config->{taxon}{query_taxon_id} );
+    $self->set_value( "entry_query_name",    $Config->{taxon}{query_name} );
+    $self->set_value( "entry_dir_align_axt", path( $Config->{taxon}{dir_align} )->stringify );
 
     # fas
-    $self->set_value( "entry_file_id2name",
-        $self->relpath_to_abs( $Config->{taxon}{file_id2name} ) );
-    $self->set_value( "entry_dir_align_fas",
-        $self->relpath_to_abs( $Config->{taxon}{dir_align_fas} ) );
+    $self->set_value( "entry_file_id2name",  path( $Config->{taxon}{file_id2name} )->stringify );
+    $self->set_value( "entry_dir_align_fas", path( $Config->{taxon}{dir_align_fas} )->stringify );
 
     # insert GC
-    $self->set_value( "checkbutton_insert_gc", $Config->{gc}{insert_gc} );
-    $self->set_value( "checkbutton_insert_segment",
-        $Config->{gc}{insert_segment} );
+    $self->set_value( "checkbutton_insert_gc",      $Config->{gc}{insert_gc} );
+    $self->set_value( "checkbutton_insert_segment", $Config->{gc}{insert_segment} );
 
     # three-way
     $self->set_value( "entry_first_db",  "S288cvsRM11" );
@@ -244,20 +239,6 @@ sub fill_combobox {
     $self->{app}->get_object("combobox_outgroup")->set_active(3);
 
     return;
-}
-
-# convert relative path to alignDB base to absolute
-sub relpath_to_abs {
-    my $self = shift;
-    my $path = shift;
-
-    if ( File::Spec->file_name_is_absolute($path) ) {
-        return $path;
-    }
-    else {
-        my $abs_path = File::Spec->rel2abs( $path, "$FindBin::Bin/.." );
-        return $abs_path;
-    }
 }
 
 #----------------------------#
@@ -356,8 +337,7 @@ sub dialog_taxon {
     open my $csv_fh, "<", $file or die "$file: $!";
     $csv->getline($csv_fh);    # bypass title line
 
-    my $model
-        = Gtk3::ListStore->new( 'Glib::Int', 'Glib::String', 'Glib::String' );
+    my $model = Gtk3::ListStore->new( 'Glib::Int', 'Glib::String', 'Glib::String' );
     while ( my $row = $csv->getline($csv_fh) ) {
         my $id      = $row->[0];
         my $species = $row->[1] . ' ' . $row->[2];
@@ -377,14 +357,9 @@ sub dialog_taxon {
     my $treeview = Gtk3::TreeView->new_with_model($model);
 
     # Add columns
-    $treeview->insert_column_with_attributes( 0, "id",
-        Gtk3::CellRendererText->new,
-        text => 0 );
-    $treeview->insert_column_with_attributes( 1, "name",
-        Gtk3::CellRendererText->new,
-        text => 1 );
-    $treeview->insert_column_with_attributes( 2, "species",
-        Gtk3::CellRendererText->new,
+    $treeview->insert_column_with_attributes( 0, "id",   Gtk3::CellRendererText->new, text => 0 );
+    $treeview->insert_column_with_attributes( 1, "name", Gtk3::CellRendererText->new, text => 1 );
+    $treeview->insert_column_with_attributes( 2, "species", Gtk3::CellRendererText->new,
         text => 2 );
     $treeview->get_column(0)->set_sort_column_id(0);
     $treeview->get_column(1)->set_sort_column_id(1);
@@ -399,11 +374,11 @@ sub dialog_taxon {
     $sw->set_size_request( 360, 240 );
     $sw->set_policy( 'automatic', 'automatic' );
     $sw->add($treeview);
-    
+
     # Create a vbox
-    my $vbox = Gtk3::Box->new( 'vertical', 5);
+    my $vbox = Gtk3::Box->new( 'vertical', 5 );
     $vbox->pack_start( $label, FALSE, FALSE, 5 );
-    $vbox->pack_start( $sw, TRUE, TRUE, 0 );
+    $vbox->pack_start( $sw,    TRUE,  TRUE,  0 );
     $dialog->get_content_area()->add($vbox);
     $dialog->show_all;
 
@@ -444,14 +419,10 @@ sub dialog_choose_db {
     my $username = $self->get_value("entry_username");
     my $password = $self->get_value("entry_password");
 
-    my $cmd
-        = "mysql"
-        . " -h$server"
-        . " -P$port"
-        . " -u$username"
-        . " -p$password"
-        . ' -e "SHOW DATABASES"';
-    my @dbs = grep {/vs/} split "\n", `$cmd`;
+    my @dbs = grep {/vs/}
+        map { s/dbi\:mysql\://i; $_ }
+        DBI->data_sources( "mysql",
+        { host => $server, port => $port, user => $username, password => $password } );
 
     my $model = Gtk3::ListStore->new('Glib::String');
     for (@dbs) {
@@ -462,8 +433,7 @@ sub dialog_choose_db {
     my $treeview = Gtk3::TreeView->new_with_model($model);
 
     # Add columns
-    $treeview->insert_column_with_attributes( 0, "DB name",
-        Gtk3::CellRendererText->new,
+    $treeview->insert_column_with_attributes( 0, "DB name", Gtk3::CellRendererText->new,
         text => 0 );
     $treeview->get_column(0)->set_sort_column_id(0);
 
@@ -476,11 +446,11 @@ sub dialog_choose_db {
     $sw->set_size_request( 360, 240 );
     $sw->set_policy( 'automatic', 'automatic' );
     $sw->add($treeview);
-    
+
     # Create a vbox
-    my $vbox = Gtk3::Box->new( 'vertical', 5);
+    my $vbox = Gtk3::Box->new( 'vertical', 5 );
     $vbox->pack_start( $label, FALSE, FALSE, 5 );
-    $vbox->pack_start( $sw, TRUE, TRUE, 0 );
+    $vbox->pack_start( $sw,    TRUE,  TRUE,  0 );
     $dialog->get_content_area()->add($vbox);
     $dialog->show_all;
 
@@ -540,8 +510,7 @@ sub dialog_db_meta {
         'gtk-close' => 'close',
     );
 
-    my $model
-        = Gtk3::ListStore->new( 'Glib::Int', 'Glib::String', 'Glib::String' );
+    my $model = Gtk3::ListStore->new( 'Glib::Int', 'Glib::String', 'Glib::String' );
 
     # retrieve data for $model
     {
@@ -583,15 +552,10 @@ sub dialog_db_meta {
     my $treeview = Gtk3::TreeView->new_with_model($model);
 
     # Add columns
-    $treeview->insert_column_with_attributes( 0, "serial",
-        Gtk3::CellRendererText->new,
-        text => 0 );
-    $treeview->insert_column_with_attributes( 1, "operation",
-        Gtk3::CellRendererText->new,
+    $treeview->insert_column_with_attributes( 0, "serial", Gtk3::CellRendererText->new, text => 0 );
+    $treeview->insert_column_with_attributes( 1, "operation", Gtk3::CellRendererText->new,
         text => 1 );
-    $treeview->insert_column_with_attributes( 2, "time",
-        Gtk3::CellRendererText->new,
-        text => 2 );
+    $treeview->insert_column_with_attributes( 2, "time", Gtk3::CellRendererText->new, text => 2 );
     $treeview->get_column(0)->set_sort_column_id(0);
     $treeview->get_column(1)->set_sort_column_id(1);
     $treeview->get_column(2)->set_sort_column_id(2);
@@ -607,7 +571,7 @@ sub dialog_db_meta {
     $sw->add($treeview);
 
     # Create a vbox
-    my $vbox = Gtk3::Box->new( 'vertical', 5);
+    my $vbox = Gtk3::Box->new( 'vertical', 5 );
     $vbox->pack_start( $sw, TRUE, TRUE, 0 );
     $dialog->get_content_area()->add($vbox);
     $dialog->show_all;
@@ -732,10 +696,7 @@ sub on_button_auto_db_name_join_clicked {
         '1target' => $second_target_name,
         '1query'  => $second_query_name,
     );
-    $goal_db
-        = $name_of{$first} . 'vs'
-        . $name_of{$second} . 'ref'
-        . $name_of{$outgroup};
+    $goal_db = $name_of{$first} . 'vs' . $name_of{$second} . 'ref' . $name_of{$outgroup};
 
     $self->set_value( "entry_db_name", $goal_db );
     $self->append_text("db_name set to [$goal_db]\n");
@@ -907,14 +868,15 @@ sub on_button_test_clicked {
     my $username = $self->get_value("entry_username");
     my $password = $self->get_value("entry_password");
 
-    my $cmd
-        = "mysql"
-        . " -h$server"
-        . " -P$port"
-        . " -u$username"
-        . " -p$password"
-        . q{ -e "SELECT 123456789"};
-    my $success = grep {/123456789/} split "\n", `$cmd`;
+    my $dbh = AlignDB->new(
+        mysql  => "mysql:$server",
+        user   => $username,
+        passwd => $password,
+    )->dbh;
+    my @row_ary = $dbh->selectrow_array("SELECT 123456789");
+    print Dump @row_ary;
+
+    my $success = grep {/123456789/} @row_ary;
 
     if ($success) {
         $self->append_text("Test connection successful\n");
@@ -1371,9 +1333,7 @@ sub on_button_chart_common_clicked {
     }
     return if !$stat_file;
 
-    my $cmd
-        = "perl $FindBin::Bin/../stat/common_chart_factory.pl"
-        . " -i $stat_file";
+    my $cmd = "perl $FindBin::Bin/../stat/common_chart_factory.pl" . " -i $stat_file";
 
     $self->exec_cmd($cmd);
     return;
@@ -1389,9 +1349,7 @@ sub on_button_chart_multi_clicked {
     }
     return if !$stat_file;
 
-    my $cmd
-        = "perl $FindBin::Bin/../stat/multi_chart_factory.pl"
-        . " -i $stat_file";
+    my $cmd = "perl $FindBin::Bin/../stat/multi_chart_factory.pl" . " -i $stat_file";
 
     $self->exec_cmd($cmd);
     return;
@@ -1407,9 +1365,7 @@ sub on_button_chart_gc_clicked {
     }
     return if !$stat_file;
 
-    my $cmd
-        = "perl $FindBin::Bin/../stat/gc_chart_factory.pl"
-        . " -i $stat_file";
+    my $cmd = "perl $FindBin::Bin/../stat/gc_chart_factory.pl" . " -i $stat_file";
 
     $self->exec_cmd($cmd);
     return;
