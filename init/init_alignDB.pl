@@ -3,14 +3,13 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use Text::CSV_XS;
 
-use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 use AlignDB::Stopwatch;
@@ -18,8 +17,7 @@ use AlignDB::Stopwatch;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -28,35 +26,39 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-my $init_sql   = "$FindBin::Bin/../init.sql";
-my $init_taxon = "$FindBin::Bin/../data/taxon.csv";
-my $init_chr   = "$FindBin::Bin/../data/chr_length.csv";
+init_alignDB.pl - Initiate alignDB
 
-my $man  = 0;
-my $help = 0;
+=head1 SYNOPSIS
+
+    perl init_alignDB.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --sql           STR     init sql filename
+        --taxon         STR     init taxon filename
+        --chr           STR     init chr_length filename
+
+    perl init_alignDB.pl -d S288cvsYJM789
+
+=cut
 
 GetOptions(
-    'help|?'             => \$help,
-    'man'                => \$man,
-    's|server=s'         => \$server,
-    'P|port=i'           => \$port,
-    'd|db=s'             => \$db,
-    'u|username=s'       => \$username,
-    'p|password=s'       => \$password,
-    'sql|init_sql=s'     => \$init_sql,
-    'taxon|init_taxon=s' => \$init_taxon,
-    'chr|init_chr=s'     => \$init_chr,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server     = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port       = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db         = $Config->{database}{db} ),
+    'username|u=s' => \( my $username   = $Config->{database}{username} ),
+    'password|p=s' => \( my $password   = $Config->{database}{password} ),
+    'sql=s'        => \( my $init_sql   = "$FindBin::Bin/../init.sql" ),
+    'taxon=s'      => \( my $init_taxon = "$FindBin::Bin/../data/taxon.csv" ),
+    'chr=s'        => \( my $init_chr   = "$FindBin::Bin/../data/chr_length.csv" ),
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # call mysql
@@ -64,17 +66,21 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 {
     $stopwatch->block_message("Create DB skeleton");
 
-    $ENV{MYSQL_PWD} = $password;
-    my $cmd    = "mysql -h$server -P$port -u$username ";
-    my $drop   = "-e \"DROP DATABASE IF EXISTS $db;\"";
-    my $create = "-e \"CREATE DATABASE $db;\"";
+    my $drh = DBI->install_driver("mysql");    # Driver handle object
+    print "# dropdb\n";
+    $drh->func( 'dropdb', $db, $server, $username, $password, 'admin' );
+    print "# createdb\n";
+    $drh->func( 'createdb', $db, $server, $username, $password, 'admin' );
 
-    print "#drop\n" . "$cmd $drop\n";
-    system("$cmd $drop");
-    print "#create\n" . "$cmd $create\n";
-    system("$cmd $create");
-    print "#init\n" . "$cmd $db < $init_sql\n";
-    system("$cmd $db < $init_sql");
+    print "# init\n";
+    my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
+    open my $infh, '<', $init_sql;
+    my $content = do { local $/; <$infh> };
+    close $infh;
+    my @statements = grep {/\w/} split /;/, $content;
+    for (@statements) {
+        $dbh->do($_) or die $dbh->errstr;
+    }
 }
 
 #----------------------------------------------------------#
@@ -110,8 +116,7 @@ if ( -f $init_taxon ) {
     $csv->getline($csv_fh);    # bypass title line
 
     while ( my $row = $csv->getline($csv_fh) ) {
-        $insert_sth->execute( $row->[0], $row->[1], $row->[2], $row->[3],
-            $row->[4], );
+        $insert_sth->execute( $row->[0], $row->[1], $row->[2], $row->[3], $row->[4], );
     }
     close $csv_fh;
     $insert_sth->finish;
@@ -121,7 +126,7 @@ if ( -f $init_taxon ) {
         q{
         SELECT *
         FROM taxon
-        WHERE common_name = "Human"
+        WHERE common_name in ( "Human", "human", "S288C", "S288c")
         }
     );
     $query_sth->execute;
@@ -171,7 +176,7 @@ if ( -f $init_chr ) {
     $query_sth->execute;
     while ( my $ref = $query_sth->fetchrow_hashref ) {
         my $taxon_id = $ref->{taxon_id};
-        if ( defined $taxon_id and $taxon_id == 3702 ) {
+        if ( defined $taxon_id and ( $taxon_id == 3702 or $taxon_id == 9606 ) ) {
             printf "Found a row: taxon_id = %s,"
                 . " chr_name = %s, chr_length = %s\n",
                 $ref->{taxon_id}, $ref->{chr_name}, $ref->{chr_length};
@@ -194,25 +199,3 @@ END {
 }
 
 __END__
-
-
-=head1 NAME
-
-init_alignDB.pl - Initiate alignDB
-
-=head1 SYNOPSIS
-
-    perl init_alignDB.pl [options]
-      Options:
-        --help          brief help message
-        --man           full documentation
-        --server        MySQL server IP/Domain name
-        --port          MySQL server port
-        --db            database name
-        --username      username
-        --password      password
-        --init_sql      init sql filename
-
-    perl init_alignDB.pl -d S288cvsYJM789
-
-=cut
