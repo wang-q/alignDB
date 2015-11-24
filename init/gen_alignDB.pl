@@ -1,10 +1,11 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use File::Find::Rule;
@@ -12,15 +13,13 @@ use File::Find::Rule;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
 
-use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -29,15 +28,28 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-# dir of alignments
-my $dir_align = $Config->{taxon}{dir_align};
+gen_alignDB.pl - Generate alignDB from axt files
+
+=head1 SYNOPSIS
+
+    perl gen_alignDB.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --dir_align -da STR     .axt files' directory
+        --target        STR     "target_taxon_id,target_name"
+        --query         STR     "query_taxon_id,query_name"
+        --length    -l  INT     threshold of alignment length
+        --parallel      INT     run in parallel mode
+        --gzip                  open .axt.gz files
+
+=cut
 
 # target, query init values
 my $target_taxon_id = $Config->{taxon}{target_taxon_id};
@@ -45,39 +57,20 @@ my $target_name     = $Config->{taxon}{target_name};
 my $query_taxon_id  = $Config->{taxon}{query_taxon_id};
 my $query_name      = $Config->{taxon}{query_name};
 
-my $target = $target_taxon_id . "," . $target_name;    # target sequence
-my $query  = $query_taxon_id . "," . $query_name;      # query sequence
-
-# program parameter
-my $length_threshold
-    = $Config->{generate}{length_threshold};    # legnth threshold of align
-
-# run in parallel mode
-my $parallel = $Config->{generate}{parallel};
-
-my $gzip;                                       # open .gz
-
-my $help = 0;
-my $man  = 0;
-
 GetOptions(
-    'help|?'             => \$help,
-    'man'                => \$man,
-    's|server=s'         => \$server,
-    'P|port=i'           => \$port,
-    'u|username=s'       => \$username,
-    'p|password=s'       => \$password,
-    'd|db=s'             => \$db,
-    'da|dir|dir_align=s' => \$dir_align,
-    'target=s'           => \$target,
-    'query=s'            => \$query,
-    'l|lt|length=i'      => \$length_threshold,
-    'parallel=i'         => \$parallel,
-    'gzip'               => \$gzip,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'         => \( my $server           = $Config->{database}{server} ),
+    'port|P=i'           => \( my $port             = $Config->{database}{port} ),
+    'db|d=s'             => \( my $db               = $Config->{database}{db} ),
+    'username|u=s'       => \( my $username         = $Config->{database}{username} ),
+    'password|p=s'       => \( my $password         = $Config->{database}{password} ),
+    'dir_align|dir|da=s' => \( my $dir_align        = $Config->{taxon}{dir_align} ),
+    'target=s'           => \( my $target           = $target_taxon_id . "," . $target_name ),
+    'query=s'            => \( my $query            = $query_taxon_id . "," . $query_name ),
+    'length|lt|l=i'      => \( my $length_threshold = $Config->{generate}{length_threshold} ),
+    'parallel=i'         => \( my $parallel         = $Config->{generate}{parallel} ),
+    'gzip'               => \my $gzip,
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # update names
@@ -92,9 +85,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
-        )
-        ->update_names(
-        { $target_taxon_id => $target_name, $query_taxon_id => $query_name } );
+    )->update_names( { $target_taxon_id => $target_name, $query_taxon_id => $query_name } );
 }
 
 #----------------------------------------------------------#
@@ -171,26 +162,3 @@ END {
 exit;
 
 __END__
-
-=head1 NAME
-
-    gen_alignDB.pl - Generate alignDB from axt files
-
-=head1 SYNOPSIS
-
-    gen_alignDB.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --port              MySQL server port
-        --username          username
-        --password          password
-        --db                database name
-        --dir_align         .axt files' directory
-        --target            "target_taxon_id,target_name"
-        --query             "query_taxon_id,query_name"
-        --length            threshold of alignment length
-        --parallel          run in parallel mode
-
-=cut

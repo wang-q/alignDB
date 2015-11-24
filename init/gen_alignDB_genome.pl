@@ -1,29 +1,27 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use File::Find::Rule;
-use File::Basename;
 
 use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(:all);
 
-use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -32,52 +30,61 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-# dir
-my $dir;
+gen_alignDB_genome.pl - Generate alignDB from genome fasta files
 
-my $target;    # target sequence
+=head1 SYNOPSIS
 
-my $truncated_length = 100_000;
-my $fill             = 50;
-my $min_length       = 5000;
+    perl gen_alignDB_genome.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --dir_align -da STR     fasta files' directory
+        --target        STR     "target_taxon_id,target_name"
+        --length        INT     truncated length
+        --fill          INT     fill holes less than this
+        --min           INT     minimal length
+        --parallel      INT     run in parallel mode
 
-# run in parallel mode
-my $parallel = $Config->{generate}{parallel};
+    perl init/init_alignDB.pl -d Athvsself
+    perl init/gen_alignDB_genome.pl -d Athvsself -t "3702,Ath" --dir /home/wangq/data/alignment/arabidopsis19/ath_65  --parallel 4
+    
+    >perl init_alignDB.pl -d nipvsself
+    >perl gen_alignDB_genome.pl -d nipvsself -t "39947,Nip" --dir e:\data\alignment\rice\nip_58\  --parallel 4
+    
+    >perl init_alignDB.pl -d 9311vsself
+    >perl gen_alignDB_genome.pl -d 9311vsself -t "39946,9311" --dir e:\data\alignment\rice\9311_58\  --parallel 4
+    
+    perl init/init_alignDB.pl -d S288Cvsself
+    perl init/gen_alignDB_genome.pl -d S288Cvsself -t "4932,S288C" --dir /home/wangq/data/alignment/yeast65/S288C/  --parallel 4
+    perl init/insert_gc.pl -d S288Cvsself --parallel 4
 
-my $man  = 0;
-my $help = 0;
+=cut
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    's|server=s'   => \$server,
-    'P|port=i'     => \$port,
-    'u|username=s' => \$username,
-    'p|password=s' => \$password,
-    'd|db=s'       => \$db,
-    'dir=s'        => \$dir,
-    'target=s'     => \$target,
-    'length=i'     => \$truncated_length,
-    'fill=i'       => \$fill,
-    'min=i'        => \$min_length,
-    'parallel=i'   => \$parallel,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
+    'username|u=s' => \( my $username = $Config->{database}{username} ),
+    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'dir_align|dir|da=s' => \( my $dir ),
+    'target=s'           => \( my $target ),
+    'length=i'           => \( my $truncated_length = 100_000 ),
+    'fill=i'             => \( my $fill = 50 ),
+    'min=i'              => \( my $min_length = 5000 ),
+    'parallel=i'         => \( my $parallel = $Config->{generate}{parallel} ),
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # Search for all files and push their paths to @axt_files
 #----------------------------------------------------------#
-my @files
-    = sort File::Find::Rule->file->name( '*.fa', '*.fas', '*.fasta' )->in($dir);
+my @files = sort File::Find::Rule->file->name( '*.fa', '*.fas', '*.fasta' )->in($dir);
 printf "\n----Total .fa Files: %4s----\n\n", scalar @files;
 
 {    # update names
@@ -116,7 +123,7 @@ my $worker = sub {
     die "target_taxon_id not defined\n" unless $target_taxon_id;
     $target_name = $target_taxon_id unless $target_name;
 
-    my $chr_name = basename($infile);
+    my $chr_name = path($infile)->basename->stringify;
     $chr_name =~ s/\..+?$//;
 
     my ( $seq_of, $seq_names ) = read_fasta($infile);
@@ -135,17 +142,15 @@ my $worker = sub {
         }
     }
 
-    print "Ambiguous chromosome region for $chr_name:\n    "
-        . $ambiguous_set->runlist . "\n";
+    print "Ambiguous chromosome region for $chr_name:\n    " . $ambiguous_set->runlist . "\n";
 
     my $valid_set = AlignDB::IntSpan->new("1-$chr_length");
     $valid_set->subtract($ambiguous_set);
     $valid_set = $valid_set->fill( $fill - 1 );    # fill gaps smaller than $fill
 
-    print "Valid chromosome region for $chr_name:\n    "
-        . $valid_set->runlist . "\n";
+    print "Valid chromosome region for $chr_name:\n    " . $valid_set->runlist . "\n";
 
-    my @regions;                      # ([start, end], [start, end], ...)
+    my @regions;                                   # ([start, end], [start, end], ...)
     for my $set ( $valid_set->sets ) {
         my $size = $set->size;
         next if $size < $min_length;
@@ -226,37 +231,3 @@ END {
 exit;
 
 __END__
-
-=head1 NAME
-
-    gen_alignDB_genome.pl - Generate alignDB from fasta files
-
-=head1 SYNOPSIS
-
-    gen_alignDB_genome.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --port              MySQL server port
-        --username          username
-        --password          password
-        --db                database name
-        --dir               genome files' directory
-        --target            "target_taxon_id,target_name"
-        --parallel          run in parallel mode
-
-=cut
-
-perl init/init_alignDB.pl -d Athvsself
-perl init/gen_alignDB_genome.pl -d Athvsself -t "3702,Ath" --dir /home/wangq/data/alignment/arabidopsis19/ath_65  --parallel 4
-
->perl init_alignDB.pl -d nipvsself
->perl gen_alignDB_genome.pl -d nipvsself -t "39947,Nip" --dir e:\data\alignment\rice\nip_58\  --parallel 4
-
->perl init_alignDB.pl -d 9311vsself
->perl gen_alignDB_genome.pl -d 9311vsself -t "39946,9311" --dir e:\data\alignment\rice\9311_58\  --parallel 4
-
-perl init/init_alignDB.pl -d S288Cvsself
-perl init/gen_alignDB_genome.pl -d S288Cvsself -t "4932,S288C" --dir /home/wangq/data/alignment/yeast65/S288C/  --parallel 4
-perl init/insert_gc.pl -d S288Cvsself --parallel 4
