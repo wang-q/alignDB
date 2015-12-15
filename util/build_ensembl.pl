@@ -4,6 +4,7 @@ use warnings;
 use autodie;
 
 use Getopt::Long qw(HelpMessage);
+use Config::Tiny;
 use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
@@ -16,7 +17,7 @@ use AlignDB::Stopwatch;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/config.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
