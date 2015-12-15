@@ -370,7 +370,7 @@ my $pass = 'alignDB';
         -port    => $port,
         -species => 'Homo sapiens',
         -group   => 'core',
-        -dbname  => 'homo_sapiens_core_82_38',
+        -dbname  => 'homo_sapiens_core_82_37',
     );
 
     my @aliases = (
