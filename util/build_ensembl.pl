@@ -3,9 +3,8 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
-use Config::Tiny;
+use Getopt::Long qw(HelpMessage);
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use Archive::Extract;
@@ -14,49 +13,59 @@ use File::Find::Rule;
 
 use AlignDB::Stopwatch;
 
-use FindBin;
-
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/config.ini");
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
+# record ARGV and Config
+my $stopwatch = AlignDB::Stopwatch->new(
+    program_name => $0,
+    program_argv => [@ARGV],
+    program_conf => $Config,
+);
 
-my $do_checksum = 0;
-my $do_initdb   = 0;
+=head1 NAME
 
-my $db = "test";
-my $ensembl_dir;
+build_ensembl.pl - Build an ensembl database from mysqldump files
 
-my $man  = 0;
-my $help = 0;
+=head1 SYNOPSIS
+
+    perl build_ensembl.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --db        -d  STR     database name
+        --ensembl       STR     dir stored ensembl mysqldump files
+        --checksum              do checksum
+        --initdb                do init database
+
+    # run the following command to check the downloaded files
+    perl build_ensembl.pl --checksum --ensembl human_48/
+    
+    # run the following command to build ensembl database
+    perl build_ensembl.pl --initdb --db human_48 --ensembl human_48/
+
+=cut
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'db=s'       => \$db,
-    'ensembl=s'  => \$ensembl_dir,
-    'checksum'   => \$do_checksum,
-    'initdb'     => \$do_initdb,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server      = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port        = $Config->{database}{port} ),
+    'username|u=s' => \( my $username    = $Config->{database}{username} ),
+    'password|p=s' => \( my $password    = $Config->{database}{password} ),
+    'db|d=s'       => \( my $db          = $Config->{database}{db} ),
+    'ensembl=s'    => \my $ensembl_dir,
+    'checksum'     => \( my $do_checksum = 0 ),
+    'initdb'       => \( my $do_initdb   = 0 ),
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # run
 #----------------------------------------------------------#
-my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Build ensembl $db...");
 
 if ($do_checksum) {
@@ -150,8 +159,7 @@ else {
     if ($do_initdb) {
 
         # Ingore mysql 4.0 compatible file
-        my @sql_files
-            = File::Find::Rule->file->name('*.sql.gz')->in($ensembl_dir);
+        my @sql_files = File::Find::Rule->file->name('*.sql.gz')->in($ensembl_dir);
         my ($sql_file) = grep { $_ !~ /mysql40/ } @sql_files;
         if ( !$sql_file ) {
             die "Can not find the SQL file\n";
@@ -186,8 +194,7 @@ else {
 
     # ensembl has changed their naming rules
     my @table_files
-        = File::Find::Rule->file->name( '*.txt.table.gz', '*.txt.gz' )
-        ->in($ensembl_dir);
+        = File::Find::Rule->file->name( '*.txt.table.gz', '*.txt.gz' )->in($ensembl_dir);
 
     for my $table_file ( sort @table_files ) {
         my $archive = Archive::Extract->new( archive => $table_file, );
@@ -216,48 +223,3 @@ else {
 $stopwatch->end_message;
 
 __END__
-    
-=head1 NAME
-
-    build_ensembl.pl - Build an ensembl database from mysqldump files
-
-=head1 SYNOPSIS
-
-    perl build_ensembl.pl [options]
-      Options:
-        --help          brief help message
-        --man           full documentation
-        --server        MySQL server IP/Domain name
-        --port          MySQL server port
-        --db            ensembl database name
-        --username      username
-        --password      password
-        --checksum      do checksum
-        --ensembl       dir stored ensembl mysqldump files
-        --initdb        do init database
-
-    # run the following command to check the downloaded files
-    perl build_ensembl.pl --checksum
-    
-    # run the following command to build ensembl database
-    perl build_ensembl.pl --initdb --db=human_48 --ensembl=human_48/
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<build_ensembl.pl> will build an ensembl database from mysqldump files.
-
-=cut
