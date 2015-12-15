@@ -1,82 +1,101 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-use File::Find::Rule;
-use File::Spec;
-use Path::Class;
-use File::Basename;
+use Path::Tiny;
 use String::Compare;
 use Set::Light;
-
 use Template;
 
 use AlignDB::Stopwatch;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
+# record ARGV and Config
+my $stopwatch = AlignDB::Stopwatch->new(
+    program_name => $0,
+    program_argv => [@ARGV],
+    program_conf => $Config,
+);
 
-# write_axt parameter
-my $yml_file = "$FindBin::Bin/fungi.yml";
+=head1 NAME
 
-my $run;
+ensembl_batch.pl - Ensembl batching
 
-my $man  = 0;
-my $help = 0;
+=head1 SYNOPSIS
+
+    perl ensembl_batch.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --file      -i  STR     YAML file
+
+    perl ensembl_batch.pl -i ensembl_82.yml
+
+=cut
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    'server=s'     => \$server,
-    'port=i'       => \$port,
-    'username=s'   => \$username,
-    'password=s'   => \$password,
-    'y|yml_file=s' => \$yml_file,
-    'r|run'        => \$run,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
+    'username|u=s' => \( my $username = $Config->{database}{username} ),
+    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'file|i=s'     => \( my $yml_file = "$FindBin::Bin/fungi.yml" ),
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # Init objects
 #----------------------------------------------------------#
-my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Ensembl batching for $yml_file");
 
 my $dispatch = LoadFile($yml_file);
 
-my $mysql_dir = dir( $dispatch->{dir}{mysql} );
-my $fasta_dir = dir( $dispatch->{dir}{fasta} );
+my $mysql_dir = path( $dispatch->{dir}{mysql} )->absolute->stringify;
+my $fasta_dir = path( $dispatch->{dir}{fasta} )->absolute->stringify;
 
 my $species_ref = $dispatch->{species};
 
 my $version     = $dispatch->{meta}{version};
 my $initrc_file = $dispatch->{meta}{initrc_file};
+my $sh_file     = $dispatch->{meta}{sh_file};
 
 #----------------------------------------------------------#
 # Write .axt files from alignDB
 #----------------------------------------------------------#
-my $initrc_str;
+my $initrc_str = q{
+use strict;
+use warnings;
+use autodie;
+
+use Bio::EnsEMBL::Utils::ConfigRegistry;
+use Bio::EnsEMBL::DBSQL::DBAdaptor;
+use Bio::EnsEMBL::Compara::DBSQL::DBAdaptor;
+
+my $host = 'localhost';
+my $port = 3306;
+my $user = 'alignDB';
+my $pass = 'alignDB';
+
+};
+my $sh_str;
 for my $sp ( sort keys %{$species_ref} ) {
     print "$sp\n";
+    if ( $species_ref->{$sp}{skip} ) {
+        print " " x 4, "Skip $sp\n";
+        next;
+    }
 
     my (@aliases);
     {
@@ -85,9 +104,8 @@ for my $sp ( sort keys %{$species_ref} ) {
         if ($species) {
             my $str = lc( substr( $genus, 0, 1 ) . substr( $species, 0, 3 ) );
             push @aliases, $str;
+            push @aliases, ucfirst $str;
             push @aliases, $genus . '_' . $species;
-            push @aliases, substr( $genus, 0, 1 ) . $species;
-            push @aliases, substr( $genus, 0, 1 ) . '_' . $species;
         }
         else {
             my $str = lc $genus;
@@ -101,7 +119,8 @@ for my $sp ( sort keys %{$species_ref} ) {
     # build databases
     for my $group (qw{core funcgen otherfeatures variation compara}) {
         if ( $species_ref->{$sp}{$group} ) {
-            my $ensembl_db = build_db( $sp, $group, $mysql_dir, $run );
+            my ( $ensembl_db, $cmd ) = build_cmd( $sp, $group, $mysql_dir );
+            $sh_str .= $cmd;
             if ( $species_ref->{$sp}{initrc} ) {
                 my $aliases_ref = [@aliases];
                 push @{$aliases_ref}, $aliases[0] . "_$group" . "_$version";
@@ -110,29 +129,35 @@ for my $sp ( sort keys %{$species_ref} ) {
                 if ( ref $species_ref->{$sp}{$group} eq 'HASH'
                     and exists $species_ref->{$sp}{$group}{aliases} )
                 {
-                    push @{$aliases_ref},
-                        @{ $species_ref->{$sp}{$group}{aliases} };
+                    push @{$aliases_ref}, @{ $species_ref->{$sp}{$group}{aliases} };
                 }
-                $initrc_str
-                    .= build_initrc( $sp, $group, $ensembl_db, $aliases_ref );
+                $initrc_str .= build_initrc( $sp, $group, $ensembl_db, $aliases_ref );
             }
         }
     }
 }
 
+$initrc_str .= q{
+1;
+};
+
+#----------------------------#
+# Write outfiles
+#----------------------------#
 {
-    open my $out_fh, ">", $initrc_file;
-    print {$out_fh} $initrc_str;
-    close $out_fh;
+    path($initrc_file)->spew($initrc_str);
+    path($sh_file)->spew($sh_str);
 }
 
 $stopwatch->end_message;
 
-sub build_db {
+#----------------------------------------------------------#
+# Subroutines
+#----------------------------------------------------------#
+sub build_cmd {
     my $sp        = shift;
     my $group     = shift;
     my $mysql_dir = shift;
-    my $run       = shift;
 
     my %score_of;
     my ( $genus, $species, $strain ) = split " ", $sp;
@@ -142,38 +167,36 @@ sub build_db {
         $str = lc join "_", grep {$_} ( $genus, $species, $strain, $group );
     }
     else {
-        $str = lc join "_", ( 'ensembl', $group, $genus  );
+        $str = lc join "_", ( 'ensembl', $group, $genus );
     }
 
-    while ( my $child = $mysql_dir->next ) {
-        next unless -d $child;
-        my $dir      = $child->stringify;
-        my $base_dir = basename($dir);
-        my $score    = String::Compare::char_by_char( $base_dir, $str );
-        $score_of{$dir} = $score;
+    my $iter = path($mysql_dir)->iterator( { recurse => 0, } );
+    while ( my $child = $iter->() ) {
+        next unless $child->is_dir;
+        my $base_dir = $child->basename;
+        my $score = String::Compare::char_by_char( $base_dir, $str );
+        $score_of{ $child->stringify } = $score;
     }
 
     my ($ensembl_dir)
         = sort { $score_of{$b} <=> $score_of{$a} } keys %score_of;
-    my $ensembl_db = basename($ensembl_dir);
-    print "Find $ensembl_db for $str\n";
+    my $ensembl_db = path($ensembl_dir)->basename;
+    print " " x 4, "Find $ensembl_db for $str\n";
+    if ( index( $ensembl_db, $str ) != 0 ) {
+        print " " x 4, "Be careful for [$str]\n";
+    }
 
     my $cmd
         = "perl $FindBin::Bin/build_ensembl.pl"
-        . " -s=$server"
-        . " --port=$port"
-        . " -u=$username"
-        . " --password=$password"
+        . " -s $server"
+        . " --port $port"
+        . " -u $username"
+        . " --password $password"
         . " --initdb"
-        . " --db=$ensembl_db"
-        . " --ensembl=$ensembl_dir";
+        . " --db $ensembl_db"
+        . " --ensembl $ensembl_dir" . "\n\n";
 
-    $stopwatch->block_message("Build ensembl for $ensembl_db");
-    $stopwatch->block_message($cmd);
-    system $cmd if $run;
-    $stopwatch->block_message("Finish build");
-
-    return $ensembl_db;
+    return ( $ensembl_db, $cmd );
 }
 
 sub build_initrc {
@@ -224,38 +247,3 @@ EOF
 }
 
 __END__
-
-=head1 NAME
-
-    write_axt_slice.pl - extract alignment slices from alignDB
-
-=head1 SYNOPSIS
-
-    write_axt_slice.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-        -y, --yaml_dir      dir of yaml
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-=cut
-
