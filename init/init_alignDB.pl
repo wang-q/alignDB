@@ -10,9 +10,10 @@ use YAML qw(Dump Load DumpFile LoadFile);
 
 use Text::CSV_XS;
 
-use lib "$FindBin::Bin/../lib";
-use AlignDB;
 use AlignDB::Stopwatch;
+
+use lib "$FindBin::RealBin/../lib";
+use AlignDB;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -55,9 +56,9 @@ GetOptions(
     'db|d=s'       => \( my $db         = $Config->{database}{db} ),
     'username|u=s' => \( my $username   = $Config->{database}{username} ),
     'password|p=s' => \( my $password   = $Config->{database}{password} ),
-    'sql=s'        => \( my $init_sql   = "$FindBin::Bin/../init.sql" ),
-    'taxon=s'      => \( my $init_taxon = "$FindBin::Bin/../data/taxon.csv" ),
-    'chr=s'        => \( my $init_chr   = "$FindBin::Bin/../data/chr_length.csv" ),
+    'sql=s'        => \( my $init_sql   = "$FindBin::RealBin/../init.sql" ),
+    'taxon=s'      => \( my $init_taxon = "$FindBin::RealBin/../data/taxon.csv" ),
+    'chr=s'        => \( my $init_chr   = "$FindBin::RealBin/../data/chr_length.csv" ),
 ) or HelpMessage(1);
 
 #----------------------------------------------------------#

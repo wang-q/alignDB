@@ -1,59 +1,59 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use Spreadsheet::WriteExcel;
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 
-use FindBin;
+use AlignDB::Stopwatch;
+
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
-use AlignDB::Stopwatch;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-# format parameters
-my $wrap    = 50;
-my $spacing = 0;
+align_xls.pl - Generate a colorful excel file for one alignment in a three-way alignDB
 
-my $align_id = 1;
-my $outfile;
+=head1 SYNOPSIS
 
-my $man  = 0;
-my $help = 0;
+    perl align_xls.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --wrap          INT     wrap length, default is [50] 
+        --spacing       INT     wrapped line spacing, default is [0]
+        --align_id      INT     align_id
+        --outfile       STR     output file name
+
+=cut
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    's|server=s'   => \$server,
-    'P|port=i'     => \$port,
-    'd|db=s'       => \$db,
-    'u|username=s' => \$username,
-    'p|password=s' => \$password,
-    'wrap=i'       => \$wrap,
-    'spacing=i'    => \$spacing,
-    'align_id=s'   => \$align_id,
-    'output=s'     => \$outfile,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
+    'username|u=s' => \( my $username = $Config->{database}{username} ),
+    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'wrap=i'       => \( my $wrap     = 50 ),
+    'spacing=i'    => \( my $spacing  = 0 ),
+    'align_id=s'   => \( my $align_id = 1 ),
+    'output=s'     => \my $outfile,
+) or HelpMessage(1);
 
 $outfile ||= "$db-align-$align_id.xls";
 
@@ -73,8 +73,7 @@ my $dbh = $obj->dbh;
 
 # get target, query and reference names via AlignDB methods
 my ( $target_name, $query_name, $ref_name ) = $obj->get_names($align_id);
-my $max_name_length
-    = max( length $target_name, length $query_name, length $ref_name );
+my $max_name_length = max( length $target_name, length $query_name, length $ref_name );
 
 if ( !$ref_name or $ref_name eq 'NULL' ) {
     die "$db is not a three-way alignDB\n";
@@ -245,18 +244,15 @@ for my $pos ( sort { $a <=> $b } keys %variations ) {
 
         # write reference
         my $ref_occ = "$ref_base$snp_occured";
-        $sheet->write( $pos_row + 1,
-            $col_cursor, $ref_base, $snp_format->{$ref_occ} );
+        $sheet->write( $pos_row + 1, $col_cursor, $ref_base, $snp_format->{$ref_occ} );
 
         # write target
         my $target_occ = "$target_base$snp_occured";
-        $sheet->write( $pos_row + 2,
-            $col_cursor, $target_base, $snp_format->{$target_occ} );
+        $sheet->write( $pos_row + 2, $col_cursor, $target_base, $snp_format->{$target_occ} );
 
         # write query
         my $query_occ = "$query_base$snp_occured";
-        $sheet->write( $pos_row + 3,
-            $col_cursor, $query_base, $snp_format->{$query_occ} );
+        $sheet->write( $pos_row + 3, $col_cursor, $query_base, $snp_format->{$query_occ} );
 
         $col_cursor++;
     }
@@ -373,25 +369,3 @@ $stopwatch->end_message;
 exit;
 
 __END__
-
-=head1 NAME
-
-    align_xls.pl - Generate a colorful excel file for one alignment in
-                     a three-way alignDB
-
-=head1 SYNOPSIS
-
-    perl align_xls.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-        --wrap              wrap number 
-        --spacing           wrapped line spacing
-        --align_id          align_id
-        --outfile           output file name
-
-=cut

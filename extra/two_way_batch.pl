@@ -1,22 +1,20 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 
-use FindBin;
-
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -25,20 +23,20 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# Database init values
-my $server     = $Config->{database}{server};
-my $port       = $Config->{database}{port};
-my $username   = $Config->{database}{username};
-my $password   = $Config->{database}{password};
-my $db_name    = $Config->{database}{db};
-my $ensembl_db = $Config->{database}{ensembl};
+=head1 NAME
 
-my @gff_files;
-my @rm_gff_files;
+two_way_batch.pl - Batch process two-way alignDB
 
-# alignment
-my $dir_align        = $Config->{taxon}{dir_align};
-my $length_threshold = $Config->{generate}{length_threshold};
+=head1 SYNOPSIS
+
+    perl two_way_batch.pl -d S288CvsRM11 -t "4932,S288C" -q "285006,RM11" -da d:\data\alignment\yeast_combine\S288CvsRM11\ -lt 5000 --parallel 4 --run basic
+    perl two_way_batch.pl -d S288CvsSpar -t "4932,S288C" -q "226125,Spar" -da d:\data\alignment\yeast_combine\S288CvsSpar\ -lt 5000 --parallel 4 --run basic
+    
+    perl two_way_batch.pl -d alignDB -e yeast_65 -t "4932,S288C" -q "285006,RM11" -da ../data/S288CvsRM11 -lt 5000 --parallel 8 --run 1,2,40
+    
+    perl two_way_batch.pl -d HumanvsChimp -e human_65 -t "9606,Human" -q "9598,Chimp" -da /home/wangq/data/UCSC/Human19vsChimp2 -lt 5000 -st 0 --parallel 8 --run basic
+
+=cut
 
 # target, query init values
 my $target_taxon_id = $Config->{taxon}{target_taxon_id};
@@ -46,48 +44,26 @@ my $target_name     = $Config->{taxon}{target_name};
 my $query_taxon_id  = $Config->{taxon}{query_taxon_id};
 my $query_name      = $Config->{taxon}{query_name};
 
-my $target = $target_taxon_id . "," . $target_name;    # target sequence
-my $query  = $query_taxon_id . "," . $query_name;      # query sequence
-
-# running tasks
-my $run = "common";
-
-# run in parallel mode
-my $parallel = $Config->{generate}{parallel};
-
-# number of alignments process in one child process
-my $batch_number = $Config->{generate}{batch};
-
-my $init_taxon = "$FindBin::Bin/../data/taxon.csv";
-my $init_chr   = "$FindBin::Bin/../data/chr_length.csv";
-
-my $man  = 0;
-my $help = 0;
-
 GetOptions(
-    'help|?'                => \$help,
-    'man'                   => \$man,
-    's|server=s'            => \$server,
-    'P|port=i'              => \$port,
-    'u|username=s'          => \$username,
-    'p|password=s'          => \$password,
-    'd|db=s'                => \$db_name,
-    'da|dir_align=s'        => \$dir_align,
-    't|target=s'            => \$target,
-    'q|query=s'             => \$query,
-    'e|ensembl=s'           => \$ensembl_db,
-    'gff_files=s'           => \@gff_files,
-    'rm_gff_files=s'        => \@rm_gff_files,
-    'parallel=i'            => \$parallel,
-    'batch=i'               => \$batch_number,
-    'lt|length_threshold=i' => \$length_threshold,
-    'r|run=s'               => \$run,
-    'taxon|init_taxon=s'    => \$init_taxon,
-    'chr|init_chr=s'        => \$init_chr,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'            => \( my $server           = $Config->{database}{server} ),
+    'port|P=i'              => \( my $port             = $Config->{database}{port} ),
+    'db|d=s'                => \( my $db_name          = $Config->{database}{db} ),
+    'username|u=s'          => \( my $username         = $Config->{database}{username} ),
+    'password|p=s'          => \( my $password         = $Config->{database}{password} ),
+    'ensembl|e=s'           => \( my $ensembl_db       = $Config->{database}{ensembl} ),
+    'dir_align|da=s'        => \( my $dir_align        = $Config->{taxon}{dir_align} ),
+    'target|t=s'            => \( my $target           = $target_taxon_id . "," . $target_name ),
+    'query|q=s'             => \( my $query            = $query_taxon_id . "," . $query_name ),
+    'gff_files=s'           => \my @gff_files,
+    'rm_gff_files=s'        => \my @rm_gff_files,
+    'parallel=i'            => \( my $parallel         = $Config->{generate}{parallel} ),
+    'batch=i'               => \( my $batch_number     = $Config->{generate}{batch} ),
+    'length_threshold|lt=i' => \( my $length_threshold = $Config->{generate}{length_threshold} ),
+    'run|r=s' => \( my $run        = "common" ),                                     # running tasks
+    'taxon=s' => \( my $init_taxon = "$FindBin::RealBin/../data/taxon.csv" ),
+    'chr=s'   => \( my $init_chr   = "$FindBin::RealBin/../data/chr_length.csv" ),
+) or HelpMessage(1);
 
 # prepare to run tasks in @tasks
 my @tasks;
@@ -276,12 +252,3 @@ $stopwatch->end_message;
 exit;
 
 __END__
-
-=head1 SYNOPSIS
-
-perl two_way_batch.pl -d S288CvsRM11 -t "4932,S288C" -q "285006,RM11" -da d:\data\alignment\yeast_combine\S288CvsRM11\ -lt 5000 --parallel 4 --run basic
-perl two_way_batch.pl -d S288CvsSpar -t "4932,S288C" -q "226125,Spar" -da d:\data\alignment\yeast_combine\S288CvsSpar\ -lt 5000 --parallel 4 --run basic
-
-perl two_way_batch.pl -d alignDB -e yeast_65 -t "4932,S288C" -q "285006,RM11" -da ../data/S288CvsRM11 -lt 5000 --parallel 8 --run 1,2,40
-
-perl two_way_batch.pl -d HumanvsChimp -e human_65 -t "9606,Human" -q "9598,Chimp" -da /home/wangq/data/UCSC/Human19vsChimp2 -lt 5000 -st 0 --parallel 8 --run basic

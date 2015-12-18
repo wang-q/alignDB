@@ -1,22 +1,20 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 
-use FindBin;
-
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -25,67 +23,45 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# Database init values
-my $server     = $Config->{database}{server};
-my $port       = $Config->{database}{port};
-my $username   = $Config->{database}{username};
-my $password   = $Config->{database}{password};
-my $db_name    = $Config->{database}{db};
-my $ensembl_db = $Config->{database}{ensembl};
+=head1 NAME
 
-# alignments have an outgroup
-my $outgroup;
+multi_way_batch.pl - Batch process multi-way alignDB
 
-my @gff_files;
-my @rm_gff_files;
+=head1 SYNOPSIS
 
-# alignment
-my $dir_align        = $Config->{taxon}{dir_align};
-my $length_threshold = $Config->{generate}{length_threshold};
+    perl multi_way_batch.pl -d S288CvsThree_10k -e yeast_58 -da F:/S288CvsThree_10k -lt 5000 -st 0 --parallel=6 --run all
+    
+    perl multi_way_batch.pl -d S288CvsTen_10k -e yeast_58 -da F:/S288CvsTen_10k -lt 5000 -st 0 --parallel=6 --run all
+    
+    perl multi_way_batch.pl -d S288CvsSix_10k -r stat
+    
+    perl multi_way_batch.pl -d AthvsFive -da d:\data\alignment\arabidopsis\AthvsFive\ -lt 5000 -st 0 --parallel 4 --run 1-3,21,40
+    
+    perl ~/Scripts/alignDB/extra/multi_way_batch.pl -d AthvsV_mafft --block --id 3702 -da ~/data/alignment/arabidopsis19/AthvsV_mafft -lt 5000 -st 0 --parallel 4 --run 1-3,21,40
 
-my $block;         # input is galaxy style blocked fasta
-my $file_id_of;    # taxon_id-name mapping file
-
-# running tasks
-my $run = "common";
-
-# run in parallel mode
-my $parallel = $Config->{generate}{parallel};
-
-# number of alignments process in one child process
-my $batch_number = $Config->{generate}{batch};
-
-my $init_taxon = "$FindBin::Bin/../data/taxon.csv";
-my $init_chr   = "$FindBin::Bin/../data/chr_length.csv";
-
-my $man  = 0;
-my $help = 0;
+=cut
 
 GetOptions(
-    'help|?'                => \$help,
-    'man'                   => \$man,
-    's|server=s'            => \$server,
-    'P|port=i'              => \$port,
-    'u|username=s'          => \$username,
-    'p|password=s'          => \$password,
-    'd|db=s'                => \$db_name,
-    'o|outgroup'            => \$outgroup,
-    'da|dir_align=s'        => \$dir_align,
-    'e|ensembl=s'           => \$ensembl_db,
-    'gff_files=s'           => \@gff_files,
-    'rm_gff_files=s'        => \@rm_gff_files,
-    'id|id_of=s'            => \$file_id_of,
-    'block'                 => \$block,
-    'parallel=i'            => \$parallel,
-    'batch=i'               => \$batch_number,
-    'lt|length_threshold=i' => \$length_threshold,
-    'r|run=s'               => \$run,
-    'taxon|init_taxon=s'    => \$init_taxon,
-    'chr|init_chr=s'        => \$init_chr,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'     => \( my $server     = $Config->{database}{server} ),
+    'port|P=i'       => \( my $port       = $Config->{database}{port} ),
+    'db|d=s'         => \( my $db_name    = $Config->{database}{db} ),
+    'username|u=s'   => \( my $username   = $Config->{database}{username} ),
+    'password|p=s'   => \( my $password   = $Config->{database}{password} ),
+    'ensembl|e=s'    => \( my $ensembl_db = $Config->{database}{ensembl} ),
+    'dir_align|da=s' => \( my $dir_align  = $Config->{taxon}{dir_align} ),
+    'outgroup|o'     => \my $outgroup,
+    'gff_files=s'    => \my @gff_files,
+    'rm_gff_files=s' => \my @rm_gff_files,
+    'id|id_of=s' => \my $file_id_of,    # taxon_id-name mapping file
+    'block'      => \my $block,         # input is galaxy style blocked fasta
+    'parallel=i' => \( my $parallel = $Config->{generate}{parallel} ),
+    'batch=i' => \( my $batch_number = $Config->{generate}{batch} ),
+    'length_threshold|lt=i' => \( my $length_threshold = $Config->{generate}{length_threshold} ),
+    'run|r=s' => \( my $run        = "common" ),                                     # running tasks
+    'taxon=s' => \( my $init_taxon = "$FindBin::RealBin/../data/taxon.csv" ),
+    'chr=s'   => \( my $init_chr   = "$FindBin::RealBin/../data/chr_length.csv" ),
+) or HelpMessage(1);
 
 # prepare to run tasks in @tasks
 my @tasks;
@@ -283,16 +259,3 @@ $stopwatch->end_message;
 exit;
 
 __END__
-
-=head1 SYNOPSIS
-
-perl multi_way_batch.pl -d S288CvsThree_10k -e yeast_58 -da F:/S288CvsThree_10k -lt 5000 -st 0 --parallel=6 --run all
-
-perl multi_way_batch.pl -d S288CvsTen_10k -e yeast_58 -da F:/S288CvsTen_10k -lt 5000 -st 0 --parallel=6 --run all
-
-perl multi_way_batch.pl -d S288CvsSix_10k -r stat
-
-perl multi_way_batch.pl -d AthvsFive -da d:\data\alignment\arabidopsis\AthvsFive\ -lt 5000 -st 0 --parallel 4 --run 1-3,21,40
-
-perl ~/Scripts/alignDB/extra/multi_way_batch.pl -d AthvsV_mafft --block --id 3702 -da ~/data/alignment/arabidopsis19/AthvsV_mafft -lt 5000 -st 0 --parallel 4 --run 1-3,21,40
-
