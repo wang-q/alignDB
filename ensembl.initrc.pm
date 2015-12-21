@@ -29,6 +29,7 @@ my $pass = 'alignDB';
         'Arabidopsis_lyrata',
         'alyr_core_82',
         'alyr_82',
+        'arabidopsis_lyrata_core_29_82_10',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -54,6 +55,7 @@ my $pass = 'alignDB';
         'Arabidopsis_thaliana',
         'atha_core_82',
         'atha_82',
+        'arabidopsis_thaliana_core_29_82_10',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -79,6 +81,7 @@ my $pass = 'alignDB';
         'Aspergillus_fumigatus',
         'afum_core_82',
         'afum_82',
+        'aspergillus_fumigatus_core_29_82_2',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -104,6 +107,7 @@ my $pass = 'alignDB';
         'Brassica_oleracea',
         'bole_core_82',
         'bole_82',
+        'brassica_oleracea_core_29_82_1',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -129,6 +133,7 @@ my $pass = 'alignDB';
         'Brassica_rapa',
         'brap_core_82',
         'brap_82',
+        'brassica_rapa_core_29_82_1',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -154,6 +159,7 @@ my $pass = 'alignDB';
         'Caenorhabditis_brenneri',
         'cbre_core_82',
         'cbre_82',
+        'caenorhabditis_brenneri_core_29_82_233',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -179,6 +185,7 @@ my $pass = 'alignDB';
         'Caenorhabditis_briggsae',
         'cbri_core_82',
         'cbri_82',
+        'caenorhabditis_briggsae_core_29_82_230',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -204,6 +211,7 @@ my $pass = 'alignDB';
         'Caenorhabditis_elegans',
         'cele_core_82',
         'cele_82',
+        'caenorhabditis_elegans_core_82_245',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -229,6 +237,7 @@ my $pass = 'alignDB';
         'Caenorhabditis_japonica',
         'cjap_core_82',
         'cjap_82',
+        'caenorhabditis_japonica_core_29_82_233',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -254,6 +263,7 @@ my $pass = 'alignDB';
         'Caenorhabditis_remanei',
         'crem_core_82',
         'crem_82',
+        'caenorhabditis_remanei_core_29_82_233',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -279,6 +289,7 @@ my $pass = 'alignDB';
         'Dictyostelium_discoideum',
         'ddis_core_82',
         'ddis_82',
+        'dictyostelium_discoideum_core_29_82_1',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -304,6 +315,7 @@ my $pass = 'alignDB';
         'Drosophila_melanogaster',
         'dmel_core_82',
         'dmel_82',
+        'drosophila_melanogaster_core_82_602',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -329,6 +341,7 @@ my $pass = 'alignDB';
         'Drosophila_sechellia',
         'dsec_core_82',
         'dsec_82',
+        'drosophila_sechellia_core_29_82_1',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -354,6 +367,7 @@ my $pass = 'alignDB';
         'Drosophila_simulans',
         'dsim_core_82',
         'dsim_82',
+        'drosophila_simulans_core_29_82_1',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -379,6 +393,7 @@ my $pass = 'alignDB';
         'Homo_sapiens',
         'hsap_core_82',
         'hsap_82',
+        'homo_sapiens_core_82_37',
         'human',
     );
 
@@ -405,6 +420,7 @@ my $pass = 'alignDB';
         'Mus_musculus',
         'mmus_core_82',
         'mmus_82',
+        'mus_musculus_core_82_38',
         'mouse',
     );
 
@@ -431,6 +447,7 @@ my $pass = 'alignDB';
         'Oryza_indica',
         'oind_core_82',
         'oind_82',
+        'oryza_indica_core_29_82_2',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -456,6 +473,7 @@ my $pass = 'alignDB';
         'Oryza_sativa',
         'osat_core_82',
         'osat_82',
+        'oryza_sativa_core_29_82_7',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -481,6 +499,7 @@ my $pass = 'alignDB';
         'Plasmodium_falciparum',
         'pfal_core_82',
         'pfal_82',
+        'plasmodium_falciparum_core_29_82_3',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -506,6 +525,7 @@ my $pass = 'alignDB';
         'Saccharomyces_cerevisiae',
         'scer_core_82',
         'scer_82',
+        'saccharomyces_cerevisiae_core_29_82_4',
         'yeast',
     );
 
@@ -532,6 +552,7 @@ my $pass = 'alignDB';
         'Schizosaccharomyces_pombe',
         'spom_core_82',
         'spom_82',
+        'schizosaccharomyces_pombe_core_29_82_2',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -557,6 +578,7 @@ my $pass = 'alignDB';
         'Solanum_lycopersicum',
         'slyc_core_82',
         'slyc_82',
+        'solanum_lycopersicum_core_29_82_250',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -582,6 +604,7 @@ my $pass = 'alignDB';
         'Solanum_tuberosum',
         'stub_core_82',
         'stub_82',
+        'solanum_tuberosum_core_29_82_4',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(

@@ -55,7 +55,7 @@ GetOptions(
     'db|d=s'       => \( my $db           = $Config->{database}{db} ),
     'username|u=s' => \( my $username     = $Config->{database}{username} ),
     'password|p=s' => \( my $password     = $Config->{database}{password} ),
-    'ensembl|e'    => \( my $ensembl_db   = $Config->{database}{ensembl} ),
+    'ensembl|e=s'  => \( my $ensembl_db   = $Config->{database}{ensembl} ),
     'parallel=i'   => \( my $parallel     = $Config->{generate}{parallel} ),
     'batch=i'      => \( my $batch_number = $Config->{generate}{batch} ),
 ) or HelpMessage(1);

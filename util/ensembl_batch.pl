@@ -52,7 +52,7 @@ GetOptions(
     'port|P=i'     => \( my $port     = $Config->{database}{port} ),
     'username|u=s' => \( my $username = $Config->{database}{username} ),
     'password|p=s' => \( my $password = $Config->{database}{password} ),
-    'file|i=s'     => \( my $yml_file = "$FindBin::Bin/fungi.yml" ),
+    'file|i=s'     => \( my $yml_file = "$FindBin::Bin/ensembl_82.yml" ),
 ) or HelpMessage(1);
 
 #----------------------------------------------------------#
@@ -122,10 +122,13 @@ for my $sp ( sort keys %{$species_ref} ) {
             my ( $ensembl_db, $cmd ) = build_cmd( $sp, $group, $mysql_dir );
             $sh_str .= $cmd;
             if ( $species_ref->{$sp}{initrc} ) {
+                # Don't affect other groups' aliases
                 my $aliases_ref = [@aliases];
                 push @{$aliases_ref}, $aliases[0] . "_$group" . "_$version";
                 push @{$aliases_ref}, $aliases[0] . "_$version"
                     if $group eq 'core';
+                push @{$aliases_ref}, $ensembl_db;
+
                 if ( ref $species_ref->{$sp}{$group} eq 'HASH'
                     and exists $species_ref->{$sp}{$group}{aliases} )
                 {
