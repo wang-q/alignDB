@@ -1,59 +1,66 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-use AlignDB;
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
+
+use lib "$FindBin::RealBin/../lib";
+use AlignDB;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+# record ARGV and Config
+my $stopwatch = AlignDB::Stopwatch->new(
+    program_name => $0,
+    program_argv => [@ARGV],
+    program_conf => $Config,
+);
 
-# chr_id_runlistw
-my $target_chr_id_runlist = $Config->{write}{target_chr_id_runlist};
-my $query_chr_id_runlist  = $Config->{write}{query_chr_id_runlist};
-my $chr_flag;    # undef => all, 1 => in same chr, 2 => between two chrs
+=head1 NAME
 
-my $man  = 0;
-my $help = 0;
+write_chr_axt.pl - extract sequence of specific chromosomes from alignDB
+
+=head1 SYNOPSIS
+
+    write_chr_axt.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --target        STR     target_chr_id_runlist
+        --query         STR     query_chr_id_runlist
+        --flag          STR     undef => all, 1 => in same chr, 2 => between two chrs
+
+=cut
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    's|server=s'   => \$server,
-    'P|port=i'     => \$port,
-    'd|db=s'       => \$db,
-    'u|username=s' => \$username,
-    'p|password=s' => \$password,
-    'target=s'     => \$target_chr_id_runlist,
-    'query=s'      => \$query_chr_id_runlist,
-    'flag=s'       => \$chr_flag,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server             = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port               = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db                 = $Config->{database}{db} ),
+    'username|u=s' => \( my $username           = $Config->{database}{username} ),
+    'password|p=s' => \( my $password           = $Config->{database}{password} ),
+    'target=s'     => \( my $target_chr_runlist = "1,5-20" ),
+    'query=s'      => \( my $query_chr_runlist  = "2,21-37" ),
+    'flag=s'       => \my $chr_flag,
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # Init objects
 #----------------------------------------------------------#
-my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Write .axt files from $db...");
 
 my $obj = AlignDB->new(
@@ -69,8 +76,8 @@ my $dbh = $obj->dbh;
 # Write .axt files from alignDB
 #----------------------------------------------------------#
 # chr_ids
-my $target_chr_id_set = AlignDB::IntSpan->new($target_chr_id_runlist);
-my $query_chr_id_set  = AlignDB::IntSpan->new($query_chr_id_runlist);
+my $target_chr_set = AlignDB::IntSpan->new($target_chr_runlist);
+my $query_chr_set  = AlignDB::IntSpan->new($query_chr_runlist);
 
 # select all target_name and query_name in this database
 my ( $target_name, $query_name ) = $obj->get_names;
@@ -98,8 +105,8 @@ my $align_query = q{
 my $align_sth = $dbh->prepare($align_query);
 
 my @chr_pairs;
-for my $tchr_id ( $target_chr_id_set->elements ) {
-    for my $qchr_id ( $query_chr_id_set->elements ) {
+for my $tchr_id ( $target_chr_set->elements ) {
+    for my $qchr_id ( $query_chr_set->elements ) {
         if ( defined $chr_flag and $chr_flag == 1 ) {    # in same chr
             if ( $tchr_id == $qchr_id ) {
                 push @chr_pairs, [ $tchr_id, $qchr_id ];
@@ -152,8 +159,7 @@ for my $chr_pair (@chr_pairs) {
 
         my ( $target_seq, $query_seq ) = @{ $obj->get_seqs($align_id) };
 
-        my $score
-            = ( $target_chr_end - $target_chr_start + 1 ) * 100;    # sham score
+        my $score = ( $target_chr_end - $target_chr_start + 1 ) * 100;    # sham score
 
         # append axt file
         {
@@ -198,43 +204,3 @@ $stopwatch->end_message;
 exit;
 
 __END__
-
-=head1 NAME
-
-    write_chr_axt.pl - extract sequence of specific chromosomes from alignDB
-
-=head1 SYNOPSIS
-
-    write_chr_axt.pl [options]
-      Options:
-        --help          brief help message
-        --man           full documentation
-        --server        MySQL server IP/Domain name
-        --db            database name
-        --username      username
-        --password      password
-        --target        target_chr_id_runlist
-        --query         query_chr_id_runlist
-        --flag          undef => all, 1 => in same chr, 2 => between two chrs
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
-
-=cut
-

@@ -1,10 +1,11 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML::Syck qw(Dump Load DumpFile LoadFile);
 
 use File::Find::Rule;
@@ -15,51 +16,63 @@ use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
+use lib "$FindBin::RealBin/../lib";
 use AlignDB;
 use AlignDB::Position;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-# write_axt parameter
-my $yaml_dir = '.';
+write_axt_slice.pl - extract alignment slices from MalignDB
 
-# run in parallel mode
-my $parallel = 1;
+=head1 SYNOPSIS
 
-# An align should be an island in the slice
-my $want_equal;
+    perl write_axt_slice.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --yaml_dir  -y  STR     dir of yaml
+        --want_equal            An align should be an island in the slice
+        --parallel      INT     run in parallel mode
 
-my $man  = 0;
-my $help = 0;
+=head1 YAML format
+
+format 1: chr1.yml
+
+    --- 1-25744,815056-817137
+    
+    output axt: chr1/chr1.axt
+
+format 2: bin1.yml
+
+    ---
+    chr1: '1-25744,815056-817137'
+  
+    output axt: bin1/chr1.axt
+
+=cut
+
+#
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    's|server=s'   => \$server,
-    'P|port=i'     => \$port,
-    'd|db=s'       => \$db,
-    'u|username=s' => \$username,
-    'p|password=s' => \$password,
-    'y|yaml_dir=s' => \$yaml_dir,
-    'want_equal'   => \$want_equal,
-    'parallel=i'   => \$parallel,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
+    'username|u=s' => \( my $username = $Config->{database}{username} ),
+    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'yaml_dir|y=s' => \( my $yaml_dir = '.' ),
+    'want_equal'   => \my $want_equal,
+    'parallel=i'   => \( my $parallel = 1 ),
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # Init objects
@@ -70,8 +83,7 @@ $stopwatch->start_message("Write slice files from $db...");
 #----------------------------------------------------------#
 # Write .axt files from alignDB
 #----------------------------------------------------------#
-my @yaml_files
-    = File::Find::Rule->file->name( '*.yaml', '*.yml' )->in($yaml_dir);
+my @yaml_files = File::Find::Rule->file->name( '*.yaml', '*.yml' )->in($yaml_dir);
 printf "\n----Total YAML Files: %4s----\n\n", scalar @yaml_files;
 
 for my $yaml_file ( sort @yaml_files ) {
@@ -157,9 +169,8 @@ sub write_slice {
         my $target_set = AlignDB::IntSpan->new($target_runlist);
         my $query_set  = AlignDB::IntSpan->new($query_runlist);
 
-        my $align_chr_set
-            = AlignDB::IntSpan->new("$target_chr_start-$target_chr_end");
-        my $iset = $slice_set->intersect($align_chr_set);
+        my $align_chr_set = AlignDB::IntSpan->new("$target_chr_start-$target_chr_end");
+        my $iset          = $slice_set->intersect($align_chr_set);
         next if $iset->is_empty;
 
         if ($want_equal) {
@@ -189,23 +200,19 @@ sub write_slice {
             my $serial = $align_serial{$target_chr_name} - 1;
 
             # align coordinates to target & query chromosome coordinates
-            my $target_seg_start
-                = $pos_obj->at_target_chr( $align_id, $seg_start );
-            my $target_seg_end = $pos_obj->at_target_chr( $align_id, $seg_end );
-            my $query_seg_start
-                = $pos_obj->at_query_chr( $align_id, $seg_start );
-            my $query_seg_end = $pos_obj->at_query_chr( $align_id, $seg_end );
+            my $target_seg_start = $pos_obj->at_target_chr( $align_id, $seg_start );
+            my $target_seg_end   = $pos_obj->at_target_chr( $align_id, $seg_end );
+            my $query_seg_start = $pos_obj->at_query_chr( $align_id, $seg_start );
+            my $query_seg_end   = $pos_obj->at_query_chr( $align_id, $seg_end );
             if ( $query_strand eq '-' ) {
-                ( $query_seg_start, $query_seg_end )
-                    = ( $query_seg_end, $query_seg_start );
+                ( $query_seg_start, $query_seg_end ) = ( $query_seg_end, $query_seg_start );
             }
             my $score = $seg_length * 100;    # sham score
 
             # append axt file
             {
                 print "Write slice files: "
-                    . "$target_chr_name:$target_seg_start-$target_seg_end"
-                    . "\n";
+                    . "$target_chr_name:$target_seg_start-$target_seg_end" . "\n";
                 open my $outfh, '>>', $outfile;
                 print {$outfh} "$serial";
                 print {$outfh} " $target_chr_name";
@@ -213,10 +220,8 @@ sub write_slice {
                 print {$outfh} " $query_chr_name";
                 print {$outfh} " $query_seg_start $query_seg_end";
                 print {$outfh} " $query_strand $score\n";
-                print {$outfh}
-                    substr( $target_seq, $seg_start - 1, $seg_length ), "\n";
-                print {$outfh}
-                    substr( $query_seq, $seg_start - 1, $seg_length ), "\n";
+                print {$outfh} substr( $target_seq, $seg_start - 1, $seg_length ), "\n";
+                print {$outfh} substr( $query_seq, $seg_start - 1, $seg_length ), "\n";
                 print {$outfh} "\n";
                 close $outfh;
             }
@@ -228,49 +233,3 @@ sub write_slice {
 $stopwatch->end_message;
 
 __END__
-
-=head1 NAME
-
-    write_axt_slice.pl - extract alignment slices from alignDB
-
-=head1 SYNOPSIS
-
-    write_axt_slice.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-        -y, --yaml_dir      dir of yaml
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-format 1: chr1.yml
-  --- 1-25744,815056-817137
-  
-  output axt: chr1/chr1.axt
-format 2: bin1.yml
-  ---
-  chr1: '1-25744,815056-817137'
-
-  output axt: bin1/chr1.axt
-
-
-=cut
-

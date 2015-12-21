@@ -6,7 +6,7 @@ use autodie;
 use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck qw(Dump Load DumpFile LoadFile);
 
 use File::Find::Rule;
 use File::Spec;
@@ -41,6 +41,7 @@ write_fasta_slice.pl - extract alignment slices from MalignDB
         --password  -p  STR     password
         --yaml_dir  -y  STR     dir of yaml
         --outgroup              This alignDB has an outgroup
+        --parallel      INT     run in parallel mode
 
 =head1 YAML format
 

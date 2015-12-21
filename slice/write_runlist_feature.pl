@@ -3,9 +3,9 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML::Syck qw(Dump Load DumpFile LoadFile);
 
 use File::Spec;
@@ -14,66 +14,64 @@ use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
+use lib "$FindBin::RealBin/../lib";
 use AlignDB;
 use AlignDB::Ensembl;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# Database init values
-my $server     = $Config->{database}{server};
-my $port       = $Config->{database}{port};
-my $username   = $Config->{database}{username};
-my $password   = $Config->{database}{password};
-my $db         = $Config->{database}{db};
-my $ensembl_db = $Config->{database}{ensembl};
+# record ARGV and Config
+my $stopwatch = AlignDB::Stopwatch->new(
+    program_name => $0,
+    program_argv => [@ARGV],
+    program_conf => $Config,
+);
 
-# write_axt parameter
-my $length_threshold = $Config->{write}{feature_threshold};
-my $feature          = $Config->{write}{feature};
+=head1 NAME
 
-# removing $n integers from each end of each span of $set.
-# If $n is negative, then -$n integers are added to each end of each span.
-# use AlignDB::IntSpan->inset()
-my $inset;
+write_runlist_feature.pl - extract runlists of a certain feature from alignDB
 
-# write inverted sets
-my $invert;
+=head1 SYNOPSIS
 
-# run in parallel mode
-my $parallel = $Config->{generate}{parallel};
+    perl write_runlist_feature.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --ensembl   -e  STR     ensembl database name
+        --length    -l  INT     threshold of alignment length
+        --feature       STR     feature name, default is [non_repeat]
+        --inset         INT     removing $inset bases from each end of each span of $set.
+                                If $inset is negative, then -$inset integers are added to each end of each span.
+        --invert                write inverted sets
+        --parallel      INT     run in parallel mode
 
-my $man  = 0;
-my $help = 0;
+=cut
 
 GetOptions(
-    'help|?'        => \$help,
-    'man'           => \$man,
-    's|server=s'    => \$server,
-    'P|port=i'      => \$port,
-    'u|username=s'  => \$username,
-    'p|password=s'  => \$password,
-    'd|db=s'        => \$db,
-    'e|ensembl=s'   => \$ensembl_db,
-    'l|lt|length=i' => \$length_threshold,
-    'feature=s'     => \$feature,
-    'inset=i'       => \$inset,
-    'invert'        => \$invert,
-    'parallel=i'    => \$parallel,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'    => \( my $server           = $Config->{database}{server} ),
+    'port|P=i'      => \( my $port             = $Config->{database}{port} ),
+    'db|d=s'        => \( my $db               = $Config->{database}{db} ),
+    'username|u=s'  => \( my $username         = $Config->{database}{username} ),
+    'password|p=s'  => \( my $password         = $Config->{database}{password} ),
+    'ensembl|e'     => \( my $ensembl_db       = $Config->{database}{ensembl} ),
+    'length|lt|l=i' => \( my $length_threshold = $Config->{generate}{length_threshold} ),
+    'feature=s'  => \( my $feature  = 'non_repeat' ),
+    'inset=i'    => \my $inset,
+    'invert'     => \my $invert,
+    'parallel=i' => \( my $parallel = $Config->{generate}{parallel} ),
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # Init objects
 #----------------------------------------------------------#
-my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Write slice files from $db...");
 
 # output dir
@@ -147,10 +145,7 @@ my $worker = sub {
         $ensembl_chr_name =~ s/chr0?//i;
 
         #print "ensembl_chr_name $ensembl_chr_name\n";
-        eval {
-            $ensembl->set_slice( $ensembl_chr_name, $target_chr_start,
-                $target_chr_end );
-        };
+        eval { $ensembl->set_slice( $ensembl_chr_name, $target_chr_start, $target_chr_end ); };
         if ($@) {
             warn "Can't get annotation\n";
             next;
@@ -202,22 +197,3 @@ $run->run;
 $stopwatch->end_message;
 
 __END__
-
-=head1 NAME
-
-    write_runlist_feature.pl - extract runlists of a certain feature from alignDB
-
-=head1 SYNOPSIS
-
-    write_axt.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-        --ensembl           ensembl database name
-
-=cut
-
