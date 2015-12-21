@@ -1,72 +1,68 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use Bio::Seq;
 use Bio::Graphics::Panel;
 use Bio::Graphics::Feature;
 
+use AlignDB::GC;
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
+use lib "$FindBin::RealBin/../lib";
 use AlignDB;
-use AlignDB::Ensembl;
-use AlignDB::GC;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-# graph init values
-my $CLASS = $Config->{graph}{class};    # GD or GD::SVG
-my $width = $Config->{graph}{width};
+align_graph.pl - Generate graph for one alignment in alignDB
 
-my $figure      = $Config->{graph}{figure};
-my $gc_wave_csv = $Config->{graph}{gc_wave_csv};
+=head1 SYNOPSIS
 
-my $wave_window_size = $Config->{gc}{wave_window_size};
-my $wave_window_step = $Config->{gc}{wave_window_step};
-my $vicinal_size     = $Config->{gc}{vicinal_size};
-my $fall_range       = $Config->{gc}{fall_range};
+    perl align_graph.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --align_id      INT     align_id
+        --class         STR     GD or GD::SVG
+        --width         INT     width + 40 = figure width
 
-my $align_id = 1;
+=cut
 
-my $man  = 0;
-my $help = 0;
+my $figure      = 1;
+my $gc_wave_csv = 1;
+
+my $vicinal_size = $Config->{gc}{vicinal_size};
+my $fall_range   = $Config->{gc}{fall_range};
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    's|server=s'   => \$server,
-    'P|port=i'     => \$port,
-    'u|username=s' => \$username,
-    'p|password=s' => \$password,
-    'd|db=s'       => \$db,
-    'align_id=s'   => \$align_id,
-    'CLASS=s'      => \$CLASS,
-    'width=i'      => \$width,
-    'size=i'       => \$wave_window_size,
-    'step=i'       => \$wave_window_step,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server           = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port             = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db               = $Config->{database}{db} ),
+    'username|u=s' => \( my $username         = $Config->{database}{username} ),
+    'password|p=s' => \( my $password         = $Config->{database}{password} ),
+    'align_id=s'   => \( my $align_id         = 1 ),
+    'CLASS=s'      => \( my $CLASS            = "GD" ),
+    'width=i'      => \( my $width            = 800 ),
+    'size=i'       => \( my $wave_window_size = $Config->{gc}{wave_window_size} ),
+    'step=i'       => \( my $wave_window_step = $Config->{gc}{wave_window_step} ),
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # Init objects and SQL queries
@@ -227,9 +223,8 @@ if ($figure) {
     {    # text
         $panel->add_track(
             $align_segment,
-            -glyph => 'text_in_box',
-            -text  => "DB: $db | Align: $align_id | "
-                . "$chr_name $chr_start-$chr_end",
+            -glyph        => 'text_in_box',
+            -text         => "DB: $db | Align: $align_id | " . "$chr_name $chr_start-$chr_end",
             -text_bgcolor => 'lightcyan',
             -height       => 10,
             -bgcolor      => 'yellow',
@@ -241,8 +236,7 @@ if ($figure) {
         $panel->add_track(
             $align_segment,
             -glyph => 'text_in_box',
-            -text =>
-                "GC wave | size: $wave_window_size | step: $wave_window_step | "
+            -text  => "GC wave | size: $wave_window_size | step: $wave_window_step | "
                 . "fall range: $fall_range",
             -text_bgcolor => 'lightcyan',
             -height       => 10,
@@ -432,41 +426,3 @@ $stopwatch->end_message;
 exit;
 
 __END__
-
-
-=head1 NAME
-
-    align_graph.pl - Generate graph for one alignment in alignDB
-
-=head1 SYNOPSIS
-
-    align_graph.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-        --align_id          align_id
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
-
-=cut

@@ -1,10 +1,11 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use Bio::Seq;
@@ -16,51 +17,47 @@ use Number::Format qw(:subs);
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
+use lib "$FindBin::RealBin/../lib";
 use AlignDB;
 use AlignDB::Ensembl;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# Database init values
-my $server     = $Config->{database}{server};
-my $port       = $Config->{database}{port};
-my $username   = $Config->{database}{username};
-my $password   = $Config->{database}{password};
-my $db         = $Config->{database}{db};
-my $ensembl_db = $Config->{database}{ensembl};
+=head1 NAME
 
-# graph init values
-my $CLASS = $Config->{graph}{class};    # GD or GD::SVG
-my $width = $Config->{graph}{width};
+alignDB_graph.pl - Generate graph for chromosome coverage in alignDB
 
-# coverage on target or query
-my $goal = "target";
+=head1 SYNOPSIS
 
-my $man  = 0;
-my $help = 0;
+    perl alignDB_graph.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --class         STR     GD or GD::SVG
+        --width         INT     width + 40 = figure width
+        --goal          STR     coverage on target or query, default is [target]
+
+=cut
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=s'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'ensembl=s'  => \$ensembl_db,
-    'class=s'    => \$CLASS,
-    'width=i'    => \$width,
-    'goal=s'     => \$goal,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server     = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port       = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db         = $Config->{database}{db} ),
+    'username|u=s' => \( my $username   = $Config->{database}{username} ),
+    'password|p=s' => \( my $password   = $Config->{database}{password} ),
+    'ensembl|e'    => \( my $ensembl_db = $Config->{database}{ensembl} ),
+    'class=s'      => \( my $CLASS      = "GD" ),
+    'width=i'      => \( my $width      = 800 ),
+    'goal=s'       => \( my $goal       = "target" ),
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # Init objects
@@ -221,11 +218,7 @@ my $ftr = 'Bio::Graphics::Feature';
     );
 
     {    # text
-        my $title
-            = "DB: $db"
-            . " | Target: $target_name"
-            . " | Query: $query_name"
-            . " | On $goal";
+        my $title = "DB: $db" . " | Target: $target_name" . " | Query: $query_name" . " | On $goal";
         $panel->add_track(
             $largest_chr,
             -glyph        => 'text_in_box',
@@ -406,24 +399,5 @@ __END__
             --password          password
             --class             GD or GD::SVG
             --width             width + 40 = figure width
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
 
 =cut

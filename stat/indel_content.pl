@@ -1,62 +1,62 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use Set::Light;
 
-use FindBin;
+use AlignDB::Stopwatch;
+use AlignDB::Util qw(:all);
+
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 use AlignDB::WriteExcel;
-use AlignDB::Stopwatch;
-use AlignDB::Util qw(:all);
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# Database init values
-my $server   = $Config->{database}->{server};
-my $port     = $Config->{database}->{port};
-my $username = $Config->{database}->{username};
-my $password = $Config->{database}->{password};
-my $db       = $Config->{database}->{db};
+=head1 NAME
 
-# indel length and k-nuc length
-my $min_length = $Config->{indel}->{min_length};
-my $max_length = $Config->{indel}->{max_length};
-my $min_k      = $Config->{indel}->{min_k};
-my $max_k      = $Config->{indel}->{max_k};
+indel_content.pl - See what's in indels, using the k-nucleotide algorithm
 
-my $outfile;
+=head1 SYNOPSIS
 
-my $man  = 0;
-my $help = 0;
+    perl indel_content.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --output        STR     output filename
+        --min_length    INT     minimal length of indels, default is [1]
+        --max_length    INT     maximal length of indels, default is [50]
+        --min_k         INT     minimal number of k-nucleotide, default is [1]
+        --max_k         INT     maximal number of k-nucleotide, default is [8]
+
+=cut
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    'server=s'     => \$server,
-    'port=i'       => \$port,
-    'db=s'         => \$db,
-    'username=s'   => \$username,
-    'password=s'   => \$password,
-    'output=s'     => \$outfile,
-    'min_length=i' => \$min_length,
-    'max_length=i' => \$max_length,
-    'min_k=i'      => \$min_k,
-    'max_k=i'      => \$max_k,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server     = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port       = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db         = $Config->{database}{db} ),
+    'username|u=s' => \( my $username   = $Config->{database}{username} ),
+    'password|p=s' => \( my $password   = $Config->{database}{password} ),
+    'output=s'     => \my $outfile,
+    'min_length=i' => \( my $min_length = 1 ),
+    'max_length=i' => \( my $max_length = 50 ),
+    'min_k=i'      => \( my $min_k      = 1 ),
+    'max_k=i'      => \( my $max_k      = 8 ),
+) or HelpMessage(1);
 
 $outfile = "$db.indel.length$min_length-$max_length.xlsx" unless $outfile;
 
@@ -109,8 +109,7 @@ foreach my $k ( $min_k .. $max_k ) {
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
             );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
         };
 
         for ( @{$rows} ) {
@@ -167,10 +166,7 @@ foreach my $k ( $min_k .. $max_k ) {
 
         # k_nuc worksheet
         for my $k_nuc ( sort keys %table ) {
-            my $row = [
-                $k_nuc,         calc_gc_ratio($k_nuc),
-                $table{$k_nuc}, $table{$k_nuc} / $sum
-            ];
+            my $row = [ $k_nuc, calc_gc_ratio($k_nuc), $table{$k_nuc}, $table{$k_nuc} / $sum ];
             push @rows, $row;
         }
         @rows = sort { $b->[2] <=> $a->[2] } @rows;
@@ -191,10 +187,7 @@ foreach my $k ( $min_k .. $max_k ) {
             my $k_nuc       = "$key,$key_rc";
             my $k_nuc_count = $value + $value_rc;
 
-            my $row = [
-                $k_nuc,       calc_gc_ratio($key),
-                $k_nuc_count, $k_nuc_count / $sum
-            ];
+            my $row = [ $k_nuc, calc_gc_ratio($key), $k_nuc_count, $k_nuc_count / $sum ];
             push @rows2, $row;
         }
         @rows2 = sort { $b->[2] <=> $a->[2] } @rows2;
@@ -213,46 +206,3 @@ $stopwatch->end_message;
 exit;
 
 __END__
-
-=head1 NAME
-
-    indel_content.pl - See what's in indels, using the k-nucleotide algorithm
-
-=head1 SYNOPSIS
-
-    update_indel_slippage.pl [options]
-     Options:
-       --help            brief help message
-       --man             full documentation
-       --server          MySQL server IP/Domain name
-       --db              database name
-       --username        username
-       --password        password
-       --output          output filename
-       --min_length      minimal length of indels
-       --max_length      maximal length of indels
-       --min_k           minimal number of k-nucleotide
-       --max_k           maximal number of k-nucleotide
-       
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
-
-=cut
-
