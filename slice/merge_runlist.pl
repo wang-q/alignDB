@@ -28,7 +28,7 @@ my $help = 0;
 GetOptions(
     'help|?'  => \$help,
     'man'     => \$man,
-    'd|dir=s' => \$dir,
+    'dir|d=s' => \$dir,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -65,8 +65,8 @@ for my $file (@yml_files) {
 DumpFile( $file_out, $master );
 
 open my $report_fh, '>', "$file_out.txt";
-for my $key (sort keys %{$master}) {
-    my $set = AlignDB::IntSpan->new($master->{$key});
+for my $key ( sort keys %{$master} ) {
+    my $set = AlignDB::IntSpan->new( $master->{$key} );
     printf {$report_fh} "key:\t[%s]\tlength:\t[%s]\n", $key, $set->size;
 }
 close $report_fh;

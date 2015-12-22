@@ -53,7 +53,7 @@ GetOptions(
     'db|d=s'       => \( my $db         = $Config->{database}{db} ),
     'username|u=s' => \( my $username   = $Config->{database}{username} ),
     'password|p=s' => \( my $password   = $Config->{database}{password} ),
-    'ensembl|e'    => \( my $ensembl_db = $Config->{database}{ensembl} ),
+    'ensembl|e=s'  => \( my $ensembl_db = $Config->{database}{ensembl} ),
     'class=s'      => \( my $CLASS      = "GD" ),
     'width=i'      => \( my $width      = 800 ),
     'goal=s'       => \( my $goal       = "target" ),

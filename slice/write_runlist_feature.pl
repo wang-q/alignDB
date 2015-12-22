@@ -61,12 +61,12 @@ GetOptions(
     'db|d=s'        => \( my $db               = $Config->{database}{db} ),
     'username|u=s'  => \( my $username         = $Config->{database}{username} ),
     'password|p=s'  => \( my $password         = $Config->{database}{password} ),
-    'ensembl|e'     => \( my $ensembl_db       = $Config->{database}{ensembl} ),
+    'ensembl|e=s'   => \( my $ensembl_db       = $Config->{database}{ensembl} ),
     'length|lt|l=i' => \( my $length_threshold = $Config->{generate}{length_threshold} ),
-    'feature=s'  => \( my $feature  = 'non_repeat' ),
-    'inset=i'    => \my $inset,
-    'invert'     => \my $invert,
-    'parallel=i' => \( my $parallel = $Config->{generate}{parallel} ),
+    'feature=s'     => \( my $feature          = 'non_repeat' ),
+    'inset=i'       => \my $inset,
+    'invert'        => \my $invert,
+    'parallel=i'    => \( my $parallel         = $Config->{generate}{parallel} ),
 ) or HelpMessage(1);
 
 #----------------------------------------------------------#
