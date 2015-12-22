@@ -7,8 +7,8 @@ As example for egaz and alignDB. Extract from Scer_wgs of [`OPs-download.md`](ht
 1. Create `scer_example.tsv` manually.
 
     ```bash
-    mkdir -p ~/data/alignment/example/scer          # operation directory
-    mkdir -p ~/data/alignment/example/GENOMES  # sequence directory
+    mkdir -p ~/data/alignment/example/scer      # operation directory
+    mkdir -p ~/data/alignment/example/GENOMES   # sequence directory
 
     cd ~/data/alignment/example/GENOMES
 
@@ -62,7 +62,6 @@ As example for egaz and alignDB. Extract from Scer_wgs of [`OPs-download.md`](ht
     # Download, rename files and change fasta headers
     perl ~/Scripts/withncbi/taxon/batch_get_seq.pl \
         -p -f example.seq.csv
-
     ```
 
 ## Align
@@ -169,23 +168,23 @@ perl util/build_ensembl.pl --initdb --db saccharomyces_cerevisiae_core_29_82_4 -
 And in step 22, `yeast` is an alias to `saccharomyces_cerevisiae_core_29_82_4`.
 
 ```bash
-cd ~/Scripts/alignDB
+cd ~/Scripts/alignDB/data
 
 # S288cvsRM11_1a
-perl extra/two_way_batch.pl \
+perl ~/Scripts/alignDB/extra/two_way_batch.pl \
     -t "559292,S288c" -q "285006,RM11_1a" \
     -d S288cvsRM11_1a \
-    -da data/S288cvsRM11_1a \
+    -da S288cvsRM11_1a \
     -lt 5000 \
     --parallel 8 \
     -r all
 
 # S288cvsSpar
-perl extra/two_way_batch.pl \
+perl ~/Scripts/alignDB/extra/two_way_batch.pl \
     -t "559292,S288c" -q "226125,Spar" \
     -d S288cvsSpar \
     --ensembl yeast \
-    -da data/S288cvsSpar \
+    -da S288cvsSpar \
     -lt 5000 \
     --parallel 8 \
     -r all
@@ -194,10 +193,10 @@ perl extra/two_way_batch.pl \
 ## Three-way alignments by `join_dbs.pl`
 
 ```bash
-cd ~/Scripts/alignDB
+cd ~/Scripts/alignDB/data
 
 # without outgroup
-perl extra/join_dbs.pl \
+perl ~/Scripts/alignDB/extra/join_dbs.pl \
     --no_insert --block --trimmed_fasta --length 1000 \
     --goal_db S288cvsRM11_1avsSpar \
     --target 0target \
@@ -205,7 +204,7 @@ perl extra/join_dbs.pl \
     --dbs S288cvsRM11_1a,S288cvsSpar
 
 # with outgroup
-perl extra/join_dbs.pl \
+perl ~/Scripts/alignDB/extra/join_dbs.pl \
     --no_insert --block --trimmed_fasta --length 1000 \
     --goal_db S288cvsRM11_1arefSpar \
     --target 0target \
@@ -213,11 +212,7 @@ perl extra/join_dbs.pl \
     --outgroup 1query \
     --dbs S288cvsRM11_1a,S288cvsSpar
 
-mv S288cvsRM11_1avsSpar data/
-mv S288cvsRM11_1arefSpar data/
-
-find data -type f -name "*.fas" | parallel -j 8 gzip
-
+find . -type f -name "*.fas" | parallel -j 8 gzip
 ```
 
 ## Three-way alignments by multiz
@@ -265,4 +260,75 @@ find ScervsRM11_1a_Spar_refined -type f -name "*.fas" | parallel -j 8 gzip
 
 rm -fr ScervsRM11_1a_Spar_mz
 rm -fr ScervsRM11_1a_Spar_fasta
+```
+
+## Multi-way batch
+
+```bash
+cd ~/Scripts/alignDB/data
+
+perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
+    -d ScervsRM11_1a_Spar \
+    -da ScervsRM11_1a_Spar_refined \
+    --ensembl yeast \
+    --block \
+    --id id2name.csv \
+    --outgroup \
+    -lt 1000 --parallel 8 --batch 5 \
+    --run all
+```
+
+## Slicing
+
+### Yeast intergenic regions
+
+* two-way (axt)
+
+```bash
+mkdir -p ~/Scripts/alignDB/data/feature
+cd ~/Scripts/alignDB/data/feature
+ 
+perl ~/Scripts/alignDB/slice/write_runlist_feature.pl \
+    -d S288cvsRM11_1a -e yeast --feature intergenic -l 500
+
+mkdir axt
+mv S288cvsRM11_1a.intergenic.yml axt
+rm axt/*.axt
+
+perl ~/Scripts/alignDB/slice/write_align_slice.pl \
+    -d S288cvsRM11_1a -f axt/S288cvsRM11_1a.intergenic.yml -t axt
+
+perl ~/Scripts/alignDB/extra/two_way_batch.pl \
+    -d S288cvsRM11_1a_intergenic \
+    -t "559292,S288c" -q "285006,RM11_1a" \
+    -da axt \
+    -lt 1000 \
+    --parallel 8 \
+    --run basic
+```
+
+* multi-way (fas)
+
+```bash
+mkdir -p ~/Scripts/alignDB/data/feature
+cd ~/Scripts/alignDB/data/feature
+ 
+perl ~/Scripts/alignDB/slice/write_runlist_feature.pl \
+    -d ScervsRM11_1a_Spar -e yeast --feature intergenic -l 500
+
+mkdir fas
+mv ScervsRM11_1a_Spar.intergenic.yml fas
+rm fas/*.fas
+
+perl ~/Scripts/alignDB/slice/write_align_slice.pl \
+    -d ScervsRM11_1a_Spar -f fas/ScervsRM11_1a_Spar.intergenic.yml -t fas --outgroup
+
+perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
+    -d S288cvsRM11_1a_intergenic \
+    --id ../id2name.csv \
+    -da fas \
+    --block \
+    -lt 1000 \
+    --parallel 8 \
+    --run basic
 ```

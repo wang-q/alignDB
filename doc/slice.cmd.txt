@@ -1,130 +1,91 @@
 #----------------------------------------------------------#
-# 1. write_runlist_feature.pl
-#----------------------------------------------------------#
-# output dir is S288CvsSpar_intergenic
-perl write_runlist_feature.pl -s 114.212.202.159 -d S288CvsSpar -e yeast_65 --feature intergenic -lt 500
-
-#----------------------------------------------------------#
-# 2. merge_runlist.pl
-#----------------------------------------------------------#
-# output file is S288CvsSpar_intergenic\S288CvsSpar_intergenic.yml
-perl merge_runlist.pl -d d:\wq\Scripts\alignDB\slice\S288CvsSpar_intergenic\
-
-#----------------------------------------------------------#
-# 3. write_axt_slice.pl
-#----------------------------------------------------------#
-perl write_axt_slice.pl -s 114.212.202.159 -d S288CvsSpar -y S288CvsSpar_intergenic/S288CvsSpar_intergenic.yml
-
-#----------------------------------------------------------#
-# 4. two_way_batch.pl
-#----------------------------------------------------------#
-perl d:/wq/Scripts/alignDB/extra/two_way_batch.pl -s 114.212.202.159 -d S288CvsSpar_intergenic -t "4932,S288C" -q "226125,Spar" -a S288CvsSpar_intergenic -at 1000 -st 0 -ct 0 --parallel 8 --run 1-3
-
-#----------------------------------------------------------#
-# 1. write_runlist_feature.pl
-#----------------------------------------------------------#
-# output dir is S288CvsVIII_WGS_intergenic
-perl write_runlist_feature.pl -d S288CvsVIII_WGS -e yeast_65 --feature intergenic -lt 1000
-
-#----------------------------------------------------------#
-# 2. merge_runlist.pl
-#----------------------------------------------------------#
-# output file is S288CvsVIII_WGS_intergenic/S288CvsVIII_WGS_intergenic.yml
-perl merge_runlist.pl -d S288CvsVIII_WGS_intergenic
-
-#----------------------------------------------------------#
-# 3. write_fasta_slice.pl
-#----------------------------------------------------------#
-perl write_fasta_slice.pl -d S288CvsVIII_WGS --outgroup -y S288CvsVIII_WGS_intergenic/S288CvsVIII_WGS_intergenic.yml
-
-#----------------------------------------------------------#
-# 4. multi_way_batch.pl
-#----------------------------------------------------------#
-perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl -d S288CvsVIII_WGS_intergenic \
-    --outgroup --block --id /home/wangq/data/alignment/yeast_combine/id2name.csv \
-    -da S288CvsVIII_WGS_intergenic -lt 1000 -st 0 -ct 0 --parallel 8 --run 1-3
-
-#----------------------------------------------------------#
 # HumanvsCGOR away from gene and non repeat
 #----------------------------------------------------------#
-# gene set padded by 5000 and then invert
-# direct trim intergenic set by 5000 is not right
-perl /home/wangq/Scripts/alignDB/slice/write_runlist_feature.pl -d HumanvsCGOR -e human_65 --feature gene --inset "-5000" --invert -lt 1000 --parallel 8
-perl /home/wangq/Scripts/alignDB/slice/merge_runlist.pl -d HumanvsCGOR_gene_inset-5000_invert/
+# Gene set padded by 5000 and then invert.
+# Trim intergenic set by 5000 is not right.
+perl ~/Scripts/alignDB/slice/write_runlist_feature.pl \
+    -d HumanvsCGOR -e human_65 --feature gene --inset "-5000" --invert -l 1000 --parallel 8
+perl ~/Scripts/alignDB/slice/merge_runlist.pl -d HumanvsCGOR_gene_inset-5000_invert/
 
-perl /home/wangq/Scripts/alignDB/slice/write_fasta_slice.pl -d HumanvsCGOR --outgroup -y HumanvsCGOR_gene_inset-5000_invert/HumanvsCGOR_gene_inset-5000_invert.yml --parallel 8
-mv /home/wangq/Scripts/alignDB/slice/HumanvsCGOR_gene_inset-5000_invert /home/wangq/Scripts/alignDB/slice/HumanvsCGOR_away_gene
-mv /home/wangq/Scripts/alignDB/slice/HumanvsCGOR_away_gene /home/wangq/data/alignment/feature
+perl ~/Scripts/alignDB/slice/write_align_slice.pl \
+    -d HumanvsCGOR --outgroup -y HumanvsCGOR_gene_inset-5000_invert/HumanvsCGOR_gene_inset-5000_invert.yml --parallel 8
+mv ~/Scripts/alignDB/slice/HumanvsCGOR_gene_inset-5000_invert ~/Scripts/alignDB/slice/HumanvsCGOR_away_gene
+mv ~/Scripts/alignDB/slice/HumanvsCGOR_away_gene ~/data/alignment/feature
 
-perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
+perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
     -d HumanvsCGOR_away_gene -e human_65 \
-    --outgroup --block --id /home/wangq/data/alignment/primates/id2name.csv \
-    -da /home/wangq/data/alignment/feature/HumanvsCGOR_away_gene \
+    --outgroup --block --id ~/data/alignment/primates/id2name.csv \
+    -da ~/data/alignment/feature/HumanvsCGOR_away_gene \
     -lt 1000 --parallel 8 --run gc
 
-perl /home/wangq/Scripts/alignDB/slice/write_runlist_feature.pl -d HumanvsCGOR -e human_65 --feature non_repeat -lt 1000 --parallel 8
-perl /home/wangq/Scripts/alignDB/slice/merge_runlist.pl -d HumanvsCGOR_non_repeat
+perl ~/Scripts/alignDB/slice/write_runlist_feature.pl \
+    -d HumanvsCGOR -e human_65 --feature non_repeat -l 1000 --parallel 8
+perl ~/Scripts/alignDB/slice/merge_runlist.pl -d HumanvsCGOR_non_repeat
 
-perl /home/wangq/Scripts/alignDB/slice/compare_runlist.pl -op intersect \
+perl ~/Scripts/alignDB/slice/compare_runlist.pl -op intersect \
     -f1 HumanvsCGOR_gene_inset-5000_invert/HumanvsCGOR_gene_inset-5000_invert.yml \
     -f2 HumanvsCGOR_non_repeat/HumanvsCGOR_non_repeat.yml \
     -o HumanvsCGOR_away_gene_non_repeat.yml
 mkdir HumanvsCGOR_away_gene_non_repeat
 mv HumanvsCGOR_away_gene_non_repeat.yml HumanvsCGOR_away_gene_non_repeat
 
-perl /home/wangq/Scripts/alignDB/slice/write_fasta_slice.pl -d HumanvsCGOR --outgroup -y HumanvsCGOR_away_gene_non_repeat/HumanvsCGOR_away_gene_non_repeat.yml --parallel 8
-mv /home/wangq/Scripts/alignDB/slice/HumanvsCGOR_away_gene_non_repeat /home/wangq/data/alignment/feature
+perl ~/Scripts/alignDB/slice/write_align_slice.pl \
+    -d HumanvsCGOR --outgroup -y HumanvsCGOR_away_gene_non_repeat/HumanvsCGOR_away_gene_non_repeat.yml --parallel 8
+mv ~/Scripts/alignDB/slice/HumanvsCGOR_away_gene_non_repeat ~/data/alignment/feature
 
-perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
+perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
     -d HumanvsCGOR_away_gene_non_repeat -e human_65 \
-    --outgroup --block --id /home/wangq/data/alignment/primates/id2name.csv \
-    -da /home/wangq/data/alignment/feature/HumanvsCGOR_away_gene_non_repeat \
+    --outgroup --block --id ~/data/alignment/primates/id2name.csv \
+    -da ~/data/alignment/feature/HumanvsCGOR_away_gene_non_repeat \
     -lt 1000 -st 0 -ct 0 --parallel 8 --run gc
 
 
 #----------------------------------------------------------#
 # HumanvsCGOR_intron
 #----------------------------------------------------------#
-perl /home/wangq/Scripts/alignDB/slice/write_runlist_feature.pl -d HumanvsCGOR -e human_65 --feature intron -lt 1000 --parallel 8
-perl /home/wangq/Scripts/alignDB/slice/merge_runlist.pl -d HumanvsCGOR_intron
+perl ~/Scripts/alignDB/slice/write_runlist_feature.pl \
+    -d HumanvsCGOR -e human_65 --feature intron -l 1000 --parallel 8
+perl ~/Scripts/alignDB/slice/merge_runlist.pl -d HumanvsCGOR_intron
 
-mv /home/wangq/Scripts/alignDB/slice/HumanvsCGOR_intron /home/wangq/data/alignment/feature
-perl /home/wangq/Scripts/alignDB/slice/write_fasta_slice.pl -d HumanvsCGOR --outgroup -y /home/wangq/data/alignment/feature/HumanvsCGOR_intron/HumanvsCGOR_intron.yml --parallel 8
+mv ~/Scripts/alignDB/slice/HumanvsCGOR_intron ~/data/alignment/feature
+perl ~/Scripts/alignDB/slice/write_align_slice.pl \
+    -d HumanvsCGOR --outgroup -y ~/data/alignment/feature/HumanvsCGOR_intron/HumanvsCGOR_intron.yml --parallel 8
 
-perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
+perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
     -d HumanvsCGOR_intron -e human_65 \
-    --outgroup --block --id /home/wangq/data/alignment/primates/id2name.csv \
-    -da /home/wangq/data/alignment/feature/HumanvsCGOR_intron  \
+    --outgroup --block --id ~/data/alignment/primates/id2name.csv \
+    -da ~/data/alignment/feature/HumanvsCGOR_intron  \
     -lt 1000 --parallel 8 --run gc
 
 #----------------------------------------------------------#
 # HumanvsCGOR GC isochore
 #----------------------------------------------------------#
-cd /home/wangq/Scripts/alignDB/slice
-perl /home/wangq/Scripts/alignDB/slice/write_runlist_feature.pl -d HumanvsCGOR -e human_65 --feature slice -lt 1000 --parallel 8
-perl /home/wangq/Scripts/alignDB/slice/merge_runlist.pl -d HumanvsCGOR_slice/
+cd ~/Scripts/alignDB/slice
+perl ~/Scripts/alignDB/slice/write_runlist_feature.pl \
+    -d HumanvsCGOR -e human_65 --feature slice -l 1000 --parallel 8
+perl ~/Scripts/alignDB/slice/merge_runlist.pl -d HumanvsCGOR_slice/
 
-cp /home/wangq/Scripts/alignDB/slice/HumanvsCGOR_slice/HumanvsCGOR_slice.yml /home/wangq/Scripts/iso
-cd /home/wangq/Scripts/iso
-perl /home/wangq/Scripts/iso/isobin.pl -d ~/data/alignment/primates/human_chr/ -b 10 -s /home/wangq/Scripts/iso/HumanvsCGOR_slice.yml --debug
+cp ~/Scripts/alignDB/slice/HumanvsCGOR_slice/HumanvsCGOR_slice.yml ~/Scripts/iso
+cd ~/Scripts/iso
+perl ~/Scripts/iso/isobin.pl -d ~/data/alignment/primates/human_chr/ -b 10 -s ~/Scripts/iso/HumanvsCGOR_slice.yml --debug
 
-cd /home/wangq/Scripts/alignDB/slice/
+cd ~/Scripts/alignDB/slice/
 
 for i in `seq 0 9`; do
-    mkdir /home/wangq/Scripts/alignDB/slice/bin$i
-    cp /home/wangq/Scripts/iso/bin$i.yml /home/wangq/Scripts/alignDB/slice/bin$i
+    mkdir ~/Scripts/alignDB/slice/bin$i
+    cp ~/Scripts/iso/bin$i.yml ~/Scripts/alignDB/slice/bin$i
 done 
 
 for i in `seq 0 9`; do
-    perl /home/wangq/Scripts/alignDB/slice/write_fasta_slice.pl -d HumanvsCGOR --outgroup -y bin$i/bin$i.yml --parallel 8
+    perl ~/Scripts/alignDB/slice/write_align_slice.pl -d HumanvsCGOR --outgroup -y bin$i/bin$i.yml --parallel 8
 done 
 
-mv /home/wangq/Scripts/alignDB/slice/bin[0-9] /home/wangq/data/alignment/feature
+mv ~/Scripts/alignDB/slice/bin[0-9] ~/data/alignment/feature
 
 for i in `seq 0 9`; do
-    perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
+    perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
         -d HumanvsCGOR_bin$i -e humanb_65 \
-        --outgroup --block --id /home/wangq/data/alignment/primates/id2name.csv \
-        -da /home/wangq/data/alignment/feature/bin$i \
+        --outgroup --block --id ~/data/alignment/primates/id2name.csv \
+        -da ~/data/alignment/feature/bin$i \
         -lt 1000 --parallel 12 --run gc
 done 
