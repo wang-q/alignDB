@@ -8,10 +8,10 @@ use Config::Tiny;
 use FindBin;
 use YAML::Syck qw(Dump Load DumpFile LoadFile);
 
-use File::Spec;
+use Path::Tiny;
+use MCE::Flow;
 
 use AlignDB::IntSpan;
-use AlignDB::Run;
 use AlignDB::Stopwatch;
 
 use lib "$FindBin::RealBin/../lib";
@@ -50,39 +50,39 @@ write_runlist_feature.pl - extract runlists of a certain feature from alignDB
         --inset         INT     removing $inset bases from each end of each span of $set.
                                 If $inset is negative, then -$inset integers are added to each end of each span.
         --invert                write inverted sets
+        --output    -o  STR     output filename
         --parallel      INT     run in parallel mode
 
 =cut
 
 GetOptions(
     'help|?' => sub { HelpMessage(0) },
-    'server|s=s'    => \( my $server           = $Config->{database}{server} ),
-    'port|P=i'      => \( my $port             = $Config->{database}{port} ),
-    'db|d=s'        => \( my $db               = $Config->{database}{db} ),
-    'username|u=s'  => \( my $username         = $Config->{database}{username} ),
-    'password|p=s'  => \( my $password         = $Config->{database}{password} ),
-    'ensembl|e=s'   => \( my $ensembl_db       = $Config->{database}{ensembl} ),
-    'length|lt|l=i' => \( my $length_threshold = $Config->{generate}{length_threshold} ),
-    'feature=s'     => \( my $feature          = 'non_repeat' ),
-    'inset=i'       => \my $inset,
-    'invert'        => \my $invert,
-    'parallel=i'    => \( my $parallel         = $Config->{generate}{parallel} ),
+    'server|s=s'   => \( my $server           = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port             = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db               = $Config->{database}{db} ),
+    'username|u=s' => \( my $username         = $Config->{database}{username} ),
+    'password|p=s' => \( my $password         = $Config->{database}{password} ),
+    'ensembl|e=s'  => \( my $ensembl_db       = $Config->{database}{ensembl} ),
+    'length|l=i'   => \( my $length_threshold = $Config->{generate}{length_threshold} ),
+    'feature=s'    => \( my $feature          = 'non_repeat' ),
+    'inset=i'      => \my $inset,
+    'invert'       => \my $invert,
+    'output|o=s'   => \( my $out_file ),
+    'parallel=i'   => \( my $parallel         = $Config->{generate}{parallel} ),
 ) or HelpMessage(1);
+
+if ( !defined $out_file ) {
+    $out_file = "${db}.${feature}";
+    $out_file .= ".inset$inset" if $inset;
+    $out_file .= ".invert"      if $invert;
+    $out_file .= ".yml";
+}
 
 #----------------------------------------------------------#
 # Init objects
 #----------------------------------------------------------#
 $stopwatch->start_message("Write slice files from $db...");
 
-# output dir
-my $dir = "${db}_${feature}";
-$dir .= "_inset$inset" if $inset;
-$dir .= "_invert"      if $invert;
-mkdir $dir, 0777 unless -e $dir;
-
-#----------------------------#
-# Find all align_ids
-#----------------------------#
 my @jobs;
 {    # create alignDB object for this scope
     my $obj = AlignDB->new(
@@ -100,8 +100,8 @@ my @jobs;
 # worker
 #----------------------------------------------------------#
 my $worker = sub {
-    my $job = shift;
-    my $chr = $job;
+    my ( $self, $chunk_ref, $chunk_id ) = @_;
+    my $chr = $chunk_ref->[0];
 
     local $| = 1;
 
@@ -174,25 +174,21 @@ my $worker = sub {
         $chr_ftr_set = $chr_align_set->diff($chr_ftr_set);
     }
 
-    my $filename = File::Spec->catfile( $dir, "$chr_name.$feature.yml" );
-    if ( $chr_ftr_set->is_not_empty ) {
-        DumpFile( $filename, $chr_ftr_set->runlist );
-        print "Finish merge $feature of $chr_name\n";
-    }
-    else {
-        print "Finish $chr_name has no $feature\n";
-    }
+    MCE->gather( $chr_name, $chr_ftr_set->runlist );
 };
 
 #----------------------------------------------------------#
 # start
 #----------------------------------------------------------#
-my $run = AlignDB::Run->new(
-    parallel => $parallel,
-    jobs     => \@jobs,
-    code     => $worker,
-);
-$run->run;
+MCE::Flow::init {
+    chunk_size  => 1,
+    max_workers => $parallel,
+};
+my %feature_of = mce_flow $worker, \@jobs;
+MCE::Flow::finish;
+
+$stopwatch->block_message("Write output file [$out_file]");
+DumpFile( $out_file, \%feature_of );
 
 $stopwatch->end_message;
 
