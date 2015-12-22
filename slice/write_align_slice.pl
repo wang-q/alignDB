@@ -95,7 +95,7 @@ my $slice_set_of = LoadFile($yaml_file);
 my $worker = sub {
     my $chr_name  = shift;
     my $slice_set = AlignDB::IntSpan->new( $slice_set_of->{$chr_name} );
-    my $outfile   = path( $dir, "$chr_name.axt" )->stringify;
+    my $outfile   = path( $dir, "$chr_name.$type" )->stringify;
     if ( $type eq 'axt' ) {
         write_slice_axt( $chr_name, $slice_set, $outfile );
     }
@@ -162,7 +162,7 @@ sub write_slice {
         }
 
         if ( scalar @query_seqs != scalar @query_names ) {
-            warn "Number of queries names is not equal to one of seqs.\n";
+            warn "Number of queries names is not equal to seqs.\n";
             next;
         }
 
