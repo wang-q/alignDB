@@ -244,7 +244,6 @@ perl ~/Scripts/egaz/mz.pl \
     --tree fake_tree.nwk \
     --out ScervsRM11_1a_Spar_mz \
     -p 8
-find ScervsRM11_1a_Spar_mz -type f -name "*.maf" | parallel --no-run-if-empty -j 8 gzip
 
 # maf2fas
 mkdir -p ScervsRM11_1a_Spar_fasta
