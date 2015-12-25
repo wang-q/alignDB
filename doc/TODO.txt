@@ -3,15 +3,11 @@
 perl clean_step.pl -d alignDB -r 10
 perl clean_step.pl -d alignDB -r gc
 
-# gc isochore bins
-
 # merge three_stat and multi_stat
 
 # update_isw_cpg.pl calc wrong isw_cpg_pi
 
 # update insert_ssw.pl from three-way style to multi-way
-
-# write new webui
 
 # don't trim outgroup only seq to keep complex indel info
 
