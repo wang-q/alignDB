@@ -1,57 +1,59 @@
 +-[alignDB]
     |-README.md                                   |   239 lines |      6.9K
-    |-alignDB.ini                                 |    64 lines |       903
-    |-alignDB.komodoproject                       |    25 lines |     1.28K
-    |-ensembl.initrc.pm                           |   594 lines |    13.38K
+    |-Scer-example.md                             |   346 lines |     9.08K
+    |-alignDB.ini                                 |    41 lines |       701
+    |-alignDB.komodoproject                       |    27 lines |     1.35K
+    |-ensembl.initrc.pm                           |   617 lines |    14.38K
     |-init.sql                                    |   617 lines |     22.1K
     +-[data]
-        |-chr_length.csv                          |   247 lines |     7.03K
-        |-taxon.csv                               |    25 lines |       977
+        |-chr_length.csv                          |   488 lines |    13.88K
+        |-taxon.csv                               |    15 lines |       532
     +-[doc]
-        |-Some features.xmind                     |      Binary |         0
-        |-TODO.txt                                |    17 lines |       341
-        |-alignDB.png                             |      Binary |   174.25K
-        |-alignDB.xmind                           |      Binary |   521.43K
-        |-clean_taxon.txt                         |     5 lines |       295
+        |-TODO.txt                                |    13 lines |       302
+        |-alignDB.png                             |      Binary |   161.57K
+        |-alignDB.xmind                           |      Binary |    530.6K
         |-dG.yml                                  |    69 lines |     1.03K
         |-data_model.pdf                          |      Binary |    84.82K
-        |-dirtree.txt                             |   195 lines |    13.38K
-        |-dirtree.xls                             |      Binary |       36K
+        |-dirtree.txt                             |   157 lines |    10.44K
+        |-dirtree.xlsx                            |      Binary |    15.54K
         |-dump_dG.pl                              |    11 lines |       172
         |-features.png                            |      Binary |    19.45K
         |-features.xmind                          |      Binary |    26.18K
         |-ld.cmd.txt                              |    76 lines |     3.63K
-        |-prepare.cmd.txt                         |    33 lines |     1.37K
-        |-slice.cmd.txt                           |   130 lines |     6.94K
+        |-slice.cmd.txt                           |    91 lines |     4.17K
         |-sloccount.md                            |   180 lines |     8.07K
-        |-sra.sh                                  |   176 lines |     6.38K
         |-three.cmd.txt                           |    31 lines |     1.19K
         |-yeast_4.png                             |      Binary |   105.67K
         |-yeast_4.vsd                             |      Binary |      147K
+        +-[gc]
+            |-gc.cmd.r                            |   124 lines |     4.82K
+            |-gc.r                                |    88 lines |     3.49K
+            |-query_gc_one.txt                    |    16 lines |       400
+        +-[gene]
+            |-gene.cmd.txt                        |   100 lines |     3.64K
+            |-query_gene_quan.txt                 |    17 lines |       441
+        +-[ofg]
+            |-cmd.athgcco.txt                     |   140 lines |     6.64K
+            |-cmd.encode.txt                      |   861 lines |    38.12K
+            |-cmd.insert_sites.txt                |   365 lines |    19.56K
+            |-cmd.nat08.txt                       |    50 lines |     2.47K
+            |-cmd.spo11.txt                       |    88 lines |      4.4K
     +-[extra]
         |-align_fasta.pl                          |   139 lines |     3.21K
-        |-align_xls.pl                            |   397 lines |    10.77K
+        |-align_xls.pl                            |   371 lines |    10.55K
         |-bootstrap.pl                            |   191 lines |      3.9K
         |-join_dbs.pl                             |   577 lines |    17.62K
-        |-multi_way_batch.pl                      |   298 lines |      8.6K
+        |-multi_way_batch.pl                      |   261 lines |     8.14K
         |-random_SD.pl                            |   105 lines |     1.97K
         |-snp_ttest.pl                            |   577 lines |    17.42K
         |-target_fasta.pl                         |   110 lines |      2.5K
         |-test_wwwblast.pl                        |   158 lines |     4.45K
-        |-two_way_batch.pl                        |   287 lines |     8.45K
+        |-two_way_batch.pl                        |   254 lines |     8.18K
         |-update_isw_dxr.pl                       |   313 lines |     9.31K
         |-update_snp_cpg.pl                       |   214 lines |     5.12K
         |-update_snp_ld.pl                        |   503 lines |    14.03K
     +-[gene]
-        |-Deutschbauer-2005.csv                   |   892 lines |    17.38K
-        |-Essential_ORFs.txt                      |  1118 lines |   104.21K
-        |-Hillenmeyer-2008.csv                    |  4769 lines |    78.71K
-        |-dnds_group.bat                          |     4 lines |       354
-        |-forWebIntergenic.txt                    | 13047 lines |   234.32K
-        |-forWebORFs.txt                          |  6195 lines |   251.18K
         |-insert_gene.pl                          |   571 lines |    18.29K
-        |-nbt.1551-S2.csv                         |  6711 lines |   596.96K
-        |-sgadata_costanzo2009_stringentCutoff_101120.txt| 74587 lines |     3.93M
         |-update_gene_kaks.pl                     |   204 lines |     5.18K
         |-update_gene_yeast_ess.pl                |   283 lines |     6.42K
         |-update_gene_yeast_quan.pl               |   148 lines |     3.12K
@@ -61,10 +63,10 @@
         |-gui3.pl                                 |  1374 lines |    38.29K
         |-ui.xml                                  |  2419 lines |   127.46K
     +-[init]
-        |-gen_alignDB.pl                          |   164 lines |     5.21K
+        |-gen_alignDB.pl                          |   164 lines |     5.22K
         |-gen_alignDB_fas.pl                      |   192 lines |     5.78K
         |-gen_alignDB_genome.pl                   |   233 lines |     7.33K
-        |-init_alignDB.pl                         |   201 lines |     5.77K
+        |-init_alignDB.pl                         |   202 lines |     5.78K
         |-insert_gc.pl                            |   586 lines |    17.97K
         |-insert_isw.pl                           |   149 lines |     3.83K
         |-insert_ssw.pl                           |   135 lines |     3.52K
@@ -111,15 +113,10 @@
         |-alignDB.pdm                             | 12311 lines |   360.45K
         |-crebas2init.pl                          |    19 lines |       396
     +-[slice]
-        |-compare_runlist.pl                      |   210 lines |     4.36K
-        |-merge_runlist.pl                        |   114 lines |     2.41K
-        |-stat_runlist.pl                         |   206 lines |     4.21K
         |-unmatched_query.pl                      |   226 lines |     5.78K
-        |-write_axt_feature.pl                    |   276 lines |     7.88K
-        |-write_axt_slice.pl                      |   276 lines |     8.08K
-        |-write_chr_axt.pl                        |   240 lines |     6.64K
-        |-write_fasta_slice.pl                    |   264 lines |      7.4K
-        |-write_runlist_feature.pl                |   223 lines |     5.89K
+        |-write_align_slice.pl                    |   336 lines |    11.29K
+        |-write_chr_axt.pl                        |   206 lines |     6.21K
+        |-write_runlist_feature.pl                |   195 lines |     5.92K
     +-[stat]
         |-all_stat.sql                            |   474 lines |    15.28K
         |-charts.bat                              |    19 lines |       711
@@ -129,7 +126,7 @@
         |-gc_stat_factory.pl                      |  2218 lines |    70.62K
         |-gene_chart_factory.pl                   |   290 lines |     7.49K
         |-gene_stat_factory.pl                    |  1064 lines |    35.14K
-        |-indel_content.pl                        |   258 lines |     6.73K
+        |-indel_content.pl                        |   208 lines |     6.14K
         |-ld_chart_factory.pl                     |   266 lines |     6.96K
         |-ld_stat_factory.pl                      |   915 lines |    27.76K
         |-multi_chart_factory.pl                  |   293 lines |     7.68K
@@ -145,24 +142,16 @@
     +-[util]
         |-SRR063612-novo.sh                       |    28 lines |      1.3K
         |-add_vcf2fa.pl                           |   404 lines |    11.51K
-        |-alignDB_graph.pl                        |   429 lines |    11.83K
-        |-align_graph.pl                          |   472 lines |    12.53K
+        |-alignDB_graph.pl                        |   403 lines |    11.88K
+        |-align_graph.pl                          |   428 lines |    12.08K
         |-apply_sql.pl                            |   127 lines |     2.63K
         |-bp_pairwise_kaks.pl                     |   211 lines |      5.9K
-        |-build_ensembl.pl                        |   226 lines |     7.03K
         |-check_header.pl                         |   202 lines |     4.77K
-        |-chr_kary.pl                             |   127 lines |     3.08K
         |-dup_db.pl                               |   181 lines |     4.44K
-        |-ensembl.build.sh                        |    46 lines |     5.28K
-        |-ensembl_82.yml                          |    99 lines |     1.64K
-        |-ensembl_batch.pl                        |   249 lines |     6.58K
-        |-fungi.initrc.pm                         |   386 lines |     8.94K
-        |-fungi.yml                               |    62 lines |     1.09K
         |-genbank2gff.pl                          |    78 lines |     2.48K
         |-kaks.pl                                 |    86 lines |     1.68K
         |-merge_csv.pl                            |   157 lines |     3.45K
         |-query_sql.pl                            |   187 lines |     5.06K
         |-query_tracedb.pl                        |   214 lines |     6.55K
-        |-realign.pl                              |   228 lines |     6.53K
-        |-reverse_axt.pl                          |   151 lines |     3.56K
-        |-write_masked_chr.pl                     |   298 lines |     7.86K
+        |-write_masked_chr.pl                     |   252 lines |     7.21K
+
