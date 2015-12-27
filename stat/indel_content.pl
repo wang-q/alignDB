@@ -11,7 +11,7 @@ use YAML qw(Dump Load DumpFile LoadFile);
 use Set::Light;
 
 use AlignDB::Stopwatch;
-use AlignDB::Util qw(:all);
+use AlignDB::Util qw(calc_gc_ratio revcom);
 
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
@@ -204,5 +204,47 @@ $indel_sth->finish;
 
 $stopwatch->end_message;
 exit;
+
+sub k_nuc_permu {
+    my $k         = shift;
+    my @alphabets = qw{A C G T};
+
+    my %table;
+    $table{$_} = '' foreach @alphabets;
+    foreach ( 2 .. $k ) {
+        foreach my $current_key ( keys %table ) {
+            $table{ $current_key . $_ } = '' foreach @alphabets;
+            delete $table{$current_key};
+        }
+    }
+
+    return sort keys %table;
+}
+
+sub k_nuc_count {
+    my $seq_ref = shift;
+    my $k       = shift;
+
+    my $seq_length = length $$seq_ref;
+    my %table;
+
+    foreach ( 0 .. $seq_length - $k ) {
+        $table{ substr( $$seq_ref, $_, $k ) }++;
+    }
+
+    return %table;
+}
+
+sub k_nuc_incr {
+    my $seq_ref  = shift;
+    my $k        = shift;
+    my $hash_ref = shift;
+
+    my $seq_length = length $$seq_ref;
+
+    foreach ( 0 .. $seq_length - $k ) {
+        $hash_ref->{ substr( $$seq_ref, $_, $k ) }++;
+    }
+}
 
 __END__

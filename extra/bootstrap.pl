@@ -153,11 +153,86 @@ sub range_all {
     }
 }
 
+sub sampling_with_replacement {
+    my $data = shift;
+
+    my @sample;
+    my $size = scalar @$data;
+    for ( 1 .. $size ) {
+        my $random_index = random_number($size);
+        push @sample, $data->[$random_index];
+    }
+
+    return \@sample;
+}
+
+sub stat_result {
+    my $data = shift;
+
+    my $stat = Statistics::Descriptive::Full->new();
+    $stat->add_data(@$data);
+
+    my $count    = $stat->count();
+    my $mean     = $stat->mean();
+    my $variance = $stat->variance();
+    my $stddev   = $stat->standard_deviation();
+
+    # standard_error =  standard_deviation / sqrt(sample_size)
+    my $stderr = $stddev / sqrt($count);
+
+    my $median        = $stat->median();
+    my $percentile_5  = $stat->percentile(5);
+    my $percentile_95 = $stat->percentile(95);
+
+    my $result = {
+        a_mean          => $mean,
+        b_stderr        => $stderr,
+        c_median        => $median,
+        d_percentile_5  => $percentile_5,
+        e_percentile_95 => $percentile_95,
+    };
+
+    return $result;
+}
+
+sub random_number {
+    my $max_int = shift;
+    my $random  = int( rand($max_int) );
+    return $random;
+}
+
+# To select n records at random from a set of N, where 0 < n <= N
+# return an array containing 0 .. N - 1
+# Algorithm S (Selection sampling technique)
+# TAOCP Vol2 3.4.2
+#sub random_sampling {
+#    my ( $N, $n ) = @_;
+#
+#    my $t = 0;    # t is the total number of input records we have dealt with
+#    my $m = 0;    # m represents the number of records selected so far
+#
+#    my @samples;
+#
+#    while (1) {
+#        my $U = rand();
+#        if ( ( $N - $t ) * $U >= $n - $m ) {
+#            $t++;
+#        }
+#        else {
+#            push @samples, $t;
+#            $m++;
+#            $t++;
+#            last if ( $m >= $n );
+#        }
+#    }
+#    return @samples;
+#}
+
 __END__
 
 =head1 NAME
 
-    bootstrap.pl - bootstrap the indel-induced mutation rate increase
+bootstrap.pl - bootstrap the indel-induced mutation rate increase
 
 =head1 SYNOPSIS
 

@@ -513,6 +513,29 @@ sub realign_all {
     return;
 }
 
+sub write_fasta_fh {
+    my $fh         = shift;
+    my $seq_of     = shift;
+    my $seq_names  = shift;
+    my $real_names = shift;
+
+    for my $i ( 0 .. @{$seq_names} - 1 ) {
+        my $seq = $seq_of->{ $seq_names->[$i] };
+        my $header;
+        if ($real_names) {
+            $header = $real_names->[$i];
+        }
+        else {
+            $header = $seq_names->[$i];
+        }
+
+        print {$fh} ">" . $header . "\n";
+        print {$fh} $seq . "\n";
+    }
+
+    return;
+}
+
 __END__
 
 =head1 NAME
