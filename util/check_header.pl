@@ -3,68 +3,68 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-use File::Spec;
-use File::Basename;
+use Path::Tiny;
 use IO::Zlib;
 
 use AlignDB::Stopwatch;
-use AlignDB::Util qw(:all);
+use AlignDB::Util qw(decode_header revcom);
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $in_file;    # be checked file, normal multi fasta or blocked fasta
-my $genome;     # multi fasta containing the genome
-my $name;       # which species to be checked (should be same as $genome)
-                # omit this will check all sequences
 
-my $samtools = 'samtools';    # samtools exec file
-my $detail;                   # log error sequences
-my $gzip;                     # open .gz
+=head1 NAME
 
-my $man  = 0;
-my $help = 0;
+check_header.pl - check genome location in (blocked) fasta headers
+
+=head1 SYNOPSIS
+
+    perl check_header.pl -i <fasta file> -g <genome file>
+      Options:
+        --help          -?          brief help message
+        --input         -i  STR     be checked file, normal multi fasta or blocked fasta
+        --genome        -g  STR     one multi fasta file contains genome sequences
+        --name          -n  STR     which species to be checked, omit this will check all sequences
+        --detail                    write a fasta file report error sequences
+
+find ~/data/alignment/yeast_genome/S288c/ -name "*.fasta" \
+    | sort \
+    | xargs cat > ~/data/alignment/yeast_genome/S288c.fasta
+
+perl check_header.pl --in ~/data/alignment/self/yeast_new/S288cvsselfalign_fasta/I.net.axt.gz.fas \
+    -g ~/data/alignment/yeast_genome/S288c.fasta \
+    --detail
+
+=cut
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    'i|in_file=s'  => \$in_file,
-    'g|genome=s'   => \$genome,
-    'n|name=s'     => \$name,
-    's|samtools=s' => \$samtools,
-    'detail'       => \$detail,
-    'gzip'         => \$gzip,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?'     => sub { HelpMessage(0) },
+    'input|i=s'  => \my $in_file,
+    'genome|g=s' => \my $genome,
+    'name|n=s'   => \my $name,
+    'detail'     => \my $detail,
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
-# Search for all files
+# Start
 #----------------------------------------------------------#
 my $stopwatch = AlignDB::Stopwatch->new;
 
-my $in_fh;
-if ( !$gzip ) {
-    open $in_fh, '<', $in_file;
-}
-else {
-    $in_fh = IO::Zlib->new( $in_file, "rb" );
-}
+my $in_fh = IO::Zlib->new( $in_file, "rb" );
 
-my $log_fh;
+my $log_file;
 if ($detail) {
-    open $log_fh, '>', basename($in_file) . '.log.txt';
+    $log_file = path($in_file)->basename . '.log.txt';
+    path($log_file)->remove;
 }
 
 {
     my $header;
     my $content = '';
-    my $count   = 0;
     while ( my $line = <$in_fh> ) {
         chomp $line;
 
@@ -72,7 +72,7 @@ if ($detail) {
 
             # the first sequence is ready
             if ( defined $header ) {
-                $count = check_seq( $header, $content, $count );
+                check_seq( $header, $content, $log_file );
             }
 
             # prepare to accept next sequence
@@ -83,39 +83,70 @@ if ($detail) {
             $content = '';
         }
         elsif ( $line =~ /^[\w-]+/ ) {
-            $line =~ s/[^\w]//g;    # including '-'s
+            $line =~ s/[^\w]//g;    # Delete '-'s
             $line = uc $line;
             $content .= $line;
         }
         else {                      # Blank line, do nothing
         }
     }
-    
+
     # for last sequece
-    check_seq( $header, $content, $count );
+    check_seq( $header, $content, $log_file );
 }
 
-if ( !$gzip ) {
-    close $in_fh;
-}
-else {
-    $in_fh->close;
-}
-
-if ($detail) {
-    close $log_fh;
-}
+$in_fh->close;
 
 $stopwatch->block_message( "All files have been processed.", "duration" );
 
 exit;
 
-sub get_seq_faidx {
-    my $samtools = shift;
-    my $genome   = shift;
-    my $location = shift; # I:1-100
+sub check_seq {
+    my $header = shift;
+    my $seq    = shift;
+    my $log_file  = shift;
 
-    my $cmd = sprintf "%s faidx %s %s", $samtools, $genome, $location;
+    my $info = decode_header($header);
+    if ( $name and $name ne $info->{name} ) {
+        return;
+    }
+
+    if ( $info->{chr_strand} eq '-' ) {
+        $seq = revcom($seq);
+    }
+
+    my $location;
+    if ( $info->{chr_end} ) {
+        $location = sprintf "%s:%s-%s", $info->{chr_name}, $info->{chr_start}, $info->{chr_end};
+    }
+    else {
+        $location = sprintf "%s:%s", $info->{chr_name}, $info->{chr_start};
+    }
+    my $seq_genome = uc get_seq_faidx( $genome, $location );
+
+    if ( $seq eq $seq_genome ) {
+        printf "OK\t%s\n", $header;
+    }
+    else {
+        printf "FAILED\t%s\n", $header;
+        if ($log_file) {
+            my $str =  ">$header\n";
+            $str .= "$seq\n";
+            $str .=  ">$location\n";
+            $str .=  "$seq_genome\n";
+            $str .=  "\n";
+            path($log_file)->append($str);
+        }
+    }
+
+    return;
+}
+
+sub get_seq_faidx {
+    my $genome   = shift;
+    my $location = shift;    # I:1-100
+
+    my $cmd = sprintf "samtools faidx %s %s", $genome, $location;
     open my $fh_pipe, '-|', $cmd;
 
     my $seq;
@@ -130,73 +161,4 @@ sub get_seq_faidx {
     return $seq;
 }
 
-sub check_seq {
-    my $header = shift;
-    my $seq    = shift;
-    my $count  = shift;
-
-    $count++;
-    my $info = decode_header($header);
-    if ( $name and $name ne $info->{name} ) {
-        next;
-    }
-
-    if ( $info->{chr_strand} eq '-' ) {
-        $seq = revcom($seq);
-    }
-
-    my $location;
-    if ( $info->{chr_end} ) {
-        $location = sprintf "%s:%s-%s", $info->{chr_name},
-            $info->{chr_start}, $info->{chr_end};
-    }
-    else {
-        $location = sprintf "%s:%s", $info->{chr_name}, $info->{chr_start};
-    }
-    my $seq_genome = get_seq_faidx( $samtools, $genome, $location );
-
-    if ( $seq eq $seq_genome ) {
-        printf "OK\t%s\t%s\n", $count, $header;
-    }
-    else {
-        printf "FAILED\t%s\t%s\n", $count, $header;
-        if ($detail) {
-            print {$log_fh} ">$header\n";
-            print {$log_fh} "$seq\n";
-            print {$log_fh} ">$location\n";
-            print {$log_fh} "$seq_genome\n";
-            print {$log_fh} "\n";
-        }
-    }
-
-    return $count;
-}
-
 __END__
-
-=head1 NAME
-
-    check_header.pl - check genome location in (blocked) fasta headers
-
-=head1 SYNOPSIS
-
-    perl check_header.pl --in I.net.axt.fas -g S288c.fasta --detail
-
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --in                axt file's location
-        --genome            one multi fasta file contains genome sequences
-                            extract sub-sequence by samtools faidx
-        --detail            write a fasta file report error sequences
-        --gzip              input file is gzipped
-
-=cut
-
-find ~/data/alignment/yeast_genome/S288c/ -name "*.fasta" \
-    | sort \
-    | xargs cat > ~/data/alignment/yeast_genome/S288c.fasta
-
-perl check_header.pl --in ~/data/alignment/self/yeast_new/S288cvsselfalign_fasta/I.net.axt.gz.fas \
-    -g ~/data/alignment/yeast_genome/S288c.fasta \
-    --detail
