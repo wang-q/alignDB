@@ -53,6 +53,7 @@ GetOptions(
 # Start
 #----------------------------------------------------------#
 my $stopwatch = AlignDB::Stopwatch->new;
+$stopwatch->start_message( "Check headers for [$in_file]");
 
 my $in_fh = IO::Zlib->new( $in_file, "rb" );
 
@@ -97,7 +98,7 @@ if ($detail) {
 
 $in_fh->close;
 
-$stopwatch->block_message( "All files have been processed.", "duration" );
+$stopwatch->end_message( "All sequences scanned.", "duration" );
 
 exit;
 
@@ -124,10 +125,7 @@ sub check_seq {
     }
     my $seq_genome = uc get_seq_faidx( $genome, $location );
 
-    if ( $seq eq $seq_genome ) {
-        printf "OK\t%s\n", $header;
-    }
-    else {
+    if ( $seq ne $seq_genome ) {
         printf "FAILED\t%s\n", $header;
         if ($log_file) {
             my $str =  ">$header\n";
