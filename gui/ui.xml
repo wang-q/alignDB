@@ -219,12 +219,14 @@
               <object class="GtkGrid" id="grid2">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
+                <property name="row_spacing">3</property>
+                <property name="column_spacing">5</property>
                 <child>
                   <object class="GtkEntry" id="entry_server">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="margin_left">5</property>
-                    <property name="margin_right">5</property>
                     <property name="hexpand">True</property>
                     <property name="width_chars">16</property>
                   </object>
@@ -252,8 +254,6 @@
                   <object class="GtkEntry" id="entry_port">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="margin_left">5</property>
-                    <property name="margin_right">5</property>
                     <property name="hexpand">True</property>
                     <property name="max_length">8</property>
                     <property name="width_chars">6</property>
@@ -282,8 +282,6 @@
                   <object class="GtkEntry" id="entry_username">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="margin_left">5</property>
-                    <property name="margin_right">5</property>
                     <property name="hexpand">True</property>
                     <property name="width_chars">12</property>
                   </object>
@@ -298,8 +296,6 @@
                   <object class="GtkEntry" id="entry_password">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="margin_left">5</property>
-                    <property name="margin_right">5</property>
                     <property name="hexpand">True</property>
                     <property name="visibility">False</property>
                     <property name="width_chars">12</property>
@@ -341,8 +337,6 @@
                   <object class="GtkSeparator" id="separator5">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="margin_top">3</property>
-                    <property name="margin_bottom">3</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -368,6 +362,7 @@
                   <object class="GtkBox" id="box7">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="spacing">5</property>
                     <child>
                       <object class="GtkLabel" id="label12">
                         <property name="visible">True</property>
@@ -380,18 +375,40 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="button_init_aligndb">
-                        <property name="label" translatable="yes">Init. alignDB</property>
+                      <object class="GtkButton" id="button_auto_db_name">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="margin_right">5</property>
-                        <signal name="clicked" handler="on_button_init_aligndb_clicked" swapped="no"/>
+                        <property name="tooltip_text" translatable="yes">Naming database automaticly</property>
+                        <property name="relief">half</property>
+                        <signal name="clicked" handler="on_button_auto_db_name_clicked" swapped="no"/>
+                        <child>
+                          <object class="GtkImage" id="image12">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="stock">gtk-apply</property>
+                            <property name="icon_size">1</property>
+                          </object>
+                        </child>
                       </object>
                       <packing>
                         <property name="expand">False</property>
                         <property name="fill">False</property>
                         <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="button_init_aligndb">
+                        <property name="label" translatable="yes">Init. alignDB</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <signal name="clicked" handler="on_button_init_aligndb_clicked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">2</property>
                       </packing>
                     </child>
                   </object>
@@ -406,6 +423,7 @@
                   <object class="GtkBox" id="box9">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="spacing">5</property>
                     <child>
                       <object class="GtkLabel" id="label19">
                         <property name="visible">True</property>
@@ -423,13 +441,35 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="margin_right">5</property>
                         <signal name="clicked" handler="on_button_test_clicked" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
                         <property name="fill">False</property>
                         <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="button_choose_db">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="tooltip_text" translatable="yes">Choose db</property>
+                        <property name="relief">half</property>
+                        <signal name="clicked" handler="on_button_choose_db_clicked" swapped="no"/>
+                        <child>
+                          <object class="GtkImage" id="image4">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="stock">gtk-harddisk</property>
+                            <property name="icon_size">1</property>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">2</property>
                       </packing>
                     </child>
                   </object>
@@ -444,12 +484,11 @@
                   <object class="GtkBox" id="box10">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="spacing">5</property>
                     <child>
                       <object class="GtkEntry" id="entry_db_name">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="margin_left">5</property>
-                        <property name="margin_right">5</property>
                         <property name="hexpand">True</property>
                       </object>
                       <packing>
@@ -464,13 +503,14 @@
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <property name="tooltip_text" translatable="yes">Steps done on this db</property>
+                        <property name="resize_mode">immediate</property>
                         <property name="relief">half</property>
                         <signal name="clicked" handler="on_button_db_meta_clicked" swapped="no"/>
                         <child>
                           <object class="GtkImage" id="image14">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="stock">gtk-about</property>
+                            <property name="stock">gtk-index</property>
                             <property name="icon_size">1</property>
                           </object>
                         </child>
@@ -479,31 +519,6 @@
                         <property name="expand">False</property>
                         <property name="fill">False</property>
                         <property name="position">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="button_choose_db">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="tooltip_text" translatable="yes">Choose db</property>
-                        <property name="margin_left">5</property>
-                        <property name="margin_right">5</property>
-                        <property name="relief">half</property>
-                        <signal name="clicked" handler="on_button_choose_db_clicked" swapped="no"/>
-                        <child>
-                          <object class="GtkImage" id="image4">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="stock">gtk-network</property>
-                            <property name="icon_size">1</property>
-                          </object>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">False</property>
-                        <property name="position">2</property>
                       </packing>
                     </child>
                   </object>
@@ -556,6 +571,8 @@
                   <object class="GtkBox" id="box_init">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
                     <property name="orientation">vertical</property>
                     <property name="spacing">5</property>
                     <child>
@@ -574,6 +591,8 @@
                       <object class="GtkGrid" id="grid1">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="row_spacing">3</property>
+                        <property name="column_spacing">5</property>
                         <child>
                           <object class="GtkLabel" id="label9">
                             <property name="visible">True</property>
@@ -591,8 +610,6 @@
                           <object class="GtkEntry" id="entry_target_name">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="margin_left">5</property>
-                            <property name="margin_right">5</property>
                             <property name="hexpand">True</property>
                             <property name="width_chars">16</property>
                           </object>
@@ -609,7 +626,6 @@
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                             <property name="tooltip_text" translatable="yes">Load common taxons</property>
-                            <property name="margin_right">5</property>
                             <property name="relief">half</property>
                             <property name="image_position">right</property>
                             <signal name="clicked" handler="on_button_load_target_clicked" swapped="no"/>
@@ -662,7 +678,6 @@
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                             <property name="tooltip_text" translatable="yes">Load common taxons</property>
-                            <property name="margin_right">5</property>
                             <property name="relief">half</property>
                             <property name="image_position">right</property>
                             <signal name="clicked" handler="on_button_load_query_clicked" swapped="no"/>
@@ -686,8 +701,6 @@
                           <object class="GtkEntry" id="entry_query_name">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="margin_left">5</property>
-                            <property name="margin_right">5</property>
                             <property name="hexpand">True</property>
                             <property name="width_chars">16</property>
                           </object>
@@ -702,8 +715,6 @@
                           <object class="GtkEntry" id="entry_dir_align_axt">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="margin_left">5</property>
-                            <property name="margin_right">5</property>
                             <property name="hexpand">True</property>
                           </object>
                           <packing>
@@ -718,7 +729,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="margin_right">5</property>
                             <signal name="clicked" handler="on_button_open_dir_align_axt_clicked" swapped="no"/>
                             <child>
                               <object class="GtkImage" id="image7">
@@ -771,29 +781,6 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="button_auto_db_name_axt">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                            <property name="tooltip_text" translatable="yes">Naming db automaticly</property>
-                            <property name="relief">half</property>
-                            <signal name="clicked" handler="on_button_auto_db_name_axt_clicked" swapped="no"/>
-                            <child>
-                              <object class="GtkImage" id="image2">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="stock">gtk-apply</property>
-                                <property name="icon_size">1</property>
-                              </object>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">False</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
                           <object class="GtkButton" id="button_gen_aligndb">
                             <property name="label" translatable="yes">Gen. alignDB</property>
                             <property name="visible">True</property>
@@ -804,7 +791,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
-                            <property name="position">2</property>
+                            <property name="position">1</property>
                           </packing>
                         </child>
                         <child>
@@ -813,13 +800,12 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="margin_right">5</property>
                             <signal name="clicked" handler="on_button_insert_isw_axt_clicked" swapped="no"/>
                           </object>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
-                            <property name="position">3</property>
+                            <property name="position">2</property>
                           </packing>
                         </child>
                       </object>
@@ -845,6 +831,9 @@
                   <object class="GtkBox" id="box3_two_way">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="resize_mode">immediate</property>
                     <property name="orientation">vertical</property>
                     <property name="spacing">5</property>
                     <child>
@@ -862,12 +851,12 @@
                       <object class="GtkGrid" id="grid3">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="row_spacing">3</property>
+                        <property name="column_spacing">5</property>
                         <child>
                           <object class="GtkEntry" id="entry_dir_align_fas">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="margin_left">5</property>
-                            <property name="margin_right">5</property>
                             <property name="hexpand">True</property>
                           </object>
                           <packing>
@@ -882,7 +871,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="margin_right">5</property>
                             <signal name="clicked" handler="on_button_open_dir_align_fas_clicked" swapped="no"/>
                             <child>
                               <object class="GtkImage" id="image11">
@@ -992,29 +980,6 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="button_auto_db_name_fas">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                            <property name="tooltip_text" translatable="yes">Naming db automaticly</property>
-                            <property name="relief">half</property>
-                            <signal name="clicked" handler="on_button_auto_db_name_fas_clicked" swapped="no"/>
-                            <child>
-                              <object class="GtkImage" id="image5">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="stock">gtk-apply</property>
-                                <property name="icon_size">1</property>
-                              </object>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">False</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
                           <object class="GtkButton" id="button_gen_aligndb_fas">
                             <property name="label" translatable="yes">Gen. alignDB</property>
                             <property name="visible">True</property>
@@ -1025,7 +990,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
-                            <property name="position">2</property>
+                            <property name="position">1</property>
                           </packing>
                         </child>
                         <child>
@@ -1034,13 +999,12 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="margin_right">5</property>
                             <signal name="clicked" handler="on_button_insert_isw_fas_clicked" swapped="no"/>
                           </object>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
-                            <property name="position">3</property>
+                            <property name="position">2</property>
                           </packing>
                         </child>
                       </object>
@@ -1071,6 +1035,8 @@
                   <object class="GtkBox" id="box4">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
                     <property name="orientation">vertical</property>
                     <property name="spacing">5</property>
                     <child>
@@ -1121,6 +1087,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="tooltip_text" translatable="yes">Choose db</property>
                             <property name="margin_right">5</property>
                             <property name="relief">half</property>
                             <property name="image_position">right</property>
@@ -1129,7 +1096,7 @@
                               <object class="GtkImage" id="image15">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="stock">gtk-network</property>
+                                <property name="stock">gtk-harddisk</property>
                                 <property name="icon_size">1</property>
                               </object>
                             </child>
@@ -1146,6 +1113,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="tooltip_text" translatable="yes">Choose db</property>
                             <property name="margin_right">5</property>
                             <property name="relief">half</property>
                             <property name="image_position">right</property>
@@ -1154,7 +1122,7 @@
                               <object class="GtkImage" id="image9">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="stock">gtk-network</property>
+                                <property name="stock">gtk-harddisk</property>
                                 <property name="icon_size">1</property>
                               </object>
                             </child>
@@ -1316,29 +1284,6 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="button_auto_db_name_join">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                            <property name="tooltip_text" translatable="yes">Naming db automaticly</property>
-                            <property name="relief">half</property>
-                            <signal name="clicked" handler="on_button_auto_db_name_join_clicked" swapped="no"/>
-                            <child>
-                              <object class="GtkImage" id="image13">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="stock">gtk-apply</property>
-                                <property name="icon_size">1</property>
-                              </object>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">False</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
                           <object class="GtkButton" id="button_join_dbs">
                             <property name="label" translatable="yes">Join dbs</property>
                             <property name="visible">True</property>
@@ -1349,7 +1294,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
-                            <property name="position">2</property>
+                            <property name="position">1</property>
                           </packing>
                         </child>
                         <child>
@@ -1363,7 +1308,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
-                            <property name="position">3</property>
+                            <property name="position">2</property>
                           </packing>
                         </child>
                       </object>
@@ -1393,6 +1338,8 @@
                   <object class="GtkBox" id="box_gc">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
                     <property name="orientation">vertical</property>
                     <property name="spacing">5</property>
                     <child>
@@ -1507,7 +1454,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="margin_right">5</property>
                             <signal name="clicked" handler="on_button_upd_swcv_clicked" swapped="no"/>
                           </object>
                           <packing>
@@ -1543,6 +1489,8 @@
                   <object class="GtkBox" id="box_feature">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
                     <property name="orientation">vertical</property>
                     <property name="spacing">5</property>
                     <child>
@@ -1606,7 +1554,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="margin_right">5</property>
                             <signal name="clicked" handler="on_button_upd_segment_clicked" swapped="no"/>
                           </object>
                           <packing>
@@ -1741,6 +1688,9 @@
                   <object class="GtkBox" id="box11">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="spacing">6</property>
                     <child>
                       <object class="GtkLabel" id="label18">
                         <property name="visible">True</property>
@@ -1816,6 +1766,8 @@
                       <object class="GtkBox" id="box_two_way_stat">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="margin_left">5</property>
+                        <property name="margin_right">5</property>
                         <property name="orientation">vertical</property>
                         <property name="spacing">5</property>
                         <child>
@@ -1850,8 +1802,6 @@
                               <object class="GtkEntry" id="entry_stat_file_common">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
-                                <property name="margin_left">5</property>
-                                <property name="margin_right">5</property>
                                 <property name="hexpand">True</property>
                               </object>
                               <packing>
@@ -1866,7 +1816,6 @@
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
                                 <property name="tooltip_text" translatable="yes">Naming file automaticly</property>
-                                <property name="margin_right">5</property>
                                 <property name="relief">half</property>
                                 <property name="image_position">right</property>
                                 <signal name="clicked" handler="on_button_auto_stat_file_common_clicked" swapped="no"/>
@@ -1914,7 +1863,6 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
-                                <property name="margin_right">5</property>
                                 <signal name="clicked" handler="on_button_chart_common_clicked" swapped="no"/>
                               </object>
                               <packing>
@@ -1959,9 +1907,11 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkBox" id="box_two_way_stat1">
+                      <object class="GtkBox" id="box_multi_way_stat">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="margin_left">5</property>
+                        <property name="margin_right">5</property>
                         <property name="orientation">vertical</property>
                         <property name="spacing">5</property>
                         <child>
@@ -1996,8 +1946,6 @@
                               <object class="GtkEntry" id="entry_stat_file_multi">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
-                                <property name="margin_left">5</property>
-                                <property name="margin_right">5</property>
                                 <property name="hexpand">True</property>
                               </object>
                               <packing>
@@ -2012,7 +1960,6 @@
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
                                 <property name="tooltip_text" translatable="yes">Naming file automaticly</property>
-                                <property name="margin_right">5</property>
                                 <property name="relief">half</property>
                                 <property name="image_position">right</property>
                                 <signal name="clicked" handler="on_button_auto_stat_file_multi_clicked" swapped="no"/>
@@ -2108,9 +2055,11 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkBox" id="box_two_way_stat2">
+                      <object class="GtkBox" id="box_gc_stat">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="margin_left">5</property>
+                        <property name="margin_right">5</property>
                         <property name="orientation">vertical</property>
                         <property name="spacing">5</property>
                         <child>
@@ -2145,8 +2094,6 @@
                               <object class="GtkEntry" id="entry_stat_file_gc">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
-                                <property name="margin_left">5</property>
-                                <property name="margin_right">5</property>
                                 <property name="hexpand">True</property>
                               </object>
                               <packing>
@@ -2161,7 +2108,6 @@
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
                                 <property name="tooltip_text" translatable="yes">Naming file automaticly</property>
-                                <property name="margin_right">5</property>
                                 <property name="relief">half</property>
                                 <property name="image_position">right</property>
                                 <signal name="clicked" handler="on_button_auto_stat_file_gc_clicked" swapped="no"/>
@@ -2209,7 +2155,6 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
-                                <property name="margin_right">5</property>
                                 <signal name="clicked" handler="on_button_chart_gc_clicked" swapped="no"/>
                               </object>
                               <packing>
@@ -2301,6 +2246,9 @@
               <object class="GtkBox" id="box8">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
+                <property name="margin_bottom">3</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkScrolledWindow" id="scrolledwindow1">
@@ -2355,7 +2303,6 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="margin_right">5</property>
                         <signal name="clicked" handler="on_button_clear_clicked" swapped="no"/>
                       </object>
                       <packing>
