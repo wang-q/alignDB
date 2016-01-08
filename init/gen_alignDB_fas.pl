@@ -47,7 +47,6 @@ gen_alignDB_fas.pl - Generate alignDB from fas files
         --dir_align -da STR     .fas files' directory
         --outgroup  -o          alignments have an outgroup
         --block                 input is blocked fasta
-        --id_of     -id STR     taxon_id-name mapping file
         --length    -l  INT     threshold of alignment length
         --parallel      INT     run in parallel mode
         --batch         INT     number of alignments in one child process
@@ -71,34 +70,11 @@ GetOptions(
     'dir_align|dir|da=s' => \( my $dir_align        = '' ),
     'outgroup|o'         => \my $outgroup,
     'block'              => \my $block,
-    'id_of|id=s'         => \my $file_id_of,
     'length|lt|l=i'      => \( my $length_threshold = 5000 ),
     'parallel=i'         => \( my $parallel         = $Config->{generate}{parallel} ),
     'batch=i'            => \( my $batch_number     = $Config->{generate}{batch} ),
     'gzip'               => \my $gzip,
 ) or HelpMessage(1);
-
-#----------------------------------------------------------#
-# update names
-#----------------------------------------------------------#
-my $id_of = {};
-{
-    my $name_of = {};
-    open my $fh, '<', $file_id_of;
-    while (<$fh>) {
-        chomp;
-        my ( $id, $name ) = split /,/;
-        $id_of->{$name} = $id;
-        $name_of->{$id} = $name;
-    }
-    close $fh;
-
-    AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    )->update_names($name_of);
-}
 
 #----------------------------------------------------------#
 # Search for all files and push their paths to @files
@@ -168,9 +144,7 @@ my $run = AlignDB::Run->new(
     jobs     => \@jobs,
     code     => $worker,
     opt      => {
-        id_of     => $id_of,
         threshold => $length_threshold,
-        gzip      => $gzip,
     },
 );
 $run->run;

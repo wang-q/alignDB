@@ -42,7 +42,6 @@ init_alignDB.pl - Initiate alignDB
         --username  -u  STR     username
         --password  -p  STR     password
         --sql           STR     init sql filename
-        --taxon         STR     init taxon filename
         --chr           STR     init chr_length filename
 
     perl init_alignDB.pl -d S288cvsYJM789
@@ -51,19 +50,20 @@ init_alignDB.pl - Initiate alignDB
 
 GetOptions(
     'help|?' => sub { HelpMessage(0) },
-    'server|s=s'   => \( my $server     = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port       = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db         = $Config->{database}{db} ),
-    'username|u=s' => \( my $username   = $Config->{database}{username} ),
-    'password|p=s' => \( my $password   = $Config->{database}{password} ),
-    'sql=s'        => \( my $init_sql   = "$FindBin::RealBin/../init.sql" ),
-    'taxon=s'      => \( my $init_taxon = "$FindBin::RealBin/../data/taxon.csv" ),
-    'chr=s'        => \( my $init_chr   = "$FindBin::RealBin/../data/chr_length.csv" ),
+    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
+    'username|u=s' => \( my $username = $Config->{database}{username} ),
+    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'sql=s'        => \( my $init_sql = "$FindBin::RealBin/../init.sql" ),
+    'chr=s'        => \( my $init_chr = "$FindBin::RealBin/../data/chr_length.csv" ),
 ) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # call mysql
 #----------------------------------------------------------#
+$stopwatch->start_message("Init $db...");
+
 {
     $stopwatch->block_message("Create DB skeleton");
 
@@ -87,73 +87,25 @@ GetOptions(
 #----------------------------------------------------------#
 # init object
 #----------------------------------------------------------#
-$stopwatch->start_message("Init $db...");
-
 my $obj = AlignDB->new(
     mysql  => "$db:$server",
     user   => $username,
     passwd => $password,
 );
-$obj->index_isw_indel_id;
 my $dbh = $obj->dbh;
-
-#----------------------------------------------------------#
-# taxon
-#----------------------------------------------------------#
-if ( -f $init_taxon ) {
-    print "Use $init_taxon to Init table taxon\n";
-
-    my $insert_sth = $dbh->prepare(
-        'INSERT INTO taxon (
-            taxon_id, genus, species, sub_species, common_name
-        )
-        VALUES (
-            ?, ?, ?, ?, ? 
-        )'
-    );
-
-    my $csv = Text::CSV_XS->new( { binary => 1, eol => "\n" } );
-    open my $csv_fh, "<", $init_taxon;
-    $csv->getline($csv_fh);    # bypass title line
-
-    while ( my $row = $csv->getline($csv_fh) ) {
-        $insert_sth->execute( $row->[0], $row->[1], $row->[2], $row->[3], $row->[4], );
-    }
-    close $csv_fh;
-    $insert_sth->finish;
-
-    # Now retrieve data from the table.
-    my $query_sth = $dbh->prepare(
-        q{
-        SELECT *
-        FROM taxon
-        WHERE common_name in ( "Human", "human", "S288C", "S288c")
-        }
-    );
-    $query_sth->execute;
-    while ( my $ref = $query_sth->fetchrow_hashref ) {
-        printf "Found a row: taxon_id = %s, genus = %s,"
-            . " species = %s, common_name = %s\n",
-            $ref->{taxon_id},
-            $ref->{genus}, $ref->{species}, $ref->{common_name};
-    }
-    $query_sth->finish;
-
-    print "\n";
-}
 
 #----------------------------------------------------------#
 # chromosome
 #----------------------------------------------------------#
 if ( -f $init_chr ) {
-    print "Use $init_chr to Init table chromosome\n";
+    $stopwatch->block_message("Use [$init_chr] to Init table chromosome");
 
     my $insert_sth = $dbh->prepare(
         'INSERT INTO chromosome (
-            chr_id, taxon_id, chr_name, chr_length
+            chr_id, common_name, taxon_id, chr_name, chr_length
         )
         VALUES (
-            NULL, ?, ?, ?
+            NULL, ?, ?, ?, ?
         )'
     );
 
@@ -162,7 +114,7 @@ if ( -f $init_chr ) {
     $csv->getline($csv_fh);    # bypass title line
 
     while ( my $row = $csv->getline($csv_fh) ) {
-        $insert_sth->execute( $row->[0], $row->[1], $row->[2], );
+        $insert_sth->execute( $row->[0], $row->[1], $row->[2], $row->[3], );
     }
     close $csv_fh;
     $insert_sth->finish;
@@ -176,15 +128,17 @@ if ( -f $init_chr ) {
     );
     $query_sth->execute;
     while ( my $ref = $query_sth->fetchrow_hashref ) {
-        my $taxon_id = $ref->{taxon_id};
-        if ( defined $taxon_id and ( $taxon_id == 3702 or $taxon_id == 9606 ) ) {
-            printf "Found a row: taxon_id = %s,"
-                . " chr_name = %s, chr_length = %s\n",
-                $ref->{taxon_id}, $ref->{chr_name}, $ref->{chr_length};
+        my $common_name = $ref->{common_name};
+        if ( defined $common_name and ( $common_name eq "Human" ) ) {
+            printf "Found a row: common_name = %s, chr_name = %s, chr_length = %s\n",
+                $ref->{common_name}, $ref->{chr_name}, $ref->{chr_length};
             last;
         }
     }
     $query_sth->finish;
+}
+else {
+    die "[$init_chr] doesn't exist\n";
 }
 
 $stopwatch->end_message;

@@ -45,23 +45,18 @@ gen_alignDB_genome.pl - Generate alignDB from genome fasta files
         --username  -u  STR     username
         --password  -p  STR     password
         --dir_align -da STR     fasta files' directory
-        --target        STR     "target_taxon_id,target_name"
+        --target        STR     target_name
         --length        INT     truncated length
         --fill          INT     fill holes less than this
         --min           INT     minimal length
         --parallel      INT     run in parallel mode
 
     perl init/init_alignDB.pl -d Athvsself
-    perl init/gen_alignDB_genome.pl -d Athvsself -t "3702,Ath" --dir /home/wangq/data/alignment/arabidopsis19/ath_65  --parallel 4
+    perl init/gen_alignDB_genome.pl -d Athvsself -t Ath --da ~/data/alignment/arabidopsis19/ath_65  --parallel 4
     
-    >perl init_alignDB.pl -d nipvsself
-    >perl gen_alignDB_genome.pl -d nipvsself -t "39947,Nip" --dir e:\data\alignment\rice\nip_58\  --parallel 4
-    
-    >perl init_alignDB.pl -d 9311vsself
-    >perl gen_alignDB_genome.pl -d 9311vsself -t "39946,9311" --dir e:\data\alignment\rice\9311_58\  --parallel 4
     
     perl init/init_alignDB.pl -d S288Cvsself
-    perl init/gen_alignDB_genome.pl -d S288Cvsself -t "4932,S288C" --dir /home/wangq/data/alignment/yeast65/S288C/  --parallel 4
+    perl init/gen_alignDB_genome.pl -d S288Cvsself -t S288C --da ~/data/alignment/yeast65/S288C  --parallel 4
     perl init/insert_gc.pl -d S288Cvsself --parallel 4
 
 =cut
@@ -74,7 +69,7 @@ GetOptions(
     'username|u=s' => \( my $username = $Config->{database}{username} ),
     'password|p=s' => \( my $password = $Config->{database}{password} ),
     'dir_align|dir|da=s' => \( my $dir ),
-    'target=s'           => \( my $target ),
+    'target=s'           => \( my $target_name ),
     'length=i'           => \( my $truncated_length = 100_000 ),
     'fill=i'             => \( my $fill = 50 ),
     'min=i'              => \( my $min_length = 5000 ),
@@ -86,22 +81,6 @@ GetOptions(
 #----------------------------------------------------------#
 my @files = sort File::Find::Rule->file->name( '*.fa', '*.fas', '*.fasta' )->in($dir);
 printf "\n----Total .fa Files: %4s----\n\n", scalar @files;
-
-{    # update names
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-
-    # Database handler
-    my $dbh = $obj->dbh;
-
-    my ( $target_taxon_id, $target_name ) = split ",", $target;
-    $target_name = $target_taxon_id unless $target_name;
-
-    $obj->update_names( { $target_taxon_id => $target_name } );
-}
 
 #----------------------------------------------------------#
 # worker
@@ -118,10 +97,7 @@ my $worker = sub {
         passwd => $password,
     );
 
-    my ( $target_taxon_id, $target_name ) = split ",", $target;
-
-    die "target_taxon_id not defined\n" unless $target_taxon_id;
-    $target_name = $target_taxon_id unless $target_name;
+    die "target_name not defined\n" unless $target_name;
 
     my $chr_name = path($infile)->basename->stringify;
     $chr_name =~ s/\..+?$//;
@@ -130,7 +106,7 @@ my $worker = sub {
     my $chr_seq    = $seq_of->{ $seq_names->[0] };
     my $chr_length = length $chr_seq;
 
-    my $id_hash = $obj->get_chr_id_hash($target_taxon_id);
+    my $id_hash = $obj->get_chr_id_hash($target_name);
     my $chr_id  = $id_hash->{$chr_name};
     return unless $chr_id;
 
@@ -178,8 +154,7 @@ my $worker = sub {
         my $seq = substr $chr_seq, $start - 1, $end - $start + 1;
 
         my $info_refs = [
-            {   taxon_id   => $target_taxon_id,
-                name       => $target_name,
+            {   name       => $target_name,
                 chr_id     => $chr_id,
                 chr_name   => $chr_name,
                 chr_start  => $start,
@@ -187,8 +162,7 @@ my $worker = sub {
                 chr_strand => '+',
                 seq        => $seq,
             },
-            {   taxon_id   => $target_taxon_id,
-                name       => $target_name,
+            {   name       => $target_name,
                 chr_id     => $chr_id,
                 chr_name   => $chr_name,
                 chr_start  => $start,
