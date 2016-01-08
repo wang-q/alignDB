@@ -131,9 +131,12 @@ sub get_value {
         $value = $object->get_active ? 1 : 0;
     }
     elsif ( $class eq 'Gtk3::ComboBox' ) {
-        my $iter = $object->get_active_iter;
+        my $iter  = $object->get_active_iter;
         my $model = $object->get_model;
         $value = $model->get( $iter, 0 );
+    }
+    elsif ( $class eq 'Gtk3::Notebook' ) {
+        $value = $object->get_current_page;
     }
     else {
         warn "Widget type is [$class]\n";
@@ -615,70 +618,75 @@ sub on_button_load_query_clicked {
     return;
 }
 
-sub on_button_auto_db_name_axt_clicked {
+sub on_button_auto_db_name_clicked {
     my $self = shift;
 
-    my $target_name = $self->get_value("entry_target_name");
-    my $query_name  = $self->get_value("entry_query_name");
-    my $db_name     = "$target_name" . "vs" . "$query_name";
-    $self->set_value( "entry_db_name", $db_name );
+    my $active = $self->get_value("notebook_generate");
+    my @pages = ( "Gen. axt", "Gen. fas", "Join dbs", "GC", "Feature" );
 
-    $self->append_text("db_name set to [$db_name]\n");
-    return;
-}
+    $self->append_text("Active page is [$pages[$active]]\n");
 
-sub on_button_auto_db_name_fas_clicked {
-    my $self = shift;
+    if ( $active == 0 ) {
+        my $target_name = $self->get_value("entry_target_name");
+        my $query_name  = $self->get_value("entry_query_name");
+        my $db_name     = "$target_name" . "vs" . "$query_name";
 
-    my $dir_align_fas = $self->get_value("entry_dir_align_fas");
+        $self->set_value( "entry_db_name", $db_name );
+        $self->append_text("db_name set to ");
+        $self->append_text( "$db_name\n", "bold", "blue" );
+    }
+    elsif ( $active == 1 ) {
+        my $dir_align_fas = $self->get_value("entry_dir_align_fas");
+        my $db_name       = path($dir_align_fas)->basename;
 
-    my $db_name = path($dir_align_fas)->basename;
-    $self->set_value( "entry_db_name", $db_name );
+        $self->set_value( "entry_db_name", $db_name );
+        $self->append_text("db_name set to ");
+        $self->append_text( "$db_name\n", "bold", "blue" );
+    }
+    elsif ( $active == 2 ) {
+        my $first_db  = $self->get_value("entry_first_db");
+        my $second_db = $self->get_value("entry_second_db");
+        my $goal_db;
 
-    $self->append_text("db_name set to [$db_name]\n");
-    return;
-}
+        my $first    = $self->get_value("combobox_first");
+        my $second   = $self->get_value("combobox_second");
+        my $outgroup = $self->get_value("combobox_outgroup");
 
-sub on_button_auto_db_name_join_clicked {
-    my $self = shift;
+        my $server   = $self->get_value("entry_server");
+        my $port     = $self->get_value("entry_port");
+        my $username = $self->get_value("entry_username");
+        my $password = $self->get_value("entry_password");
 
-    my $first_db  = $self->get_value("entry_first_db");
-    my $second_db = $self->get_value("entry_second_db");
-    my $goal_db;
+        my $first_obj = AlignDB->new(
+            mysql  => "$first_db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+        my ( $first_target_name, $first_query_name ) = $first_obj->get_names;
 
-    my $first    = $self->get_value("combobox_first");
-    my $second   = $self->get_value("combobox_second");
-    my $outgroup = $self->get_value("combobox_outgroup");
+        my $second_obj = AlignDB->new(
+            mysql  => "$second_db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+        my ( $second_target_name, $second_query_name ) = $second_obj->get_names;
 
-    my $server   = $self->get_value("entry_server");
-    my $port     = $self->get_value("entry_port");
-    my $username = $self->get_value("entry_username");
-    my $password = $self->get_value("entry_password");
+        my %name_of = (
+            '0target' => $first_target_name,
+            '0query'  => $first_query_name,
+            '1target' => $second_target_name,
+            '1query'  => $second_query_name,
+        );
+        $goal_db = $name_of{$first} . 'vs' . $name_of{$second} . 'ref' . $name_of{$outgroup};
 
-    my $first_obj = AlignDB->new(
-        mysql  => "$first_db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-    my ( $first_target_name, $first_query_name ) = $first_obj->get_names;
+        $self->set_value( "entry_db_name", $goal_db );
+        $self->append_text("db_name set to ");
+        $self->append_text( "$goal_db\n", "bold", "blue" );
+    }
+    else {
+        $self->append_text("Can't set db_name on page [$pages[$active]] of Generate.\n");
+    }
 
-    my $second_obj = AlignDB->new(
-        mysql  => "$second_db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-    my ( $second_target_name, $second_query_name ) = $second_obj->get_names;
-
-    my %name_of = (
-        '0target' => $first_target_name,
-        '0query'  => $first_query_name,
-        '1target' => $second_target_name,
-        '1query'  => $second_query_name,
-    );
-    $goal_db = $name_of{$first} . 'vs' . $name_of{$second} . 'ref' . $name_of{$outgroup};
-
-    $self->set_value( "entry_db_name", $goal_db );
-    $self->append_text("db_name set to [$goal_db]\n");
     return;
 }
 
