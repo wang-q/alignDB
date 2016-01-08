@@ -3,9 +3,9 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
@@ -16,7 +16,6 @@ use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(:all);
 
-use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
 use AlignDB::Outgroup;
@@ -25,8 +24,7 @@ use AlignDB::Position;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -35,53 +33,87 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
+=head1 NAME
 
-# ref parameter
-my $length_threshold = $Config->{generate}{length_threshold} / 2;
+join_dbs.pl - join multiple dbs for three-lineage test or maligndb
+
+=head1 SYNOPSIS
+
+    perl join_dbs.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --dbs               DB names list seperated by ','
+        --goal_db           goal database name
+        --outgroup          outgroup identity (0query)
+        --target            target identity (0target)
+        --queries           query list (1query,2query)
+        --length            threshold of alignment length
+        --realign           correct pesudo-alignment error
+        --trimmed_fasta     save ref-trimmed fasta files
+        --reduce_end        reduce align end to avoid some overlaps in
+                              BlastZ results (use 10 instead of 0)
+                            For two independent datasets, use 10;
+                            for two dependent datasets, use 0
+        --no_insert         don't insert into goal_db actually
+
+$ perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11,S288CvsYJM789 \
+    --goal_db S288CvsThree --no_insert --trimmed_fasta \
+    --outgroup 0query --target 0target --queries 1query,2query
+
+# windows
+perl two_way_batch.pl -d S288CvsRM11 -t "4932,S288C" -q "285006,RM11" -da d:\data\alignment\yeast_combine\S288CvsRM11\ -lt 5000 --parallel 4 --run skeleton
+perl two_way_batch.pl -d S288CvsSpar -t "4932,S288C" -q "226125,Spar" -da d:\data\alignment\yeast_combine\S288CvsSpar\ -lt 5000 --parallel 4 --run skeleton
+
+perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar --target 0target --outgroup 0query --queries 1query --length 5000
+perl join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11_Spar --target 0target --queries 0query,1query --length 5000
+
+# linux/mac
+cd ~/Scripts/alignDB
+
+perl extra/two_way_batch.pl -d S288CvsRM11 -t "559292,S288C" -q "285006,RM11" \
+    -da data/S288CvsRM11 -lt 5000 --parallel 4 --run skeleton
+
+perl extra/two_way_batch.pl -d S288CvsSpar -t "559292,S288C" -q "226125,Spar" \
+    -da data/S288CvsSpar -lt 5000 --parallel 4 --run skeleton
+
+perl extra/join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11Spar \
+    --target 0target --queries 0query,1query \
+    --no_insert --trimmed_fasta --length 5000
+
+perl extra/join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar \
+    --target 0target --outgroup 0query --queries 1query --length 5000
+
+perl extra/join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11_Spar \
+    --target 0target --queries 0query,1query \
+    --length 5000
+
+=cut
 
 # Database info
 # Normal order: TvsO, TvsQ1, TvsQ2
-my $dbs;
-my $target;
-my $queries;
-my $outgroup;
-my $goal_db;
-
-my $trimmed_fasta = 0;
-my $no_insert     = 0;
-
-my $block = 0;    # output blocked fasta
 
 my $reduce_end = 10;
 
-my $man  = 0;
-my $help = 0;
-
 GetOptions(
-    'help|?'        => \$help,
-    'man'           => \$man,
-    's|server=s'    => \$server,
-    'P|port=i'      => \$port,
-    'u|username=s'  => \$username,
-    'p|password=s'  => \$password,
-    'dbs=s'         => \$dbs,
-    'goal_db=s'     => \$goal_db,
-    'outgroup=s'    => \$outgroup,
-    'target=s'      => \$target,
-    'queries=s'     => \$queries,
-    'length=i'      => \$length_threshold,
-    'block'         => \$block,
-    'trimmed_fasta' => \$trimmed_fasta,
-    'no_insert'     => \$no_insert,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server           = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port             = $Config->{database}{port} ),
+    'username|u=s' => \( my $username         = $Config->{database}{username} ),
+    'password|p=s' => \( my $password         = $Config->{database}{password} ),
+    'dbs=s'        => \my $dbs,
+    'goal_db=s'    => \my $goal_db,
+    'outgroup=s'   => \my $outgroup,
+    'target=s'     => \my $target,
+    'queries=s'    => \my $queries,
+    'length=i'     => \( my $length_threshold = $Config->{generate}{length_threshold} / 2 ),
+    'block'         => \( my $block ),       # output blocked fasta
+    'trimmed_fasta' => \my $trimmed_fasta,
+    'no_insert'     => \my $no_insert,
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # perl init_alignDB.pl
@@ -151,14 +183,20 @@ my ( @all_dbs, @all_names, @ingroup_names, $target_db );
 #----------------------------#
 # info hash
 #----------------------------#
-my $db_info_of
-    = build_db_info( $server, $username, $password, \@all_dbs, $reduce_end );
+$stopwatch->block_message("Build DBs information");
+my $db_info_of = build_db_info( $server, $username, $password, \@all_dbs, $reduce_end );
+
+#print Dump $db_info_of;
 
 #----------------------------#
 # build intersect chromosome set
 #----------------------------#
+$stopwatch->block_message("Build intersections of chromosomes");
 my $chr_set_of = build_inter_chr( $db_info_of, \@all_dbs, $target_db );
 
+#print Dump $chr_set_of;
+
+$stopwatch->block_message("For pieces of chromosomes");
 for my $chr_id ( sort keys %{$chr_set_of} ) {
     my $inter_chr_set = $chr_set_of->{$chr_id};
     my $chr_name      = $db_info_of->{$target_db}{chrs}{$chr_id}{name};
@@ -178,10 +216,8 @@ SEG: for my $seg (@segments) {
 
         for my $db_name (@all_dbs) {
             my $pos_obj = $db_info_of->{$db_name}{pos_obj};
-            my ( $align_id, $dummy ) = @{
-                $pos_obj->positioning_align_chr_id( $chr_id, $seg_start,
-                    $seg_end )
-            };
+            my ( $align_id, $dummy )
+                = @{ $pos_obj->positioning_align_chr_id( $chr_id, $seg_start, $seg_end ) };
 
             if ( !defined $align_id ) {
                 warn " " x 4, "Find no align in $db_name, jump to next\n";
@@ -200,8 +236,7 @@ SEG: for my $seg (@segments) {
         for my $db_name (@all_dbs) {
             my $align_id = $db_info_of->{$db_name}{align_id};
 
-            my $error
-                = build_seq( $db_info_of->{$db_name}, $seg_start, $seg_end );
+            my $error = build_seq( $db_info_of->{$db_name}, $seg_start, $seg_end );
             if ($error) {
                 warn $error . " in $db_name $align_id\n";
                 next SEG;
@@ -211,7 +246,6 @@ SEG: for my $seg (@segments) {
         #----------------------------#
         # build $seq_of, $seq_names, $seq_idxs
         #----------------------------#
-        my $name_of  = {};    # taxon_id => name
         my $seq_idxs = [];    # store simplified seq_names
         my ( $seq_of, $seq_names ) = ( {}, [] );
         for my $i ( 0 .. @all_names - 1 ) {
@@ -225,8 +259,6 @@ SEG: for my $seg (@segments) {
             my $db_name = $all_dbs[$db_name_idx];
 
             my $info = $db_info_of->{$db_name}{$torq};
-
-            $name_of->{ $info->{taxon_id} } = $info->{name};
 
             push @{$seq_idxs}, $i;
 
@@ -299,7 +331,6 @@ SEG: for my $seg (@segments) {
                 my $seq = $seq_of->{ $seq_idxs->[$i] };
                 push @{$seq_refs}, $seq;
             }
-            $goal_obj->update_names($name_of);
             $goal_obj->add_align( $info_refs, $seq_refs );
         }
     }
@@ -339,21 +370,11 @@ sub build_db_info {
         my $cur_dbh = $cur_obj->dbh;
         my $cur_pos_obj = AlignDB::Position->new( dbh => $cur_dbh );
         $db_info_of->{$db} = {
-            target => {
-                taxon_id => '',
-                name     => '',
-            },
-            query => {
-                taxon_id => '',
-                name     => '',
-            },
+            target  => { name => '', },
+            query   => { name => '', },
             obj     => $cur_obj,
             pos_obj => $cur_pos_obj,
         };
-
-        (   $db_info_of->{$db}{target}{taxon_id},
-            $db_info_of->{$db}{query}{taxon_id},
-        ) = $cur_obj->get_taxon_ids;
 
         ( $db_info_of->{$db}{target}{name}, $db_info_of->{$db}{query}{name}, )
             = $cur_obj->get_names;
@@ -474,11 +495,8 @@ sub build_seq {
         = $pos_obj->at_query_chr( $align_id, $align_end );
 
     $db_info->{target}{seq}
-        = substr( $db_info->{target}{full_seq}, $align_start - 1,
-        $align_length );
-    $db_info->{query}{seq}
-        = substr( $db_info->{query}{full_seq}, $align_start - 1,
-        $align_length );
+        = substr( $db_info->{target}{full_seq}, $align_start - 1, $align_length );
+    $db_info->{query}{seq} = substr( $db_info->{query}{full_seq}, $align_start - 1, $align_length );
 
     unless (length $db_info->{target}{seq} == length $db_info->{query}{seq}
         and length $db_info->{target}{seq} > 0 )
@@ -537,64 +555,3 @@ sub write_fasta_fh {
 }
 
 __END__
-
-=head1 NAME
-
-    join_dbs.pl - join multiple dbs for three-lineage test or maligndb
-
-=head1 SYNOPSIS
-
-    perl join_dbs.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --port              MySQL server port
-        --username          username
-        --password          password
-        --dbs               DB names list seperated by ','
-        --goal_db           goal database name
-        --outgroup          outgroup identity (0query)
-        --target            target identity (0target)
-        --queries           query list (1query,2query)
-        --length            threshold of alignment length
-        --realign           correct pesudo-alignment error
-        --trimmed_fasta     save ref-trimmed fasta files
-        --reduce_end        reduce align end to avoid some overlaps in
-                              BlastZ results (use 10 instead of 0)
-                            For two independent datasets, use 10;
-                            for two dependent datasets, use 0
-        --no_insert         don't insert into goal_db actually
-        --indel_expand
-        --indel_join
-
-$ perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11,S288CvsYJM789 \
-    --goal_db S288CvsThree --no_insert --trimmed_fasta \
-    --outgroup 0query --target 0target --queries 1query,2query
-
-# windows
-perl two_way_batch.pl -d S288CvsRM11 -t "4932,S288C" -q "285006,RM11" -da d:\data\alignment\yeast_combine\S288CvsRM11\ -lt 5000 --parallel 4 --run skeleton
-perl two_way_batch.pl -d S288CvsSpar -t "4932,S288C" -q "226125,Spar" -da d:\data\alignment\yeast_combine\S288CvsSpar\ -lt 5000 --parallel 4 --run skeleton
-
-perl join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar --target 0target --outgroup 0query --queries 1query --length 5000
-perl join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11_Spar --target 0target --queries 0query,1query --length 5000
-
-# linux/mac
-cd ~/Scripts/alignDB
-
-perl extra/two_way_batch.pl -d S288CvsRM11 -t "559292,S288C" -q "285006,RM11" \
-    -da data/S288CvsRM11 -lt 5000 --parallel 4 --run skeleton
-
-perl extra/two_way_batch.pl -d S288CvsSpar -t "559292,S288C" -q "226125,Spar" \
-    -da data/S288CvsSpar -lt 5000 --parallel 4 --run skeleton
-
-perl extra/join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11Spar \
-    --target 0target --queries 0query,1query \
-    --no_insert --trimmed_fasta --length 5000
-
-perl extra/join_dbs.pl --dbs S288CvsSpar,S288CvsRM11 --goal_db S288CvsRM11refSpar \
-    --target 0target --outgroup 0query --queries 1query --length 5000
-
-perl extra/join_dbs.pl --dbs S288CvsRM11,S288CvsSpar --goal_db S288CvsRM11_Spar \
-    --target 0target --queries 0query,1query \
-    --length 5000
