@@ -418,7 +418,7 @@ my $indel_list = sub {
     my ( $sheet_row, $sheet_col );
 
     {    # write header
-        my @headers = qw{indel_id taxon_id chr_name indel_start indel_end
+        my @headers = qw{indel_id common_name chr_name indel_start indel_end
             indel_length indel_seq indel_gc indel_freq indel_occured indel_type
             indel_slippage indel_coding indel_repeats};
         ( $sheet_row, $sheet_col ) = ( 0, 0 );
@@ -434,7 +434,7 @@ my $indel_list = sub {
     {    # write contents
         my $sql_query = q{
             SELECT 
-                i.align_id, i.indel_id, a.taxon_id, a.chr_name, i.indel_start,
+                i.align_id, i.indel_id, a.common_name, a.chr_name, i.indel_start,
                 i.indel_end, i.indel_length, i.indel_seq, i.indel_gc,
                 i.indel_freq, i.indel_occured, i.indel_type, i.indel_slippage,
                 i.indel_coding, i.indel_repeats
@@ -442,13 +442,12 @@ my $indel_list = sub {
                 indel i
                     INNER JOIN
                 (SELECT 
-                    se.align_id, ta.taxon_id, c.chr_name, se.chr_start
+                    se.align_id, c.common_name, c.chr_name, se.chr_start
                 FROM
-                    sequence se, target t, chromosome c, taxon ta
+                    sequence se, target t, chromosome c
                 WHERE
                     se.seq_id = t.seq_id
-                        AND se.chr_id = c.chr_id
-                        AND c.taxon_id = ta.taxon_id) a ON i.align_id = a.align_id
+                        AND se.chr_id = c.chr_id) a ON i.align_id = a.align_id
             ORDER BY a.chr_name, a.chr_start
         };
         my $sth = $dbh->prepare($sql_query);
@@ -484,7 +483,7 @@ my $snp_list = sub {
     my ( $sheet_row, $sheet_col );
 
     {    # write header
-        my @headers = qw{snp_id taxon_id chr_name snp_pos isw_distance
+        my @headers = qw{snp_id common_name chr_name snp_pos isw_distance
             mutant_to snp_freq snp_occured
             snp_coding snp_repeats snp_cpg};
         ( $sheet_row, $sheet_col ) = ( 0, 0 );
@@ -500,20 +499,19 @@ my $snp_list = sub {
     {    # write contents
         my $sql_query = q{
             SELECT 
-                s.align_id, s.snp_id, a.taxon_id, a.chr_name, s.snp_pos,
+                s.align_id, s.snp_id, a.common_name, a.chr_name, s.snp_pos,
                 i.isw_distance, s.mutant_to, s.snp_freq, s.snp_occured,
                 s.snp_coding, s.snp_repeats, s.snp_cpg
             FROM
                 snp s
                     INNER JOIN
                 (SELECT 
-                    se.align_id, ta.taxon_id, c.chr_name, se.chr_start
+                    se.align_id, c.common_name, c.chr_name, se.chr_start
                 FROM
-                    sequence se, target t, chromosome c, taxon ta
+                    sequence se, target t, chromosome c
                 WHERE
                     se.seq_id = t.seq_id
-                        AND se.chr_id = c.chr_id
-                        AND c.taxon_id = ta.taxon_id) a ON s.align_id = a.align_id
+                        AND se.chr_id = c.chr_id) a ON s.align_id = a.align_id
                     LEFT JOIN
                 isw i ON s.isw_id = i.isw_id
             ORDER BY a.chr_name, a.chr_start
@@ -579,13 +577,12 @@ my $snp_codon_list = sub {
                 snp s
                     INNER JOIN
                 (SELECT 
-                    se.align_id, ta.taxon_id, c.chr_name, se.chr_start
+                    se.align_id, c.common_name, c.chr_name, se.chr_start
                 FROM
-                    sequence se, target t, chromosome c, taxon ta
+                    sequence se, target t, chromosome c
                 WHERE
                     se.seq_id = t.seq_id
-                        AND se.chr_id = c.chr_id
-                        AND c.taxon_id = ta.taxon_id) a ON s.align_id = a.align_id
+                        AND se.chr_id = c.chr_id) a ON s.align_id = a.align_id
             ORDER BY a.chr_name, a.chr_start
         };
         my $sth = $dbh->prepare($sql_query);
@@ -662,13 +659,12 @@ my $gene_list = sub {
                 window w ON g.window_id = w.window_id
                     INNER JOIN
                 (SELECT 
-                    se.align_id, ta.taxon_id, c.chr_name, se.chr_start
+                    se.align_id, c.common_name, c.chr_name, se.chr_start
                 FROM
-                    sequence se, target t, chromosome c, taxon ta
+                    sequence se, target t, chromosome c
                 WHERE
                     se.seq_id = t.seq_id
-                        AND se.chr_id = c.chr_id
-                        AND c.taxon_id = ta.taxon_id) a ON w.align_id = a.align_id
+                        AND se.chr_id = c.chr_id) a ON w.align_id = a.align_id
             ORDER BY a.chr_name , a.chr_start
         };
         my $sth = $dbh->prepare($sql_query);
