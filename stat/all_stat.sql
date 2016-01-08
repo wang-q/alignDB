@@ -1,13 +1,6 @@
 #----------------------------------------------------------#
 # SUMMARY TABLE                                     
 #----------------------------------------------------------#
-# Total_length
-SELECT t.genus Genus, t.species Speciest, t.sub_species Sub_species, SUM(s.seq_length) Total_length
-FROM sequence s, chromosome c, taxon t
-WHERE s.chr_id = c.chr_id
-AND c.taxon_id = t.taxon_id            
-GROUP BY t.taxon_id
-
 # Alignment_length
 SELECT CONCAT(vs.target_name, ' vs. ', vs.query_name), SUM(a.align_length) Alignment_length
 FROM align a
@@ -131,14 +124,6 @@ FROM pi_group p,
 GROUP BY CEIL(p.p_id / s.spacing)
 
 DROP TABLE IF EXISTS pi_group
-
-# Processed chr
-SELECT c.chr_id, t.genus, t.species, t.sub_species, c.chr_name
-FROM target ta, sequence s, chromosome c, taxon t
-WHERE ta.seq_id = s.seq_id
-AND s.chr_id = c.chr_id
-AND c.taxon_id = t.taxon_id
-GROUP BY chr_id
 
 #----------------------------------------------------------#
 # CHROMOSOME                                          

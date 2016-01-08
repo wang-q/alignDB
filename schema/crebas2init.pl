@@ -17,14 +17,19 @@ $content =~ s/alter.+?\;//sg;
 $content =~ s/\n{3,}/\n\n/g;
 
 $content .= q{
-create index common_name_idx on chromosome
+CREATE INDEX common_name_idx ON chromosome
 (
    common_name
 );
 
-create index taxon_id_idx on chromosome
+CREATE INDEX taxon_id_idx ON chromosome
 (
    taxon_id
+);
+
+CREATE INDEX indel_isw_id_FK ON isw
+(
+    isw_indel_id
 );
 
 };
