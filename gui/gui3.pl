@@ -131,7 +131,9 @@ sub get_value {
         $value = $object->get_active ? 1 : 0;
     }
     elsif ( $class eq 'Gtk3::ComboBox' ) {
-        $value = $object->get_active_text;
+        my $iter = $object->get_active_iter;
+        my $model = $object->get_model;
+        $value = $model->get( $iter, 0 );
     }
     else {
         warn "Widget type is [$class]\n";
