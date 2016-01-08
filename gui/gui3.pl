@@ -16,7 +16,7 @@ use Glib qw(TRUE FALSE);
 
 use Path::Tiny;
 use Proc::Background;
-use Text::CSV_XS;
+use List::MoreUtils qw(uniq);
 
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
@@ -42,7 +42,7 @@ sub BUILD {
 
     # Load the UI
     $self->{app} = Gtk3::Builder->new;
-    $self->{app}->add_from_file("$FindBin::Bin/ui.xml");
+    $self->{app}->add_from_file("$FindBin::RealBin/ui.xml");
 
     # Connect signals magically
     $self->{app}->connect_signals( undef, $self );
@@ -55,9 +55,9 @@ sub BUILD {
         my $textbuffer = $textview->get_buffer;
         $self->{text} = $textbuffer;
 
-        $textbuffer->create_tag( "bold",   font       => "Courier Bold 9", );
-        $textbuffer->create_tag( "normal", font       => "Courier 9", );
-        $textbuffer->create_tag( "italic", font       => "Courier Italic 9", );
+        $textbuffer->create_tag( "bold",   font       => "Courier Bold 12", );
+        $textbuffer->create_tag( "normal", font       => "Courier 12", );
+        $textbuffer->create_tag( "italic", font       => "Courier Italic 12", );
         $textbuffer->create_tag( "blue",   foreground => "blue" );
 
         # create a mark at the end of the buffer, with right gravity,
@@ -247,11 +247,10 @@ sub on_toolbutton_about_clicked {
         Gtk3::Window->new,
         program_name => 'AlignDB GUI3',
         version      => '0,9',
-        copyright    => "(C) 2004-2015 WANG, Qiang",
+        copyright    => "(C) 2004-2015 Qiang Wang",
         authors      => ['Qiang Wang <wangq@nju.edu.cn>'],
-        comments     => "The third generation of GUI interface for AlignDB",
+        comments     => "The GUI interface for AlignDB",
         title        => "About AlignDB GUI3",
-        website      => "http://ega.nju.edu.cn",
         wrap_license => TRUE,
         license =>
             "This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.\n",
@@ -327,39 +326,27 @@ sub dialog_taxon {
     $label->set_alignment( 0, 0.5 );
     $label->set_justify('left');
 
-    # read out normal taxons and put them into listmodel
-    my $file = "$FindBin::Bin/../data/taxon.csv";
-    my $csv = Text::CSV_XS->new( { binary => 1, eol => "\n" } );
-    open my $csv_fh, "<", $file or die "$file: $!";
-    $csv->getline($csv_fh);    # bypass title line
+    # put common names to listmodel
+    my $model = Gtk3::ListStore->new('Glib::String');
+    my @common_names;
+    for my $line ( path( $FindBin::RealBin, "..", "data", "chr_length.csv" )->lines ) {
+        my ($name) = split( /,/, $line );
+        push @common_names, $name;
 
-    my $model = Gtk3::ListStore->new( 'Glib::Int', 'Glib::String', 'Glib::String' );
-    while ( my $row = $csv->getline($csv_fh) ) {
-        my $id      = $row->[0];
-        my $species = $row->[1] . ' ' . $row->[2];
-        my $name    = $row->[4];
+    }
+    @common_names = uniq(@common_names);
+    for (@common_names) {
 
         # The iter is a pointer in the treestore. We use to add data.
         my $iter = $model->append;
-        $model->set(
-            $iter,
-            0 => $id,
-            1 => $name,
-            2 => $species,
-        );
+        $model->set( $iter, 0 => $_, );
     }
-    close $csv_fh;
 
     my $treeview = Gtk3::TreeView->new_with_model($model);
 
     # Add columns
-    $treeview->insert_column_with_attributes( 0, "id",   Gtk3::CellRendererText->new, text => 0 );
-    $treeview->insert_column_with_attributes( 1, "name", Gtk3::CellRendererText->new, text => 1 );
-    $treeview->insert_column_with_attributes( 2, "species", Gtk3::CellRendererText->new,
-        text => 2 );
+    $treeview->insert_column_with_attributes( 0, "name", Gtk3::CellRendererText->new, text => 0 );
     $treeview->get_column(0)->set_sort_column_id(0);
-    $treeview->get_column(1)->set_sort_column_id(1);
-    $treeview->get_column(2)->set_sort_column_id(2);
 
     # get the Gtk3::TreeSelection of $treeview
     my $treeselection = $treeview->get_selection;
@@ -380,19 +367,18 @@ sub dialog_taxon {
 
     # get response
     my $response = $dialog->run;
-    my ( $id, $name );
+    my $name;
     if ( $response eq 'ok' ) {
         my $iter = $treeselection->get_selected;
         if ( defined $iter ) {
 
             # we want data at the model's columns where the iter is pointing
-            $id   = $model->get( $iter, 0 );
-            $name = $model->get( $iter, 1 );
+            $name = $model->get( $iter, 0 );
         }
     }
     $dialog->destroy;
 
-    return ( $id, $name );
+    return $name;
 }
 
 sub dialog_choose_db {
@@ -606,10 +592,9 @@ sub on_button_db_meta_clicked {
 sub on_button_load_target_clicked {
     my $self = shift;
 
-    my ( $id, $name ) = $self->dialog_taxon;
+    my $name = $self->dialog_taxon;
 
-    if ( defined $id and defined $name ) {
-        $self->set_value( "entry_target_id",   $id );
+    if ( defined $name ) {
         $self->set_value( "entry_target_name", $name );
     }
 
@@ -619,10 +604,9 @@ sub on_button_load_target_clicked {
 sub on_button_load_query_clicked {
     my $self = shift;
 
-    my ( $id, $name ) = $self->dialog_taxon;
+    my $name = $self->dialog_taxon;
 
-    if ( defined $id and defined $name ) {
-        $self->set_value( "entry_query_id",   $id );
+    if ( defined $name ) {
         $self->set_value( "entry_query_name", $name );
     }
 
@@ -792,7 +776,7 @@ sub on_button_auto_stat_file_common_clicked {
     my $self = shift;
 
     my $db_name = $self->get_value("entry_db_name");
-    my $outfile = path($FindBin::Bin, '..', 'stat', "$db_name.common.xlsx")->absolute->stringify;
+    my $outfile = path( $FindBin::Bin, '..', 'stat', "$db_name.common.xlsx" )->absolute->stringify;
     $self->set_value( "entry_stat_file_common", $outfile );
 
     return;
@@ -802,7 +786,7 @@ sub on_button_auto_stat_file_gc_clicked {
     my $self = shift;
 
     my $db_name = $self->get_value("entry_db_name");
-    my $outfile = path($FindBin::Bin, '..', 'stat', "$db_name.gc.xlsx")->absolute->stringify;
+    my $outfile = path( $FindBin::Bin, '..', 'stat', "$db_name.gc.xlsx" )->absolute->stringify;
     $self->set_value( "entry_stat_file_gc", $outfile );
 
     return;
@@ -812,7 +796,7 @@ sub on_button_auto_stat_file_multi_clicked {
     my $self = shift;
 
     my $db_name = $self->get_value("entry_db_name");
-    my $outfile = path($FindBin::Bin, '..', 'stat', "$db_name.multi.xlsx")->absolute->stringify;
+    my $outfile = path( $FindBin::Bin, '..', 'stat', "$db_name.multi.xlsx" )->absolute->stringify;
     $self->set_value( "entry_stat_file_multi", $outfile );
 
     return;
