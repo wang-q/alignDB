@@ -102,7 +102,7 @@ Stats of pairwise and multiple alignments are minimal.
     cd ~/data/alignment/example/scer
 
     # pop_prep.pl
-    perl ~/Scripts/withncbi/pop/pop_prep.pl -p 12 -i scer_test.yml
+    perl ~/Scripts/withncbi/pop/pop_prep.pl -p 8 -i scer_test.yml
 
     sh 01_file.sh
     sh 02_rm.sh
