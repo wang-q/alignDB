@@ -12,18 +12,17 @@ use AlignDB::IntSpan;
 use AlignDB::Window;
 use AlignDB::Util qw(:all);
 
-has 'mysql'  => ( is => 'ro', isa => 'Str' );    # e.g. 'alignDB:202.119.43.5'
-has 'server' => ( is => 'ro', isa => 'Str' );    # e.g. '202.119.43.5'
-has 'db'     => ( is => 'ro', isa => 'Str' );    # e.g. 'alignDB'
-has 'user'   => ( is => 'ro', isa => 'Str' );    # database username
-has 'passwd' => ( is => 'ro', isa => 'Str' );    # database password
-has 'dbh'    => ( is => 'ro', isa => 'Ref' );    # store database handle here
-has 'window_maker' => ( is => 'ro', isa => 'Object' );   # sliding windows maker
+has 'mysql'        => ( is => 'ro', isa => 'Str' );       # e.g. 'alignDB:202.119.43.5'
+has 'server'       => ( is => 'ro', isa => 'Str' );       # e.g. '202.119.43.5'
+has 'db'           => ( is => 'ro', isa => 'Str' );       # e.g. 'alignDB'
+has 'user'         => ( is => 'ro', isa => 'Str' );       # database username
+has 'passwd'       => ( is => 'ro', isa => 'Str' );       # database password
+has 'dbh'          => ( is => 'ro', isa => 'Ref' );       # store database handle here
+has 'window_maker' => ( is => 'ro', isa => 'Object' );    # sliding windows maker
 has 'threshold' => ( is => 'ro', isa => 'Int', default => sub {5_000} );
 
-has 'caching_id' => ( is => 'ro', isa => 'Int' );        # caching seqs
-has 'caching_seqs' =>
-    ( is => 'ro', isa => 'ArrayRef[Str]', default => sub { [] } );
+has 'caching_id' => ( is => 'ro', isa => 'Int' );                                     # caching seqs
+has 'caching_seqs' => ( is => 'ro', isa => 'ArrayRef[Str]', default => sub { [] } );
 
 # target info
 has 'caching_info' => ( is => 'ro', isa => 'HashRef', default => sub { {} } );
@@ -135,11 +134,9 @@ sub _insert_seq {
     );
 
     $seq_insert->execute(
-        $seq_info->{chr_id},     $seq_info->{align_id},
-        $seq_info->{chr_start},  $seq_info->{chr_end},
-        $seq_info->{chr_strand}, $seq_info->{length},
-        $seq_info->{seq},        $seq_info->{gc},
-        $seq_info->{runlist},
+        $seq_info->{chr_id},  $seq_info->{align_id},   $seq_info->{chr_start},
+        $seq_info->{chr_end}, $seq_info->{chr_strand}, $seq_info->{length},
+        $seq_info->{seq},     $seq_info->{gc},         $seq_info->{runlist},
     );
 
     my $seq_id = $self->last_insert_id;
@@ -355,10 +352,9 @@ sub _insert_indel {
     my $prev_indel_id = 0;
     for (@indel_sites) {
         $indel_insert->execute(
-            $prev_indel_id, $align_id,         $_->{start},
-            $_->{end},      $_->{length},      $_->{seq},
-            $_->{all_seqs}, $_->{left_extand}, $_->{right_extand},
-            $_->{gc},       $_->{freq},        $_->{occured},
+            $prev_indel_id,     $align_id, $_->{start},    $_->{end},
+            $_->{length},       $_->{seq}, $_->{all_seqs}, $_->{left_extand},
+            $_->{right_extand}, $_->{gc},  $_->{freq},     $_->{occured},
             $_->{type},
         );
         ($prev_indel_id) = $self->last_insert_id;
@@ -531,8 +527,7 @@ sub insert_isw {
 
         my $window_maker = $self->window_maker;
 
-        my @isws = $window_maker->interval_window( $align_set, $interval_start,
-            $interval_end );
+        my @isws = $window_maker->interval_window( $align_set, $interval_start, $interval_end );
 
         for my $isw (@isws) {
             my $isw_set    = $isw->{set};
@@ -552,10 +547,9 @@ sub insert_isw {
             }
             my $isw_stat = $self->get_slice_stat( $align_id, $isw_set );
             $isw_insert->execute(
-                $indel_id,      $prev_indel_id,   $isw_indel_id,
-                $isw_start,     $isw_end,         $isw_length,
-                $isw->{type},   $isw->{distance}, $isw->{density},
-                $isw_stat->[3], $isw_stat->[7],   $isw_stat->[8],
+                $indel_id,       $prev_indel_id, $isw_indel_id,  $isw_start,
+                $isw_end,        $isw_length,    $isw->{type},   $isw->{distance},
+                $isw->{density}, $isw_stat->[3], $isw_stat->[7], $isw_stat->[8],
                 $isw_stat->[9],
             );
         }
@@ -841,8 +835,7 @@ sub insert_ssw {
                 $d_nosnp   /= $ssw_set_member_number;
                 $d_complex /= $ssw_set_member_number;
 
-                my ($cur_window_id)
-                    = $self->insert_window( $align_id, $ssw_set );
+                my ($cur_window_id) = $self->insert_window( $align_id, $ssw_set );
 
                 $ssw_insert->execute( $snp_id, $cur_window_id, $ssw_type,
                     $ssw_distance, $d_snp, $d_nosnp, $d_complex );
@@ -929,26 +922,17 @@ sub parse_axt_file {
     my $infile = shift;
     my $opt    = shift;
 
-    my $target_taxon_id = $opt->{target_taxon_id};
-    my $query_taxon_id  = $opt->{query_taxon_id};
-    my $threshold       = $opt->{threshold};
-    my $gzip            = $opt->{gzip};
+    my $target_name = $opt->{target_name};
+    my $query_name  = $opt->{query_name};
+    my $threshold   = $opt->{threshold};
 
-    my $target_name      = $self->get_name_of($target_taxon_id);
-    my $query_name       = $self->get_name_of($query_taxon_id);
-    my $target_chr_id_of = $self->get_chr_id_hash($target_taxon_id);
-    my $query_chr_id_of  = $self->get_chr_id_hash($query_taxon_id);
+    my $target_chr_id_of = $self->get_chr_id_hash($target_name);
+    my $query_chr_id_of  = $self->get_chr_id_hash($query_name);
 
     # minimal length
     $threshold ||= $self->threshold;
 
-    my $in_fh;
-    if ( !$gzip ) {
-        open $in_fh, '<', $infile;
-    }
-    else {
-        $in_fh = IO::Zlib->new( $infile, "rb" );
-    }
+    my $in_fh = IO::Zlib->new( $infile, "rb" );
 
     while (1) {
         my $summary_line = <$in_fh>;
@@ -964,22 +948,19 @@ sub parse_axt_file {
 
         next if length $first_line < $threshold;
 
-        my ($align_serial, $first_chr,    $first_start,
-            $first_end,    $second_chr,   $second_start,
-            $second_end,   $query_strand, $align_score,
+        my ($align_serial, $first_chr,  $first_start,  $first_end, $second_chr,
+            $second_start, $second_end, $query_strand, $align_score,
         ) = split /\s+/, $summary_line;
 
         my $info_refs = [
-            {   taxon_id   => $target_taxon_id,
-                name       => $target_name,
+            {   name       => $target_name,
                 chr_name   => $first_chr,
                 chr_id     => $target_chr_id_of->{$first_chr},
                 chr_start  => $first_start,
                 chr_end    => $first_end,
                 chr_strand => '+',
             },
-            {   taxon_id   => $query_taxon_id,
-                name       => $query_name,
+            {   name       => $query_name,
                 chr_name   => $second_chr,
                 chr_id     => $query_chr_id_of->{$second_chr},
                 chr_start  => $second_start,
@@ -991,33 +972,20 @@ sub parse_axt_file {
         $self->add_align( $info_refs, [ $first_line, $second_line ], );
     }
 
-    if ( !$gzip ) {
-        close $in_fh;
-    }
-    else {
-        $in_fh->close;
-    }
+    $in_fh->close;
 
     return;
 }
 
 # blocked fasta format
 sub parse_block_fasta_file {
-    my $self   = shift;
+    my $self    = shift;
     my $in_file = shift;
-    my $opt    = shift;
+    my $opt     = shift;
 
-    my $id_of     = $opt->{id_of};
     my $threshold = $opt->{threshold};
-    my $gzip      = $opt->{gzip};
 
-    my $in_fh;
-    if ( !$gzip ) {
-        open $in_fh, '<', $in_file;
-    }
-    else {
-        $in_fh = IO::Zlib->new( $in_file, "rb" );
-    }
+    my $in_fh = IO::Zlib->new( $in_file, "rb" );
 
     my $content = '';
     while ( my $line = <$in_fh> ) {
@@ -1044,18 +1012,15 @@ sub parse_block_fasta_file {
             #S288C:
             #  chr_end: 667886
             #  chr_id: 265
-            #  chr_name: chrIV
+            #  chr_name: IV
             #  chr_start: 652404
             #  chr_strand: +
             #  name: S288C
-            #  taxon_id: 4932
             my $info_refs = [];
             for my $header (@headers) {
                 my $info_ref = decode_header($header);
-                $info_ref->{taxon_id} = $id_of->{ $info_ref->{name} };
                 $info_ref->{chr_id}
-                    = $self->get_chr_id_hash( $info_ref->{taxon_id} )
-                    ->{ $info_ref->{chr_name} };
+                    = $self->get_chr_id_hash( $info_ref->{name} )->{ $info_ref->{chr_name} };
 
                 push @{$info_refs}, $info_ref;
             }
@@ -1067,12 +1032,7 @@ sub parse_block_fasta_file {
         }
     }
 
-    if ( !$gzip ) {
-        close $in_fh;
-    }
-    else {
-        $in_fh->close;
-    }
+    $in_fh->close;
 
     return;
 }
@@ -1180,11 +1140,7 @@ sub get_names {
                     INNER JOIN
                 _TABLE_ ON s.seq_id = _TABLE_.seq_id
                     INNER JOIN
-                (SELECT 
-                    c.taxon_id, t.common_name, c.chr_id
-                FROM
-                    chromosome c
-                INNER JOIN taxon t ON c.taxon_id = t.taxon_id) c ON c.chr_id = s.chr_id
+                chromosome c ON c.chr_id = s.chr_id
             WHERE
                 s.align_id = ?
         };
@@ -1204,14 +1160,6 @@ sub get_names {
     return (@names);
 }
 
-##################################################
-# Usage      : $self->get_taxon_ids;
-# Purpose    : get target_taxon_id, query_taxon_id & ref_taxon_id
-# Returns    : ( $target_taxon_id, $query_taxon_id, $ref_taxon_id )
-# Parameters : none
-# Throws     : no exceptions
-# Comments   : none
-# See Also   : n/a
 sub get_taxon_ids {
     my $self = shift;
     my $align_id = shift || 1;
@@ -1228,11 +1176,7 @@ sub get_taxon_ids {
                     INNER JOIN
                 _TABLE_ ON s.seq_id = _TABLE_.seq_id
                     INNER JOIN
-                (SELECT 
-                    c.taxon_id, t.common_name, c.chr_id
-                FROM
-                    chromosome c
-                INNER JOIN taxon t ON c.taxon_id = t.taxon_id) c ON c.chr_id = s.chr_id
+                chromosome c ON c.chr_id = s.chr_id
             WHERE
                 s.align_id = ?
         };
@@ -1250,27 +1194,6 @@ sub get_taxon_ids {
     return (@ids);
 }
 
-sub update_names {
-    my $self    = shift;
-    my $name_of = shift;
-
-    my $dbh = $self->dbh;
-
-    my $query = q{
-        UPDATE taxon
-        SET common_name = ?
-        WHERE taxon_id = ?
-    };
-
-    my $sth = $dbh->prepare($query);
-    for my $taxon_id ( keys %{$name_of} ) {
-        $sth->execute( $name_of->{$taxon_id}, $taxon_id );
-    }
-    $sth->finish;
-
-    return;
-}
-
 sub get_name_of {
     my $self     = shift;
     my $taxon_id = shift;
@@ -1278,8 +1201,8 @@ sub get_name_of {
     my $dbh = $self->dbh;
 
     my $query = q{
-        select common_name
-        from taxon
+        select distinct common_name
+        from chromosome
         where taxon_id = ?
     };
 
@@ -1305,8 +1228,7 @@ sub get_sets {
         }
     );
     $sth->execute($align_id);
-    my ( $align_length, $comparable_runlist, $indel_runlist )
-        = $sth->fetchrow_array;
+    my ( $align_length, $comparable_runlist, $indel_runlist ) = $sth->fetchrow_array;
     $sth->finish;
 
     my $align_set      = AlignDB::IntSpan->new("1-$align_length");
@@ -1317,14 +1239,13 @@ sub get_sets {
 }
 
 sub get_chr_id_hash {
-    my $self     = shift;
-    my $taxon_id = shift;
+    my $self        = shift;
+    my $common_name = shift;
 
-    my %chr_id = ();
-    my $dbh    = $self->dbh;
-    my $chromosome
-        = $dbh->prepare(q{SELECT * FROM chromosome WHERE taxon_id = ?});
-    $chromosome->execute($taxon_id);
+    my %chr_id     = ();
+    my $dbh        = $self->dbh;
+    my $chromosome = $dbh->prepare(q{SELECT * FROM chromosome WHERE common_name = ?});
+    $chromosome->execute($common_name);
     while ( my $ref = $chromosome->fetchrow_hashref ) {
         $chr_id{ $ref->{chr_name} } = $ref->{chr_id};
     }
@@ -1417,8 +1338,7 @@ sub insert_window {
     # $set_indel is equal to $window_span - 1
     my $window_indel;
     if ($internal_indel) {
-        my ( $set_indel, $real_indel )
-            = $self->get_slice_indel( $align_id, $window_set );
+        my ( $set_indel, $real_indel ) = $self->get_slice_indel( $align_id, $window_set );
         $window_indel = $set_indel + $real_indel;
     }
     else {
@@ -1430,10 +1350,9 @@ sub insert_window {
 
     my $window_stat = $self->get_slice_stat( $align_id, $window_set );
     $window_insert->execute(
-        $align_id,         $window_start,     $window_end,
-        $window_length,    $window_runlist,   $window_stat->[1],
-        $window_stat->[2], $window_stat->[3], $window_indel,
-        $window_stat->[7], $window_stat->[8], $window_stat->[9],
+        $align_id,       $window_start,     $window_end,       $window_length,
+        $window_runlist, $window_stat->[1], $window_stat->[2], $window_stat->[3],
+        $window_indel,   $window_stat->[7], $window_stat->[8], $window_stat->[9],
     );
 
     return $self->last_insert_id;
@@ -1463,14 +1382,6 @@ sub execute_sql {
     }
 
     $sth->execute(@$bind_value);
-}
-
-sub index_isw_indel_id {
-    my $self = shift;
-
-    my $query = "CREATE INDEX indel_isw_id_FK ON isw ( isw_indel_id );";
-    $self->execute_sql($query);
-    return;
 }
 
 ##################################################
@@ -1686,14 +1597,6 @@ sub get_align_ids {
     return $align_ids;
 }
 
-##################################################
-# Usage      : $self->get_align_ids_of_chr($chr_id);
-# Purpose    : get an array of align_ids of a chr
-# Returns    : $tbl_ary_ref ( \@align_ids)
-# Parameters : none
-# Throws     : no exceptions
-# Comments   : none
-# See Also   : n/a
 sub get_align_ids_of_chr {
     my $self   = shift;
     my $chr_id = shift;
@@ -1759,7 +1662,7 @@ sub get_target_info {
         my $dbh = $self->dbh;
 
         my $query = q{
-            SELECT c.taxon_id,
+            SELECT c.common_name,
                    c.chr_id,
                    c.chr_name,
                    c.chr_length,
@@ -1795,7 +1698,7 @@ sub get_queries_info {
     my $dbh = $self->dbh;
 
     my $query = q{
-        SELECT c.taxon_id,
+        SELECT c.common_name,
                c.chr_id,
                c.chr_name,
                c.chr_length,
@@ -1826,14 +1729,6 @@ sub get_queries_info {
     return @array;
 }
 
-##################################################
-# Usage      : $self->get_target_chr_info($align_id);
-# Purpose    : get target chr_id, chr_name, chr_length
-# Returns    : ( $chr_id, $chr_name, $chr_length )
-# Parameters : $align_id
-# Throws     : no exceptions
-# Comments   : none
-# See Also   : get_query_chr_info
 sub get_target_chr_info {
     my $self     = shift;
     my $align_id = shift;
@@ -1856,14 +1751,6 @@ sub get_target_chr_info {
     return ( $chr_id, $chr_name, $chr_length );
 }
 
-##################################################
-# Usage      : $self->get_query_chr_info($align_id);
-# Purpose    : get query chr_id, chr_name, chr_length
-# Returns    : ( $chr_id, $chr_name, $chr_length )
-# Parameters : $align_id
-# Throws     : no exceptions
-# Comments   : none
-# See Also   : get_target_chr_info
 sub get_query_chr_info {
     my $self     = shift;
     my $align_id = shift;
@@ -1886,14 +1773,6 @@ sub get_query_chr_info {
     return ( $chr_id, $chr_name, $chr_length );
 }
 
-##################################################
-# Usage      : $self->get_chrs($goal);
-# Purpose    : get all chrs of $goal (target or query)
-# Returns    : arrayref of [ $chr_id, $chr_name, $chr_length ]
-# Parameters : none
-# Throws     : no exceptions
-# Comments   : none
-# See Also   : get_chr_info
 sub get_chrs {
     my $self = shift;
     my $goal = shift || 'target';
@@ -1951,7 +1830,8 @@ sub process_message {
 
     my $info = $self->get_target_info($align_id);
 
-    printf "Process align [%s] at %s(%s):%s-%s\n", $align_id, $info->{chr_name},
+    printf "Process align [%s] at %s.%s(%s):%s-%s\n", $align_id, $info->{common_name},
+        $info->{chr_name},
         $info->{chr_strand}, $info->{chr_start}, $info->{chr_end};
 
     return;
@@ -2016,8 +1896,8 @@ __END__
 
 =head1 NAME
 
-    AlignDB - convert alignment filea to an indel-concentrated RDBMS
-              (Default format is blastZ F<.axt>)
+AlignDB - convert alignment filea to an indel-concentrated RDBMS
+          (Default format is blastZ F<.axt>)
 
 =head1 SYNOPSIS
 
@@ -2027,11 +1907,6 @@ __END__
         user           => $username,
         passwd         => $password,
     );
-
-=head1 DESCRIPTION
-
-C<AlignDB> is a simple class to convert alignment files to an indel-concentrated
-RDBMS.
 
 =head1 AUTHOR
 
@@ -2043,4 +1918,4 @@ Email: wangq{at}nju{dot}edu{dot}cn
 
 Internal methods are usually preceded with a _
 
-
+=cut

@@ -27,22 +27,7 @@ my $stopwatch = AlignDB::Stopwatch->new(
 
 two_way_batch.pl - Batch process two-way alignDB
 
-=head1 SYNOPSIS
-
-    perl two_way_batch.pl -d S288CvsRM11 -t "4932,S288C" -q "285006,RM11" -da d:\data\alignment\yeast_combine\S288CvsRM11\ -lt 5000 --parallel 4 --run basic
-    perl two_way_batch.pl -d S288CvsSpar -t "4932,S288C" -q "226125,Spar" -da d:\data\alignment\yeast_combine\S288CvsSpar\ -lt 5000 --parallel 4 --run basic
-    
-    perl two_way_batch.pl -d alignDB -e yeast_65 -t "4932,S288C" -q "285006,RM11" -da ../data/S288CvsRM11 -lt 5000 --parallel 8 --run 1,2,40
-    
-    perl two_way_batch.pl -d HumanvsChimp -e human_65 -t "9606,Human" -q "9598,Chimp" -da /home/wangq/data/UCSC/Human19vsChimp2 -lt 5000 -st 0 --parallel 8 --run basic
-
 =cut
-
-# target, query init values
-my $target_taxon_id = $Config->{taxon}{target_taxon_id};
-my $target_name     = $Config->{taxon}{target_name};
-my $query_taxon_id  = $Config->{taxon}{query_taxon_id};
-my $query_name      = $Config->{taxon}{query_name};
 
 GetOptions(
     'help|?' => sub { HelpMessage(0) },
@@ -53,15 +38,14 @@ GetOptions(
     'password|p=s'          => \( my $password         = $Config->{database}{password} ),
     'ensembl|e=s'           => \( my $ensembl_db       = $Config->{database}{ensembl} ),
     'dir_align|da=s'        => \( my $dir_align        = $Config->{taxon}{dir_align} ),
-    'target|t=s'            => \( my $target           = $target_taxon_id . "," . $target_name ),
-    'query|q=s'             => \( my $query            = $query_taxon_id . "," . $query_name ),
+    'target|t=s'            => \( my $target_name      = $Config->{taxon}{target_name} ),
+    'query|q=s'             => \( my $query_name       = $Config->{taxon}{query_name} ),
     'gff_files=s'           => \my @gff_files,
     'rm_gff_files=s'        => \my @rm_gff_files,
     'parallel=i'            => \( my $parallel         = $Config->{generate}{parallel} ),
     'batch=i'               => \( my $batch_number     = $Config->{generate}{batch} ),
     'length_threshold|lt=i' => \( my $length_threshold = $Config->{generate}{length_threshold} ),
     'run|r=s' => \( my $run        = "common" ),                                     # running tasks
-    'taxon=s' => \( my $init_taxon = "$FindBin::RealBin/../data/taxon.csv" ),
     'chr=s'   => \( my $init_chr   = "$FindBin::RealBin/../data/chr_length.csv" ),
 ) or HelpMessage(1);
 
@@ -112,7 +96,6 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . ( $init_taxon ? " -taxon $init_taxon" : "" )
         . ( $init_chr   ? " -chr $init_chr"     : "" ),
     2 => "perl $FindBin::Bin/../init/gen_alignDB.pl"
         . " -s $server"
@@ -120,8 +103,8 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " --db $db_name"
-        . " -t \"$target\""
-        . " -q \"$query\""
+        . " -t $target_name"
+        . " -q $query_name"
         . " --da $dir_align"
         . " -lt $length_threshold"
         . " --parallel $parallel",

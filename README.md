@@ -11,60 +11,60 @@ cd ~/Scripts/alignDB
 
 1. `perl init/init_alignDB.pl -d S288cvsRM11`
 
-    ```
-    ==============================
-    Create DB skeleton
-    ==============================
-    
+    ```text
     ==============================
     Init S288cvsRM11...
-    Start at: Fri Jul 17 22:57:41 2015
+    Start at: Fri Jan  8 17:09:36 2016
     
-    Use /Users/wangq/Scripts/alignDB/init/../data/taxon.csv to Init table taxon
-    Found a row: taxon_id = 9606, genus = Homo, species = sapiens, common_name = Human
     
-    Use /Users/wangq/Scripts/alignDB/init/../data/chr_length.csv to Init table chromosome
-    Found a row: taxon_id = 3702, chr_name = chrUn, chr_length = 999999999
+    ==> Create DB skeleton
     
-    End at: Fri Jul 17 22:57:41 2015
-    Runtime 0 seconds.
+    # dropdb
+    # createdb
+    # init
+    
+    ==> Use [/Users/wangq/Scripts/alignDB/init/../data/chr_length.csv] to Init table chromosome
+    
+    Found a row: taxon_id = 9606, common_name = Human chr_name = chrUn, chr_length = 999999999
+    
+    End at: Fri Jan  8 17:09:37 2016
+    Runtime 1 second.
     ==============================
     ```
 
-2. `perl init/gen_alignDB.pl -d S288cvsRM11 -t "559292,S288c" -q "285006,RM11" -da data/S288CvsRM11 -lt 5000 --parallel 2`
+2. `perl init/gen_alignDB.pl -d S288cvsRM11 -t S288c -q RM11 -da data/S288CvsRM11_1a -lt 5000 --parallel 2`
 
     ```
     ----Total .axt Files:    0----
     
-    ----Total .axt.gz Files:   17----
     
-    ===Do task 1 out of 17===
-    ===Do task 2 out of 17===
+    ----Total .axt.gz Files:   16----
     
-    ==============================
-    Process data/S288CvsRM11/axtNet/chrI.net.axt.gz...
-    ==============================
+    ===Do task 1 out of 16===
+    ===Do task 2 out of 16===
     
-    ==============================
-    Process data/S288CvsRM11/axtNet/chrII.net.axt.gz...
-    ==============================
+    ==> Process data/S288CvsRM11_1a/axtNet/I.net.axt.gz...
     
-    Prosess align [1] at S288c.chrI(+):17221-24930
-    Prosess align [2] at S288c.chrII(+):9425-29638
-    Prosess align [3] at S288c.chrI(+):27070-160233
+    
+    ==> Process data/S288CvsRM11_1a/axtNet/II.net.axt.gz...
+    
+    Prosess align [1] at S288c.I(+):17221-24930
+    Prosess align [2] at S288c.II(+):9425-29638
+    Prosess align [3] at S288c.I(+):27070-160233
+
     
     ...
     
-    Prosess align [204] at S288c.chrXVI(+):927529-936894
+    Prosess align [205] at S288c.XVI(+):856555-927349
+    Prosess align [206] at S288c.XVI(+):927529-936894
     
-    ==============================
-    data/S288CvsRM11/axtNet/chrXVI.net.axt.gz has been processed.
-    Runtime 10 seconds.
-    ==============================
+    ==> data/S288CvsRM11_1a/axtNet/XVI.net.axt.gz has been processed.
+    ==> Runtime 7 seconds.
+    
     
     All files have been processed.
-    End at: Fri Jul 17 23:05:29 2015
-    Runtime 1 minute and 3 seconds.
+    End at: Fri Jan  8 17:11:55 2016
+    Runtime 45 seconds.
     ==============================
     ```
 
@@ -138,7 +138,7 @@ cd ~/Scripts/alignDB
     ==============================
     ```
 
-6. `perl init/update_feature.pl -d S288cvsRM11 -e yeast_65 --parallel 2`
+6. `perl init/update_feature.pl -d S288cvsRM11 -e yeast_82 --parallel 2`
 
     ```
     ==============================
@@ -232,8 +232,8 @@ cd ~/Scripts/alignDB
     ```bash
     perl extra/two_way_batch.pl \
         -d S288cvsRM11 \
-        -t "559292,S288c" -q "285006,RM11" \
-        -da data/S288CvsRM11 \
-        -e yeast_65 \
+        -t S288c -q RM11 \
+        -da data/S288cvsRM11_1a \
+        -e yeast_82 \
         -lt 5000 --parallel 2
     ```

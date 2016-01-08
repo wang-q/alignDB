@@ -197,14 +197,11 @@ sub read_config {
     $self->set_value( "entry_length_threshold", $Config->{generate}{length_threshold} );
 
     # axt
-    $self->set_value( "entry_target_id",     $Config->{taxon}{target_taxon_id} );
     $self->set_value( "entry_target_name",   $Config->{taxon}{target_name} );
-    $self->set_value( "entry_query_id",      $Config->{taxon}{query_taxon_id} );
     $self->set_value( "entry_query_name",    $Config->{taxon}{query_name} );
     $self->set_value( "entry_dir_align_axt", path( $Config->{taxon}{dir_align} )->stringify );
 
     # fas
-    $self->set_value( "entry_file_id2name",  path( $Config->{taxon}{file_id2name} )->stringify );
     $self->set_value( "entry_dir_align_fas", path( $Config->{taxon}{dir_align_fas} )->stringify );
 
     # insert GC
@@ -473,13 +470,10 @@ sub dialog_choose_db {
             passwd => $password,
         );
 
-        my ( $target_id,   $query_id )   = $obj->get_taxon_ids;
         my ( $target_name, $query_name ) = $obj->get_names;
 
         $self->append_text("choose db succeeded\n");
         return {
-            target_id   => $target_id,
-            query_id    => $query_id,
             target_name => $target_name,
             query_name  => $query_name,
             db_name     => $db_name,

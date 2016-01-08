@@ -43,19 +43,13 @@ gen_alignDB.pl - Generate alignDB from axt files
         --username  -u  STR     username
         --password  -p  STR     password
         --dir_align -da STR     .axt files' directory
-        --target        STR     "target_taxon_id,target_name"
-        --query         STR     "query_taxon_id,query_name"
+        --target        STR     target_name
+        --query         STR     query_name
         --length    -l  INT     threshold of alignment length
         --parallel      INT     run in parallel mode
         --gzip                  open .axt.gz files
 
 =cut
-
-# target, query init values
-my $target_taxon_id = $Config->{taxon}{target_taxon_id};
-my $target_name     = $Config->{taxon}{target_name};
-my $query_taxon_id  = $Config->{taxon}{query_taxon_id};
-my $query_name      = $Config->{taxon}{query_name};
 
 GetOptions(
     'help|?' => sub { HelpMessage(0) },
@@ -65,28 +59,12 @@ GetOptions(
     'username|u=s'       => \( my $username         = $Config->{database}{username} ),
     'password|p=s'       => \( my $password         = $Config->{database}{password} ),
     'dir_align|dir|da=s' => \( my $dir_align        = $Config->{taxon}{dir_align} ),
-    'target=s'           => \( my $target           = $target_taxon_id . "," . $target_name ),
-    'query=s'            => \( my $query            = $query_taxon_id . "," . $query_name ),
+    'target=s'           => \( my $target_name      = $Config->{taxon}{target_name} ),
+    'query=s'            => \( my $query_name       = $Config->{taxon}{query_name} ),
     'length|lt|l=i'      => \( my $length_threshold = $Config->{generate}{length_threshold} ),
     'parallel=i'         => \( my $parallel         = $Config->{generate}{parallel} ),
     'gzip'               => \my $gzip,
 ) or HelpMessage(1);
-
-#----------------------------------------------------------#
-# update names
-#----------------------------------------------------------#
-{
-    my ( $target_taxon_id, $target_name ) = split ",", $target;
-    my ( $query_taxon_id,  $query_name )  = split ",", $query;
-    $target_name = $target_taxon_id unless $target_name;
-    $query_name  = $query_taxon_id  unless $query_name;
-
-    AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    )->update_names( { $target_taxon_id => $target_name, $query_taxon_id => $query_name } );
-}
 
 #----------------------------------------------------------#
 # Search for all files and push their paths to @files
@@ -117,18 +95,14 @@ my $worker = sub {
         passwd => $password,
     );
 
-    my ( $target_taxon_id, ) = split ",", $target;
-    my ( $query_taxon_id, )  = split ",", $query;
-
-    die "target_taxon_id not defined\n" unless $target_taxon_id;
-    die "query_taxon_id not defined\n"  unless $query_taxon_id;
+    die "target_name not defined\n" unless length $target_name;
+    die "query_name not defined\n"  unless length $query_name;
 
     $obj->parse_axt_file(
         $infile,
-        {   target_taxon_id => $target_taxon_id,
-            query_taxon_id  => $query_taxon_id,
-            threshold       => $length_threshold,
-            gzip            => $gzip,
+        {   target_name => $target_name,
+            query_name  => $query_name,
+            threshold   => $length_threshold,
         }
     );
 

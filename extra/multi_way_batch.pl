@@ -29,15 +29,7 @@ multi_way_batch.pl - Batch process multi-way alignDB
 
 =head1 SYNOPSIS
 
-    perl multi_way_batch.pl -d S288CvsThree_10k -e yeast_58 -da F:/S288CvsThree_10k -lt 5000 -st 0 --parallel=6 --run all
-    
-    perl multi_way_batch.pl -d S288CvsTen_10k -e yeast_58 -da F:/S288CvsTen_10k -lt 5000 -st 0 --parallel=6 --run all
-    
-    perl multi_way_batch.pl -d S288CvsSix_10k -r stat
-    
-    perl multi_way_batch.pl -d AthvsFive -da d:\data\alignment\arabidopsis\AthvsFive\ -lt 5000 -st 0 --parallel 4 --run 1-3,21,40
-    
-    perl ~/Scripts/alignDB/extra/multi_way_batch.pl -d AthvsV_mafft --block --id 3702 -da ~/data/alignment/arabidopsis19/AthvsV_mafft -lt 5000 -st 0 --parallel 4 --run 1-3,21,40
+    perl multi_way_batch.pl -d AthvsV_mafft --block -da ~/data/alignment/arabidopsis19/AthvsV_mafft -lt 5000 --parallel 4 --run 1-3,21,40
 
 =cut
 
@@ -53,13 +45,11 @@ GetOptions(
     'outgroup|o'     => \my $outgroup,
     'gff_files=s'    => \my @gff_files,
     'rm_gff_files=s' => \my @rm_gff_files,
-    'id|id_of=s' => \my $file_id_of,    # taxon_id-name mapping file
     'block'      => \my $block,         # input is galaxy style blocked fasta
     'parallel=i' => \( my $parallel = $Config->{generate}{parallel} ),
     'batch=i' => \( my $batch_number = $Config->{generate}{batch} ),
     'length_threshold|lt=i' => \( my $length_threshold = $Config->{generate}{length_threshold} ),
     'run|r=s' => \( my $run        = "common" ),                                     # running tasks
-    'taxon=s' => \( my $init_taxon = "$FindBin::RealBin/../data/taxon.csv" ),
     'chr=s'   => \( my $init_chr   = "$FindBin::RealBin/../data/chr_length.csv" ),
 ) or HelpMessage(1);
 
@@ -110,7 +100,6 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . ( $init_taxon ? " -taxon $init_taxon" : "" )
         . ( $init_chr   ? " -chr $init_chr"     : "" ),
     2 => "perl $FindBin::Bin/../init/gen_alignDB_fas.pl"
         . " -s $server"
@@ -122,7 +111,6 @@ my $dispatch = {
         . " -lt $length_threshold"
         . " --parallel $parallel"
         . " --batch $batch_number"
-        . " --id $file_id_of"
         . ( $outgroup ? " --outgroup" : "" )
         . ( $block    ? " --block"    : "" ),
     3 => undef,
