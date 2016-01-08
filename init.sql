@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     2013/11/16 4:11:44                           */
+/* Created on:     1/8/2016 15:58:19                            */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -40,20 +40,13 @@ ENGINE = MyISAM;
 create table chromosome
 (
    chr_id                         int                            not null AUTO_INCREMENT,
+   common_name                    char(64)                       not null,
    taxon_id                       int,
-   chr_name                       text,
-   chr_length                     int,
+   chr_name                       char(64)                       not null,
+   chr_length                     int                            not null,
    primary key (chr_id)
 )
 ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Index: taxon_chromosome_FK                                   */
-/*==============================================================*/
-create index taxon_chromosome_FK on chromosome
-(
-   taxon_id
-);
 
 /*==============================================================*/
 /* Table: codingsw                                              */
@@ -171,7 +164,6 @@ create table gene
    gene_tc_runlist                text,
    gene_tl_runlist                text,
    gene_description               text,
-   gene_go                        char(64),
    gene_feature4                  double,
    gene_feature5                  double,
    primary key (gene_id),
@@ -244,7 +236,7 @@ create table indel
    right_extand                   int,
    indel_gc                       double,
    indel_freq                     int,
-   indel_occured                  char(128),
+   indel_occured                  text,
    indel_type                     char(8),
    indel_slippage                 double,
    indel_coding                   double,
@@ -488,11 +480,11 @@ create table snp
    snp_pos                        int,
    target_base                    char(1),
    query_base                     char(1),
-   all_bases                      char(128),
+   all_bases                      text,
    ref_base                       char(1),
-   mutant_to                      char(128),
+   mutant_to                      char(64),
    snp_freq                       int,
-   snp_occured                    char(128),
+   snp_occured                    text,
    snp_coding                     double,
    snp_repeats                    double,
    snp_cpg                        double,
@@ -569,20 +561,6 @@ create index sequence_target_FK on target
 );
 
 /*==============================================================*/
-/* Table: taxon                                                 */
-/*==============================================================*/
-create table taxon
-(
-   taxon_id                       int                            not null AUTO_INCREMENT,
-   genus                          text,
-   species                        text,
-   sub_species                    text,
-   common_name                    text,
-   primary key (taxon_id)
-)
-ENGINE = MyISAM;
-
-/*==============================================================*/
 /* Table: window                                                */
 /*==============================================================*/
 create table window
@@ -613,5 +591,16 @@ ENGINE = MyISAM;
 create index align_window_FK on window
 (
    align_id
+);
+
+
+create index common_name_idx on chromosome
+(
+   common_name
+);
+
+create index taxon_id_idx on chromosome
+(
+   taxon_id
 );
 

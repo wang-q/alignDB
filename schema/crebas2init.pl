@@ -1,19 +1,32 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-my $crebas_file = "crebas.sql";
-my $init_file   = "init.sql";
+use Path::Tiny;
+use FindBin;
 
-open my $infh, '<', $crebas_file;
-my $content = do { local $/; <$infh> };
-close $infh;
+my $init_file = "init.sql";
 
+my $content = path( $FindBin::RealBin, "crebas.sql" )->slurp;
+
+$content =~ s/\r//g;
 $content =~ s/type = InnoDB/ENGINE = MyISAM/g;
 $content =~ s/^drop.*$//mg;
-$content =~ s/^alter.*?\;$//smg;
+$content =~ s/alter.+?\;//sg;
 $content =~ s/\n{3,}/\n\n/g;
 
-open my $out, '>', $init_file;
-print $out $content;
-close $out;
+$content .= q{
+create index common_name_idx on chromosome
+(
+   common_name
+);
+
+create index taxon_id_idx on chromosome
+(
+   taxon_id
+);
+
+};
+
+path( $FindBin::RealBin, "init.sql" )->spew($content);
