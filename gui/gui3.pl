@@ -55,9 +55,9 @@ sub BUILD {
         my $textbuffer = $textview->get_buffer;
         $self->{text} = $textbuffer;
 
-        $textbuffer->create_tag( "bold",   font       => "Courier Bold 12", );
-        $textbuffer->create_tag( "normal", font       => "Courier 12", );
-        $textbuffer->create_tag( "italic", font       => "Courier Italic 12", );
+        $textbuffer->create_tag( "bold",   font       => "Courier Bold 10", );
+        $textbuffer->create_tag( "normal", font       => "Courier 10", );
+        $textbuffer->create_tag( "italic", font       => "Courier Italic 10", );
         $textbuffer->create_tag( "blue",   foreground => "blue" );
 
         # create a mark at the end of the buffer, with right gravity,
