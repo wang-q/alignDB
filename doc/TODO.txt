@@ -1,13 +1,7 @@
-* clean certain steps in alignDB
+* merge three_stat and multi_stat
 
-perl clean_step.pl -d alignDB -r 10
-perl clean_step.pl -d alignDB -r gc
+* update_isw_cpg.pl calc wrong isw_cpg_pi
 
-# merge three_stat and multi_stat
+* update insert_ssw.pl from three-way style to multi-way
 
-# update_isw_cpg.pl calc wrong isw_cpg_pi
-
-# update insert_ssw.pl from three-way style to multi-way
-
-# don't trim outgroup only seq to keep complex indel info
-
+* don't trim outgroup only seq to keep complex indel info
