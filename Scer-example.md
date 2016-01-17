@@ -13,6 +13,7 @@ As example for egaz and alignDB. Extract from Scer_wgs of [`OPs-download.md`](ht
     cd ~/data/alignment/example/GENOMES
 
     echo -e '#name\tprefix\torganism\tcontigs' > example_wgs.tsv
+    echo -e "YJM789\tAAFW\tSaccharomyces cerevisiae YJM789\t258" >> example_wgs.tsv
     echo -e "Spar\tAABY\tSaccharomyces paradoxus NRRL Y-17217\t832" >> example_wgs.tsv
     ```
 
@@ -45,17 +46,12 @@ As example for egaz and alignDB. Extract from Scer_wgs of [`OPs-download.md`](ht
         > S288c.seq.csv
 
     perl ~/Scripts/withncbi/taxon/assembly_csv.pl \
-        -f ftp://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/All/GCA_000218975.1.assembly.txt \
-        --nuclear --genbank --scaffold -name EC1118 \
-        > EC1118.seq.csv
-
-    perl ~/Scripts/withncbi/taxon/assembly_csv.pl \
         -f ftp://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/All/GCA_000149365.1.assembly.txt \
         --genbank --scaffold -name RM11_1a \
         > RM11_1a.seq.csv
 
     echo "#strain_name,accession,strain_taxon_id,seq_name" > example.seq.csv
-    cat S288c.seq.csv EC1118.seq.csv RM11_1a.seq.csv \
+    cat S288c.seq.csv RM11_1a.seq.csv \
         | perl -nl -e '/^#/ and next; /^\s*$/ and next; print;' \
         >> example.seq.csv
 
@@ -68,7 +64,7 @@ As example for egaz and alignDB. Extract from Scer_wgs of [`OPs-download.md`](ht
 
 In these steps, I don't use ensembl annotations. Just Assembly and RepeatMasker ones.
 
-Stats of pairwise and multiple alignments are minimal.
+Stats on pairwise and multiple alignments are minimal.
 
 1. `gen_pop_conf.pl`
 
@@ -89,9 +85,8 @@ Stats of pairwise and multiple alignments are minimal.
         --dd ~/data/alignment/example/GENOMES/DOWNLOAD \
         --download "name=S288c;taxon=559292" \
         --download "name=RM11_1a;taxon=285006" \
-        --download "name=EC1118;taxon=643680" \
-        --plan 'name=Scer_n3_Spar;t=S288c;qs=EC1118,RM11_1a,Spar;o=Spar' \
-        --plan 'name=Scer_n3_pop;t=S288c;qs=EC1118,RM11_1a' \
+        --plan 'name=Scer_n3_Spar;t=S288c;qs=RM11_1a,YJM789,Spar;o=Spar' \
+        --plan 'name=Scer_n3_pop;t=S288c;qs=RM11_1a,YJM789' \
         --plan 'name=Scer_n2_Spar;t=S288c;qs=RM11_1a,Spar;o=Spar' \
         -y
     ```
@@ -104,31 +99,31 @@ Stats of pairwise and multiple alignments are minimal.
     # pop_prep.pl
     perl ~/Scripts/withncbi/pop/pop_prep.pl -p 8 -i scer_test.yml
 
-    sh 01_file.sh
-    sh 02_rm.sh
-    sh 03_strain_info.sh
+    bash 01_file.sh
+    bash 02_rm.sh
+    bash 03_strain_info.sh
 
     # plan_ALL.sh
-    sh plan_ALL.sh
+    bash plan_ALL.sh
 
-    sh 1_real_chr.sh
-    sh 3_pair_cmd.sh
-    sh 4_rawphylo.sh
-    sh 5_multi_cmd.sh
-    sh 7_multi_db_only.sh
+    bash 1_real_chr.sh
+    bash 3_pair_cmd.sh
+    bash 4_rawphylo.sh
+    bash 5_multi_cmd.sh
+    bash 7_multi_db_only.sh
 
     # other plans
-    sh plan_Scer_n3_Spar.sh
-    sh 5_multi_cmd.sh
-    sh 7_multi_db_only.sh
+    bash plan_Scer_n3_Spar.sh
+    bash 5_multi_cmd.sh
+    bash 7_multi_db_only.sh
 
-    sh plan_Scer_n3_pop.sh
-    sh 5_multi_cmd.sh
-    sh 7_multi_db_only.sh
+    bash plan_Scer_n3_pop.sh
+    bash 5_multi_cmd.sh
+    bash 7_multi_db_only.sh
 
-    sh plan_Scer_n2_Spar.sh
-    sh 5_multi_cmd.sh
-    sh 7_multi_db_only.sh
+    bash plan_Scer_n2_Spar.sh
+    bash 5_multi_cmd.sh
+    bash 7_multi_db_only.sh
     ```
 
 ## Copy directories and files to example directory
@@ -139,10 +134,9 @@ cd ~/Scripts/alignDB
 cp -R ~/data/alignment/example/scer/Genomes/S288c data/
 
 cp -R ~/data/alignment/example/scer/Pairwise/S288cvsRM11_1a data/
-cp -R ~/data/alignment/example/scer/Pairwise/S288cvsEC1118 data/
+cp -R ~/data/alignment/example/scer/Pairwise/S288cvsYJM789 data/
 cp -R ~/data/alignment/example/scer/Pairwise/S288cvsSpar data/
 
-cp ~/data/alignment/example/scer/id2name.csv data/
 cp ~/data/alignment/example/scer/fake_tree.nwk data/
 ```
 
@@ -164,7 +158,7 @@ perl util/build_ensembl.pl --initdb --db saccharomyces_cerevisiae_core_29_82_4 -
 
 ## Two-way alignments
 
-`-taxon` and `-chr` are omitted because they already exist in default ones.
+`-chr` is omitted because it already exist in default ones.
 
 `--ensembl yeast` means different in step 20 and 22. In step 20, `yeast` is the mysql database name.
 And in step 22, `yeast` is an alias to `saccharomyces_cerevisiae_core_29_82_4`.
@@ -174,7 +168,7 @@ cd ~/Scripts/alignDB/data
 
 # S288cvsRM11_1a
 perl ~/Scripts/alignDB/extra/two_way_batch.pl \
-    -t "559292,S288c" -q "285006,RM11_1a" \
+    -t S288c -q RM11_1a \
     -d S288cvsRM11_1a \
     -da S288cvsRM11_1a \
     -lt 5000 \
@@ -183,7 +177,7 @@ perl ~/Scripts/alignDB/extra/two_way_batch.pl \
 
 # S288cvsSpar
 perl ~/Scripts/alignDB/extra/two_way_batch.pl \
-    -t "559292,S288c" -q "226125,Spar" \
+    -t S288c -q Spar \
     -d S288cvsSpar \
     --ensembl yeast \
     -da S288cvsSpar \
@@ -273,7 +267,6 @@ perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
     -da ScervsRM11_1a_Spar_refined \
     --ensembl yeast \
     --block \
-    --id id2name.csv \
     --outgroup \
     -lt 1000 --parallel 8 --batch 5 \
     --run all
@@ -282,31 +275,6 @@ perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
 ## Slicing
 
 ### Yeast intergenic regions
-
-* two-way (axt)
-
-```bash
-mkdir -p ~/Scripts/alignDB/data/feature
-cd ~/Scripts/alignDB/data/feature
- 
-perl ~/Scripts/alignDB/slice/write_runlist_feature.pl \
-    -d S288cvsRM11_1a -e yeast --feature intergenic -l 500
-
-mkdir axt
-mv S288cvsRM11_1a.intergenic.yml axt
-rm axt/*.axt
-
-perl ~/Scripts/alignDB/slice/write_align_slice.pl \
-    -d S288cvsRM11_1a -f axt/S288cvsRM11_1a.intergenic.yml -t axt
-
-perl ~/Scripts/alignDB/extra/two_way_batch.pl \
-    -d S288cvsRM11_1a_intergenic \
-    -t "559292,S288c" -q "285006,RM11_1a" \
-    -da axt \
-    -lt 1000 \
-    --parallel 8 \
-    --run basic
-```
 
 * multi-way (fas)
 
@@ -326,7 +294,6 @@ perl ~/Scripts/alignDB/slice/write_align_slice.pl \
 
 perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
     -d S288cvsRM11_1a_intergenic \
-    --id ../id2name.csv \
     -da fas \
     --block \
     -lt 1000 \
