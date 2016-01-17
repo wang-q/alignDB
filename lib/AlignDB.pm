@@ -928,6 +928,7 @@ sub parse_axt_file {
 
     my $target_chr_id_of = $self->get_chr_id_hash($target_name);
     my $query_chr_id_of  = $self->get_chr_id_hash($query_name);
+    my $query_length_of  = $self->get_chr_legnth_hash($query_name);
 
     # minimal length
     $threshold ||= $self->threshold;
@@ -951,6 +952,14 @@ sub parse_axt_file {
         my ($align_serial, $first_chr,  $first_start,  $first_end, $second_chr,
             $second_start, $second_end, $query_strand, $align_score,
         ) = split /\s+/, $summary_line;
+
+        if ( $query_strand eq "-" ) {
+            if ( exists $query_length_of->{$second_chr} ) {
+                $second_start = $query_length_of->{$second_chr} - $second_start + 1;
+                $second_end   = $query_length_of->{$second_chr} - $second_end + 1;
+                ( $second_start, $second_end ) = ( $second_end, $second_start );
+            }
+        }
 
         my $info_refs = [
             {   name       => $target_name,
@@ -1242,16 +1251,32 @@ sub get_chr_id_hash {
     my $self        = shift;
     my $common_name = shift;
 
-    my %chr_id     = ();
+    my %id_of      = ();
     my $dbh        = $self->dbh;
     my $chromosome = $dbh->prepare(q{SELECT * FROM chromosome WHERE common_name = ?});
     $chromosome->execute($common_name);
     while ( my $ref = $chromosome->fetchrow_hashref ) {
-        $chr_id{ $ref->{chr_name} } = $ref->{chr_id};
+        $id_of{ $ref->{chr_name} } = $ref->{chr_id};
     }
     $chromosome->finish;
 
-    return \%chr_id;
+    return \%id_of;
+}
+
+sub get_chr_legnth_hash {
+    my $self        = shift;
+    my $common_name = shift;
+
+    my %length_of  = ();
+    my $dbh        = $self->dbh;
+    my $chromosome = $dbh->prepare(q{SELECT * FROM chromosome WHERE common_name = ?});
+    $chromosome->execute($common_name);
+    while ( my $ref = $chromosome->fetchrow_hashref ) {
+        $length_of{ $ref->{chr_name} } = $ref->{chr_length};
+    }
+    $chromosome->finish;
+
+    return \%length_of;
 }
 
 sub get_slice_stat {
