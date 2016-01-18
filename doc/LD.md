@@ -1,19 +1,28 @@
-#----------------------------------------------------------#
-# 1. dup DB
-#----------------------------------------------------------#
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d S288CvsVIII_WGS -g S288CvsVIII_WGS_LD
+# LD between indels and SNPs
 
-#----------------------------------------------------------#
-# 2. update ld
-#----------------------------------------------------------#
-perl /home/wangq/Scripts/alignDB/multi/update_snp_ld.pl -d S288CvsVIII_WGS_LD
+## Yeast
 
-#----------------------------------------------------------#
-# 3. stat
-#----------------------------------------------------------#
-perl ld_stat_factory.pl -s 114.212.202.159 -d S288CvsVIII_WGS_LD -ct 0 -st 0
-perl ld_chart_factory.pl -i S288CvsVIII_WGS_LD.ld.xlsx
+1. dup DB
 
+```bash
+perl ~/Scripts/alignDB/util/dup_db.pl -f ~/data/dumps/mysql/Scer_n8_pop.sql.gz -g Scer_n8_pop_LD
+```
+
+2. update ld
+
+```bash
+perl ~/Scripts/alignDB/extra/update_snp_ld.pl -d Scer_n8_pop_LD
+```
+
+3. stat
+
+```bash
+perl ~/Scripts/alignDB/stat/ld_stat_factory.pl -d Scer_n8_pop_LD
+```
+
+## Others
+
+```bash
 perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d DmelvsXXII -g DmelvsXXII_LD
 perl /home/wangq/Scripts/alignDB/multi/update_snp_ld.pl -d DmelvsXXII_LD
 
@@ -30,19 +39,14 @@ perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d HumanvsXI -g HumanvsXI_LD
 perl /home/wangq/Scripts/alignDB/multi/update_snp_ld.pl -d HumanvsXI_LD
 
 perl ld_stat_factory.pl -s 114.212.202.159 -d DmelvsXXII_LD -ct 0 -st 0
-perl ld_chart_factory.pl -i DmelvsXXII_LD.ld.xlsx
 
 perl ld_stat_factory.pl -s 114.212.202.159 -d AthvsXIX_LD -ct 0 -st 0
-perl ld_chart_factory.pl -i AthvsXIX_LD.ld.xlsx
 
 perl ld_stat_factory.pl -s 114.212.202.159 -d NipvsXXIV_LD -ct 0 -st 0
-perl ld_chart_factory.pl -i NipvsXXIV_LD.ld.xlsx
 
 perl ld_stat_factory.pl -s 114.212.202.159 -d MousevsXIIS_LD -ct 0 -st 0
-perl ld_chart_factory.pl -i MousevsXIIS_LD.ld.xlsx
 
 perl ld_stat_factory.pl -s 114.212.202.159 -d HumanvsXI_LD -ct 0 -st 0
-perl ld_chart_factory.pl -i HumanvsXI_LD.ld.xlsx
 
 # bacs
 perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Escherichia_coli -g Escherichia_coli_LD
@@ -61,16 +65,13 @@ perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Streptococcus_pyogenes -g Str
 perl /home/wangq/Scripts/alignDB/multi/update_snp_ld.pl -d Streptococcus_pyogenes_LD
 
 perl ld_stat_factory.pl -s 114.212.202.159 -d Escherichia_coli_LD -ct 0 -st 0
-perl ld_chart_factory.pl -i Escherichia_coli_LD.ld.xlsx
 
 perl ld_stat_factory.pl -s 114.212.202.159 -d Salmonella_enterica_LD -ct 0 -st 0
-perl ld_chart_factory.pl -i Salmonella_enterica_LD.ld.xlsx
 
 perl ld_stat_factory.pl -s 114.212.202.159 -d Staphylococcus_aureus_LD -ct 0 -st 0
-perl ld_chart_factory.pl -i Staphylococcus_aureus_LD.ld.xlsx
 
 perl ld_stat_factory.pl -s 114.212.202.159 -d Streptococcus_pneumoniae_LD -ct 0 -st 0
-perl ld_chart_factory.pl -i Streptococcus_pneumoniae_LD.ld.xlsx
 
 perl ld_stat_factory.pl -s 114.212.202.159 -d Streptococcus_pyogenes_LD -ct 0 -st 0
-perl ld_chart_factory.pl -i Streptococcus_pyogenes_LD.ld.xlsx
+
+```
