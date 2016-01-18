@@ -2126,84 +2126,6 @@ my $align_repeat = sub {
     }
 };
 
-#----------------------------------------------------------#
-# worksheet -- align_te
-#----------------------------------------------------------#
-my $align_te = sub {
-
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
-    unless ( $write_obj->check_column( 'align', 'align_te' ) ) {
-        return;
-    }
-
-    # find quartiles
-    my $quartiles;
-    {
-        my $sql_query = q{
-            SELECT align_te
-            FROM align
-            WHERE align_te IS NOT NULL
-        };
-        my %option = ( sql_query => $sql_query, );
-        $quartiles = $write_obj->quantile_sql( \%option, 4 );
-    }
-
-    my @te_levels = (
-        [ 1, $quartiles->[0], $quartiles->[1] ],
-        [ 2, $quartiles->[1], $quartiles->[2] ],
-        [ 3, $quartiles->[2], $quartiles->[3] ],
-        [ 4, $quartiles->[3], $quartiles->[4] ],
-        [ 5, 0,               0 ],
-        [ 6, 0.0001,          0.1 ],
-        [ 7, 0.1,             0.9 ],
-        [ 8, 0.9,             1 ],
-        [ 9, 0.4,             0.6 ],
-    );
-
-    my $write_sheet = sub {
-        my ( $order, $low_border, $high_border ) = @_;
-
-        my $sheet_name = "align_te_$order";
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers = ( qw{distance AVG_pi COUNT STD_pi}, $low_border,
-                $high_border );
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            my $thaw_sql = $sql_file->retrieve('common-align-0');
-            $thaw_sql->add_where(
-                'align.align_te' => { op => '>=', value => '1' } );
-            $thaw_sql->add_where(
-                'align.align_te' => { op => '<=', value => '1' } );
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $low_border, $high_border ],
-            );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    };
-
-    foreach (@te_levels) {
-        &$write_sheet(@$_);
-    }
-};
-
 foreach my $n (@tasks) {
     if ( $n == 1 ) { &$basic; &$process; &$summary; next; }
     if ( $n == 2 )  { &$pi_gc_cv;             next; }
@@ -2224,7 +2146,6 @@ foreach my $n (@tasks) {
 
     if ( $n == 51 ) { &$align_coding;  next; }
     if ( $n == 52 ) { &$align_repeat;  next; }
-    if ( $n == 53 ) { &$align_te;      next; }
 }
 
 $stopwatch->end_message;

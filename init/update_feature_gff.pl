@@ -155,10 +155,8 @@ my $worker = sub {
         UPDATE align
         SET align_coding = ?,
             align_repeats = ?,
-            align_te = ?,
             align_coding_runlist = ?,
-            align_repeats_runlist = ?,
-            align_te_runlist = ?
+            align_repeats_runlist = ?
         WHERE align_id = ?
     };
     my $align_feature_sth = $dbh->prepare($align_feature);
@@ -294,8 +292,8 @@ UPDATE: for my $align_id (@align_ids) {
                     = $repeat_set_of->{$chr_name}->map_set( sub { $align_pos{$_} } )->runlist;
             }
 
-            $align_feature_sth->execute( $align_coding, $align_repeats, undef,
-                $align_cds_runlist, $align_repeat_runlist, undef, $align_id, );
+            $align_feature_sth->execute( $align_coding, $align_repeats,
+                $align_cds_runlist, $align_repeat_runlist, $align_id, );
 
             $align_feature_sth->finish;
         }

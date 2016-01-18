@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/8/2016 15:58:19                            */
+/* Created on:     1/19/2016 01:31:37                           */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -24,12 +24,8 @@ create table align
    align_indel_runlist            text,
    align_coding                   double,
    align_repeats                  double,
-   align_te                       double,
-   align_paralog                  double,
    align_coding_runlist           text,
    align_repeats_runlist          text,
-   align_te_runlist               text,
-   align_paralog_runlist          text,
    primary key (align_id)
 )
 ENGINE = MyISAM;

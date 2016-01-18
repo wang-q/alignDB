@@ -119,10 +119,8 @@ my $worker = sub {
         UPDATE align
         SET align_coding = ?,
             align_repeats = ?,
-            align_te = ?,
             align_coding_runlist = ?,
-            align_repeats_runlist = ?,
-            align_te_runlist = ?
+            align_repeats_runlist = ?
         WHERE align_id = ?
     };
     my $align_feature_sth = $dbh->prepare($align_feature);
@@ -251,17 +249,14 @@ UPDATE: for my $align_id (@align_ids) {
             # feature protions
             my $align_coding  = $ensembl->feature_portion( '_cds_set',    $align_chr_runlist );
             my $align_repeats = $ensembl->feature_portion( '_repeat_set', $align_chr_runlist );
-            my $align_te      = $ensembl->feature_portion( '_te_set',     $align_chr_runlist );
 
             # feature runlists
             my $cds_set    = $ensembl->feature_set_obj('_cds_set');
             my $repeat_set = $ensembl->feature_set_obj('_repeat_set');
-            my $te_set     = $ensembl->feature_set_obj('_te_set');
             $cds_set    = $cds_set->map_set( sub    { $align_pos{$_} } );
             $repeat_set = $repeat_set->map_set( sub { $align_pos{$_} } );
-            $te_set     = $te_set->map_set( sub     { $align_pos{$_} } );
             $align_feature_sth->execute( $align_coding, $align_repeats,
-                $align_te, $cds_set->runlist, $repeat_set->runlist, $te_set->runlist, $align_id, );
+                $cds_set->runlist, $repeat_set->runlist, $align_id, );
 
             $align_feature_sth->finish;
         }
