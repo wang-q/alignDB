@@ -290,7 +290,7 @@ mv ScervsRM11_1a_Spar.intergenic.yml fas
 rm fas/*.fas
 
 perl ~/Scripts/alignDB/slice/write_align_slice.pl \
-    -d ScervsRM11_1a_Spar -f fas/ScervsRM11_1a_Spar.intergenic.yml -t fas --outgroup
+    -d ScervsRM11_1a_Spar -f fas/ScervsRM11_1a_Spar.intergenic.yml --outgroup
 
 perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
     -d S288cvsRM11_1a_intergenic \

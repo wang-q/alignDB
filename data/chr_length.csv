@@ -1,4 +1,4 @@
-common_name,taxon_id,chr,length,name,assembly
+common_name,taxon_id,chr,length,assembly
 S288c,559292,chrUn,999999999,
 RM11_1a,285006,chrUn,999999999,
 YJM789,307796,chrUn,999999999,
