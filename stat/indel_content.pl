@@ -8,7 +8,7 @@ use Config::Tiny;
 use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-use Set::Light;
+use Set::Scalar;
 
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(calc_gc_ratio revcom);
@@ -51,7 +51,7 @@ GetOptions(
     'db|d=s'       => \( my $db         = $Config->{database}{db} ),
     'username|u=s' => \( my $username   = $Config->{database}{username} ),
     'password|p=s' => \( my $password   = $Config->{database}{password} ),
-    'output=s'     => \my $outfile,
+    'output=s'     => \( my $outfile ),
     'min_length=i' => \( my $min_length = 1 ),
     'max_length=i' => \( my $max_length = 50 ),
     'min_k=i'      => \( my $min_k      = 1 ),
@@ -153,7 +153,7 @@ foreach my $k ( $min_k .. $max_k ) {
 
         {    # remove invalid keys
             my @k_nucs    = k_nuc_permu($k);
-            my $k_nuc_set = Set::Light->new(@k_nucs);
+            my $k_nuc_set = Set::Scalar->new(@k_nucs);
             for ( keys %table ) {
                 unless ( $k_nuc_set->has($_) ) {
                     delete $table{$_};
