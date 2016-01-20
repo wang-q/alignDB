@@ -9,19 +9,20 @@ use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use File::Find::Rule;
+use Path::Tiny;
 
 use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
-use AlignDB::Util qw(:all);
+use AlignDB::Util qw(read_fasta);
 
-use lib "$FindBin::Bin/../lib";
+use lib "$FindBin::RealBin/../lib";
 use AlignDB;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -38,26 +39,18 @@ gen_alignDB_genome.pl - Generate alignDB from genome fasta files
 
     perl gen_alignDB_genome.pl [options]
       Options:
-        --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
-        --db        -d  STR     database name
-        --username  -u  STR     username
-        --password  -p  STR     password
-        --dir_align -da STR     fasta files' directory
-        --target        STR     target_name
-        --length        INT     truncated length
-        --fill          INT     fill holes less than this
-        --min           INT     minimal length
-        --parallel      INT     run in parallel mode
-
-    perl init/init_alignDB.pl -d Athvsself
-    perl init/gen_alignDB_genome.pl -d Athvsself -t Ath --da ~/data/alignment/arabidopsis19/ath_65  --parallel 4
-    
-    
-    perl init/init_alignDB.pl -d S288Cvsself
-    perl init/gen_alignDB_genome.pl -d S288Cvsself -t S288C --da ~/data/alignment/yeast65/S288C  --parallel 4
-    perl init/insert_gc.pl -d S288Cvsself --parallel 4
+        --help          -?              brief help message
+        --server        -s      STR     MySQL server IP/Domain name
+        --port          -P      INT     MySQL server port
+        --db            -d      STR     database name
+        --username      -u      STR     username
+        --password      -p      STR     password
+        --dir_align     -da     STR     fasta files' directory
+        --target                STR     target_name
+        --length                INT     truncated length
+        --fill                  INT     fill holes less than this
+        --min                   INT     minimal length
+        --parallel              INT     run in parallel mode
 
 =cut
 
@@ -99,8 +92,7 @@ my $worker = sub {
 
     die "target_name not defined\n" unless $target_name;
 
-    my $chr_name = path($infile)->basename->stringify;
-    $chr_name =~ s/\..+?$//;
+    my $chr_name = path($infile)->basename('.fasta', '.fas', '.fa');
 
     my ( $seq_of, $seq_names ) = read_fasta($infile);
     my $chr_seq    = $seq_of->{ $seq_names->[0] };
