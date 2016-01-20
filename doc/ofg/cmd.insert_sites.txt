@@ -1,29 +1,6 @@
 #----------------------------------------------------------#
 # prepare
 #----------------------------------------------------------#
-# Athvsself
-perl /home/wangq/Scripts/alignDB/init/init_alignDB.pl  -d Athvsself_tdna
-perl /home/wangq/Scripts/alignDB/init/gen_alignDB_genome.pl -d Athvsself_tdna -t "3702,Ath" --dir /home/wangq/data/alignment/arabidopsis19/ath_65 --length 500000 --parallel 8
-
-# Nipvsself
-perl /home/wangq/Scripts/alignDB/init/init_alignDB.pl  -d Nipvsself_tdna
-perl /home/wangq/Scripts/alignDB/init/gen_alignDB_genome.pl -d Nipvsself_tdna -t "39947,Nip" --dir /home/wangq/data/alignment/rice/nip_65 --length 500000 --parallel 8
-
-# Dmelvsself
-perl /home/wangq/Scripts/alignDB/init/init_alignDB.pl  -d Dmelvsself_transposon
-perl /home/wangq/Scripts/alignDB/init/gen_alignDB_genome.pl -d Dmelvsself_transposon -t "7227,Dmel" --dir /home/wangq/data/alignment/dpgp/Dmel_65/ --length 500000 --parallel 8
-
-# Mousevsself
-perl /home/wangq/Scripts/alignDB/init/init_alignDB.pl  -d Mousevsself_transposon
-perl /home/wangq/Scripts/alignDB/init/gen_alignDB_genome.pl -d Mousevsself_transposon -t "10090,Mouse" --dir /home/wangq/data/alignment/mouse65/mouse/ --length 500000 --parallel 8
-
-# db
-mkdir /home/wangq/data/salk/db
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Athvsself_tdna -f /home/wangq/data/salk/db/Athvsself_tdna.dump.sql
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Nipvsself_tdna -f /home/wangq/data/salk/db/Nipvsself_tdna.dump.sql
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Dmelvsself_transposon -f /home/wangq/data/salk/db/Dmelvsself_transposon.dump.sql
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Mousevsself_transposon -f /home/wangq/data/salk/db/Mousevsself_transposon.dump.sql
-
 # AthvsXVIIIpop
 perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
     -d AthvsXVIIIpop --block \
@@ -81,34 +58,6 @@ perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d MousevsIV_pop -f /home/wangq/
 
 # NipvsXXIV
 perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d NipvsXXIV -f /home/wangq/data/salk/db/NipvsXXIV_tdna.dump.sql
-
-#----------------------------------------------------------#
-# tdna to bed
-#----------------------------------------------------------#
-cd ~/Scripts/alignDB/
-
-mkdir /home/wangq/data/salk/process
-
-mkdir /home/wangq/data/salk/process/ath
-for name in CMT CSHL FLAG GABI IMAL MX RATM SAIL SALK SK WISC
-do
-    echo $name;
-    perl ofg/tnda2bed.pl -f ~/data/salk/database/tdnaexpress/T-DNA.$name -o ~/data/salk/process/ath/T-DNA.$name.bed;
-done
-
-perl ofg/tnda2bed.pl -f ~/data/salk/database/tdnaexpress/T-DNA.SALK -o ~/data/salk/process/ath/T-DNA.SALK.bed
-perl ofg/tnda2bed.pl -f ~/data/salk/database/tdnaexpress/T-DNA.SAIL -o ~/data/salk/process/ath/T-DNA.SAIL.bed
-perl ofg/tnda2bed.pl -f ~/data/salk/database/tdnaexpress/T-DNA.FLAG -o ~/data/salk/process/ath/T-DNA.FLAG.bed
-perl ofg/tnda2bed.pl -f ~/data/salk/database/tdnaexpress/T-DNA.GABI -o ~/data/salk/process/ath/T-DNA.GABI.bed
-
-mkdir /home/wangq/data/salk/process/nip
-for name in affjp cirad csiro genoplante gsnu ostid PFG_FSTs rifgp rmd ship trim ucd
-do
-    echo $name;
-    perl ofg/tnda2bed.pl -f ~/data/salk/database/RiceGE/T-DNA.$name -o ~/data/salk/process/nip/T-DNA.$name.bed;
-done
-
-
 
 #----------------------------#
 # fly
