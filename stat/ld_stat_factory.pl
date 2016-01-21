@@ -170,7 +170,7 @@ my $chart_d1_indel_ld = sub {
     my $sheet = shift;
     my $data  = shift;
 
-    my %option = (
+    my %opt = (
         x_column    => 0,
         y_column    => 2,
         first_row   => 2,
@@ -182,23 +182,23 @@ my $chart_d1_indel_ld = sub {
         top         => 1,
         left        => 6,
     );
-    $write_obj->draw_y( $sheet, \%option );
+    $write_obj->draw_y( $sheet, \%opt );
 
-    $option{y_column} = 4;
-    $option{y_title}  = "|Dprime|";
-    $option{y_data}   = $data->[4];
-    $option{top} += 18;
-    $write_obj->draw_y( $sheet, \%option );
+    $opt{y_column} = 4;
+    $opt{y_title}  = "|Dprime|";
+    $opt{y_data}   = $data->[4];
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
 
-    $option{y_column}  = 1;
-    $option{y_title}   = "r";
-    $option{y_data}    = $data->[1];
-    $option{y2_column} = 3;
-    $option{y2_data}   = $data->[3];
-    $option{y2_title}  = "Dprime";
-    $option{top}       = 1;
-    $option{left}      = 12;
-    $write_obj->draw_2y( $sheet, \%option );
+    $opt{y_column}  = 1;
+    $opt{y_title}   = "r";
+    $opt{y_data}    = $data->[1];
+    $opt{y2_column} = 3;
+    $opt{y2_data}   = $data->[3];
+    $opt{y2_title}  = "Dprime";
+    $opt{top}       = 1;
+    $opt{left}      = 12;
+    $write_obj->draw_2y( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -208,7 +208,7 @@ my $chart_d2_indel_ld = sub {
     my $sheet = shift;
     my $data  = shift;
 
-    my %option = (
+    my %opt = (
         x_column    => 0,
         y_column    => 2,
         first_row   => 2,
@@ -220,23 +220,23 @@ my $chart_d2_indel_ld = sub {
         top         => 1,
         left        => 6,
     );
-    $write_obj->draw_y( $sheet, \%option );
+    $write_obj->draw_y( $sheet, \%opt );
 
-    $option{y_column} = 4;
-    $option{y_title}  = "|Dprime|";
-    $option{y_data}   = $data->[4];
-    $option{top} += 18;
-    $write_obj->draw_y( $sheet, \%option );
+    $opt{y_column} = 4;
+    $opt{y_title}  = "|Dprime|";
+    $opt{y_data}   = $data->[4];
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
 
-    $option{y_column}  = 1;
-    $option{y_title}   = "r";
-    $option{y_data}    = $data->[1];
-    $option{y2_column} = 3;
-    $option{y2_data}   = $data->[3];
-    $option{y2_title}  = "Dprime";
-    $option{top}       = 1;
-    $option{left}      = 12;
-    $write_obj->draw_2y( $sheet, \%option );
+    $opt{y_column}  = 1;
+    $opt{y_title}   = "r";
+    $opt{y_data}    = $data->[1];
+    $opt{y2_column} = 3;
+    $opt{y2_data}   = $data->[3];
+    $opt{y2_title}  = "Dprime";
+    $opt{top}       = 1;
+    $opt{left}      = 12;
+    $write_obj->draw_2y( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -246,7 +246,7 @@ my $chart_d1_snps_ld = sub {
     my $sheet = shift;
     my $data  = shift;
 
-    my %option = (
+    my %opt = (
         x_column    => 0,
         y_column    => 1,
         first_row   => 2,
@@ -258,32 +258,32 @@ my $chart_d1_snps_ld = sub {
         top         => 1,
         left        => 11,
     );
-    $write_obj->draw_y( $sheet, \%option );
+    $write_obj->draw_y( $sheet, \%opt );
 
-    $option{y_column} = 3;
-    $option{y_title}  = "|Dprime| to nearest indel ";
-    $option{y_data}   = $data->[3];
-    $option{top} += 18;
-    $write_obj->draw_y( $sheet, \%option );
+    $opt{y_column} = 3;
+    $opt{y_title}  = "|Dprime| to nearest indel ";
+    $opt{y_data}   = $data->[3];
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
 
-    $option{y_column} = 2;
-    $option{y_title}  = "r^2 to near snps";
-    $option{y_data}   = $data->[2];
-    $option{top}      = 1;
-    $option{left}     = 17;
-    $write_obj->draw_y( $sheet, \%option );
+    $opt{y_column} = 2;
+    $opt{y_title}  = "r^2 to near snps";
+    $opt{y_data}   = $data->[2];
+    $opt{top}      = 1;
+    $opt{left}     = 17;
+    $write_obj->draw_y( $sheet, \%opt );
 
-    $option{y_column} = 5;
-    $option{y_title}  = "indel group snps r^2";
-    $option{y_data}   = $data->[5];
-    $option{top} += 18;
-    $write_obj->draw_y( $sheet, \%option );
+    $opt{y_column} = 5;
+    $opt{y_title}  = "indel group snps r^2";
+    $opt{y_data}   = $data->[5];
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
 
-    $option{y_column} = 6;
-    $option{y_title}  = "nonindel group snps r^2";
-    $option{y_data}   = $data->[6];
-    $option{top} += 18;
-    $write_obj->draw_y( $sheet, \%option );
+    $opt{y_column} = 6;
+    $opt{y_title}  = "nonindel group snps r^2";
+    $opt{y_data}   = $data->[6];
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -293,7 +293,7 @@ my $chart_d2_snps_ld = sub {
     my $sheet = shift;
     my $data  = shift;
 
-    my %option = (
+    my %opt = (
         x_column    => 0,
         y_column    => 1,
         first_row   => 2,
@@ -305,32 +305,32 @@ my $chart_d2_snps_ld = sub {
         top         => 1,
         left        => 11,
     );
-    $write_obj->draw_y( $sheet, \%option );
+    $write_obj->draw_y( $sheet, \%opt );
 
-    $option{y_column} = 3;
-    $option{y_title}  = "|Dprime| to nearest indel ";
-    $option{y_data}   = $data->[3];
-    $option{top} += 18;
-    $write_obj->draw_y( $sheet, \%option );
+    $opt{y_column} = 3;
+    $opt{y_title}  = "|Dprime| to nearest indel ";
+    $opt{y_data}   = $data->[3];
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
 
-    $option{y_column} = 2;
-    $option{y_title}  = "r^2 to near snps";
-    $option{y_data}   = $data->[2];
-    $option{top}      = 1;
-    $option{left}     = 17;
-    $write_obj->draw_y( $sheet, \%option );
+    $opt{y_column} = 2;
+    $opt{y_title}  = "r^2 to near snps";
+    $opt{y_data}   = $data->[2];
+    $opt{top}      = 1;
+    $opt{left}     = 17;
+    $write_obj->draw_y( $sheet, \%opt );
 
-    $option{y_column} = 5;
-    $option{y_title}  = "indel group snps r^2";
-    $option{y_data}   = $data->[5];
-    $option{top} += 18;
-    $write_obj->draw_y( $sheet, \%option );
+    $opt{y_column} = 5;
+    $opt{y_title}  = "indel group snps r^2";
+    $opt{y_data}   = $data->[5];
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
 
-    $option{y_column} = 6;
-    $option{y_title}  = "nonindel group snps r^2";
-    $option{y_data}   = $data->[6];
-    $option{top} += 18;
-    $write_obj->draw_y( $sheet, \%option );
+    $opt{y_column} = 6;
+    $opt{y_title}  = "nonindel group snps r^2";
+    $opt{y_data}   = $data->[6];
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -341,30 +341,25 @@ my $indel_ld = sub {
     {
         my $sheet_name = 'd1_indel_ld';
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-indel_ld-0');
         $thaw_sql->limit(20);
 
         my @names = $thaw_sql->as_header;
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            my %option = (
-                sql_query => $thaw_sql->as_sql,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query => $thaw_sql->as_sql,
+                    data      => 1,
+                }
             );
-            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
         if ($add_chart) {    # chart
@@ -377,7 +372,8 @@ my $indel_ld = sub {
     {
         my $sheet_name = 'd2_indel_ld';
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-indel_ld-0');
         $thaw_sql->limit(35);
@@ -385,23 +381,17 @@ my $indel_ld = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            my %option = (
-                sql_query => $thaw_sql->as_sql,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query => $thaw_sql->as_sql,
+                    data      => 1,
+                }
             );
-            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
         if ($add_chart) {    # chart
@@ -419,7 +409,8 @@ my $indel_ld_insdel = sub {
         my ($level) = @_;
         my $sheet_name = 'd1_indel_ld_' . $level->[0];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-indel_ld-0');
         $thaw_sql->limit(20);
@@ -427,24 +418,18 @@ my $indel_ld_insdel = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1] ],
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $level->[1] ],
+                    data       => 1,
+                }
             );
-            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
         if ($add_chart) {    # chart
@@ -458,7 +443,8 @@ my $indel_ld_insdel = sub {
         my ($level) = @_;
         my $sheet_name = 'd2_indel_ld_' . $level->[0];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-indel_ld-0');
         $thaw_sql->replace( { distance => 'density' } );
@@ -467,24 +453,18 @@ my $indel_ld_insdel = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1] ],
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $level->[1] ],
+                    data       => 1,
+                }
             );
-            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
         if ($add_chart) {    # chart
@@ -508,30 +488,25 @@ my $snps_ld = sub {
     {
         my $sheet_name = 'd1_snps_ld';
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
         $thaw_sql->limit(20);
 
         my @names = $thaw_sql->as_header;
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            my %option = (
-                sql_query => $thaw_sql->as_sql,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query => $thaw_sql->as_sql,
+                    data      => 1,
+                }
             );
-            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
         if ($add_chart) {    # chart
@@ -544,7 +519,8 @@ my $snps_ld = sub {
     {
         my $sheet_name = 'd2_snps_ld';
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
         $thaw_sql->replace( { distance => 'density' } );
@@ -552,23 +528,17 @@ my $snps_ld = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            my %option = (
-                sql_query => $thaw_sql->as_sql,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query => $thaw_sql->as_sql,
+                    data      => 1,
+                }
             );
-            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
         if ($add_chart) {    # chart
@@ -586,7 +556,8 @@ my $snps_ld_insdel = sub {
         my ($level) = @_;
         my $sheet_name = 'd1_snps_ld_' . $level->[0];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
         $thaw_sql->limit(20);
@@ -594,24 +565,18 @@ my $snps_ld_insdel = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1] ],
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $level->[1] ],
+                    data       => 1,
+                }
             );
-            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
         if ($add_chart) {    # chart
@@ -625,7 +590,8 @@ my $snps_ld_insdel = sub {
         my ($level) = @_;
         my $sheet_name = 'd2_snps_ld_' . $level->[0];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
         $thaw_sql->replace( { distance => 'density' } );
@@ -634,24 +600,18 @@ my $snps_ld_insdel = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1] ],
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $level->[1] ],
+                    data       => 1,
+                }
             );
-            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
         if ($add_chart) {    # chart
@@ -677,7 +637,8 @@ my $snps_ld_freq = sub {
         my ($level) = @_;
         my $sheet_name = 'd1_snps_ld_freq_' . $level->[0];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
         $thaw_sql->limit(20);
@@ -686,24 +647,18 @@ my $snps_ld_freq = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1], $level->[2] ],
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $level->[1], $level->[2] ],
+                    data       => 1,
+                }
             );
-            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
         if ($add_chart) {    # chart
@@ -717,7 +672,8 @@ my $snps_ld_freq = sub {
         my ($level) = @_;
         my $sheet_name = 'd2_snps_ld_freq_' . $level->[0];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
         $thaw_sql->replace( { distance => 'density' } );
@@ -727,24 +683,18 @@ my $snps_ld_freq = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1], $level->[2] ],
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $level->[1], $level->[2] ],
+                    data       => 1,
+                }
             );
-            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
         if ($add_chart) {    # chart
@@ -774,12 +724,13 @@ my $segment_gc_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_gc_indel' . "_$segment_type";
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(1);
 
         {    # create temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            my %opt = ( sql_query => $sql_query, );
+            $write_obj->excute_sql( \%opt );
         }
 
         {
@@ -799,12 +750,12 @@ my $segment_gc_indel = sub {
                     AND s.segment_type = ?
                     ORDER BY gc DESC, r2 DESC, pi, indel
             };
-            my %option = (
+            my %opt = (
                 sql_query  => $sql_query,
                 bind_value => [$segment_type],
 
             );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( \%opt );
         }
 
         # make group
@@ -814,11 +765,11 @@ my $segment_gc_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my %option = (
+            my %opt = (
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
 
         my @names
@@ -827,13 +778,7 @@ my $segment_gc_indel = sub {
         push @{$data}, [] for @names;
 
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 1 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         {    # content
@@ -874,19 +819,18 @@ my $segment_gc_indel = sub {
                 }
             }
 
-            $sheet->write( $sheet_row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
-            $sheet->write( $sheet_row, 1, $data, $write_obj->format->{NORMAL} );
-
+            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
+            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            my %opt = ( sql_query => $sql_query, );
+            $write_obj->excute_sql( \%opt );
         }
 
         if ($add_chart) {    # chart
-            my %option = (
+            my %opt = (
                 x_column  => 1,
                 y_column  => 6,
                 first_row => 1,
@@ -898,7 +842,7 @@ my $segment_gc_indel = sub {
                 top       => 1,
                 left      => 11,
             );
-            $write_obj->draw_xy( $sheet, \%option );
+            $write_obj->draw_xy( $sheet, \%opt );
         }
 
         print "Sheet [$sheet_name] has been generated.\n";
@@ -917,12 +861,13 @@ my $segment_cv_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_cv_indel' . "_$segment_type";
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(1);
 
         {    # create temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            my %opt = ( sql_query => $sql_query, );
+            $write_obj->excute_sql( \%opt );
         }
 
         {
@@ -942,12 +887,12 @@ my $segment_cv_indel = sub {
                     AND s.segment_type = ?
                     ORDER BY cv DESC, r2 DESC, pi, indel
             };
-            my %option = (
+            my %opt = (
                 sql_query  => $sql_query,
                 bind_value => [$segment_type],
 
             );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( \%opt );
         }
 
         # make group
@@ -957,11 +902,11 @@ my $segment_cv_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my %option = (
+            my %opt = (
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
 
         my @names
@@ -970,13 +915,7 @@ my $segment_cv_indel = sub {
         push @{$data}, [] for @names;
 
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 1 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         {    # query
@@ -1017,18 +956,18 @@ my $segment_cv_indel = sub {
                     }
                 }
             }
-            $sheet->write( $sheet_row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
-            $sheet->write( $sheet_row, 1, $data, $write_obj->format->{NORMAL} );
+            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
+            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            my %opt = ( sql_query => $sql_query, );
+            $write_obj->excute_sql( \%opt );
         }
 
         if ($add_chart) {    # chart
-            my %option = (
+            my %opt = (
                 x_column  => 1,
                 y_column  => 6,
                 first_row => 1,
@@ -1040,7 +979,7 @@ my $segment_cv_indel = sub {
                 top       => 1,
                 left      => 12,
             );
-            $write_obj->draw_xy( $sheet, \%option );
+            $write_obj->draw_xy( $sheet, \%opt );
         }
 
         print "Sheet [$sheet_name] has been generated.\n";
