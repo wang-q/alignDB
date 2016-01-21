@@ -8,11 +8,12 @@ use Config::Tiny;
 use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
+use DBI;
+
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::SQL;
 use AlignDB::SQL::Library;
-
 use AlignDB::ToXLSX;
 
 #----------------------------------------------------------#
@@ -40,6 +41,7 @@ ld_stat_factory.pl - LD stats for alignDB
         --combine       INT     
         --piece         INT     
         --index                 add an index sheet
+        --chart                 add charts
 
 =cut
 
@@ -56,6 +58,7 @@ GetOptions(
     'combine=i'    => \( my $combine  = 0 ),
     'piece=i'      => \( my $piece    = 0 ),
     'index'        => \( my $add_index_sheet, ),
+    'chart'        => \( my $add_chart, ),
 ) or HelpMessage(1);
 
 # prepare to run tasks in @tasks
@@ -89,13 +92,12 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
+my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
+    or die "Cannot connect to MySQL database at $db:$server";
 my $write_obj = AlignDB::ToXLSX->new(
-    mysql   => "$db:$server",
-    user    => $username,
-    passwd  => $password,
+    dbh     => $dbh,
     outfile => $outfile,
 );
-my $dbh = $write_obj->dbh;
 
 my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::Bin/sql.lib" );
 
@@ -109,24 +111,16 @@ if ( $piece == 0 ) {
     ( undef, $piece ) = $write_obj->calc_threshold;
 }
 
-print Dump {
-    combine => $combine,
-    piece   => $piece,
-};
-
 #----------------------------#
 # count freq
 #----------------------------#
-my $all_freq = get_freq($dbh);
-
-if ( $all_freq < 2 ) {
-    die "all_freq is $all_freq, are you sure this is an AlignDB DB?\n";
-}
+my $largest    = get_freq($dbh);
+my $seq_number = get_seq_number($dbh);
 
 my @freqs;
 if ($max_freq) {
     for ( 1 .. $max_freq - 1 ) {
-        my $name = $_ . "of" . $all_freq;
+        my $name = $_ . "of" . $largest;
         push @freqs, [ $name, $_, $_ ];
     }
 }
@@ -134,30 +128,40 @@ else {
 
     # for 22 flies, low, mid, high
     {
-        my @all_freqs = 1 .. $all_freq - 1;
+        my @all_freqs = 1 .. $largest;
         if ( scalar @all_freqs <= 3 ) {
             for (@all_freqs) {
-                my $name = $_ . "of" . $all_freq;
+                my $name = $_ . "of" . $seq_number;
                 push @freqs, [ $name, $_, $_ ];
             }
         }
         else {
-            my @to_be_combs = @all_freqs[ 0 .. $all_freq - 2 ];
+            my @to_be_combs = @all_freqs[ 0 .. $largest - 1 ];
             my @chunks      = reverse apportion( scalar @to_be_combs, 3 );
             my @chunks_freq = multi_slice( \@to_be_combs, @chunks );
             for my $chunk (@chunks_freq) {
                 if ( $chunk->[0] == $chunk->[-1] ) {
-                    my $name = $chunk->[0] . "of" . $all_freq;
+                    my $name = $chunk->[0] . "of" . $seq_number;
                     push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
                 }
                 else {
-                    my $name = join( '_', $chunk->[0], $chunk->[-1] ) . "of" . $all_freq;
+                    my $name = join( '_', $chunk->[0], $chunk->[-1] ) . "of" . $seq_number;
                     push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
                 }
             }
         }
     }
 }
+
+print Dump [
+    {   combine => $combine,
+        piece   => $piece,
+    },
+    {   $largest   => $largest,
+        seq_number => $seq_number,
+        freq       => \@freqs,
+    }
+];
 
 #----------------------------------------------------------#
 # chart -- d1_indel_ld
@@ -343,31 +347,27 @@ my $indel_ld = sub {
         $thaw_sql->limit(20);
 
         my @names = $thaw_sql->as_header;
-        my $data  = [];
-        push @{$data}, [] for @names;
-
-        {    # write header
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
                 header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {    # write data
-            my $sth = $dbh->prepare( $thaw_sql->as_sql );
-            $sth->execute;
-            while ( my @row = $sth->fetchrow_array ) {
-                for my $i ( 0 .. $#names ) {
-                    push @{ $data->[$i] }, $row[$i];
-                }
-            }
-            $sheet->write( $sheet_row, 0, $data, $write_obj->format->{NORMAL} );
+        my $data;
+        {    # content
+            my %option = (
+                sql_query => $thaw_sql->as_sql,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+            );
+            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
-        {    # chart
+        if ($add_chart) {    # chart
             $chart_d1_indel_ld->( $sheet, $data );
         }
 
@@ -384,31 +384,27 @@ my $indel_ld = sub {
         $thaw_sql->replace( { distance => 'density' } );
 
         my @names = $thaw_sql->as_header;
-        my $data  = [];
-        push @{$data}, [] for @names;
-
-        {    # write header
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
                 header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {    # write data
-            my $sth = $dbh->prepare( $thaw_sql->as_sql );
-            $sth->execute;
-            while ( my @row = $sth->fetchrow_array ) {
-                for my $i ( 0 .. $#names ) {
-                    push @{ $data->[$i] }, $row[$i];
-                }
-            }
-            $sheet->write( $sheet_row, 0, $data, $write_obj->format->{NORMAL} );
+        my $data;
+        {    # content
+            my %option = (
+                sql_query => $thaw_sql->as_sql,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+            );
+            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
-        {    # chart
+        if ($add_chart) {    # chart
             $chart_d2_indel_ld->( $sheet, $data );
         }
 
@@ -430,31 +426,28 @@ my $indel_ld_insdel = sub {
         $thaw_sql->add_where( 'indel.indel_type' => \'= ?' );
 
         my @names = $thaw_sql->as_header;
-        my $data  = [];
-        push @{$data}, [] for @names;
-
-        {    # write header
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
                 header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {    # write data
-            my $sth = $dbh->prepare( $thaw_sql->as_sql );
-            $sth->execute( $level->[1] );
-            while ( my @row = $sth->fetchrow_array ) {
-                for my $i ( 0 .. $#names ) {
-                    push @{ $data->[$i] }, $row[$i];
-                }
-            }
-            $sheet->write( $sheet_row, 0, $data, $write_obj->format->{NORMAL} );
+        my $data;
+        {    # content
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1] ],
+            );
+            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
-        {    # chart
+        if ($add_chart) {    # chart
             $chart_d1_indel_ld->( $sheet, $data );
         }
 
@@ -473,31 +466,28 @@ my $indel_ld_insdel = sub {
         $thaw_sql->add_where( 'indel.indel_type' => \'= ?' );
 
         my @names = $thaw_sql->as_header;
-        my $data  = [];
-        push @{$data}, [] for @names;
-
-        {    # write header
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
                 header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {    # write data
-            my $sth = $dbh->prepare( $thaw_sql->as_sql );
-            $sth->execute( $level->[1] );
-            while ( my @row = $sth->fetchrow_array ) {
-                for my $i ( 0 .. $#names ) {
-                    push @{ $data->[$i] }, $row[$i];
-                }
-            }
-            $sheet->write( $sheet_row, 0, $data, $write_obj->format->{NORMAL} );
+        my $data;
+        {    # content
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1] ],
+            );
+            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
-        {    # chart
+        if ($add_chart) {    # chart
             $chart_d2_indel_ld->( $sheet, $data );
         }
 
@@ -524,31 +514,27 @@ my $snps_ld = sub {
         $thaw_sql->limit(20);
 
         my @names = $thaw_sql->as_header;
-        my $data  = [];
-        push @{$data}, [] for @names;
-
-        {    # write header
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
                 header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {    # write data
-            my $sth = $dbh->prepare( $thaw_sql->as_sql );
-            $sth->execute;
-            while ( my @row = $sth->fetchrow_array ) {
-                for my $i ( 0 .. $#names ) {
-                    push @{ $data->[$i] }, $row[$i];
-                }
-            }
-            $sheet->write( $sheet_row, 0, $data, $write_obj->format->{NORMAL} );
+        my $data;
+        {    # content
+            my %option = (
+                sql_query => $thaw_sql->as_sql,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+            );
+            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
-        {    # chart
+        if ($add_chart) {    # chart
             $chart_d1_snps_ld->( $sheet, $data );
         }
 
@@ -565,31 +551,27 @@ my $snps_ld = sub {
         $thaw_sql->limit(35);
 
         my @names = $thaw_sql->as_header;
-        my $data  = [];
-        push @{$data}, [] for @names;
-
-        {    # write header
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
                 header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {    # write data
-            my $sth = $dbh->prepare( $thaw_sql->as_sql );
-            $sth->execute;
-            while ( my @row = $sth->fetchrow_array ) {
-                for my $i ( 0 .. $#names ) {
-                    push @{ $data->[$i] }, $row[$i];
-                }
-            }
-            $sheet->write( $sheet_row, 0, $data, $write_obj->format->{NORMAL} );
+        my $data;
+        {    # content
+            my %option = (
+                sql_query => $thaw_sql->as_sql,
+                sheet_row => $sheet_row,
+                sheet_col => $sheet_col,
+            );
+            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
-        {    # chart
+        if ($add_chart) {    # chart
             $chart_d2_snps_ld->( $sheet, $data );
         }
 
@@ -611,31 +593,28 @@ my $snps_ld_insdel = sub {
         $thaw_sql->add_where( 'indel.indel_type' => \'= ?' );
 
         my @names = $thaw_sql->as_header;
-        my $data  = [];
-        push @{$data}, [] for @names;
-
-        {    # write header
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
                 header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {    # write data
-            my $sth = $dbh->prepare( $thaw_sql->as_sql );
-            $sth->execute( $level->[1] );
-            while ( my @row = $sth->fetchrow_array ) {
-                for my $i ( 0 .. $#names ) {
-                    push @{ $data->[$i] }, $row[$i];
-                }
-            }
-            $sheet->write( $sheet_row, 0, $data, $write_obj->format->{NORMAL} );
+        my $data;
+        {    # content
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1] ],
+            );
+            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
-        {    # chart
+        if ($add_chart) {    # chart
             $chart_d1_snps_ld->( $sheet, $data );
         }
 
@@ -654,31 +633,28 @@ my $snps_ld_insdel = sub {
         $thaw_sql->add_where( 'indel.indel_type' => \'= ?' );
 
         my @names = $thaw_sql->as_header;
-        my $data  = [];
-        push @{$data}, [] for @names;
-
-        {    # write header
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
                 header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {    # write data
-            my $sth = $dbh->prepare( $thaw_sql->as_sql );
-            $sth->execute( $level->[1] );
-            while ( my @row = $sth->fetchrow_array ) {
-                for my $i ( 0 .. $#names ) {
-                    push @{ $data->[$i] }, $row[$i];
-                }
-            }
-            $sheet->write( $sheet_row, 0, $data, $write_obj->format->{NORMAL} );
+        my $data;
+        {    # content
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1] ],
+            );
+            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
-        {    # chart
+        if ($add_chart) {    # chart
             $chart_d2_snps_ld->( $sheet, $data );
         }
 
@@ -709,31 +685,28 @@ my $snps_ld_freq = sub {
         $thaw_sql->add_where( 'indel.indel_freq' => \'<= ?' );
 
         my @names = $thaw_sql->as_header;
-        my $data  = [];
-        push @{$data}, [] for @names;
-
-        {    # write header
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
                 header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {    # write data
-            my $sth = $dbh->prepare( $thaw_sql->as_sql );
-            $sth->execute( $level->[1], $level->[2] );
-            while ( my @row = $sth->fetchrow_array ) {
-                for my $i ( 0 .. $#names ) {
-                    push @{ $data->[$i] }, $row[$i];
-                }
-            }
-            $sheet->write( $sheet_row, 0, $data, $write_obj->format->{NORMAL} );
+        my $data;
+        {    # content
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1], $level->[2] ],
+            );
+            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
-        {    # chart
+        if ($add_chart) {    # chart
             $chart_d1_snps_ld->( $sheet, $data );
         }
 
@@ -753,31 +726,28 @@ my $snps_ld_freq = sub {
         $thaw_sql->add_where( 'indel.indel_freq' => \'<= ?' );
 
         my @names = $thaw_sql->as_header;
-        my $data  = [];
-        push @{$data}, [] for @names;
-
-        {    # write header
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
                 header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {    # write data
-            my $sth = $dbh->prepare( $thaw_sql->as_sql );
-            $sth->execute( $level->[1], $level->[2] );
-            while ( my @row = $sth->fetchrow_array ) {
-                for my $i ( 0 .. $#names ) {
-                    push @{ $data->[$i] }, $row[$i];
-                }
-            }
-            $sheet->write( $sheet_row, 0, $data, $write_obj->format->{NORMAL} );
+        my $data;
+        {    # content
+            my %option = (
+                sql_query  => $thaw_sql->as_sql,
+                sheet_row  => $sheet_row,
+                sheet_col  => $sheet_col,
+                bind_value => [ $level->[1], $level->[2] ],
+            );
+            ( $sheet_row, $data ) = $write_obj->write_sql( $sheet, \%option );
         }
 
-        {    # chart
+        if ($add_chart) {    # chart
             $chart_d2_snps_ld->( $sheet, $data );
         }
 
@@ -856,17 +826,17 @@ my $segment_gc_indel = sub {
         my $data = [];
         push @{$data}, [] for @names;
 
-        {    # write header
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 1 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
                 header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {    # write data
+        {    # content
             my $sql_query = q{
                 SELECT AVG(t.gc) `AVG_gc`,
                        AVG(t.pi) `AVG_pi`,
@@ -915,7 +885,7 @@ my $segment_gc_indel = sub {
             $write_obj->excute_sql( \%option );
         }
 
-        {    # chart
+        if ($add_chart) {    # chart
             my %option = (
                 x_column  => 1,
                 y_column  => 6,
@@ -999,14 +969,14 @@ my $segment_cv_indel = sub {
         my $data = [];
         push @{$data}, [] for @names;
 
-        {    # write header
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 1 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
                 header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
         {    # query
@@ -1057,7 +1027,7 @@ my $segment_cv_indel = sub {
             $write_obj->excute_sql( \%option );
         }
 
-        {    # chart
+        if ($add_chart) {    # chart
             my %option = (
                 x_column  => 1,
                 y_column  => 6,
@@ -1119,13 +1089,17 @@ sub multi_slice {
     } @chunk_sizes;
 }
 
-sub get_freq {
+sub get_seq_number {
     my $dbh = shift;
 
     my $sql_query = q{
-        SELECT DISTINCT COUNT(q.query_id) + 1
-        FROM  query q, sequence s
-        WHERE q.seq_id = s.seq_id
+        SELECT DISTINCT
+            COUNT(q.query_id) + 1
+        FROM
+            query q,
+            sequence s
+        WHERE
+            q.seq_id = s.seq_id
         GROUP BY s.align_id
     };
     my $sth = $dbh->prepare($sql_query);
@@ -1136,7 +1110,27 @@ sub get_freq {
         push @counts, $count;
     }
     if ( scalar @counts > 1 ) {
-        warn "Database corrupts, freqs are not consistent\n";
+        warn "Database with non-consistent query numbers!\n";
+    }
+
+    return $counts[0];
+}
+
+sub get_freq {
+    my $dbh = shift;
+
+    my $sql_query = q{
+        SELECT 
+            MAX(indel_freq)
+        FROM
+            indel
+    };
+    my $sth = $dbh->prepare($sql_query);
+
+    my @counts;
+    $sth->execute;
+    while ( my ($count) = $sth->fetchrow_array ) {
+        push @counts, $count;
     }
 
     return $counts[0];
