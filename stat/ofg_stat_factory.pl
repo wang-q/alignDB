@@ -8,6 +8,8 @@ use Config::Tiny;
 use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
+use DBI;
+
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::ToXLSX;
@@ -86,13 +88,12 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
+my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
+    or die "Cannot connect to MySQL database at $db:$server";
 my $write_obj = AlignDB::ToXLSX->new(
-    mysql   => "$db:$server",
-    user    => $username,
-    passwd  => $password,
+    dbh     => $dbh,
     outfile => $outfile,
 );
-my $dbh = $write_obj->dbh;
 
 #----------------------------------------------------------#
 # worksheet -- summary
@@ -102,126 +103,147 @@ my $summary_ofg = sub {
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
+    my @names = qw{Type COUNT AVG_length SUM_length};
+
     {    # write header
-        my $query_name = 'Item';
-        my $sql_query  = q{
-            SELECT 'Type', 'COUNT', 'AVG_length', 'SUM_length'
-        };
         ( $sheet_row, $sheet_col ) = ( 0, 1 );
         my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+            sheet_row => $sheet_row,
+            sheet_col => $sheet_col,
+            header    => \@names,
         );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_sql( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
     }
 
     {    # write contents
         my $query_name = 'ofg count';
         my $sql_query  = q{
-            SELECT  CONCAT(o.ofg_tag, "_", o.ofg_type) Type,
-                    COUNT(*) COUNT
-              FROM ofg o
-            GROUP BY o.ofg_tag, o.ofg_type
-            ORDER BY CONCAT(o.ofg_tag, "_", o.ofg_type)
+            SELECT 
+                CONCAT(o.ofg_tag, '_', o.ofg_type) Type, COUNT(*) COUNT
+            FROM
+                ofg o
+            GROUP BY o.ofg_tag , o.ofg_type
+            ORDER BY Type
         };
+
         my %option = (
             query_name => $query_name,
             sql_query  => $sql_query,
             sheet_row  => $sheet_row,
             sheet_col  => $sheet_col,
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
     }
-    $sheet_row++;    # add a blank row
+    $sheet_row++;
 
-    {                # write contents
+    {    # write contents
+        my $data = [];
+        push @{$data}, [] for @names;
+
         my $query_name = 'ofg tag count';
         my $sql_query  = q{
-            SELECT  o.ofg_tag,
-                    COUNT(*) COUNT
-              FROM ofg o
+            SELECT 
+                o.ofg_tag, COUNT(*) COUNT
+            FROM
+                ofg o
             GROUP BY o.ofg_tag
             ORDER BY o.ofg_tag
         };
+
         my %option = (
             query_name => $query_name,
             sql_query  => $sql_query,
             sheet_row  => $sheet_row,
             sheet_col  => $sheet_col,
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
     }
-    $sheet_row++;    # add a blank row
+    $sheet_row++;
 
-    {                # write contents
+    {    # write contents
+        my $data = [];
+        push @{$data}, [] for @names;
+
         my $query_name = 'ofg type count';
         my $sql_query  = q{
             SELECT  o.ofg_type,
                     COUNT(*) COUNT
-              FROM ofg o
+            FROM ofg o
             GROUP BY o.ofg_type
             ORDER BY o.ofg_type
         };
+
         my %option = (
             query_name => $query_name,
             sql_query  => $sql_query,
             sheet_row  => $sheet_row,
             sheet_col  => $sheet_col,
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
     }
-    $sheet_row++;    # add a blank row
-
-    {                # write contents
-        my $query_name = 'ofg';
-        my $sql_query  = q{
-            SELECT CONCAT(o.ofg_tag, "_", o.ofg_type) Type,
-                   COUNT(*) COUNT,
-                   AVG(w.window_length) AVG_length,
-                   SUM(w.window_length) SUM_length
-              FROM ofg o, window w
-             WHERE w.window_id = o.window_id
-            GROUP BY o.ofg_tag, o.ofg_type
-        };
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    # add a blank row
     $sheet_row++;
 
     {    # write contents
-        my $query_name = 'ofgsw_outside';
+        my $data = [];
+        push @{$data}, [] for @names;
+
+        my $query_name = 'ofg';
         my $sql_query  = q{
-            SELECT CONCAT(o.ofg_tag, "_", o.ofg_type) Type,
-                   COUNT(*) COUNT,
-                   AVG(w.window_length) AVG_length,
-                   SUM(w.window_length) SUM_length
-              FROM ofg o, window w, ofgsw s
-             WHERE w.window_id = s.window_id AND
-                   o.ofg_id = s.ofg_id
-            GROUP BY o.ofg_tag, o.ofg_type
+            SELECT 
+                CONCAT(o.ofg_tag, '_', o.ofg_type) Type,
+                COUNT(*) COUNT,
+                AVG(w.window_length) AVG_length,
+                SUM(w.window_length) SUM_length
+            FROM
+                ofg o,
+                window w
+            WHERE
+                w.window_id = o.window_id
+            GROUP BY o.ofg_tag , o.ofg_type
         };
+
         my %option = (
             query_name => $query_name,
             sql_query  => $sql_query,
             sheet_row  => $sheet_row,
             sheet_col  => $sheet_col,
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
     }
-
-    # add a blank row
     $sheet_row++;
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    {    # write contents
+        my $data = [];
+        push @{$data}, [] for @names;
+
+        my $query_name = 'ofgsw_outside';
+        my $sql_query  = q{
+            SELECT 
+                CONCAT(o.ofg_tag, '_', o.ofg_type) Type,
+                COUNT(*) COUNT,
+                AVG(w.window_length) AVG_length,
+                SUM(w.window_length) SUM_length
+            FROM
+                ofg o,
+                window w,
+                ofgsw s
+            WHERE
+                w.window_id = s.window_id
+                    AND o.ofg_id = s.ofg_id
+            GROUP BY o.ofg_tag , o.ofg_type
+        };
+
+        my %option = (
+            query_name => $query_name,
+            sql_query  => $sql_query,
+            sheet_row  => $sheet_row,
+            sheet_col  => $sheet_col,
+        );
+        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
+    }
+    $sheet_row++;
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -239,49 +261,54 @@ my $ofg_all = sub {
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
-    {    # write header
-        my @headers = qw{distance AVG_pi STD_pi AVG_indel STD_indel AVG_gc
-            STD_gc AVG_cv STD_cv AVG_repeats STD_repeats COUNT};
+    my $sql_query = q{
+        SELECT 
+            s.ofgsw_distance `distance`,
+            AVG(w.window_pi) `AVG_pi`,
+            STD(w.window_pi) `STD_pi`,
+            AVG(w.window_indel / w.window_length * 100) `AVG_indel`,
+            STD(w.window_indel / w.window_length * 100) `STD_indel`,
+            AVG(w.window_target_gc) `AVG_gc`,
+            STD(w.window_target_gc) `STD_gc`,
+            AVG(s.ofgsw_cv) `AVG_cv`,
+            STD(s.ofgsw_cv) `STD_cv`,
+            AVG(w.window_repeats) `AVG_repeats`,
+            STD(w.window_repeats) `STD_repeats`,
+            COUNT(*) COUNT
+        FROM
+            ofg o,
+            ofgsw s,
+            window w
+        WHERE
+            o.ofg_id = s.ofg_id
+                AND s.window_id = w.window_id
+        GROUP BY s.ofgsw_distance
+    };
+
+    my @names = $write_obj->sql2names($sql_query);
+    my $data  = [];
+    push @{$data}, [] for @names;
+
+    {    # header
         ( $sheet_row, $sheet_col ) = ( 0, 0 );
         my %option = (
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
-            header    => \@headers,
+            header    => \@names,
         );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
     }
 
-    {    # query
-        my $sql_query = q{
-            SELECT s.ofgsw_distance `distance`,
-                   AVG(w.window_pi) `avg_pi`,
-                   STD(w.window_pi) `avg_pi`,
-                   AVG(w.window_indel / w.window_length * 100) `avg_indel`,
-                   STD(w.window_indel / w.window_length * 100) `avg_indel`,
-                   AVG(w.window_target_gc) `avg_gc`,
-                   STD(w.window_target_gc) `avg_gc`,
-                   AVG(s.ofgsw_cv) `avg_cv`,
-                   STD(s.ofgsw_cv) `avg_cv`,
-                   AVG(w.window_repeats) `avg_repeats`,
-                   STD(w.window_repeats) `avg_repeats`,
-                   COUNT(*) count
-              FROM ofg o,
-                   ofgsw s,
-                   window w
-             WHERE o.ofg_id = s.ofg_id AND
-                   s.window_id = w.window_id
-            GROUP BY s.ofgsw_distance
-        };
+    {    # content
         my %option = (
             sql_query => $sql_query,
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
         );
-
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -306,58 +333,61 @@ my $ofg_coding = sub {
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
-        {    # write header
-            my @headers = qw{distance AVG_pi STD_pi AVG_indel STD_indel AVG_gc
-                STD_gc AVG_cv STD_cv AVG_repeats STD_repeats COUNT};
+        my $sql_query = q{
+            SELECT
+                s.ofgsw_distance `distance`,
+                AVG(w.window_pi) `AVG_pi`,
+                STD(w.window_pi) `STD_pi`,
+                AVG(w.window_indel / w.window_length * 100) `AVG_indel`,
+                STD(w.window_indel / w.window_length * 100) `STD_indel`,
+                AVG(w.window_target_gc) `AVG_gc`,
+                STD(w.window_target_gc) `STD_gc`,
+                AVG(s.ofgsw_cv) `AVG_cv`,
+                STD(s.ofgsw_cv) `STD_cv`,
+                AVG(w.window_repeats) `AVG_repeats`,
+                STD(w.window_repeats) `STD_repeats`,
+                COUNT(*) COUNT
+            FROM ofgsw s,
+                 window w,
+                 (
+                  SELECT s.ofgsw_id
+                  FROM ofgsw s,
+                        ofg o,
+                       window w
+                  WHERE o.window_id = w.window_id AND
+                        w.window_coding = ? AND
+                        s.ofg_id = o.ofg_id
+                 ) sw
+            WHERE s.window_id = w.window_id AND
+                  s.ofgsw_id = sw.ofgsw_id
+            GROUP BY s.ofgsw_distance
+        };
+
+        my @names = $write_obj->sql2names($sql_query);
+        my $data  = [];
+        push @{$data}, [] for @names;
+
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
-                header    => \@headers,
+                header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {    # query
-            my $sql_query = q{
-                SELECT s.ofgsw_distance `distance`,
-                   AVG(w.window_pi) `avg_pi`,
-                   STD(w.window_pi) `avg_pi`,
-                   AVG(w.window_indel / w.window_length * 100) `avg_indel`,
-                   STD(w.window_indel / w.window_length * 100) `avg_indel`,
-                   AVG(w.window_target_gc) `avg_gc`,
-                   STD(w.window_target_gc) `avg_gc`,
-                   AVG(s.ofgsw_cv) `avg_cv`,
-                   STD(s.ofgsw_cv) `avg_cv`,
-                   AVG(w.window_repeats) `avg_repeats`,
-                   STD(w.window_repeats) `avg_repeats`,
-                   COUNT(*) count
-                FROM ofgsw s,
-                     window w,
-                     (
-                      SELECT s.ofgsw_id
-                      FROM ofgsw s,
-                            ofg o,
-                           window w
-                      WHERE o.window_id = w.window_id AND
-                            w.window_coding = ? AND
-                            s.ofg_id = o.ofg_id
-                     ) sw
-                WHERE s.window_id = w.window_id AND
-                      s.ofgsw_id = sw.ofgsw_id
-                GROUP BY s.ofgsw_distance
-            };
+        {    # content
             my %option = (
                 sql_query  => $sql_query,
                 sheet_row  => $sheet_row,
                 sheet_col  => $sheet_col,
                 bind_value => [ $value, ],
             );
-
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
     for (@levels) {
@@ -387,48 +417,52 @@ my $ofg_coding_pure = sub {
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
-        {    # write header
-            my @headers = qw{distance AVG_pi STD_pi AVG_indel STD_indel AVG_gc
-                STD_gc AVG_cv STD_cv AVG_repeats STD_repeats COUNT};
+        my $sql_query = q{
+            SELECT
+                s.ofgsw_distance `distance`,
+                AVG(w.window_pi) `AVG_pi`,
+                STD(w.window_pi) `STD_pi`,
+                AVG(w.window_indel / w.window_length * 100) `AVG_indel`,
+                STD(w.window_indel / w.window_length * 100) `STD_indel`,
+                AVG(w.window_target_gc) `AVG_gc`,
+                STD(w.window_target_gc) `STD_gc`,
+                AVG(s.ofgsw_cv) `AVG_cv`,
+                STD(s.ofgsw_cv) `STD_cv`,
+                AVG(w.window_repeats) `AVG_repeats`,
+                STD(w.window_repeats) `STD_repeats`,
+                COUNT(*) COUNT
+            FROM ofgsw s,
+                 window w,
+                 (
+                  SELECT s.ofgsw_id
+                  FROM ofgsw s,
+                        ofg o,
+                       window w
+                  WHERE o.window_id = w.window_id AND
+                        w.window_coding = ? AND
+                        s.ofg_id = o.ofg_id
+                 ) sw
+            WHERE s.window_id = w.window_id AND
+                  s.ofgsw_id = sw.ofgsw_id AND
+                  w.window_coding = ?
+            GROUP BY s.ofgsw_distance
+        };
+
+        my @names = $write_obj->sql2names($sql_query);
+        my $data  = [];
+        push @{$data}, [] for @names;
+
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
-                header    => \@headers,
+                header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {    # query
-            my $sql_query = q{
-                SELECT s.ofgsw_distance `distance`,
-                   AVG(w.window_pi) `avg_pi`,
-                   STD(w.window_pi) `avg_pi`,
-                   AVG(w.window_indel / w.window_length * 100) `avg_indel`,
-                   STD(w.window_indel / w.window_length * 100) `avg_indel`,
-                   AVG(w.window_target_gc) `avg_gc`,
-                   STD(w.window_target_gc) `avg_gc`,
-                   AVG(s.ofgsw_cv) `avg_cv`,
-                   STD(s.ofgsw_cv) `avg_cv`,
-                   AVG(w.window_repeats) `avg_repeats`,
-                   STD(w.window_repeats) `avg_repeats`,
-                   COUNT(*) count
-                FROM ofgsw s,
-                     window w,
-                     (
-                      SELECT s.ofgsw_id
-                      FROM ofgsw s,
-                            ofg o,
-                           window w
-                      WHERE o.window_id = w.window_id AND
-                            w.window_coding = ? AND
-                            s.ofg_id = o.ofg_id
-                     ) sw
-                WHERE s.window_id = w.window_id AND
-                      s.ofgsw_id = sw.ofgsw_id AND
-                      w.window_coding = ?
-                GROUP BY s.ofgsw_distance
-            };
+        {    # content
             my %option = (
                 sql_query  => $sql_query,
                 sheet_row  => $sheet_row,
@@ -436,10 +470,10 @@ my $ofg_coding_pure = sub {
                 bind_value => [ $value, $value, ],
             );
 
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
     for (@levels) {
@@ -462,51 +496,54 @@ my $ofg_dG = sub {
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
-    {    # write header
-        my @headers = qw{distance AVG_pi STD_pi AVG_indel STD_indel AVG_gc
-            STD_gc AVG_cv STD_cv AVG_dG STD_dG COUNT};
+    my $sql_query = q{
+        SELECT
+            s.ofgsw_distance `distance`,
+            AVG(w.window_pi) `AVG_pi`,
+            STD(w.window_pi) `STD_pi`,
+            AVG(w.window_indel / w.window_length * 100) `AVG_indel`,
+            STD(w.window_indel / w.window_length * 100) `STD_indel`,
+            AVG(w.window_target_gc) `AVG_gc`,
+            STD(w.window_target_gc) `STD_gc`,
+            AVG(s.ofgsw_cv) `AVG_cv`,
+            STD(s.ofgsw_cv) `STD_cv`,
+            AVG(s.ofgsw_dG) `avg_dG`,
+            STD(s.ofgsw_dG) `std_dG`,
+            COUNT(*) COUNT
+          FROM ofg o,
+               ofgsw s,
+               window w
+        WHERE     1 = 1
+        AND o.ofg_id = s.ofg_id
+        AND s.window_id = w.window_id
+        AND s.ofgsw_distance != 0
+        GROUP BY s.ofgsw_distance
+    };
+
+    my @names = $write_obj->sql2names($sql_query);
+    my $data  = [];
+    push @{$data}, [] for @names;
+
+    {    # header
         ( $sheet_row, $sheet_col ) = ( 0, 0 );
         my %option = (
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
-            header    => \@headers,
+            header    => \@names,
         );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
     }
 
-    {    # query
-        my $sql_query = q{
-            SELECT s.ofgsw_distance `distance`,
-                   AVG(w.window_pi) `avg_pi`,
-                   STD(w.window_pi) `std_pi`,
-                   AVG(w.window_indel / w.window_length * 100) `avg_indel`,
-                   STD(w.window_indel / w.window_length * 100) `std_indel`,
-                   AVG(w.window_target_gc) `avg_gc`,
-                   STD(w.window_target_gc) `std_gc`,
-                   AVG(s.ofgsw_cv) `avg_cv`,
-                   STD(s.ofgsw_cv) `std_cv`,
-                   AVG(s.ofgsw_dG) `avg_dG`,
-                   STD(s.ofgsw_dG) `std_dG`,
-                   COUNT(*) count
-              FROM ofg o,
-                   ofgsw s,
-                   window w
-            WHERE     1 = 1
-            AND o.ofg_id = s.ofg_id
-            AND s.window_id = w.window_id
-            AND s.ofgsw_distance != 0
-            GROUP BY s.ofgsw_distance
-        };
+    {    # content
         my %option = (
             sql_query => $sql_query,
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
         );
-
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 my $ofg_tag_type = sub {
@@ -552,59 +589,63 @@ my $ofg_tag_type = sub {
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
-        {                                           # write header
-            my @headers = qw{distance AVG_pi STD_pi AVG_indel STD_indel AVG_gc
-                STD_gc AVG_cv STD_cv AVG_repeats STD_repeats COUNT};
+        my $sql_query = q{
+            SELECT 
+                s.ofgsw_distance `distance`,
+                AVG(w.window_pi) `AVG_pi`,
+                STD(w.window_pi) `STD_pi`,
+                AVG(w.window_indel / w.window_length * 100) `AVG_indel`,
+                STD(w.window_indel / w.window_length * 100) `STD_indel`,
+                AVG(w.window_target_gc) `AVG_gc`,
+                STD(w.window_target_gc) `STD_gc`,
+                AVG(s.ofgsw_cv) `AVG_cv`,
+                STD(s.ofgsw_cv) `STD_cv`,
+                AVG(w.window_repeats) `AVG_repeats`,
+                STD(w.window_repeats) `STD_repeats`,
+                COUNT(*) COUNT
+            FROM
+                ofg o,
+                ofgsw s,
+                window w
+            WHERE
+                o.ofg_id = s.ofg_id
+                    AND s.window_id = w.window_id
+        };
+        if ( $by eq "tag" ) {
+            $sql_query .= "AND o.ofg_tag = ? GROUP BY s.ofgsw_distance";
+        }
+        elsif ( $by eq "type" ) {
+            $sql_query .= "AND o.ofg_type = ? GROUP BY s.ofgsw_distance";
+        }
+        elsif ( $by eq "tt" ) {
+            $sql_query .= q{AND CONCAT(o.ofg_tag, "_", o.ofg_type) = ? GROUP BY s.ofgsw_distance};
+        }
+
+        my @names = $write_obj->sql2names($sql_query);
+        my $data  = [];
+        push @{$data}, [] for @names;
+
+        {    # header
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
             my %option = (
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
-                header    => \@headers,
+                header    => \@names,
             );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
         }
 
-        {                                           # query
-            my $sql_query = q{
-                SELECT s.ofgsw_distance `distance`,
-                       AVG(w.window_pi) `avg_pi`,
-                       STD(w.window_pi) `avg_pi`,
-                       AVG(w.window_indel / w.window_length * 100) `avg_indel`,
-                       STD(w.window_indel / w.window_length * 100) `avg_indel`,
-                       AVG(w.window_target_gc) `avg_gc`,
-                       STD(w.window_target_gc) `avg_gc`,
-                       AVG(s.ofgsw_cv) `avg_cv`,
-                       STD(s.ofgsw_cv) `avg_cv`,
-                       AVG(w.window_repeats) `avg_repeats`,
-                       STD(w.window_repeats) `avg_repeats`,
-                       COUNT(*) count
-                  FROM ofg o,
-                       ofgsw s,
-                       window w
-                 WHERE o.ofg_id = s.ofg_id 
-                   AND s.window_id = w.window_id
-            };
-            if ( $by eq "tag" ) {
-                $sql_query .= "AND o.ofg_tag = ? GROUP BY s.ofgsw_distance";
-            }
-            elsif ( $by eq "type" ) {
-                $sql_query .= "AND o.ofg_type = ? GROUP BY s.ofgsw_distance";
-            }
-            elsif ( $by eq "tt" ) {
-                $sql_query
-                    .= q{AND CONCAT(o.ofg_tag, "_", o.ofg_type) = ? GROUP BY s.ofgsw_distance};
-            }
+        {    # content
             my %option = (
                 sql_query  => $sql_query,
                 sheet_row  => $sheet_row,
                 sheet_col  => $sheet_col,
                 bind_value => [ $bind, ],
             );
-
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
     for ( @{$ary_ref} ) {
@@ -612,7 +653,7 @@ my $ofg_tag_type = sub {
     }
 };
 
-foreach my $n (@tasks) {
+for my $n (@tasks) {
     if ( $n == 1 ) { &$summary_ofg;     next; }
     if ( $n == 2 ) { &$ofg_all;         next; }
     if ( $n == 3 ) { &$ofg_coding;      next; }
