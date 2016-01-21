@@ -89,3 +89,63 @@ perl ~/Scripts/fig_table/xlsx2csv.pl -f mmc2.xls --sheet 'Spo11 Hot Spot Annotat
 
     perl ~/Scripts/alignDB/stat/ofg_stat_factory.pl -d S288cvsself_spo11_edge --index --chart
     ```
+
+## S288c X YJM789 (nature 2008)
+
+### Get data
+
+Original paper:
+
+Mancera, E., Bourgon, R., Brozzi, A., Huber, W. & Steinmetz, L. M. High-resolution mapping of meiotic crossovers and non-crossovers in yeast. Nature 454, 479Ð485 (2008).
+
+```bash
+mkdir -p ~/data/ofg/nat08
+cd ~/data/ofg/nat08
+
+wget -N http://www.nature.com/nature/journal/v454/n7203/extref/nature07135-s2.zip
+
+unzip nature07135-s2.zip
+
+rm gce_*.bed
+
+perl -anl -F"\t" -e '
+    BEGIN { use Path::Tiny; use Roman; }
+    $F[0] =~ /chr(\d+)/ or next;
+    $chr = Roman($1);
+    $F[1] =~ s/\.\d+//;
+    $F[2] =~ s/\.\d+//;
+    $str = join(qq{\t}, $chr, $F[1], $F[2]);
+    path(q{gce_} . $F[6] . q{.bed})->append($str);
+    ' nature07135-s2/event_intervals.txt
+```
+
+### Process
+
+1. S288Cvsself center
+
+    ```bash
+    cd ~/data/ofg/nat08
+
+    perl ~/Scripts/alignDB/util/dup_db.pl -g S288cvsself_nat08 -f ~/data/dumps/mysql/S288cvsself.sql.gz
+
+    perl ~/Scripts/alignDB/ofg/insert_bed.pl \
+        -d S288cvsself_nat08 \
+        --style center --batch 1 --parallel 8 \
+        --dG \
+        --tag gce --type C  -f ~/data/ofg/nat08/gce_C.bed  \
+        --tag gce --type CC -f ~/data/ofg/nat08/gce_CC.bed \
+        --tag gce --type M  -f ~/data/ofg/nat08/gce_M.bed  \
+        --tag gce --type X  -f ~/data/ofg/nat08/gce_X.bed
+
+    perl ~/Scripts/alignDB/init/update_sw_cv.pl -d S288cvsself_nat08 --batch 1 --parallel 8
+    perl ~/Scripts/alignDB/init/update_feature.pl \
+        -d S288cvsself_nat08 \
+        -e saccharomyces_cerevisiae_core_29_82_4 \
+        --batch 1 --parallel 8
+
+    perl ~/Scripts/alignDB/stat/ofg_stat_factory.pl -d S288cvsself_nat08 --index --chart
+    ```
+
+2. nat08 style edge S288CvsYJM789
+
+3. nat08 style center S288CvsYJM789
