@@ -11,13 +11,13 @@ perl ~/Scripts/alignDB/util/dup_db.pl -f ~/data/dumps/mysql/Scer_n8_pop.sql.gz -
 2. update ld
 
 ```bash
-perl ~/Scripts/alignDB/extra/update_snp_ld.pl -d Scer_n8_pop_LD
+perl ~/Scripts/alignDB/extra/update_snp_ld.pl -d Scer_n8_pop_LD --parallel 8 --batch 10
 ```
 
 3. stat
 
 ```bash
-perl ~/Scripts/alignDB/stat/ld_stat_factory.pl -d Scer_n8_pop_LD
+perl ~/Scripts/alignDB/stat/ld_stat_factory.pl -d Scer_n8_pop_LD --index --chart
 ```
 
 ## Others
