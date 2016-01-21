@@ -45,7 +45,7 @@ perl ~/Scripts/fig_table/xlsx2csv.pl -f mmc2.xls --sheet 'Spo11 Hot Spot Annotat
         -e saccharomyces_cerevisiae_core_29_82_4 \
         --batch 1 --parallel 8
 
-    perl ~/Scripts/alignDB/stat/ofg_stat_factory.pl -d S288cvsself_spo11
+    perl ~/Scripts/alignDB/stat/ofg_stat_factory.pl -d S288cvsself_spo11 --index --chart
     ```
 
 2. Scer_n8_pop center_intact
@@ -66,7 +66,7 @@ perl ~/Scripts/fig_table/xlsx2csv.pl -f mmc2.xls --sheet 'Spo11 Hot Spot Annotat
         -e saccharomyces_cerevisiae_core_29_82_4 \
         --batch 10 --parallel 8
 
-    perl ~/Scripts/alignDB/stat/ofg_stat_factory.pl -d Scer_n8_pop_spo11
+    perl ~/Scripts/alignDB/stat/ofg_stat_factory.pl -d Scer_n8_pop_spo11 --index --chart
     ```
 
 3. S288Cvsself edge
@@ -87,5 +87,5 @@ perl ~/Scripts/fig_table/xlsx2csv.pl -f mmc2.xls --sheet 'Spo11 Hot Spot Annotat
         -e saccharomyces_cerevisiae_core_29_82_4 \
         --batch 1 --parallel 8
 
-    perl ~/Scripts/alignDB/stat/ofg_stat_factory.pl -d S288cvsself_spo11_edge
+    perl ~/Scripts/alignDB/stat/ofg_stat_factory.pl -d S288cvsself_spo11_edge --index --chart
     ```

@@ -9,6 +9,8 @@ use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use DBI;
+use Set::Scalar;
+use List::MoreUtils qw( first_index);
 
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
@@ -43,6 +45,7 @@ ofg_stat_factory.pl - OFG (other features of genome) stats for alignDB
         --combine       INT     
         --piece         INT     
         --index                 add an index sheet
+        --chart                 add charts
 
 =cut
 
@@ -56,6 +59,8 @@ GetOptions(
     'output|o=s'   => \( my $outfile ),
     'by=s'         => \( my $by       = "tag" ),
     'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
+    'index'        => \( my $add_index_sheet, ),
+    'chart'        => \( my $add_chart, ),
 ) or HelpMessage(1);
 
 $outfile = "$db.ofg.xlsx" unless $outfile;
@@ -96,23 +101,142 @@ my $write_obj = AlignDB::ToXLSX->new(
 );
 
 #----------------------------------------------------------#
+# chart -- ofg
+#----------------------------------------------------------#
+my $chart_ofg = sub {
+    my $sheet = shift;
+    my $data  = shift;
+
+    my $x_set = Set::Scalar->new( @{ $data->[0] } );
+
+    my %opt = (
+        x_column => 0,
+        x_title  => "Distance to ofg",
+        top      => 1,
+        left     => 13,
+    );
+
+    if ( $x_set->has(-10) ) {
+        my $idx = first_index { $_ == -10 } @{ $data->[0] };
+        $opt{first_row}   = $idx + 1;
+        $opt{last_row}    = $idx + 26;
+        $opt{x_min_scale} = -10;
+        $opt{x_max_scale} = 15;
+        $opt{cross}       = 0;
+    }
+    elsif ( $x_set->has(0) ) {
+        my $idx = first_index { $_ == 0 } @{ $data->[0] };
+        $opt{first_row}   = $idx + 1;
+        $opt{last_row}    = $idx + 16;
+        $opt{x_min_scale} = 0;
+        $opt{x_max_scale} = 15;
+        $opt{cross}       = 0;
+    }
+    elsif ( $x_set->has(1) ) {
+        my $idx = first_index { $_ == 1 } @{ $data->[0] };
+        $opt{first_row}   = $idx + 1;
+        $opt{last_row}    = $idx + 16;
+        $opt{x_min_scale} = 0;
+        $opt{x_max_scale} = 15;
+    }
+    else {
+        warn "X column errors\n";
+        print Dump $data;
+        return;
+    }
+
+    # chart 1
+    $opt{y_column} = 1;
+    $opt{y_data}   = $data->[1];
+    $opt{y_title}  = "Nucleotide diversity";
+    $write_obj->draw_y( $sheet, \%opt );
+
+    # chart 2
+    $opt{y_column} = 3;
+    $opt{y_data}   = $data->[3];
+    $opt{y_title}  = "Indel per 100 bp";
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
+
+    # chart 3
+    $opt{y_column}  = 5;
+    $opt{y_data}    = $data->[5];
+    $opt{y_title}   = "GC proportion";
+    $opt{y2_column} = 7;
+    $opt{y2_data}   = $data->[7];
+    $opt{y2_title}  = "Window CV";
+    $opt{top} += 18;
+    $write_obj->draw_2y( $sheet, \%opt );
+    delete $opt{y2_column};
+    delete $opt{y2_data};
+    delete $opt{y2_title};
+
+    # chart 4
+    $opt{y_column} = 9;
+    $opt{y_data}   = $data->[9];
+    $opt{y_title}  = "Repeats proportion";
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
+
+    if ( $x_set->has(-90) ) {
+        my $idx = first_index { $_ == -90 } @{ $data->[0] };
+
+        $opt{first_row}   = $idx + 1;
+        $opt{last_row}    = $idx + 16;
+        $opt{x_min_scale} = -90;
+        $opt{x_max_scale} = -75;
+        $opt{cross}       = -90;
+
+        # chart 5
+        $opt{y_column} = 1;
+        $opt{y_data}   = $data->[1];
+        $opt{y_title}  = "Nucleotide diversity";
+        $opt{top}      = 1;
+        $opt{left}     = 19;
+        $write_obj->draw_y( $sheet, \%opt );
+
+        # chart 6
+        $opt{y_column} = 3;
+        $opt{y_data}   = $data->[3];
+        $opt{y_title}  = "Indel per 100 bp";
+        $opt{top} += 18;
+        $write_obj->draw_y( $sheet, \%opt );
+
+        # chart 7
+        $opt{y_column} = 5;
+        $opt{y_data}   = $data->[5];
+        $opt{y_title}  = "GC proportion";
+        $opt{top} += 18;
+        $write_obj->draw_y( $sheet, \%opt );
+
+        # chart 8
+        $opt{y_column} = 7;
+        $opt{y_data}   = $data->[7];
+        $opt{y_title}  = "Window CV";
+        $opt{top} += 18;
+        $write_obj->draw_y( $sheet, \%opt );
+
+        # chart 9
+        $opt{y_column} = 9;
+        $opt{y_data}   = $data->[9];
+        $opt{y_title}  = "Repeats proportion";
+        $opt{top} += 18;
+        $write_obj->draw_y( $sheet, \%opt );
+    }
+};
+
+#----------------------------------------------------------#
 # worksheet -- summary
 #----------------------------------------------------------#
 my $summary_ofg = sub {
     my $sheet_name = 'summary';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     my @names = qw{Type COUNT AVG_length SUM_length};
-
     {    # write header
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@names,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     {    # write contents
@@ -126,20 +250,16 @@ my $summary_ofg = sub {
             ORDER BY Type
         };
 
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
     }
-    $sheet_row++;
+    $write_obj->increase_row;
 
     {    # write contents
-        my $data = [];
-        push @{$data}, [] for @names;
-
         my $query_name = 'ofg tag count';
         my $sql_query  = q{
             SELECT 
@@ -150,20 +270,16 @@ my $summary_ofg = sub {
             ORDER BY o.ofg_tag
         };
 
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
     }
-    $sheet_row++;
+    $write_obj->increase_row;
 
     {    # write contents
-        my $data = [];
-        push @{$data}, [] for @names;
-
         my $query_name = 'ofg type count';
         my $sql_query  = q{
             SELECT  o.ofg_type,
@@ -173,20 +289,16 @@ my $summary_ofg = sub {
             ORDER BY o.ofg_type
         };
 
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
     }
-    $sheet_row++;
+    $write_obj->increase_row;
 
     {    # write contents
-        my $data = [];
-        push @{$data}, [] for @names;
-
         my $query_name = 'ofg';
         my $sql_query  = q{
             SELECT 
@@ -202,20 +314,16 @@ my $summary_ofg = sub {
             GROUP BY o.ofg_tag , o.ofg_type
         };
 
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
     }
-    $sheet_row++;
+    $write_obj->increase_row;
 
     {    # write contents
-        my $data = [];
-        push @{$data}, [] for @names;
-
         my $query_name = 'ofgsw_outside';
         my $sql_query  = q{
             SELECT 
@@ -233,15 +341,14 @@ my $summary_ofg = sub {
             GROUP BY o.ofg_tag , o.ofg_type
         };
 
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
     }
-    $sheet_row++;
+    $write_obj->increase_row;
 
     print "Sheet [$sheet_name] has been generated.\n";
 };
@@ -259,7 +366,8 @@ my $ofg_all = sub {
 
     my $sheet_name = "ofg_all";
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
     my $sql_query = q{
         SELECT 
@@ -286,26 +394,22 @@ my $ofg_all = sub {
     };
 
     my @names = $write_obj->sql2names($sql_query);
-    my $data  = [];
-    push @{$data}, [] for @names;
-
     {    # header
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@names,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
+    my $data;
     {    # content
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
+        $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query => $sql_query,
+                data      => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
+    }
+
+    if ($add_chart) {    # chart
+        $chart_ofg->( $sheet, $data );
     }
 
     print "Sheet [$sheet_name] has been generated.\n";
@@ -331,7 +435,8 @@ my $ofg_coding = sub {
         my ( $order, $value ) = @_;
         my $sheet_name = "ofg_$order";
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
         my $sql_query = q{
             SELECT
@@ -364,27 +469,24 @@ my $ofg_coding = sub {
         };
 
         my @names = $write_obj->sql2names($sql_query);
-        my $data  = [];
-        push @{$data}, [] for @names;
-
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+
         }
 
+        my $data;
         {    # content
-            my %option = (
-                sql_query  => $sql_query,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $value, ],
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $sql_query,
+                    bind_value => [ $value, ],
+                    data       => 1,
+                }
             );
-            ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
+        }
+
+        if ($add_chart) {    # chart
+            $chart_ofg->( $sheet, $data );
         }
 
         print "Sheet [$sheet_name] has been generated.\n";
@@ -415,7 +517,8 @@ my $ofg_coding_pure = sub {
         my ( $order, $value ) = @_;
         my $sheet_name = "ofg_$order" . "_pure";
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
         my $sql_query = q{
             SELECT
@@ -449,28 +552,23 @@ my $ofg_coding_pure = sub {
         };
 
         my @names = $write_obj->sql2names($sql_query);
-        my $data  = [];
-        push @{$data}, [] for @names;
-
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
+        my $data;
         {    # content
-            my %option = (
-                sql_query  => $sql_query,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $value, $value, ],
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $sql_query,
+                    bind_value => [ $value, $value ],
+                    data       => 1,
+                }
             );
+        }
 
-            ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
+        if ($add_chart) {    # chart
+            $chart_ofg->( $sheet, $data );
         }
 
         print "Sheet [$sheet_name] has been generated.\n";
@@ -494,7 +592,8 @@ my $ofg_dG = sub {
 
     my $sheet_name = "ofg_dG";
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
     my $sql_query = q{
         SELECT
@@ -521,26 +620,22 @@ my $ofg_dG = sub {
     };
 
     my @names = $write_obj->sql2names($sql_query);
-    my $data  = [];
-    push @{$data}, [] for @names;
-
     {    # header
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@names,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
+    my $data;
     {    # content
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
+        $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query => $sql_query,
+                data      => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
+    }
+
+    if ($add_chart) {    # chart
+        $chart_ofg->( $sheet, $data );
     }
 
     print "Sheet [$sheet_name] has been generated.\n";
@@ -587,7 +682,8 @@ my $ofg_tag_type = sub {
         }
         $sheet_name = substr $sheet_name, 0, 31;    # excel sheet name limit
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
         my $sql_query = q{
             SELECT 
@@ -622,27 +718,23 @@ my $ofg_tag_type = sub {
         }
 
         my @names = $write_obj->sql2names($sql_query);
-        my $data  = [];
-        push @{$data}, [] for @names;
-
         {    # header
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@names,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
+        my $data;
         {    # content
-            my %option = (
-                sql_query  => $sql_query,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $bind, ],
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $sql_query,
+                    bind_value => [ $bind, ],
+                    data       => 1,
+                }
             );
-            ($sheet_row) = $write_obj->write_sql( $sheet, \%option );
+        }
+
+        if ($add_chart) {    # chart
+            $chart_ofg->( $sheet, $data );
         }
 
         print "Sheet [$sheet_name] has been generated.\n";
@@ -660,6 +752,11 @@ for my $n (@tasks) {
     if ( $n == 4 ) { &$ofg_coding_pure; next; }
     if ( $n == 5 ) { &$ofg_dG;          next; }
     if ( $n == 6 ) { &$ofg_tag_type;    next; }
+}
+
+if ($add_index_sheet) {
+    $write_obj->add_index_sheet;
+    print "Sheet [INDEX] has been generated.\n";
 }
 
 $stopwatch->end_message;
