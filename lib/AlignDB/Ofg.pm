@@ -59,8 +59,7 @@ has 'style' => ( is => 'rw', isa => 'Styles', default => 'edge', );
 
 # dG calculator
 has 'insert_dG' => ( is => 'rw', isa => 'Bool', default => 0, );
-has 'dG_calc' =>
-    ( is => 'ro', isa => 'Object', default => sub { AlignDB::DeltaG->new }, );
+has 'dG_calc' => ( is => 'ro', isa => 'Object', default => sub { AlignDB::DeltaG->new }, );
 
 sub insert_ofg {
     my $self        = shift;
@@ -111,8 +110,7 @@ sub insert_ofg {
             my $iset = $_->{set}->intersect($chr_set);
             if ( $iset->is_not_empty ) {
                 print ' ' x 4, "Find ofg: $chr_name $iset\n";
-                push @align_ofg,
-                    { set => $iset, tag => $_->{tag}, type => $_->{type} };
+                push @align_ofg, { set => $iset, tag => $_->{tag}, type => $_->{type} };
             }
         }
         if ( @align_ofg == 0 ) {
@@ -145,9 +143,7 @@ sub insert_ofg {
             $ofg_end   = $ofg_set->max;
 
             # window
-            my ($cur_window_id)
-                = $self->insert_window( $align_id, $ofg_set,
-                $internal_indel_flag );
+            my ($cur_window_id) = $self->insert_window( $align_id, $ofg_set, $internal_indel_flag );
 
             # insert to table
             $ofg_insert_sth->execute( $cur_window_id, $ofg_tag, $ofg_type );
@@ -236,13 +232,11 @@ sub insert_ofgsw {
 
             # outside rsw
             my @out_rsw
-                = $window_maker->outside_window( $target_set, $ofg_set->min,
-                $ofg_set->max );
+                = $window_maker->outside_window( $target_set, $ofg_set->min, $ofg_set->max );
 
             for my $outside_rsw (@out_rsw) {
                 my ($cur_window_id)
-                    = $self->insert_window( $align_id, $outside_rsw->{set},
-                    $internal_indel_flag );
+                    = $self->insert_window( $align_id, $outside_rsw->{set}, $internal_indel_flag );
 
                 my $deltaG
                     = $self->insert_dG
@@ -253,14 +247,11 @@ sub insert_ofgsw {
             }
 
             # inside rsw
-            my @in_rsw
-                = $window_maker->inside_window( $target_set, $ofg_set->min,
-                $ofg_set->max );
+            my @in_rsw = $window_maker->inside_window( $target_set, $ofg_set->min, $ofg_set->max );
 
             for my $inside_rsw (@in_rsw) {
                 my ($cur_window_id)
-                    = $self->insert_window( $align_id, $inside_rsw->{set},
-                    $internal_indel_flag );
+                    = $self->insert_window( $align_id, $inside_rsw->{set}, $internal_indel_flag );
 
                 my $deltaG
                     = $self->insert_dG
@@ -275,8 +266,7 @@ sub insert_ofgsw {
                 # inside rsw 2
                 # rsw2 start from -90, so there will be no conflicts with rsw
                 my @in_rsw2
-                    = $window_maker->inside_window2( $target_set, $ofg_set->min,
-                    $ofg_set->max );
+                    = $window_maker->inside_window2( $target_set, $ofg_set->min, $ofg_set->max );
 
                 for my $inside_rsw (@in_rsw2) {
                     my ($cur_window_id)
@@ -288,20 +278,17 @@ sub insert_ofgsw {
                         ? $self->_calc_deltaG( $align_id, $inside_rsw->{set} )
                         : undef;
                     $ofgsw_insert->execute( $cur_window_id, $ofg_id,
-                        $inside_rsw->{type}, $inside_rsw->{distance}, $deltaG,
-                    );
+                        $inside_rsw->{type}, $inside_rsw->{distance}, $deltaG, );
                 }
             }
         }
         elsif ( $style eq 'center' ) {
             my @center_rsw
-                = $window_maker->center_window( $target_set, $ofg_set->min,
-                $ofg_set->max );
+                = $window_maker->center_window( $target_set, $ofg_set->min, $ofg_set->max );
 
             for my $rsw (@center_rsw) {
                 my ($cur_window_id)
-                    = $self->insert_window( $align_id, $rsw->{set},
-                    $internal_indel_flag );
+                    = $self->insert_window( $align_id, $rsw->{set}, $internal_indel_flag );
 
                 my $deltaG
                     = $self->insert_dG
@@ -312,13 +299,12 @@ sub insert_ofgsw {
             }
         }
         elsif ( $style eq 'center_intact' ) {
-            my @center_rsw = $window_maker->center_intact_window( $target_set,
-                $ofg_set->min, $ofg_set->max );
+            my @center_rsw
+                = $window_maker->center_intact_window( $target_set, $ofg_set->min, $ofg_set->max );
 
             for my $rsw (@center_rsw) {
                 my ($cur_window_id)
-                    = $self->insert_window( $align_id, $rsw->{set},
-                    $internal_indel_flag );
+                    = $self->insert_window( $align_id, $rsw->{set}, $internal_indel_flag );
 
                 my $deltaG
                     = $self->insert_dG

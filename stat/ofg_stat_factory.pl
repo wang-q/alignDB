@@ -1,58 +1,60 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
+use AlignDB::ToXLSX;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
+use lib "$FindBin::RealBin/../lib";
 use AlignDB;
-use AlignDB::WriteExcel;
 use AlignDB::Ofg;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-# stat parameter
-my $run     = $Config->{stat}{run};
-my $outfile = "";
+ofg_stat_factory.pl - OFG (other features of genome) stats for alignDB
 
-my $by = "tag";    # "type" or "tt"
+=head1 SYNOPSIS
 
-my $man  = 0;
-my $help = 0;
+    perl ofg_stat_factory.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --outfile   -o  STR     outfile filename
+        --by            STR     tag, type or tt
+        --run       -r  STR     run special analysis
+        --combine       INT     
+        --piece         INT     
+        --index                 add an index sheet
+
+=cut
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    's|server=s'   => \$server,
-    'P|port=s'     => \$port,
-    'd|db=s'       => \$db,
-    'u|username=s' => \$username,
-    'p|password=s' => \$password,
-    'o|output=s'   => \$outfile,
-    'r|run=s'      => \$run,
-    'by=s'         => \$by,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
+    'username|u=s' => \( my $username = $Config->{database}{username} ),
+    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'output|o=s'   => \( my $outfile ),
+    'by=s'         => \( my $by       = "tag" ),
+    'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
+) or HelpMessage(1);
 
 $outfile = "$db.ofg.xlsx" unless $outfile;
 
@@ -84,17 +86,17 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my $write_obj = AlignDB::WriteExcel->new(
+my $write_obj = AlignDB::ToXLSX->new(
     mysql   => "$db:$server",
     user    => $username,
     passwd  => $password,
     outfile => $outfile,
 );
+my $dbh = $write_obj->dbh;
 
 #----------------------------------------------------------#
 # worksheet -- summary
 #----------------------------------------------------------#
-#
 my $summary_ofg = sub {
     my $sheet_name = 'summary';
     my $sheet;
@@ -112,8 +114,7 @@ my $summary_ofg = sub {
             sheet_row  => $sheet_row,
             sheet_col  => $sheet_col,
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_sql( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_sql( $sheet_name, \%option );
     }
 
     {    # write contents
@@ -133,9 +134,9 @@ my $summary_ofg = sub {
         );
         ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
-    $sheet_row++; # add a blank row
+    $sheet_row++;    # add a blank row
 
-    {    # write contents
+    {                # write contents
         my $query_name = 'ofg tag count';
         my $sql_query  = q{
             SELECT  o.ofg_tag,
@@ -152,9 +153,9 @@ my $summary_ofg = sub {
         );
         ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
-    $sheet_row++; # add a blank row
+    $sheet_row++;    # add a blank row
 
-    {    # write contents
+    {                # write contents
         my $query_name = 'ofg type count';
         my $sql_query  = q{
             SELECT  o.ofg_type,
@@ -171,9 +172,9 @@ my $summary_ofg = sub {
         );
         ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
-    $sheet_row++; # add a blank row
+    $sheet_row++;    # add a blank row
 
-    {    # write contents
+    {                # write contents
         my $query_name = 'ofg';
         my $sql_query  = q{
             SELECT CONCAT(o.ofg_tag, "_", o.ofg_type) Type,
@@ -247,8 +248,7 @@ my $ofg_all = sub {
             sheet_col => $sheet_col,
             header    => \@headers,
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     {    # query
@@ -294,6 +294,9 @@ my $ofg_coding = sub {
     unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
         return;
     }
+    unless ( $write_obj->check_column( 'window', 'window_coding' ) ) {
+        return;
+    }
 
     my @levels = ( [ "coding", 1 ], [ "noncoding", 0 ], );
 
@@ -312,8 +315,7 @@ my $ofg_coding = sub {
                 sheet_col => $sheet_col,
                 header    => \@headers,
             );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
         }
 
         {    # query
@@ -373,6 +375,9 @@ my $ofg_coding_pure = sub {
     unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
         return;
     }
+    unless ( $write_obj->check_column( 'window', 'window_coding' ) ) {
+        return;
+    }
 
     my @levels = ( [ "coding", 1 ], [ "noncoding", 0 ], );
 
@@ -391,8 +396,7 @@ my $ofg_coding_pure = sub {
                 sheet_col => $sheet_col,
                 header    => \@headers,
             );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
         }
 
         {    # query
@@ -467,8 +471,7 @@ my $ofg_dG = sub {
             sheet_col => $sheet_col,
             header    => \@headers,
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     {    # query
@@ -545,11 +548,11 @@ my $ofg_tag_type = sub {
         elsif ( $by eq "tt" ) {
             $sheet_name = "ofg_tt_$bind";
         }
-        $sheet_name = substr $sheet_name, 0, 31; # excel sheet name limit
+        $sheet_name = substr $sheet_name, 0, 31;    # excel sheet name limit
         my $sheet;
         my ( $sheet_row, $sheet_col );
 
-        {    # write header
+        {                                           # write header
             my @headers = qw{distance AVG_pi STD_pi AVG_indel STD_indel AVG_gc
                 STD_gc AVG_cv STD_cv AVG_repeats STD_repeats COUNT};
             ( $sheet_row, $sheet_col ) = ( 0, 0 );
@@ -558,11 +561,10 @@ my $ofg_tag_type = sub {
                 sheet_col => $sheet_col,
                 header    => \@headers,
             );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
         }
 
-        {    # query
+        {                                           # query
             my $sql_query = q{
                 SELECT s.ofgsw_distance `distance`,
                        AVG(w.window_pi) `avg_pi`,
@@ -623,42 +625,3 @@ $stopwatch->end_message;
 exit;
 
 __END__
-
-=head1 NAME
-
-    ofg_stat_factory.pl - Generate statistical Excel files from alignDB
-
-=head1 SYNOPSIS
-
-    ofg_stat_factory.pl [options]
-     Options:
-       --help            brief help message
-       --man             full documentation
-       --server          MySQL server IP/Domain name
-       --db              database name
-       --username        username
-       --password        password
-       --output          output filename
-       --run             run special analysis
-       
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
-
-=cut
