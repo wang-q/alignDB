@@ -23,7 +23,7 @@ perl ~/Scripts/alignDB/util/dup_db.pl -f ~/data/dumps/mysql/Human_n11cg_chimp_ba
 perl ~/Scripts/alignDB/ofg/insert_bed.pl \
     -d Human_n11cg_chimp_as_flanking \
     --style center_intact \
-    --parallel 8 \
+    --parallel 12 \
     --tag intron --type ASase -f ~/data/alt-splice/ase_flanking/ASase.bed \
     --tag intron --type AScse -f ~/data/alt-splice/ase_flanking/AScse.bed \
     --tag intron --type nonAS -f ~/data/alt-splice/ase_flanking/nonAS.bed
