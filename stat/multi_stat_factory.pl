@@ -574,35 +574,47 @@ my $distance_insdel_freq = sub {
 my $indel_length = sub {
     my $sheet_name = 'indel_length';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
+    my $thaw_sql = $sql_file->retrieve('multi-indel_length-0');
+
+    my @names = $thaw_sql->as_header;
     {    # header
-        my @headers = qw{indel_length indel_number AVG_gc indel_sum};
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # contents
-        my $thaw_sql = $sql_file->retrieve('multi-indel_length-0');
+    {    # content
+        my $sth = $dbh->prepare( $thaw_sql->as_sql );
+        $sth->execute;
 
-        my %option = (
-            sql_query => $thaw_sql->as_sql,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-        );
-        ($sheet_row) = $write_obj->write_content_highlight( $sheet, \%option );
+        my $last_number;
+        while ( my @row = $sth->fetchrow_array ) {
+
+            # Highlight 'special' indels
+            my $style = 'NORMAL';
+            if ( defined $last_number ) {
+                if ( $row[1] > $last_number ) {
+                    $style = 'HIGHLIGHT';
+                }
+            }
+            $last_number = $row[1];
+
+            for ( my $i = 0; $i < scalar @row; $i++ ) {
+                $sheet->write(
+                    $write_obj->row, $i + $write_obj->column,
+                    $row[$i],        $write_obj->format->{$style}
+                );
+            }
+            $write_obj->increase_row;
+        }
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
-# worksheet -- indel_length
+# worksheet -- indel_length_freq
 #----------------------------------------------------------#
 my $indel_length_freq = sub {
 
@@ -612,43 +624,54 @@ my $indel_length_freq = sub {
         my ($level) = @_;
         my $sheet_name = 'indel_length_freq_' . $level->[0];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
-        {    # write header
-            my @headers = qw{indel_length indel_number AVG_gc indel_sum};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        my $thaw_sql = $sql_file->retrieve('multi-indel_length-0');
+        $thaw_sql->add_where( 'indel.indel_freq' => { op => '>=', value => '1' } );
+        $thaw_sql->add_where( 'indel.indel_freq' => { op => '<=', value => '1' } );
+
+        my @names = $thaw_sql->as_header;
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
-        {    # write contents
-            my $thaw_sql = $sql_file->retrieve('multi-indel_length-0');
-            $thaw_sql->add_where( 'indel.indel_freq' => { op => '>=', value => '1' } );
-            $thaw_sql->add_where( 'indel.indel_freq' => { op => '<=', value => '1' } );
+        {    # content
+            my $sth = $dbh->prepare( $thaw_sql->as_sql );
+            $sth->execute( $level->[1], $level->[2], );
 
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1], $level->[2], ]
-            );
-            ($sheet_row) = $write_obj->write_content_highlight( $sheet, \%option );
+            my $last_number;
+            while ( my @row = $sth->fetchrow_array ) {
+
+                # Highlight 'special' indels
+                my $style = 'NORMAL';
+                if ( defined $last_number ) {
+                    if ( $row[1] > $last_number ) {
+                        $style = 'HIGHLIGHT';
+                    }
+                }
+                $last_number = $row[1];
+
+                for ( my $i = 0; $i < scalar @row; $i++ ) {
+                    $sheet->write(
+                        $write_obj->row, $i + $write_obj->column,
+                        $row[$i],        $write_obj->format->{$style}
+                    );
+                }
+                $write_obj->increase_row;
+            }
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
-    foreach (@freq_levels) {
-        &$write_sheet($_);
+    for (@freq_levels) {
+        $write_sheet->($_);
     }
 };
 
 #----------------------------------------------------------#
-# worksheet -- indel_length
+# worksheet -- indel_length_insdel
 #----------------------------------------------------------#
 my $indel_length_insdel = sub {
 
@@ -658,37 +681,48 @@ my $indel_length_insdel = sub {
         my ($level) = @_;
         my $sheet_name = 'indel_length_' . $level->[0];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
-        {    # write header
-            my @headers = qw{indel_length indel_number AVG_gc indel_sum};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        my $thaw_sql = $sql_file->retrieve('multi-indel_length-0');
+        $thaw_sql->add_where( 'indel.indel_type' => { op => '=', value => 'I' } );
+
+        my @names = $thaw_sql->as_header;
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
-        {    # write contents
-            my $thaw_sql = $sql_file->retrieve('multi-indel_length-0');
-            $thaw_sql->add_where( 'indel.indel_type' => { op => '=', value => 'I' } );
+        {    # content
+            my $sth = $dbh->prepare( $thaw_sql->as_sql );
+            $sth->execute( $level->[1] );
 
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1] ]
-            );
-            ($sheet_row) = $write_obj->write_content_highlight( $sheet, \%option );
+            my $last_number;
+            while ( my @row = $sth->fetchrow_array ) {
+
+                # Highlight 'special' indels
+                my $style = 'NORMAL';
+                if ( defined $last_number ) {
+                    if ( $row[1] > $last_number ) {
+                        $style = 'HIGHLIGHT';
+                    }
+                }
+                $last_number = $row[1];
+
+                for ( my $i = 0; $i < scalar @row; $i++ ) {
+                    $sheet->write(
+                        $write_obj->row, $i + $write_obj->column,
+                        $row[$i],        $write_obj->format->{$style}
+                    );
+                }
+                $write_obj->increase_row;
+            }
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
-    foreach (@type_levels) {
-        &$write_sheet($_);
+    for (@type_levels) {
+        $write_sheet->($_);
     }
 };
 
