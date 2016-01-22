@@ -1,59 +1,63 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-use AlignDB::WriteExcel;
+use DBI;
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::SQL;
 use AlignDB::SQL::Library;
+use AlignDB::ToXLSX;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-# stat parameter
-my $run     = 'all';
-my $combine = 0;
-my $outfile = "";
+ld_stat_factory.pl - LD stats for alignDB
 
-my $max_freq;    # count freq one by one to $max_freq
+=head1 SYNOPSIS
 
-my $help = 0;
-my $man  = 0;
+    perl ld_stat_factory.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --outfile   -o  STR     outfile filename
+        --freq          INT     count freq one by one to $max_freq
+        --run       -r  STR     run special analysis
+        --combine       INT     
+        --piece         INT     
+        --index                 add an index sheet
+        --chart                 add charts
+
+=cut
 
 GetOptions(
-    'help|?'         => \$help,
-    'man'            => \$man,
-    's|server=s'     => \$server,
-    'P|port=s'       => \$port,
-    'u|username=s'   => \$username,
-    'p|password=s'   => \$password,
-    'd|db=s'         => \$db,
-    'o|output=s'     => \$outfile,
-    'max|max_freq=s' => \$max_freq,
-    'r|run=s'        => \$run,
-    'cb|combine=i'   => \$combine,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
+    'username|u=s' => \( my $username = $Config->{database}{username} ),
+    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'output|o=s'   => \( my $outfile ),
+    'freq=i'       => \( my $max_freq ),
+    'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
+    'combine=i'    => \( my $combine  = 0 ),
+    'index'        => \( my $add_index_sheet, ),
+    'chart'        => \( my $add_chart, ),
+) or HelpMessage(1);
 
 # prepare to run tasks in @tasks
 my @tasks;
@@ -86,10 +90,10 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my $write_obj = AlignDB::WriteExcel->new(
-    mysql   => "$db:$server",
-    user    => $username,
-    passwd  => $password,
+my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
+    or die "Cannot connect to MySQL database at $db:$server";
+my $write_obj = AlignDB::ToXLSX->new(
+    dbh     => $dbh,
     outfile => $outfile,
 );
 
@@ -103,58 +107,87 @@ if ( $combine == 0 ) {
 #----------------------------#
 # count freq
 #----------------------------#
-my $all_freq = $write_obj->get_freq;
-
-if ( $all_freq < 2 ) {
-    die "all_freq is $all_freq, are you sure this is a AlignDB database?\n";
-}
+my $largest    = get_freq($dbh);
+my $seq_number = get_seq_number($dbh);
 
 my @freqs;
 if ($max_freq) {
     for ( 1 .. $max_freq - 1 ) {
-        my $name = $_ . "of" . $all_freq;
+        my $name = $_ . "of" . $largest;
         push @freqs, [ $name, $_, $_ ];
     }
 }
 else {
 
-    # for 22 flies, 1, 2, low, mid, high, 20, 21
+    # for 22 flies, low, mid, high
     {
-        my @all_freqs = 1 .. $all_freq - 1;
-        if ( scalar @all_freqs <= 7 ) {
+        my @all_freqs = 1 .. $largest;
+        if ( scalar @all_freqs <= 3 ) {
             for (@all_freqs) {
-                my $name = $_ . "of" . $all_freq;
+                my $name = $_ . "of" . $seq_number;
                 push @freqs, [ $name, $_, $_ ];
             }
         }
         else {
-            for ( 1, 2 ) {
-                my $name = $_ . "of" . $all_freq;
-                push @freqs, [ $name, $_, $_ ];
-            }
-
-            my @to_be_combs = @all_freqs[ 2 .. $all_freq - 4 ];
+            my @to_be_combs = @all_freqs[ 0 .. $largest - 1 ];
             my @chunks      = reverse apportion( scalar @to_be_combs, 3 );
             my @chunks_freq = multi_slice( \@to_be_combs, @chunks );
             for my $chunk (@chunks_freq) {
                 if ( $chunk->[0] == $chunk->[-1] ) {
-                    my $name = $chunk->[0] . "of" . $all_freq;
+                    my $name = $chunk->[0] . "of" . $seq_number;
                     push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
                 }
                 else {
-                    my $name = join( '_', $chunk->[0], $chunk->[-1] ) . "of"
-                        . $all_freq;
+                    my $name = join( '_', $chunk->[0], $chunk->[-1] ) . "of" . $seq_number;
                     push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
                 }
-            }
-
-            for ( $all_freq - 2, $all_freq - 1 ) {
-                my $name = $_ . "of" . $all_freq;
-                push @freqs, [ $name, $_, $_ ];
             }
         }
     }
 }
+
+print Dump [
+    { combine => $combine, },
+    {   $largest   => $largest,
+        seq_number => $seq_number,
+        freq       => \@freqs,
+    }
+];
+
+#----------------------------------------------------------#
+# chart -- d1_indel_ld
+#----------------------------------------------------------#
+my $chart_distance = sub {
+    my $sheet = shift;
+    my $data  = shift;
+
+    my %opt = (
+        x_column      => 0,
+        y_column      => 2,
+        y_last_column => 3,
+        first_row     => 2,
+        last_row      => 7,
+        x_max_scale   => 5,
+        y_data        => [ map { $data->[$_] } 2 .. 3 ],
+        x_title       => "Distance to indels (d1)",
+        y_title       => "Nucleotide diversity",
+        top           => 1,
+        left          => 10,
+    );
+    $write_obj->draw_y( $sheet, \%opt );
+
+    $opt{y_column}      = 4;
+    $opt{y_last_column} = 5;
+    $opt{y_data}        = [ map { $data->[$_] } 4 .. 5 ], $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
+
+    $opt{y_column}      = 7;
+    $opt{y_last_column} = 7;
+    $opt{y_title}       = "Di/Dn";
+    $opt{y_data}        = $data->[7];
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
+};
 
 #----------------------------------------------------------#
 # worksheet -- summary_indel
@@ -162,20 +195,12 @@ else {
 my $summary_indel = sub {
     my $sheet_name = 'summary_indel';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
-    {    # write header
-        my $query_name = 'Item';
-        my @headers    = qw{AVG MIN MAX STD COUNT SUM};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            query_name => $query_name,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+    my @names = qw{AVG MIN MAX STD COUNT SUM};
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     my $column_stat = sub {
@@ -199,26 +224,22 @@ my $summary_indel = sub {
         $sql_query =~ s/_COLUMN_/$column/g;
         $sql_query .= $where if $where;
 
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     };
 
-    # write contents
-    {
-
+    {    # contents
         my @freq_levels = ( @freqs, [ 'unknown', -1, -1 ] );
 
         # all indels
         $column_stat->( 'all', 'indel i', 'i.indel_length', );
 
-        foreach my $level (@freq_levels) {
-            my ( $name, $lower, $upper ) = @$level;
+        for my $level (@freq_levels) {
+            my ( $name, $lower, $upper ) = @{$level};
 
             $column_stat->(
                 'all_' . $name, 'indel i',
@@ -227,16 +248,13 @@ my $summary_indel = sub {
                     AND i.indel_freq <= $upper}
             );
         }
-
-        $sheet_row++;
+        $write_obj->increase_row;
 
         # insertions
-        $column_stat->(
-            'ins', 'indel i', 'i.indel_length', q{WHERE i.indel_type = 'I'}
-        );
+        $column_stat->( 'ins', 'indel i', 'i.indel_length', q{WHERE i.indel_type = 'I'} );
 
-        foreach my $level (@freq_levels) {
-            my ( $name, $lower, $upper ) = @$level;
+        for my $level (@freq_levels) {
+            my ( $name, $lower, $upper ) = @{$level};
 
             $column_stat->(
                 'ins_' . $name, 'indel i',
@@ -246,16 +264,13 @@ my $summary_indel = sub {
                     AND i.indel_type = 'I'}
             );
         }
-
-        $sheet_row++;
+        $write_obj->increase_row;
 
         # deletions
-        $column_stat->(
-            'del', 'indel i', 'i.indel_length', q{WHERE i.indel_type = 'D'}
-        );
+        $column_stat->( 'del', 'indel i', 'i.indel_length', q{WHERE i.indel_type = 'D'} );
 
-        foreach my $level (@freq_levels) {
-            my ( $name, $lower, $upper ) = @$level;
+        for my $level (@freq_levels) {
+            my ( $name, $lower, $upper ) = @{$level};
 
             $column_stat->(
                 'del_' . $name, 'indel i',
@@ -267,7 +282,7 @@ my $summary_indel = sub {
         }
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -276,32 +291,31 @@ my $summary_indel = sub {
 my $distance = sub {
     my $sheet_name = 'distance';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
-    {    # write header
-        my @headers = qw{distance AVG_D AVG_Di AVG_Dn
-            AVG_Dbii/2 AVG_Dbnn/2 AVG_Dc Di/Dn COUNT};
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+    my $thaw_sql = $sql_file->retrieve('multi-distance-0');
+
+    my @names = $thaw_sql->as_header;
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # write contents
-        my $thaw_sql = $sql_file->retrieve('multi-distance-0');
-        my %option   = (
-            sql_query => $thaw_sql->as_sql,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
+    my $data;
+    {    # content
+        $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query => $thaw_sql->as_sql,
+                data      => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_distance->( $sheet, $data );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -310,32 +324,31 @@ my $distance = sub {
 my $distance2 = sub {
     my $sheet_name = 'distance2';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
-    {    # write header
-        my @headers = qw{distance AVG_D AVG_Di2 AVG_Dn2
-            AVG_Dbii2/2 AVG_Dbnn2/2 AVG_Dc2 Di2/Dn2 COUNT};
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+    my $thaw_sql = $sql_file->retrieve('multi-distance2-0');
+
+    my @names = $thaw_sql->as_header;
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # write contents
-        my $thaw_sql = $sql_file->retrieve('multi-distance2-0');
-        my %option   = (
-            sql_query => $thaw_sql->as_sql,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
+    my $data;
+    {    # content
+        $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query => $thaw_sql->as_sql,
+                data      => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_distance->( $sheet, $data );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -344,39 +357,37 @@ my $distance2 = sub {
 my $distance3 = sub {
     my $sheet_name = 'distance3';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
-    {    # write header
-        my @headers = qw{distance AVG_D AVG_Di3 AVG_Dn3
-            AVG_Dbii3/2 AVG_Dbnn3/2 AVG_Dc3 Di3/Dn3 COUNT};
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+    my $thaw_sql = $sql_file->retrieve('multi-distance3-0');
+
+    my @names = $thaw_sql->as_header;
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # write contents
-        my $thaw_sql = $sql_file->retrieve('multi-distance3-0');
-        my %option   = (
-            sql_query => $thaw_sql->as_sql,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
+    my $data;
+    {    # content
+        $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query => $thaw_sql->as_sql,
+                data      => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_distance->( $sheet, $data );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
 # worksheet -- distance_length
 #----------------------------------------------------------#
 my $distance_length = sub {
-
     my @length_levels
         = ( [ '1-5', 1, 5 ], [ '6-10', 6, 10 ], [ '11-50', 11, 50 ], );
 
@@ -384,43 +395,39 @@ my $distance_length = sub {
         my ($level) = @_;
         my $sheet_name = 'distance_' . $level->[0];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
-        {    # write header
-            my @headers = qw{distance AVG_D AVG_Di AVG_Dn
-                AVG_Dbii/2 AVG_Dbnn/2 AVG_Dc Di/Dn COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+        my $thaw_sql = $sql_file->retrieve('multi-distance-0');
+        $thaw_sql->add_where( 'indel.indel_length' => { op => '>=', value => '1' } );
+        $thaw_sql->add_where( 'indel.indel_length' => { op => '<=', value => '1' } );
+
+        my @names = $thaw_sql->as_header;
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
-        {    # write contents
-            my $thaw_sql = $sql_file->retrieve('multi-distance-0');
-            $thaw_sql->add_where(
-                'indel.indel_length' => { op => '>=', value => '1' } );
-            $thaw_sql->add_where(
-                'indel.indel_length' => { op => '<=', value => '1' } );
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1], $level->[2] ],
+        my $data;
+        {    # content
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $level->[1], $level->[2] ],
+                    data       => 1,
+                }
             );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        if ($add_chart) {    # chart
+            $chart_distance->( $sheet, $data );
+        }
+
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
-    foreach (@length_levels) {
-        &$write_sheet($_);
+    for (@length_levels) {
+        $write_sheet->($_);
     }
-
 };
 
 #----------------------------------------------------------#
@@ -433,137 +440,38 @@ my $frequency_distance = sub {
         my ($level) = @_;
         my $sheet_name = 'distance_freq_' . $level->[0];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
-        {    # write header
-            my @headers = qw{distance AVG_D AVG_Di AVG_Dn
-                AVG_Dbii/2 AVG_Dbnn/2 AVG_Dc Di/Dn COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+        my $thaw_sql = $sql_file->retrieve('multi-distance-0');
+        $thaw_sql->add_where( 'indel.indel_freq' => { op => '>=', value => '1' } );
+        $thaw_sql->add_where( 'indel.indel_freq' => { op => '<=', value => '1' } );
+
+        my @names = $thaw_sql->as_header;
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
-        {    # write contents
-            my $thaw_sql = $sql_file->retrieve('multi-distance-0');
-            $thaw_sql->add_where(
-                'indel.indel_freq' => { op => '>=', value => '1' } );
-            $thaw_sql->add_where(
-                'indel.indel_freq' => { op => '<=', value => '1' } );
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1], $level->[2] ],
+        my $data;
+        {    # content
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $level->[1], $level->[2] ],
+                    data       => 1,
+                }
             );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        if ($add_chart) {    # chart
+            $chart_distance->( $sheet, $data );
+        }
+
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
-    foreach (@freq_levels) {
-        &$write_sheet($_);
-    }
-};
-
-#----------------------------------------------------------#
-# worksheet -- distance(frequecy)
-#----------------------------------------------------------#
-my $frequency_distance2 = sub {
-    my @freq_levels = ( @freqs, [ 'unknown', -1, -1 ], );
-
-    my $write_sheet = sub {
-        my ($level) = @_;
-        my $sheet_name = 'distance2_freq_' . $level->[0];
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers = qw{distance AVG_D AVG_Di AVG_Dn
-                AVG_Dbii/2 AVG_Dbnn/2 AVG_Dc Di/Dn COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            my $thaw_sql = $sql_file->retrieve('multi-distance2-0');
-            $thaw_sql->add_where(
-                'indel.indel_freq' => { op => '>=', value => '1' } );
-            $thaw_sql->add_where(
-                'indel.indel_freq' => { op => '<=', value => '1' } );
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1], $level->[2] ],
-            );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    };
-
-    foreach (@freq_levels) {
-        &$write_sheet($_);
-    }
-};
-
-#----------------------------------------------------------#
-# worksheet -- distance(frequecy)
-#----------------------------------------------------------#
-my $frequency_distance3 = sub {
-    my @freq_levels = ( @freqs, [ 'unknown', -1, -1 ], );
-
-    my $write_sheet = sub {
-        my ($level) = @_;
-        my $sheet_name = 'distance3_freq_' . $level->[0];
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers = qw{distance AVG_D AVG_Di AVG_Dn
-                AVG_Dbii/2 AVG_Dbnn/2 AVG_Dc Di/Dn COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            my $thaw_sql = $sql_file->retrieve('multi-distance3-0');
-            $thaw_sql->add_where(
-                'indel.indel_freq' => { op => '>=', value => '1' } );
-            $thaw_sql->add_where(
-                'indel.indel_freq' => { op => '<=', value => '1' } );
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1], $level->[2] ],
-            );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    };
-
-    foreach (@freq_levels) {
-        &$write_sheet($_);
+    for (@freq_levels) {
+        $write_sheet->($_);
     }
 };
 
@@ -577,39 +485,37 @@ my $distance_insdel = sub {
         my ($level) = @_;
         my $sheet_name = 'distance_' . $level->[0];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
-        {    # write header
-            my @headers = qw{distance AVG_D AVG_Di AVG_Dn
-                AVG_Dbii/2 AVG_Dbnn/2 AVG_Dc Di/Dn COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+        my $thaw_sql = $sql_file->retrieve('multi-distance-0');
+        $thaw_sql->add_where( 'indel.indel_type' => { op => '=', value => '1' } );
+
+        my @names = $thaw_sql->as_header;
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
-        {    # write contents
-            my $thaw_sql = $sql_file->retrieve('multi-distance-0');
-            $thaw_sql->add_where(
-                'indel.indel_type' => { op => '=', value => '1' } );
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1] ],
+        my $data;
+        {    # content
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $level->[1] ],
+                    data       => 1,
+                }
             );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        if ($add_chart) {    # chart
+            $chart_distance->( $sheet, $data );
+        }
+
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
-    foreach (@type_levels) {
-        &$write_sheet($_);
+    for (@type_levels) {
+        $write_sheet->($_);
     }
 };
 
@@ -624,44 +530,40 @@ my $distance_insdel_freq = sub {
         my ( $type, $freq ) = @_;
         my $sheet_name = 'distance_' . $type->[0] . '_' . $freq->[0];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
-        {    # write header
-            my @headers = qw{distance AVG_D AVG_Di AVG_Dn
-                AVG_Dbii/2 AVG_Dbnn/2 AVG_Dc Di/Dn COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+        my $thaw_sql = $sql_file->retrieve('multi-distance-0');
+        $thaw_sql->add_where( 'indel.indel_type' => { op => '=',  value => '1' } );
+        $thaw_sql->add_where( 'indel.indel_freq' => { op => '>=', value => '1' } );
+        $thaw_sql->add_where( 'indel.indel_freq' => { op => '<=', value => '1' } );
+
+        my @names = $thaw_sql->as_header;
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
-        {    # write contents
-            my $thaw_sql = $sql_file->retrieve('multi-distance-0');
-            $thaw_sql->add_where(
-                'indel.indel_type' => { op => '=', value => '1' } );
-            $thaw_sql->add_where(
-                'indel.indel_freq' => { op => '>=', value => '1' } );
-            $thaw_sql->add_where(
-                'indel.indel_freq' => { op => '<=', value => '1' } );
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $type->[1], $freq->[1], $freq->[2], ]
+        my $data;
+        {    # content
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $type->[1], $freq->[1], $freq->[2] ],
+                    data       => 1,
+                }
             );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        if ($add_chart) {    # chart
+            $chart_distance->( $sheet, $data );
+        }
+
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
-    foreach my $type (@type_levels) {
-        foreach my $freq (@freq_levels) {
-            &$write_sheet( $type, $freq );
+    for my $type (@type_levels) {
+        for my $freq (@freq_levels) {
+            $write_sheet->( $type, $freq );
         }
     }
 };
@@ -674,7 +576,7 @@ my $indel_length = sub {
     my $sheet;
     my ( $sheet_row, $sheet_col );
 
-    {    # write header
+    {    # header
         my @headers = qw{indel_length indel_number AVG_gc indel_sum};
         ( $sheet_row, $sheet_col ) = ( 0, 0 );
         my %option = (
@@ -682,11 +584,10 @@ my $indel_length = sub {
             sheet_col => $sheet_col,
             header    => \@headers,
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
-    {    # write contents
+    {    # contents
         my $thaw_sql = $sql_file->retrieve('multi-indel_length-0');
 
         my %option = (
@@ -721,16 +622,13 @@ my $indel_length_freq = sub {
                 sheet_col => $sheet_col,
                 header    => \@headers,
             );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
         }
 
         {    # write contents
             my $thaw_sql = $sql_file->retrieve('multi-indel_length-0');
-            $thaw_sql->add_where(
-                'indel.indel_freq' => { op => '>=', value => '1' } );
-            $thaw_sql->add_where(
-                'indel.indel_freq' => { op => '<=', value => '1' } );
+            $thaw_sql->add_where( 'indel.indel_freq' => { op => '>=', value => '1' } );
+            $thaw_sql->add_where( 'indel.indel_freq' => { op => '<=', value => '1' } );
 
             my %option = (
                 sql_query  => $thaw_sql->as_sql,
@@ -738,8 +636,7 @@ my $indel_length_freq = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $level->[1], $level->[2], ]
             );
-            ($sheet_row)
-                = $write_obj->write_content_highlight( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_highlight( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -771,14 +668,12 @@ my $indel_length_insdel = sub {
                 sheet_col => $sheet_col,
                 header    => \@headers,
             );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
         }
 
         {    # write contents
             my $thaw_sql = $sql_file->retrieve('multi-indel_length-0');
-            $thaw_sql->add_where(
-                'indel.indel_type' => { op => '=', value => 'I' } );
+            $thaw_sql->add_where( 'indel.indel_type' => { op => '=', value => 'I' } );
 
             my %option = (
                 sql_query  => $thaw_sql->as_sql,
@@ -786,8 +681,7 @@ my $indel_length_insdel = sub {
                 sheet_col  => $sheet_col,
                 bind_value => [ $level->[1] ]
             );
-            ($sheet_row)
-                = $write_obj->write_content_highlight( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_highlight( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -819,8 +713,7 @@ my $indel_type_gc_10 = sub {
             header     => \@headers,
             query_name => $query_name,
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     # write contents
@@ -871,8 +764,7 @@ my $indel_type_gc_100 = sub {
             header     => \@headers,
             query_name => $query_name,
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     # write contents
@@ -934,8 +826,7 @@ my $combined_pigccv = sub {
                 sheet_col => $sheet_col,
                 header    => \@headers,
             );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
         }
 
         {    # write contents
@@ -958,8 +849,7 @@ my $combined_pigccv = sub {
                 sheet_col => $sheet_col,
                 combined  => \@combined,
             );
-            ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1002,8 +892,7 @@ my $combined_pigccv = sub {
                 sheet_col => $sheet_col,
                 header    => \@headers,
             );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
         }
 
         {    # write contents
@@ -1028,8 +917,7 @@ my $combined_pigccv = sub {
                 sheet_col => $sheet_col,
                 combined  => \@combined,
             );
-            ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1072,8 +960,7 @@ my $combined_pigccv = sub {
                 sheet_col => $sheet_col,
                 header    => \@headers,
             );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
         }
 
         {    # write contents
@@ -1098,8 +985,7 @@ my $combined_pigccv = sub {
                 sheet_col => $sheet_col,
                 combined  => \@combined,
             );
-            ($sheet_row)
-                = $write_obj->write_content_combine( $sheet, \%option );
+            ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
@@ -1123,8 +1009,7 @@ my $di_dn_ttest = sub {
             sheet_col => $sheet_col,
             header    => \@headers,
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     my @group_distance = ( [0], [1], [2], [3], [4], [ 5 .. 10 ], [ 2 .. 5 ] );
@@ -1147,7 +1032,7 @@ my $di_dn_ttest = sub {
             my @range      = @$_;
             my $in_list    = '(' . join( ',', @range ) . ')';
             my $sql_query2 = $sql_query . $in_list;
-            $sql_query2 .= " \nLIMIT 1000000";   # prevent to exceed excel limit
+            $sql_query2 .= " \nLIMIT 1000000";    # prevent to exceed excel limit
 
             my %option  = ( sql_query => $sql_query2, );
             my $ttest   = $write_obj->column_ttest( \%option );
@@ -1223,8 +1108,7 @@ my $di_dn_ttest_nonslippage = sub {
             sheet_col => $sheet_col,
             header    => \@headers,
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     my @group_distance = ( [0], [1], [2], [3], [4], [ 5 .. 10 ], [ 2 .. 5 ] );
@@ -1247,7 +1131,7 @@ my $di_dn_ttest_nonslippage = sub {
             my @range      = @$_;
             my $in_list    = '(' . join( ',', @range ) . ')';
             my $sql_query2 = $sql_query . $in_list;
-            $sql_query2 .= " \nLIMIT 1000000";   # prevent to exceed excel limit
+            $sql_query2 .= " \nLIMIT 1000000";    # prevent to exceed excel limit
 
             my %option  = ( sql_query => $sql_query2, );
             my $ttest   = $write_obj->column_ttest( \%option );
@@ -1330,8 +1214,7 @@ my $frequency_pigccv = sub {
                 sheet_col => $sheet_col,
                 header    => \@headers,
             );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_direct( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
         }
 
         {    # write contents
@@ -1368,7 +1251,7 @@ my $frequency_pigccv = sub {
     }
 };
 
-foreach my $n (@tasks) {
+for my $n (@tasks) {
     if ( $n == 1 )  { &$summary_indel;        next; }
     if ( $n == 2 )  { &$distance;             &$distance_length; next; }
     if ( $n == 3 )  { &$frequency_distance;   next; }
@@ -1383,8 +1266,11 @@ foreach my $n (@tasks) {
     if ( $n == 21 ) { &$combined_pigccv;      next; }
     if ( $n == 22 ) { &$frequency_pigccv;     next; }
     if ( $n == 52 ) { &$di_dn_ttest;          &$di_dn_ttest_nonslippage; next; }
-    if ( $n == 53 ) { &$frequency_distance2;  next; }
-    if ( $n == 54 ) { &$frequency_distance3;  next; }
+}
+
+if ($add_index_sheet) {
+    $write_obj->add_index_sheet;
+    print "Sheet [INDEX] has been generated.\n";
 }
 
 $stopwatch->end_message;
@@ -1395,9 +1281,7 @@ sub apportion {
     my ( $elements, $pieces ) = @_;
     my $small_chunk     = int $elements / $pieces;
     my $oversized_count = $elements % $pieces;
-    (   ( 1 + $small_chunk ) x ($oversized_count),
-        ($small_chunk) x ( $pieces - $oversized_count )
-    );
+    ( ( 1 + $small_chunk ) x ($oversized_count), ($small_chunk) x ( $pieces - $oversized_count ) );
 }
 
 sub multi_slice {
@@ -1409,25 +1293,52 @@ sub multi_slice {
         [ @$aref[ $lo_i .. $hi_i ] ]
     } @chunk_sizes;
 }
+
+sub get_seq_number {
+    my $dbh = shift;
+
+    my $sql_query = q{
+        SELECT DISTINCT
+            COUNT(q.query_id) + 1
+        FROM
+            query q,
+            sequence s
+        WHERE
+            q.seq_id = s.seq_id
+        GROUP BY s.align_id
+    };
+    my $sth = $dbh->prepare($sql_query);
+
+    my @counts;
+    $sth->execute;
+    while ( my ($count) = $sth->fetchrow_array ) {
+        push @counts, $count;
+    }
+    if ( scalar @counts > 1 ) {
+        warn "Database with non-consistent query numbers!\n";
+    }
+
+    return $counts[0];
+}
+
+sub get_freq {
+    my $dbh = shift;
+
+    my $sql_query = q{
+        SELECT 
+            MAX(indel_freq)
+        FROM
+            indel
+    };
+    my $sth = $dbh->prepare($sql_query);
+
+    my @counts;
+    $sth->execute;
+    while ( my ($count) = $sth->fetchrow_array ) {
+        push @counts, $count;
+    }
+
+    return $counts[0];
+}
+
 __END__
-
-=head1 NAME
-
-    multi_stat_factory.pl - Generate statistical Excel files from malignDB
-
-=head1 SYNOPSIS
-
-    multi_stat_factory.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-        --outfile            outfile filename
-        --run               run special analysis
-        --freq              max freq
-
-=cut
-
