@@ -41,8 +41,8 @@ ld_stat_factory.pl - LD stats for alignDB
 
 GetOptions(
     'help|?' => sub { HelpMessage(0) },
-    'lib=s'   => \(my $lib_file = "$FindBin::RealBin/sql.lib"),
-    'verbose' => \my  $verbose,
+    'lib=s' => \( my $lib_file = "$FindBin::RealBin/sql.lib" ),
+    'verbose' => \my $verbose,
 ) or HelpMessage(1);
 
 #----------------------------------------------------------#
@@ -607,7 +607,7 @@ sub ns { return AlignDB::SQL->new; }
 #GROUP BY indel_length
 {
     my $sql = ns();
-    $sql->add_select('indel_length');
+    $sql->add_select( 'indel_length',      'indel_length' );
     $sql->add_select( 'COUNT(*)',          'indel_number' );
     $sql->add_select( 'AVG(indel_gc)',     'AVG_gc' );
     $sql->add_select( 'SUM(indel_length)', 'indel_sum' );

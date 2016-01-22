@@ -9,7 +9,6 @@ use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use DBI;
-
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::SQL;

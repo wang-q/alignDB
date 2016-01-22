@@ -143,7 +143,7 @@ perl -anl -F"\t" -e '
         -e saccharomyces_cerevisiae_core_29_82_4 \
         --batch 1 --parallel 8
 
-    perl ~/Scripts/alignDB/stat/ofg_stat_factory.pl -d S288cvsself_nat08 --index --chart
+    perl ~/Scripts/alignDB/stat/ofg_stat_factory.pl -d S288cvsself_nat08 --by tt --index --chart
     ```
 
 2. nat08 style edge S288CvsYJM789

@@ -235,11 +235,11 @@ my $summary_ofg = sub {
     $write_obj->column(1);
 
     my @names = qw{Type COUNT AVG_length SUM_length};
-    {    # write header
+    {    # header
         $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # write contents
+    {    # contents
         my $query_name = 'ofg count';
         my $sql_query  = q{
             SELECT 
@@ -259,7 +259,7 @@ my $summary_ofg = sub {
     }
     $write_obj->increase_row;
 
-    {    # write contents
+    {    # contents
         my $query_name = 'ofg tag count';
         my $sql_query  = q{
             SELECT 
@@ -279,7 +279,7 @@ my $summary_ofg = sub {
     }
     $write_obj->increase_row;
 
-    {    # write contents
+    {    # contents
         my $query_name = 'ofg type count';
         my $sql_query  = q{
             SELECT  o.ofg_type,
@@ -298,7 +298,7 @@ my $summary_ofg = sub {
     }
     $write_obj->increase_row;
 
-    {    # write contents
+    {    # contents
         my $query_name = 'ofg';
         my $sql_query  = q{
             SELECT 
@@ -323,7 +323,7 @@ my $summary_ofg = sub {
     }
     $write_obj->increase_row;
 
-    {    # write contents
+    {    # contents
         my $query_name = 'ofgsw_outside';
         my $sql_query  = q{
             SELECT 
