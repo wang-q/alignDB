@@ -148,14 +148,14 @@ else {
 
 print Dump [
     { combine => $combine, },
-    {   $largest   => $largest,
+    {   largest    => $largest,
         seq_number => $seq_number,
         freq       => \@freqs,
     }
 ];
 
 #----------------------------------------------------------#
-# chart -- d1_indel_ld
+# chart -- distance_*
 #----------------------------------------------------------#
 my $chart_distance = sub {
     my $sheet = shift;
@@ -187,6 +187,52 @@ my $chart_distance = sub {
     $opt{y_data}        = $data->[7];
     $opt{top} += 18;
     $write_obj->draw_y( $sheet, \%opt );
+};
+
+#----------------------------------------------------------#
+# chart -- pigccv_*
+#----------------------------------------------------------#
+my $chart_pigccv = sub {
+    my $sheet = shift;
+    my $data  = shift;
+
+    my %opt = (
+        x_column    => 0,
+        y_column    => 1,
+        first_row   => 2,
+        last_row    => 17,
+        x_max_scale => 15,
+        y_data      => $data->[1],
+        x_title     => "Distance to indels (d1)",
+        y_title     => "Nucleotide diversity",
+        top         => 1,
+        left        => 10,
+    );
+    $write_obj->draw_y( $sheet, \%opt );
+
+    $opt{y_column} = 3;
+    $opt{y_data}   = $data->[3];
+    $opt{y_title}  = "GC proportion";
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
+
+    $opt{y_column} = 5;
+    $opt{y_data}   = $data->[5];
+    $opt{y_title}  = "Window CV";
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
+
+    $opt{y_column}  = 3;
+    $opt{y_data}    = $data->[3];
+    $opt{y_title}   = "GC proportion";
+    $opt{y2_column} = 5;
+    $opt{y2_data}   = $data->[5];
+    $opt{y2_title}  = "Window CV";
+    $opt{top} += 18;
+    $write_obj->draw_2y( $sheet, \%opt );
+    delete $opt{y2_column};
+    delete $opt{y2_data};
+    delete $opt{y2_title};
 };
 
 #----------------------------------------------------------#
@@ -732,45 +778,43 @@ my $indel_length_insdel = sub {
 my $indel_type_gc_10 = sub {
     my $sheet_name = 'indel_type_gc_10';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     # indel_type groups
-    my @indel_types = ( [ 'Insertion', ['I'] ], [ 'Deletion', ['D'] ], );
+    my @indel_types = ( [ 'Insertion', 'I' ], [ 'Deletion', 'D' ], );
 
-    {    # write header
-        my $query_name = 'indel_type_gc_10';
-        my @headers    = qw{indel_length AVG_gc COUNT STD_gc };
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $query_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+    my $sql_query = q{
+        SELECT 
+            indel_length indel_length,
+            AVG(indel_gc) AVG_indel_gc,
+            COUNT(*) `COUNT`,
+            STD(indel_gc) STD_indel_gc
+        FROM
+            indel
+        WHERE
+            indel_type = ? AND indel_length <= 10
+        GROUP BY indel_length
+    };
+
+    my @names = $write_obj->sql2names( $sql_query, { bind_value => [ $indel_types[0]->[1] ] } );
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    # write contents
+    # contents
+    my $data;
     for (@indel_types) {
-        $sheet_row++;
-        my $sql_query = q{
-            SELECT  indel_length,
-                    AVG(indel_gc) AVG_indel_gc,
-                    COUNT(*),
-                    STD(indel_gc) STD_indel_gc
-            FROM indel
-            WHERE indel_type = ?
-            AND indel_length <= 10
-            GROUP BY indel_length
-        };
-        my %option = (
-            sql_query  => $sql_query,
-            query_name => $_->[0],
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            bind_value => $_->[1],
+        $write_obj->increase_row;
+
+        $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $sql_query,
+                query_name => $_->[0],
+                bind_value => [ $_->[1] ],
+                data       => $data,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
@@ -782,249 +826,147 @@ my $indel_type_gc_10 = sub {
 my $indel_type_gc_100 = sub {
     my $sheet_name = 'indel_type_gc_100';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     # indel_type groups
-    my @indel_types
-        = ( [ 'Insertion', ['I'] ], [ 'Deletion', ['D'] ], );
+    my @indel_types = ( [ 'Insertion', 'I' ], [ 'Deletion', 'D' ], );
 
-    {    # write header
-        my $query_name = 'indel_type_gc_100';
-        my @headers    = qw{indel_length AVG_gc COUNT STD_gc };
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $query_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+    my $sql_query = q{
+        SELECT 
+            CEIL(indel_length / 10) * 10,
+            AVG(indel_gc) AVG_indel_gc,
+            COUNT(*),
+            STD(indel_gc) STD_indel_gc
+        FROM
+            indel
+        WHERE
+            indel_type = ? AND indel_length <= 100
+        GROUP BY CEIL(indel_length / 10)
+    };
+
+    my @names = $write_obj->sql2names( $sql_query, { bind_value => [ $indel_types[0]->[1] ] } );
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    # write contents
+    # contents
+    my $data;
     for (@indel_types) {
-        $sheet_row++;
-        my $sql_query = q{
-            # indel_length distribution
-            SELECT  CEIL(indel_length / 10) * 10,
-                    AVG(indel_gc) AVG_indel_gc,
-                    COUNT(*),
-                    STD(indel_gc) STD_indel_gc
-            FROM indel
-            WHERE indel_type = ?
-            AND indel_length <= 100
-            GROUP BY CEIL(indel_length / 10)
-        };
-        my %option = (
-            sql_query  => $sql_query,
-            query_name => $_->[0],
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            bind_value => $_->[1],
+        $write_obj->increase_row;
+
+        $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $sql_query,
+                query_name => $_->[0],
+                bind_value => [ $_->[1] ],
+                data       => $data,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
 };
 
+#----------------------------------------------------------#
+# worksheet -- pigccv_combined
+#----------------------------------------------------------#
 my $combined_pigccv = sub {
-
-    #----------------------------------------------------------#
-    # worksheet -- combined_pigccv
-    #----------------------------------------------------------#
-
-    # make combine
-    my @combined;
-    {
-        my $thaw_sql   = $sql_file->retrieve('common-d1_combine-0');
-        my $standalone = [ -1, 0 ];
-        my %option     = (
-            sql_query  => $thaw_sql->as_sql,
-            threshold  => $combine,
-            standalone => $standalone,
-        );
-        @combined = @{ $write_obj->make_combine( \%option ) };
-    }
-    {
-        my $sheet_name = 'combined_pigccv';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers = qw{AVG_distance AVG_pi STD_pi AVG_gc STD_gc
-                AVG_cv STD_cv COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            my $sql_query = q{
-                SELECT
-                    AVG(isw_distance) AVG_distance,
-                    AVG(isw_pi) AVG_pi,
-                    STD(isw_pi) STD_pi,
-                    AVG(isw_average_gc) AVG_gc,
-                    STD(isw_average_gc) STD_gc,
-                    AVG(isw_cv) AVG_cv,
-                    STD(isw_cv) STD_cv,
-                    COUNT(*) COUNT
-                FROM isw
-                WHERE isw_distance IN
-            };
-            my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                combined  => \@combined,
-            );
-            ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    }
-
-    #----------------------------------------------------------#
-    # worksheet -- combined_pure_coding
-    #----------------------------------------------------------#
+    my $sheet_name = 'pigccv_combined';
+    my $sheet;
+    $write_obj->row(0);
+    $write_obj->column(0);
 
     # make combine
-    @combined = ();
-    {
-        my $sql_query = q{
-                SELECT  i.isw_distance,
-                        COUNT(*) COUNT
-                FROM isw i
-                inner join indel on i.isw_indel_id = indel.indel_id and indel.indel_coding = 1
-                where i.isw_coding = 1
-                group by i.isw_distance
-            };
-        my $standalone = [ -1, 0 ];
-        my %option = (
-            sql_query  => $sql_query,
+    my $combined = $write_obj->make_combine(
+        {   sql_query  => $sql_file->retrieve('common-d1_combine-0')->as_sql,
             threshold  => $combine,
-            standalone => $standalone,
+            standalone => [ -1, 0 ],
+        }
+    );
+
+    my $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
+
+    my @names = $thaw_sql->as_header;
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+    }
+
+    my $data;
+    for my $comb ( @{$combined} ) {    # content
+        my $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
+        $thaw_sql->add_where( 'isw.isw_distance' => $comb );
+
+        $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                query_name => $_->[0],
+                bind_value => $comb,
+                data       => $data,
+            }
         );
-        @combined = @{ $write_obj->make_combine( \%option ) };
     }
-    {
-        my $sheet_name = 'combined_pure_coding';
+
+    if ($add_chart) {    # chart
+        $chart_pigccv->( $sheet, $data );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
+
+};
+
+#----------------------------------------------------------#
+# worksheet -- pigccv_freq
+#----------------------------------------------------------#
+my $frequency_pigccv = sub {
+    my @freq_levels = ( @freqs, [ 'unknown', -1, -1 ], );
+
+    my $write_sheet = sub {
+        my ($level) = @_;
+        my $sheet_name = 'pigccv_freq_' . $level->[0];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
-        {    # write header
-            my @headers = qw{AVG_distance AVG_pi STD_pi AVG_gc STD_gc
-                AVG_cv STD_cv COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            my $sql_query = q{
-                SELECT
-                    AVG(isw_distance) AVG_distance,
-                    AVG(isw_pi) AVG_pi,
-                    STD(isw_pi) STD_pi,
-                    AVG(isw_average_gc) AVG_gc,
-                    STD(isw_average_gc) STD_gc,
-                    AVG(isw_cv) AVG_cv,
-                    STD(isw_cv) STD_cv,
-                    COUNT(*) COUNT
-                FROM isw i
-                INNER JOIN indel ON i.isw_indel_id = indel.indel_id AND indel.indel_coding = 1
-                WHERE i.isw_coding = 1
-                AND isw_distance IN
-            };
-            my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                combined  => \@combined,
-            );
-            ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    }
-
-    #----------------------------------------------------------#
-    # worksheet -- combined_pure_noncoding
-    #----------------------------------------------------------#
-
-    # make combine
-    @combined = ();
-    {
-        my $sql_query = q{
-                SELECT  i.isw_distance,
-                        COUNT(*) COUNT
-                FROM isw i
-                inner join indel on i.isw_indel_id = indel.indel_id and indel.indel_coding = 0
-                where i.isw_coding = 0
-                group by i.isw_distance
-            };
-        my $standalone = [ -1, 0 ];
-        my %option = (
-            sql_query  => $sql_query,
-            threshold  => $combine,
-            standalone => $standalone,
+        my $thaw_sql = $sql_file->retrieve('common-d1_pi_gc_cv-0');
+        $thaw_sql->from( [] );
+        $thaw_sql->add_join(
+            isw => [
+                {   type      => 'inner',
+                    table     => 'indel',
+                    condition => 'isw.isw_indel_id = indel.indel_id'
+                },
+            ]
         );
-        @combined = @{ $write_obj->make_combine( \%option ) };
-    }
-    {
-        my $sheet_name = 'combined_pure_noncoding';
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $thaw_sql->add_where( 'indel.indel_freq' => { op => '>=', value => '1' } );
+        $thaw_sql->add_where( 'indel.indel_freq' => { op => '<=', value => '1' } );
 
-        {    # write header
-            my @headers = qw{AVG_distance AVG_pi STD_pi AVG_gc STD_gc
-                AVG_cv STD_cv COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        my @names = $thaw_sql->as_header;
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
-        {    # write contents
-            my $sql_query = q{
-                SELECT
-                    AVG(isw_distance) AVG_distance,
-                    AVG(isw_pi) AVG_pi,
-                    STD(isw_pi) STD_pi,
-                    AVG(isw_average_gc) AVG_gc,
-                    STD(isw_average_gc) STD_gc,
-                    AVG(isw_cv) AVG_cv,
-                    STD(isw_cv) STD_cv,
-                    COUNT(*) COUNT
-                FROM isw i
-                INNER JOIN indel ON i.isw_indel_id = indel.indel_id AND indel.indel_coding = 0
-                WHERE i.isw_coding = 0
-                AND isw_distance IN
-            };
-            my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                combined  => \@combined,
+        my $data;
+        {    # content
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $level->[1], $level->[2] ],
+                    data       => 1,
+                }
             );
-            ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    }
+        if ($add_chart) {    # chart
+            $chart_pigccv->( $sheet, $data );
+        }
 
+        print "Sheet [$sheet_name] has been generated.\n";
+    };
+
+    for (@freq_levels) {
+        $write_sheet->($_);
+    }
 };
 
 #----------------------------------------------------------#
@@ -1225,64 +1167,6 @@ my $di_dn_ttest_nonslippage = sub {
     }
 
     print "Sheet \"$sheet_name\" has been generated.\n";
-};
-
-#----------------------------------------------------------#
-# worksheet -- distance(frequecy)
-#----------------------------------------------------------#
-my $frequency_pigccv = sub {
-    my @freq_levels = ( @freqs, [ 'unknown', -1, -1 ], );
-
-    my $write_sheet = sub {
-        my ($level) = @_;
-        my $sheet_name = 'pigccv_freq_' . $level->[0];
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # write header
-            my @headers = qw{distance AVG_pi STD_pi AVG_gc STD_gc
-                AVG_cv STD_cv COUNT};
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
-
-        {    # write contents
-            my $sql_query = q{
-                SELECT
-                    isw_distance,
-                    AVG(isw_pi) AVG_D,
-                    STD(isw_pi) STD_D,
-                    AVG(isw_average_gc) AVG_gc,
-                    STD(isw_average_gc) STD_gc,
-                    AVG(isw_cv) AVG_cv,
-                    STD(isw_cv) STD_cv,
-                    COUNT(*) COUNT
-                FROM    isw s, indel i
-                WHERE s.isw_indel_id = i.indel_id
-                AND i.indel_freq >= ?
-                AND i.indel_freq <= ?
-                GROUP BY isw_distance
-            };
-            my %option = (
-                sql_query  => $sql_query,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $level->[1], $level->[2] ],
-            );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    };
-
-    foreach (@freq_levels) {
-        &$write_sheet($_);
-    }
 };
 
 for my $n (@tasks) {
