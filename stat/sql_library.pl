@@ -1,13 +1,14 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use DBI;
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
+use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-use FindBin;
+use DBI;
 use AlignDB::SQL;
 use AlignDB::SQL::Library;
 
@@ -23,22 +24,26 @@ use AlignDB::SQL::Library;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $lib_file = "$FindBin::Bin/sql.lib";
 
-my $verbose;
+=head1 NAME
 
-my $man  = 0;
-my $help = 0;
+ld_stat_factory.pl - LD stats for alignDB
+
+=head1 SYNOPSIS
+
+    perl ld_stat_factory.pl [options]
+      Options:
+        --help      -?          brief help message
+        --lib           STR     Path to sql.lib
+        --verbose               verbose mode
+        
+=cut
 
 GetOptions(
-    'help|?'  => \$help,
-    'man'     => \$man,
-    'lib=s'   => \$lib_file,
-    'verbose' => \$verbose,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'lib=s'   => \(my $lib_file = "$FindBin::RealBin/sql.lib"),
+    'verbose' => \my  $verbose,
+) or HelpMessage(1);
 
 #----------------------------------------------------------#
 # Init section
@@ -517,7 +522,7 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_select( 'isw_distance',                          'distance' );
     $sql->add_select( 'AVG(isw_pi)',                           'AVG_D' );
     $sql->add_select( 'AVG(isw_d_indel)',                      'AVG_Di' );
-    $sql->add_select( 'AVG(isw_d_noindel)',                    'AVG_Dni' );
+    $sql->add_select( 'AVG(isw_d_noindel)',                    'AVG_Dn' );
     $sql->add_select( 'AVG(isw_d_bii)/2',                      '`AVG_Dbii/2`' );
     $sql->add_select( 'AVG(isw_d_bnn)/2',                      '`AVG_Dbnn/2`' );
     $sql->add_select( 'AVG(isw_d_complex)',                    'AVG_Dc' );
@@ -541,13 +546,13 @@ sub ns { return AlignDB::SQL->new; }
 
 {
     my $sql = ns();
-    $sql->add_select( 'isw_distance',        'distance' );
-    $sql->add_select( 'AVG(isw_pi)',         'AVG_D' );
-    $sql->add_select( 'AVG(isw_d_indel2)',   'AVG_Di2' );
-    $sql->add_select( 'AVG(isw_d_noindel2)', 'AVG_Dni2' );
-    $sql->add_select( 'AVG(isw_d_bii2)/2',   '`AVG_Dbii2/2`' );
-    $sql->add_select( 'AVG(isw_d_bnn2)/2',   '`AVG_Dbnn2/2`' );
-    $sql->add_select( 'AVG(isw_d_complex2)', 'AVG_Dc2' );
+    $sql->add_select( 'isw_distance',                            'distance' );
+    $sql->add_select( 'AVG(isw_pi)',                             'AVG_D' );
+    $sql->add_select( 'AVG(isw_d_indel2)',                       'AVG_Di2' );
+    $sql->add_select( 'AVG(isw_d_noindel2)',                     'AVG_Dn2' );
+    $sql->add_select( 'AVG(isw_d_bii2)/2',                       '`AVG_Dbii2/2`' );
+    $sql->add_select( 'AVG(isw_d_bnn2)/2',                       '`AVG_Dbnn2/2`' );
+    $sql->add_select( 'AVG(isw_d_complex2)',                     'AVG_Dc2' );
     $sql->add_select( 'AVG(isw_d_indel2) / AVG(isw_d_noindel2)', '`Di2/Dn2`' );
     $sql->add_select( 'COUNT(*)',                                'COUNT' );
 
@@ -568,13 +573,13 @@ sub ns { return AlignDB::SQL->new; }
 
 {
     my $sql = ns();
-    $sql->add_select( 'isw_distance',        'distance' );
-    $sql->add_select( 'AVG(isw_pi)',         'AVG_D' );
-    $sql->add_select( 'AVG(isw_d_indel3)',   'AVG_Di3' );
-    $sql->add_select( 'AVG(isw_d_noindel3)', 'AVG_Dni3' );
-    $sql->add_select( 'AVG(isw_d_bii3)/2',   '`AVG_Dbii3/2`' );
-    $sql->add_select( 'AVG(isw_d_bnn3)/2',   '`AVG_Dbnn3/2`' );
-    $sql->add_select( 'AVG(isw_d_complex3)', 'AVG_Dc3' );
+    $sql->add_select( 'isw_distance',                            'distance' );
+    $sql->add_select( 'AVG(isw_pi)',                             'AVG_D' );
+    $sql->add_select( 'AVG(isw_d_indel3)',                       'AVG_Di3' );
+    $sql->add_select( 'AVG(isw_d_noindel3)',                     'AVG_Dn3' );
+    $sql->add_select( 'AVG(isw_d_bii3)/2',                       '`AVG_Dbii3/2`' );
+    $sql->add_select( 'AVG(isw_d_bnn3)/2',                       '`AVG_Dbnn3/2`' );
+    $sql->add_select( 'AVG(isw_d_complex3)',                     'AVG_Dc3' );
     $sql->add_select( 'AVG(isw_d_indel3) / AVG(isw_d_noindel3)', '`Di3/Dn3`' );
     $sql->add_select( 'COUNT(*)',                                'COUNT' );
 
