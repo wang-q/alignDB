@@ -9,6 +9,8 @@ use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use DBI;
+use Statistics::R;
+
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::SQL;
@@ -975,74 +977,18 @@ my $frequency_pigccv = sub {
 my $di_dn_ttest = sub {
     my $sheet_name = 'di_dn_ttest';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # write header
-        my @headers = qw{AVG_distance AVG_D AVG_Di AVG_Dn Di/Dn COUNT P_value};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     my @group_distance = ( [0], [1], [2], [3], [4], [ 5 .. 10 ], [ 2 .. 5 ] );
 
-    my @p_values;
-
-    # ttest
-    {
-        my $sql_query = qq{
-            SELECT s.isw_d_indel, s.isw_d_noindel
-            FROM    isw s, indel i
-            WHERE i.indel_id = s.isw_indel_id
-            AND s.isw_distance >= 0
-            AND s.isw_d_indel IS NOT NULL 
-            AND (s.isw_d_indel + s.isw_d_noindel != 0)
-            AND s.isw_distance IN 
-        };
-
-        for (@group_distance) {
-            my @range      = @$_;
-            my $in_list    = '(' . join( ',', @range ) . ')';
-            my $sql_query2 = $sql_query . $in_list;
-            $sql_query2 .= " \nLIMIT 1000000";    # prevent to exceed excel limit
-
-            my %option  = ( sql_query => $sql_query2, );
-            my $ttest   = $write_obj->column_ttest( \%option );
-            my $p_value = $ttest->{t_prob};
-
-            unless ( defined $p_value ) {
-                $p_value = "NA";
-
-                #my $ttest_sheet_name = "ttest_" . join( '-', @range[ 0, -1 ] );
-                #my $stat_sheet;
-                #
-                #my ( $stat_sheet_row, $stat_sheet_col ) = ( 0, 0 );
-                #my %option = (
-                #    sheet_row => $stat_sheet_row,
-                #    sheet_col => $stat_sheet_col,
-                #    header    => [qw{d_indel d_noindel}],
-                #);
-                #( $stat_sheet, $stat_sheet_row )
-                #    = $write_obj->write_header_direct( $ttest_sheet_name,
-                #    \%option );
-                #
-                #%option = (
-                #    sql_query => $sql_query2,
-                #    sheet_row => $stat_sheet_row,
-                #    sheet_col => $stat_sheet_col,
-                #);
-                #$write_obj->write_content_direct( $stat_sheet, \%option );
-            }
-            push @p_values, [$p_value];
-        }
+    my @names = qw{AVG_distance AVG_D AVG_Di AVG_Dn Di/Dn COUNT P_value};
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {
-        my $sql_query = qq{
+    {    # content
+        my $base_query = qq{
             SELECT  AVG(isw_distance) AVG_distance,
                     AVG(isw_pi) AVG_D,
                     AVG(isw_d_indel) AVG_Di,
@@ -1055,118 +1001,157 @@ my $di_dn_ttest = sub {
             AND s.isw_d_indel IS NOT NULL 
             AND s.isw_distance IN 
         };
-        my %option = (
-            sql_query     => $sql_query,
-            sheet_row     => $sheet_row,
-            sheet_col     => $sheet_col,
-            group         => \@group_distance,
-            append_column => \@p_values,
-        );
-        ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
+
+        for (@group_distance) {
+            my @range     = @$_;
+            my $in_list   = '(' . join( ',', @range ) . ')';
+            my $sql_query = $base_query . $in_list;
+            my $group_name;
+            if ( scalar @range > 1 ) {
+                $group_name = $range[0] . "--" . $range[-1];
+            }
+            else {
+                $group_name = $range[0];
+            }
+            $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $sql_query,
+                    query_name => $group_name,
+                }
+            );
+        }
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    {    # t-test
+        my $base_query = qq{
+            SELECT s.isw_d_indel, s.isw_d_noindel
+            FROM    isw s, indel i
+            WHERE i.indel_id = s.isw_indel_id
+            AND s.isw_distance >= 0
+            AND s.isw_d_indel IS NOT NULL 
+            AND (s.isw_d_indel + s.isw_d_noindel != 0)
+            AND s.isw_distance IN 
+        };
+
+        my @p_values;
+        for (@group_distance) {
+            my @range     = @$_;
+            my $in_list   = '(' . join( ',', @range ) . ')';
+            my $sql_query = $base_query . $in_list;
+
+            my $sth = $dbh->prepare($sql_query);
+            $sth->execute;
+
+            my ( @sample1, @sample2 );
+            while ( my @row = $sth->fetchrow_array ) {
+                push @sample1, $row[0];
+                push @sample2, $row[1];
+            }
+
+            my $p_value = r_t_test( \@sample1, \@sample2 );
+            if ( !defined $p_value ) {
+                $p_value = "NA";
+            }
+            push @p_values, [$p_value];
+        }
+
+        $sheet->write( 1, scalar @names, [ [@p_values] ], $write_obj->format->{NORMAL} );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
 # worksheet -- di_dn_ttest
 #----------------------------------------------------------#
-my $di_dn_ttest_nonslippage = sub {
-    my $sheet_name = 'di_dn_ttest_nonslippage';
+my $di_dn_ttest_ns = sub {
+    my $sheet_name = 'di_dn_ttest_ns';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # write header
-        my @headers = qw{AVG_distance AVG_D AVG_Di AVG_Dn Di/Dn COUNT P_value};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     my @group_distance = ( [0], [1], [2], [3], [4], [ 5 .. 10 ], [ 2 .. 5 ] );
 
-    my @p_values;
+    my @names = qw{AVG_distance AVG_D AVG_Di AVG_Dn Di/Dn COUNT P_value};
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+    }
 
-    # ttest
-    {
-        my $sql_query = qq{
+    {    # content
+        my $base_query = qq{
+            SELECT  AVG(isw_distance) AVG_distance,
+                    AVG(isw_pi) AVG_D,
+                    AVG(isw_d_indel) AVG_Di,
+                    AVG(isw_d_noindel) AVG_Dn,
+                    AVG(isw_d_indel)/AVG(isw_d_noindel) `Di/Dn`,
+                    COUNT(*) COUNT
+            FROM    isw s, indel i
+            WHERE s.isw_indel_id = i.indel_id
+            AND s.isw_distance >= 0
+            AND s.isw_d_indel IS NOT NULL
+            AND i.indel_slippage = 0
+            AND (s.isw_d_indel + s.isw_d_noindel != 0)
+            AND s.isw_distance IN 
+        };
+
+        for (@group_distance) {
+            my @range     = @$_;
+            my $in_list   = '(' . join( ',', @range ) . ')';
+            my $sql_query = $base_query . $in_list;
+            my $group_name;
+            if ( scalar @range > 1 ) {
+                $group_name = $range[0] . "--" . $range[-1];
+            }
+            else {
+                $group_name = $range[0];
+            }
+            $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $sql_query,
+                    query_name => $group_name,
+                }
+            );
+        }
+    }
+
+    {    # t-test
+        my $base_query = qq{
             SELECT s.isw_d_indel, s.isw_d_noindel
             FROM    isw s, indel i
             WHERE i.indel_id = s.isw_indel_id
             AND s.isw_distance >= 0
             AND s.isw_d_indel IS NOT NULL
             AND i.indel_slippage = 0
-            AND s.isw_distance IN 
-        };
-
-        for (@group_distance) {
-            my @range      = @$_;
-            my $in_list    = '(' . join( ',', @range ) . ')';
-            my $sql_query2 = $sql_query . $in_list;
-            $sql_query2 .= " \nLIMIT 1000000";    # prevent to exceed excel limit
-
-            my %option  = ( sql_query => $sql_query2, );
-            my $ttest   = $write_obj->column_ttest( \%option );
-            my $p_value = $ttest->{t_prob};
-
-            unless ( defined $p_value ) {
-                $p_value = "NA";
-
-                #my $ttest_sheet_name = "ttest_" . join( '-', @range[ 0, -1 ] );
-                #my $stat_sheet;
-                #
-                #my ( $stat_sheet_row, $stat_sheet_col ) = ( 0, 0 );
-                #my %option = (
-                #    sheet_row => $stat_sheet_row,
-                #    sheet_col => $stat_sheet_col,
-                #    header    => [qw{d_indel d_noindel}],
-                #);
-                #( $stat_sheet, $stat_sheet_row )
-                #    = $write_obj->write_header_direct( $ttest_sheet_name,
-                #    \%option );
-                #
-                #%option = (
-                #    sql_query => $sql_query2,
-                #    sheet_row => $stat_sheet_row,
-                #    sheet_col => $stat_sheet_col,
-                #);
-                #$write_obj->write_content_direct( $stat_sheet, \%option );
-            }
-            push @p_values, [$p_value];
-        }
-    }
-
-    {
-        my $sql_query = qq{
-            SELECT  AVG(isw_distance) AVG_distance,
-                    AVG(isw_pi) AVG_D,
-                    AVG(isw_d_indel) AVG_Di,
-                    AVG(isw_d_noindel) AVG_Dn,
-                    AVG(isw_d_indel)/AVG(isw_d_noindel) `Di/Dn`,
-                    COUNT(*) COUNT
-            FROM    isw s, indel i
-            WHERE s.isw_indel_id = i.indel_id
-            AND s.isw_distance >= 0
-            AND s.isw_d_indel IS NOT NULL 
-            AND i.indel_slippage = 0
             AND (s.isw_d_indel + s.isw_d_noindel != 0)
             AND s.isw_distance IN 
         };
-        my %option = (
-            sql_query     => $sql_query,
-            sheet_row     => $sheet_row,
-            sheet_col     => $sheet_col,
-            group         => \@group_distance,
-            append_column => \@p_values,
-        );
-        ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
+
+        my @p_values;
+        for (@group_distance) {
+            my @range     = @$_;
+            my $in_list   = '(' . join( ',', @range ) . ')';
+            my $sql_query = $base_query . $in_list;
+
+            my $sth = $dbh->prepare($sql_query);
+            $sth->execute;
+
+            my ( @sample1, @sample2 );
+            while ( my @row = $sth->fetchrow_array ) {
+                push @sample1, $row[0];
+                push @sample2, $row[1];
+            }
+
+            my $p_value = r_t_test( \@sample1, \@sample2 );
+            if ( !defined $p_value ) {
+                $p_value = "NA";
+            }
+            push @p_values, [$p_value];
+        }
+
+        $sheet->write( 1, scalar @names, [ [@p_values] ], $write_obj->format->{NORMAL} );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 for my $n (@tasks) {
@@ -1183,7 +1168,7 @@ for my $n (@tasks) {
     if ( $n == 11 ) { &$indel_type_gc_10;     &$indel_type_gc_100; next; }
     if ( $n == 21 ) { &$combined_pigccv;      next; }
     if ( $n == 22 ) { &$frequency_pigccv;     next; }
-    if ( $n == 52 ) { &$di_dn_ttest;          &$di_dn_ttest_nonslippage; next; }
+    if ( $n == 52 ) { &$di_dn_ttest;          &$di_dn_ttest_ns; next; }
 }
 
 if ($add_index_sheet) {
@@ -1257,6 +1242,30 @@ sub get_freq {
     }
 
     return $counts[0];
+}
+
+# t-test using R
+sub r_t_test {
+    my $x = shift;
+    my $y = shift;
+
+    die "Give two array-refs to me\n" if ref $x ne 'ARRAY';
+    die "Give two array-refs to me\n" if ref $y ne 'ARRAY';
+    die "Variable lengths differ\n"   if @$x != @$y;
+    return                            if @$x <= 2;
+
+    # Create a communication bridge with R and start R
+    my $R = Statistics::R->new;
+
+    $R->set( 'x', $x );
+    $R->set( 'y', $y );
+    $R->run(q{ result = t.test(x, y, alternative = "greater", paired = TRUE) });
+    $R->run(q{ p_value <- result$p.value });
+
+    my $p_value = $R->get('p_value');
+    $R->stop;
+
+    return $p_value;
 }
 
 __END__
