@@ -10,6 +10,7 @@ use YAML qw(Dump Load DumpFile LoadFile);
 
 use DBI;
 use Statistics::R;
+use Tie::IxHash;
 
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
@@ -235,6 +236,46 @@ my $chart_pigccv = sub {
     delete $opt{y2_column};
     delete $opt{y2_data};
     delete $opt{y2_title};
+};
+
+my $chart_indel_type_gc = sub {
+    my $sheet   = shift;
+    my $data_of = shift;
+
+    # write charting data
+    my @keys = keys %{$data_of};
+    $write_obj->row(2);
+    $write_obj->column(7);
+
+    #$write_obj->write_row($sheet, { row => [ 'X', @keys] } );
+
+    $write_obj->write_column( $sheet, { column => $data_of->{ $keys[0] }[0], } );
+    for my $key (@keys) {
+        $write_obj->write_column(
+            $sheet,
+            {   query_name => $key,
+                column     => $data_of->{$key}[1],
+            }
+        );
+    }
+
+    my %opt = (
+        x_column      => 7,
+        y_column      => 8,
+        y_last_column => 8 + @keys - 1,
+        first_row     => 2,
+        last_row      => 11,
+        x_min_scale   => 1,
+        x_max_scale   => 10,
+        y_data        => [ map { $data_of->{$_}[1] } @keys ],
+        x_title       => "Indel length",
+        y_title       => "GC proportion",
+        top           => 13,
+        left          => 7,
+        height        => 480,
+        width         => 480,
+    );
+    $write_obj->draw_dd( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -805,21 +846,26 @@ my $indel_type_gc_10 = sub {
     }
 
     # contents
-    my $data;
+    tie my %data_of, 'Tie::IxHash';
     for (@indel_types) {
         $write_obj->increase_row;
 
-        $data = $write_obj->write_sql(
+        my $data = $write_obj->write_sql(
             $sheet,
             {   sql_query  => $sql_query,
                 query_name => $_->[0],
                 bind_value => [ $_->[1] ],
-                data       => $data,
+                data       => 1,
             }
         );
+        $data_of{ $_->[0] } = $data;
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_indel_type_gc->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -853,21 +899,26 @@ my $indel_type_gc_100 = sub {
     }
 
     # contents
-    my $data;
+    tie my %data_of, 'Tie::IxHash';
     for (@indel_types) {
         $write_obj->increase_row;
 
-        $data = $write_obj->write_sql(
+        my $data = $write_obj->write_sql(
             $sheet,
             {   sql_query  => $sql_query,
                 query_name => $_->[0],
                 bind_value => [ $_->[1] ],
-                data       => $data,
+                data       => 1,
             }
         );
+        $data_of{ $_->[0] } = $data;
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_indel_type_gc->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
