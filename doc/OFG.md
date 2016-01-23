@@ -35,7 +35,7 @@ perl ~/Scripts/fig_table/xlsx2csv.pl -f mmc2.xls --sheet 'Spo11 Hot Spot Annotat
 
     perl ~/Scripts/alignDB/ofg/insert_bed.pl \
         -d S288cvsself_spo11 \
-        --style center_intact --batch 1 --parallel 8 \
+        --style center_intact --parallel 8 \
         --dG \
         --tag spo11 --type hotspot -f ~/data/ofg/spo11/spo11_hot.bed
 
