@@ -319,54 +319,6 @@ sub insert_ofgsw {
     return;
 }
 
-sub get_tags {
-    my $self = shift;
-
-    my $dbh = $self->dbh;
-
-    my $query = q{
-        SELECT DISTINCT o.ofg_tag
-        FROM ofg o
-        ORDER BY o.ofg_tag
-    };
-
-    my $ary_ref = $dbh->selectcol_arrayref($query);
-
-    return $ary_ref;
-}
-
-sub get_types {
-    my $self = shift;
-
-    my $dbh = $self->dbh;
-
-    my $query = q{
-        SELECT DISTINCT o.ofg_type
-        FROM ofg o
-        ORDER BY o.ofg_type
-    };
-
-    my $ary_ref = $dbh->selectcol_arrayref($query);
-
-    return $ary_ref;
-}
-
-sub get_tts {
-    my $self = shift;
-
-    my $dbh = $self->dbh;
-
-    my $query = q{
-        SELECT DISTINCT CONCAT(o.ofg_tag, "_", o.ofg_type)
-        FROM ofg o
-        ORDER BY CONCAT(o.ofg_tag, "_", o.ofg_type)
-    };
-
-    my $ary_ref = $dbh->selectcol_arrayref($query);
-
-    return $ary_ref;
-}
-
 sub _calc_deltaG {
     my $self     = shift;
     my $align_id = shift;

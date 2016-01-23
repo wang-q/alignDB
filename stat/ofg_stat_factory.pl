@@ -16,10 +16,6 @@ use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::ToXLSX;
 
-use lib "$FindBin::RealBin/../lib";
-use AlignDB;
-use AlignDB::Ofg;
-
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
@@ -649,22 +645,15 @@ my $ofg_tag_type = sub {
         return;
     }
 
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-    AlignDB::Ofg->meta->apply($obj);
-
     my $ary_ref;
     if ( $by eq "tag" ) {
-        $ary_ref = $obj->get_tags;
+        $ary_ref = get_tags($dbh);
     }
     elsif ( $by eq "type" ) {
-        $ary_ref = $obj->get_types;
+        $ary_ref = get_types($dbh);
     }
     elsif ( $by eq "tt" ) {
-        $ary_ref = $obj->get_tts;
+        $ary_ref = get_tts($dbh);
     }
 
     my $write_sheet = sub {
@@ -761,5 +750,47 @@ if ($add_index_sheet) {
 
 $stopwatch->end_message;
 exit;
+
+sub get_tags {
+    my $dbh = shift;
+
+    my $query = q{
+        SELECT DISTINCT o.ofg_tag
+        FROM ofg o
+        ORDER BY o.ofg_tag
+    };
+
+    my $ary_ref = $dbh->selectcol_arrayref($query);
+
+    return $ary_ref;
+}
+
+sub get_types {
+    my $dbh = shift;
+
+    my $query = q{
+        SELECT DISTINCT o.ofg_type
+        FROM ofg o
+        ORDER BY o.ofg_type
+    };
+
+    my $ary_ref = $dbh->selectcol_arrayref($query);
+
+    return $ary_ref;
+}
+
+sub get_tts {
+    my $dbh = shift;
+
+    my $query = q{
+        SELECT DISTINCT CONCAT(o.ofg_tag, "_", o.ofg_type)
+        FROM ofg o
+        ORDER BY CONCAT(o.ofg_tag, "_", o.ofg_type)
+    };
+
+    my $ary_ref = $dbh->selectcol_arrayref($query);
+
+    return $ary_ref;
+}
 
 __END__
