@@ -764,192 +764,6 @@ my $snp_base_change = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- target_snp
-#----------------------------------------------------------#
-#
-my $target_snp = sub {
-    my $sheet_name = 'target_snp';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    # write header
-    {
-        my $query_name = 'target_snp';
-        my $sql_query  = q~
-            # header
-            SELECT 'base_change', 'snp_number'
-        ~;
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            query_name => $query_name,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_sql( $sheet_name, \%option );
-    }
-
-    # write contents
-    {
-        $sheet_row++;
-        my $query_name = 'T_indel';
-        my $sql_query  = q~
-        SELECT  s.base_change, s.snp_number / total.total * 100
-        FROM    (SELECT COUNT(*) total
-                FROM indel, isw, snp
-                WHERE indel.indel_occured = "T"
-                AND snp.snp_occured = "T"
-                AND indel.indel_id = isw.indel_id
-                AND isw.isw_id = snp.isw_id
-                ) total,
-                (SELECT CONCAT(ref_base, "->", target_base) base_change,
-                        COUNT(*) snp_number
-                FROM indel, isw, snp
-                WHERE indel.indel_occured = "T"
-                AND snp.snp_occured = "T"
-                AND indel.indel_id = isw.indel_id
-                AND isw.isw_id = snp.isw_id
-                GROUP BY CONCAT(ref_base, "->", target_base)
-                ) s
-        ~;
-        my %option = (
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            query_name => $query_name,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    {
-        $sheet_row++;
-        my $query_name = 'T_noindel';
-        my $sql_query  = q~
-        SELECT  s.base_change, s.snp_number / total.total * 100
-        FROM    (SELECT COUNT(*) total
-                FROM indel, isw, snp
-                WHERE indel.indel_occured = "T"
-                AND snp.snp_occured = "Q"
-                AND indel.indel_id = isw.indel_id
-                AND isw.isw_id = snp.isw_id
-                ) total,
-                (SELECT CONCAT(ref_base, "->", query_base) base_change,
-                        COUNT(*) snp_number
-                FROM indel, isw, snp
-                WHERE indel.indel_occured = "T"
-                AND snp.snp_occured = "Q"
-                AND indel.indel_id = isw.indel_id
-                AND isw.isw_id = snp.isw_id
-                GROUP BY CONCAT(ref_base, "->", query_base)
-                ) s
-        ~;
-        my %option = (
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            query_name => $query_name,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    print "Sheet \"$sheet_name\" has been generated.\n";
-};
-
-#----------------------------------------------------------#
-# worksheet -- query_snp
-#----------------------------------------------------------#
-#
-my $query_snp = sub {
-    my $sheet_name = 'query_snp';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    # write header
-    {
-        my $query_name = 'query_snp';
-        my $sql_query  = q~
-            # header
-            SELECT 'base_change', 'snp_number'
-        ~;
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            query_name => $query_name,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_sql( $sheet_name, \%option );
-    }
-
-    # write contents
-    {
-        $sheet_row++;
-        my $query_name = 'Q_indel';
-        my $sql_query  = q~
-        SELECT  s.base_change, s.snp_number / total.total * 100
-        FROM    (SELECT COUNT(*) total
-                FROM indel, isw, snp
-                WHERE indel.indel_occured = "Q"
-                AND snp.snp_occured = "Q"
-                AND indel.indel_id = isw.indel_id
-                AND isw.isw_id = snp.isw_id
-                ) total,
-                (SELECT CONCAT(ref_base, "->", query_base) base_change,
-                        COUNT(*) snp_number
-                FROM indel, isw, snp
-                WHERE indel.indel_occured = "Q"
-                AND snp.snp_occured = "Q"
-                AND indel.indel_id = isw.indel_id
-                AND isw.isw_id = snp.isw_id
-                GROUP BY CONCAT(ref_base, "->", query_base)
-                ) s
-        ~;
-        my %option = (
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            query_name => $query_name,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    {
-        $sheet_row++;
-        my $query_name = 'Q_noindel';
-        my $sql_query  = q~
-        SELECT  s.base_change, s.snp_number / total.total * 100
-        FROM    (SELECT COUNT(*) total
-                FROM indel, isw, snp
-                WHERE indel.indel_occured = "Q"
-                AND snp.snp_occured = "T"
-                AND indel.indel_id = isw.indel_id
-                AND isw.isw_id = snp.isw_id
-                ) total,
-                (SELECT CONCAT(ref_base, "->", target_base) base_change,
-                        COUNT(*) snp_number
-                FROM indel, isw, snp
-                WHERE indel.indel_occured = "Q"
-                AND snp.snp_occured = "T"
-                AND indel.indel_id = isw.indel_id
-                AND isw.isw_id = snp.isw_id
-                GROUP BY CONCAT(ref_base, "->", target_base)
-                ) s
-        ~;
-        my %option = (
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            query_name => $query_name,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    print "Sheet \"$sheet_name\" has been generated.\n";
-};
-
-#----------------------------------------------------------#
 # worksheet -- distance_snp
 #----------------------------------------------------------#
 my $distance_snp = sub {
@@ -1499,7 +1313,6 @@ foreach my $n (@tasks) {
     if ( $n == 1 )  { &$summary;              next; }
     if ( $n == 10 ) { &$indel_distance_slip;  next; }
     if ( $n == 17 ) { &$snp_base_change;      next; }
-    if ( $n == 18 ) { &$target_snp;           &$query_snp; next; }
     if ( $n == 19 ) { &$distance_snp;         &$distance_tri_trv; next; }
     if ( $n == 20 ) { &$distance_snp_non_cpg; next; }
     if ( $n == 22 ) { &$distance_cpg;         next; }
@@ -1519,11 +1332,11 @@ __END__
 
 =head1 NAME
 
-    three_stat_factory.pl - Generate statistical Excel files from alignDB
+three_stat_factory.pl - Generate statistical Excel files from alignDB
 
 =head1 SYNOPSIS
 
-    three_stat_factory.pl [options]
+    perl three_stat_factory.pl [options]
      Options:
        --help            brief help message
        --man             full documentation
@@ -1533,25 +1346,5 @@ __END__
        --password        password
        --output          output filename
        --run             run special analysis
-       
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
 
 =cut

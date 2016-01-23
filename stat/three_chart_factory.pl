@@ -540,22 +540,6 @@ $excel_obj->jc_correction if $jc_correction;
     );
 
     $excel_obj->draw_dd( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- target_snp
-    #----------------------------#
-    $sheet_name = 'target_snp';
-    @group_name = qw/T_indel T_noindel/;
-
-    $excel_obj->draw_dd( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- query_snp
-    #----------------------------#
-    $sheet_name = 'query_snp';
-    @group_name = qw/Q_indel Q_noindel/;
-
-    $excel_obj->draw_dd( $sheet_name, \%option );
 }
 
 {
@@ -639,7 +623,7 @@ __END__
     
 =head1 NAME
 
-    three_chart_factory.pl - Use Win32::OLE to automate Excel chart
+three_chart_factory.pl - Use Win32::OLE to automate Excel chart
 
 =head1 SYNOPSIS
 
@@ -649,25 +633,5 @@ __END__
        --man             full documentation
        --infile          input file name (full path)
        --outfile         output file name
-       
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
 
 =cut
