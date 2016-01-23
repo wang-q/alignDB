@@ -215,9 +215,9 @@ SEG: for my $seg (@segments) {
         print "$chr_name:$seg_start-$seg_end; length:$seg_length\n";
 
         for my $db_name (@all_dbs) {
-            my $pos_obj = $db_info_of->{$db_name}{pos_obj};
             my ( $align_id, $dummy )
-                = @{ $pos_obj->positioning_align_chr_id( $chr_id, $seg_start, $seg_end ) };
+                = @{ $db_info_of->{$db_name}{obj}
+                    ->find_align_chr_id( $chr_id, $seg_start, $seg_end ) };
 
             if ( !defined $align_id ) {
                 warn " " x 4, "Find no align in $db_name, jump to next\n";

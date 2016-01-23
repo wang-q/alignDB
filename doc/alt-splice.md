@@ -20,6 +20,7 @@ cd ~/data/alt-splice/ase_flanking/
 # Runtime 29 minutes and 53 seconds.
 perl ~/Scripts/alignDB/util/dup_db.pl -f ~/data/dumps/mysql/Human_n11cg_chimp_basic.sql.gz -g Human_n11cg_chimp_as_flanking
 
+# 2 days
 perl ~/Scripts/alignDB/ofg/insert_bed.pl \
     -d Human_n11cg_chimp_as_flanking \
     --style center_intact \
@@ -30,15 +31,16 @@ perl ~/Scripts/alignDB/ofg/insert_bed.pl \
 
 perl ~/Scripts/alignDB/init/update_sw_cv.pl \
     -d Human_n11cg_chimp_as_flanking \
-    --parallel 8
+    --parallel 12
 
 perl ~/Scripts/alignDB/init/update_feature.pl \
     -d Human_n11cg_chimp_as_flanking \
     -e homo_sapiens_core_82_37 \
-    --parallel 8
+    --parallel 12
 
 perl /home/wangq/Scripts/alignDB/stat/ofg_stat_factory.pl \
     --by type -d Human_n11cg_chimp_as_flanking \
+    --index --chart \
     -o Human_n11cg_chimp_as_flanking.ofg.xlsx
 
 ```
