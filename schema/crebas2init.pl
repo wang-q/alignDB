@@ -18,6 +18,9 @@ $content =~ s/\n{3,}/\n\n/g;
 
 # indexes
 $content .= q{
+#----------------------------#
+# chromosome
+#----------------------------#
 CREATE INDEX chr_common_name ON chromosome
 (
    common_name, chr_name
@@ -33,6 +36,9 @@ CREATE INDEX chr_chr_name ON chromosome
     chr_name
 );
 
+#----------------------------#
+# sequence
+#----------------------------#
 CREATE INDEX seq_chr_id ON sequence
 (
     chr_id, chr_start, chr_end
@@ -48,14 +54,63 @@ CREATE INDEX seq_chr_start ON sequence
     chr_start, chr_end
 );
 
+#----------------------------#
+# indel
+#----------------------------#
 CREATE INDEX indel_type ON indel
 (
     indel_type
 );
 
+CREATE INDEX indel_align_id ON indel
+(
+    align_id, indel_start, indel_end
+);
+
+CREATE INDEX indel_start ON indel
+(
+    indel_start, indel_end
+);
+
+CREATE INDEX indel_freq ON indel
+(
+    indel_freq
+);
+
+#----------------------------#
+# snp
+#----------------------------#
+CREATE INDEX snp_align_id ON snp
+(
+    align_id, snp_pos
+);
+
+CREATE INDEX snp_pos ON snp
+(
+    snp_pos
+);
+
+CREATE INDEX snp_freq ON snp
+(
+    snp_freq
+);
+
+#----------------------------#
+# isw
+#----------------------------#
 CREATE INDEX indel_isw_id_FK ON isw
 (
     isw_indel_id
+);
+
+CREATE INDEX isw_align_id ON isw
+(
+    align_id, isw_start, isw_end
+);
+
+CREATE INDEX isw_start ON isw
+(
+    isw_start, isw_end
 );
 
 CREATE INDEX isw_distance ON isw

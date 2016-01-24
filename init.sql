@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/24/2016 00:14:42                           */
+/* Created on:     1/24/2016 09:07:28                           */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -257,6 +257,7 @@ create table isw
    isw_id                         int                            not null AUTO_INCREMENT,
    indel_id                       int,
    prev_indel_id                  int,
+   align_id                       int,
    isw_indel_id                   int,
    isw_start                      int,
    isw_end                        int,
@@ -298,6 +299,14 @@ create index indel_isw_FK on isw
 (
    indel_id,
    prev_indel_id
+);
+
+/*==============================================================*/
+/* Index: align_isw_FK                                          */
+/*==============================================================*/
+create index align_isw_FK on isw
+(
+   align_id
 );
 
 /*==============================================================*/
@@ -591,6 +600,9 @@ create index align_window_FK on window
 );
 
 
+#----------------------------#
+# chromosome
+#----------------------------#
 CREATE INDEX chr_common_name ON chromosome
 (
    common_name, chr_name
@@ -606,6 +618,9 @@ CREATE INDEX chr_chr_name ON chromosome
     chr_name
 );
 
+#----------------------------#
+# sequence
+#----------------------------#
 CREATE INDEX seq_chr_id ON sequence
 (
     chr_id, chr_start, chr_end
@@ -621,14 +636,63 @@ CREATE INDEX seq_chr_start ON sequence
     chr_start, chr_end
 );
 
+#----------------------------#
+# indel
+#----------------------------#
 CREATE INDEX indel_type ON indel
 (
     indel_type
 );
 
+CREATE INDEX indel_align_id ON indel
+(
+    align_id, indel_start, indel_end
+);
+
+CREATE INDEX indel_start ON indel
+(
+    indel_start, indel_end
+);
+
+CREATE INDEX indel_freq ON indel
+(
+    indel_freq
+);
+
+#----------------------------#
+# snp
+#----------------------------#
+CREATE INDEX snp_align_id ON snp
+(
+    align_id, snp_pos
+);
+
+CREATE INDEX snp_pos ON snp
+(
+    snp_pos
+);
+
+CREATE INDEX snp_freq ON snp
+(
+    snp_freq
+);
+
+#----------------------------#
+# isw
+#----------------------------#
 CREATE INDEX indel_isw_id_FK ON isw
 (
     isw_indel_id
+);
+
+CREATE INDEX isw_align_id ON isw
+(
+    align_id, isw_start, isw_end
+);
+
+CREATE INDEX isw_start ON isw
+(
+    isw_start, isw_end
 );
 
 CREATE INDEX isw_distance ON isw

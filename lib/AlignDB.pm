@@ -480,17 +480,15 @@ sub insert_isw {
     my $isw_insert = $dbh->prepare(
         q{
         INSERT INTO isw (
-            isw_id, indel_id, prev_indel_id, isw_indel_id,
-            isw_start, isw_end, isw_length, 
-            isw_type, isw_distance, isw_density,
-            isw_differences, isw_pi,
+            isw_id, indel_id, prev_indel_id, align_id, isw_indel_id,
+            isw_start, isw_end, isw_length, isw_type,
+            isw_distance, isw_density, isw_differences, isw_pi,
             isw_target_gc, isw_average_gc
         )
         VALUES (
-            NULL, ?, ?, ?,
-            ?, ?, ?,
-            ?, ?, ?,
-            ?, ?,
+            NULL, ?, ?, ?, ?,
+            ?, ?, ?, ?,
+            ?, ?, ?, ?,
             ?, ?
         )
         }
@@ -548,10 +546,10 @@ sub insert_isw {
             }
             my $isw_stat = $self->get_slice_stat( $align_id, $isw_set );
             $isw_insert->execute(
-                $indel_id,       $prev_indel_id, $isw_indel_id,  $isw_start,
-                $isw_end,        $isw_length,    $isw->{type},   $isw->{distance},
-                $isw->{density}, $isw_stat->[3], $isw_stat->[7], $isw_stat->[8],
-                $isw_stat->[9],
+                $indel_id,        $prev_indel_id,  $align_id,      $isw_indel_id,
+                $isw_start,       $isw_end,        $isw_length,    $isw->{type},
+                $isw->{distance}, $isw->{density}, $isw_stat->[3], $isw_stat->[7],
+                $isw_stat->[8],   $isw_stat->[9],
             );
         }
     }
@@ -580,11 +578,11 @@ sub isw_snp_fk {
     my $fetch_isw_id = $dbh->prepare(
         q{
         SELECT isw_id
-        FROM isw, indel
-        WHERE isw.indel_id = indel.indel_id
-        AND indel.align_id = ?
-        AND isw.isw_start <= ?
-        AND isw.isw_end >= ?
+        FROM isw
+        WHERE 1 = 1
+        AND align_id = ?
+        AND isw_start <= ?
+        AND isw_end >= ?
         }
     );
 
@@ -610,113 +608,6 @@ sub isw_snp_fk {
     $snp_update->finish;
     $fetch_isw_id->finish;
     $fetch_snp_id->finish;
-
-    return;
-}
-
-sub _modify_isw {
-    my $self     = shift;
-    my $align_id = shift;
-
-    my $dbh = $self->dbh;
-
-    # get sliding windows' sizes
-    my $window_maker = $self->window_maker;
-    my $windows_size = $window_maker->sw_size;
-
-    # indel_id & prev_indel_id
-    my $fetch_indel_id = $dbh->prepare(
-        q{
-        SELECT i1.indel_id,
-                i1.indel_occured,
-                i2.indel_occured
-        FROM indel i1, indel i2
-        WHERE i1.prev_indel_id = i2.indel_id
-        AND i1.align_id = ?
-        AND i1.left_extand >= ?
-        }
-    );
-
-    # isw_id
-    my $fetch_isw_id = $dbh->prepare(
-        q{
-        SELECT isw_id, isw_type
-        FROM isw
-        WHERE indel_id = ?
-        }
-    );
-
-    # snp
-    my $fetch_snp = $dbh->prepare(
-        q{
-        SELECT snp_occured, COUNT(*)
-        FROM snp
-        WHERE isw_id = ?
-        GROUP BY snp_occured
-        }
-    );
-
-    # update isw
-    my $update_isw = $dbh->prepare(
-        q{
-        UPDATE isw
-        SET isw_d_indel = ? / isw_length,
-            isw_d_noindel = ? /isw_length,
-            isw_d_complex = ? /isw_length
-        WHERE isw_id = ?
-        }
-    );
-
-    $fetch_indel_id->execute( $align_id, $windows_size );
-    while ( my @row = $fetch_indel_id->fetchrow_array ) {
-        my ( $indel_id, $indel_occured, $prev_indel_occured ) = @row;
-        $fetch_isw_id->execute($indel_id);
-        while ( my @row = $fetch_isw_id->fetchrow_array ) {
-            my ( $isw_id, $isw_type ) = @row;
-            my %occured;
-            my ( $d_indel, $d_noindel, $d_complex );
-            $fetch_snp->execute($isw_id);
-            while ( my @row = $fetch_snp->fetchrow_array ) {
-                my ( $snp_occured, $number ) = @row;
-                $occured{$snp_occured} = $number;
-            }
-
-            # When there is not a snp,
-            #   $occured{$snp_occured} will be undef.
-            foreach (qw{T Q N}) {
-                $occured{$_} ||= 0;
-            }
-            if ( $indel_occured eq "T" and $isw_type eq "R" ) {
-                $d_indel   = $occured{T};
-                $d_noindel = $occured{Q};
-                $d_complex = $occured{N};
-            }
-            elsif ( $indel_occured eq "Q" and $isw_type eq "R" ) {
-                $d_indel   = $occured{Q};
-                $d_noindel = $occured{T};
-                $d_complex = $occured{N};
-            }
-            elsif ( $prev_indel_occured eq "T"
-                and $isw_type eq "L" )
-            {
-                $d_indel   = $occured{T};
-                $d_noindel = $occured{Q};
-                $d_complex = $occured{N};
-            }
-            elsif ( $prev_indel_occured eq "Q"
-                and $isw_type eq "L" )
-            {
-                $d_indel   = $occured{Q};
-                $d_noindel = $occured{T};
-                $d_complex = $occured{N};
-            }
-            else {
-                next;
-            }
-
-            $update_isw->execute( $d_indel, $d_noindel, $d_complex, $isw_id );
-        }
-    }
 
     return;
 }
