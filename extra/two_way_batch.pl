@@ -96,7 +96,7 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . ( $init_chr   ? " -chr $init_chr"     : "" ),
+        . ( $init_chr   ? " --chr $init_chr"     : "" ),
     2 => "perl $FindBin::Bin/../init/gen_alignDB.pl"
         . " -s $server"
         . " --port $port"
