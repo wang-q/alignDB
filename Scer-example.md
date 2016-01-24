@@ -311,3 +311,32 @@ perl ~/Scripts/alignDB/slice/write_runlist_feature.pl \
     -d S288cvsRM11_1a -e yeast --feature repeat -l 500
 
 ```
+
+## Speed test
+
+```bash
+perl ~/Scripts/alignDB/extra/two_way_batch.pl \
+    -d alignDB -e saccharomyces_cerevisiae_core_29_82_4 \
+    -t S288c -q RM11_1a \
+    -da ~/data/alignment/example/scer/Pairwise/S288cvsRM11_1a \
+    --chr ~/data/alignment/example/scer/chr_length.csv \
+    -lt 10000 --run common \
+    --parallel 4 --batch 10
+```
+
+* On Hackintosh (4790k SSD)
+    * `--parallel 4`: 2m52s
+    * `--parallel 8`: 2m50s
+
+* On new server (E5-2690 256G HDD)
+    * `--parallel 4`: 4m32s
+
+* On desktop pc (E3-1245 v2 Windows)
+    * `--parallel 4`: 6m9s
+
+* On macbook pro (mid 2014)
+    * `--parallel 4`: 5m24s
+
+* On server (E5-2690 v3 128G SSD)
+    * `--parallel 4`: 3m13s
+    * `--parallel 8`: 2m22s
