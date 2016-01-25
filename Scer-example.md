@@ -147,13 +147,12 @@ Use `build_ensembl.pl`.
 If don't use scripts in `gene/*`, local ensembl database names are arbitrary.
 
 ```bash
-cd ~/Scripts/alignDB
+perl ~/Scripts/withncbi/ensembl/build_ensembl.pl --initdb --db saccharomyces_cerevisiae_core_29_82_4 \
+    --ensembl ~/data/ensembl82/mysql/saccharomyces_cerevisiae_core_29_82_4
+    
+perl ~/Scripts/withncbi/ensembl/build_ensembl.pl --initdb --db yeast \
+    --ensembl ~/data/ensembl82/mysql/saccharomyces_cerevisiae_core_29_82_4
 
-cp -R ~/data/ensembl82/mysql/saccharomyces_cerevisiae_core_29_82_4 data/
-
-perl util/build_ensembl.pl --checksum --ensembl data/saccharomyces_cerevisiae_core_29_82_4
-perl util/build_ensembl.pl --initdb --db yeast --ensembl data/saccharomyces_cerevisiae_core_29_82_4
-perl util/build_ensembl.pl --initdb --db saccharomyces_cerevisiae_core_29_82_4 --ensembl data/saccharomyces_cerevisiae_core_29_82_4
 ```
 
 ## Two-way alignments
@@ -335,7 +334,7 @@ perl ~/Scripts/alignDB/extra/two_way_batch.pl \
     * `--parallel 4`: 6m9s
 
 * On macbook pro (mid 2014)
-    * `--parallel 4`: 5m24s
+    * `--parallel 4`: 4m5s
 
 * On server (E5-2690 v3 128G SSD)
     * `--parallel 4`: 3m13s
