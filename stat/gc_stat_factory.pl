@@ -116,6 +116,41 @@ if ( $piece == 0 ) {
 }
 
 #----------------------------------------------------------#
+# chart -- wave
+#----------------------------------------------------------#
+my $chart_wave = sub {
+    my $sheet = shift;
+    my $data  = shift;
+    my $x_title = shift;
+
+    my %opt = (
+        x_column    => 0,
+        y_column    => 1,
+        first_row   => 1,
+        last_row    => 16,
+        x_max_scale => 15,
+        y_data      => $data->[1],
+        x_title     => $x_title,
+        y_title     => "Nucleotide diversity",
+        top         => 1,
+        left        => 10,
+    );
+    $write_obj->draw_y( $sheet, \%opt );
+
+    $opt{y_column} = 3;
+    $opt{y_data}   = $data->[3];
+    $opt{y_title}  = "Indel per 100 bp";
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
+
+    $opt{y_column} = 5;
+    $opt{y_data}   = $data->[5];
+    $opt{y_title}  = "Window CV";
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
+};
+
+#----------------------------------------------------------#
 # worksheet -- summary
 #----------------------------------------------------------#
 my $summary = sub {
@@ -292,6 +327,10 @@ my $distance_to_trough = sub {
         );
     }
 
+    if ($add_chart) {    # chart
+        $chart_wave->( $sheet, $data , "Distance to GC trough");
+    }
+
     print "Sheet [$sheet_name] has been generated.\n";
 };
 
@@ -337,6 +376,10 @@ my $distance_to_crest = sub {
         );
     }
 
+    if ($add_chart) {    # chart
+        $chart_wave->( $sheet, $data , "Distance to GC crest");
+    }
+
     print "Sheet [$sheet_name] has been generated.\n";
 };
 
@@ -380,6 +423,10 @@ my $wave_length = sub {
                 data       => $data,
             }
         );
+    }
+
+    if ($add_chart) {    # chart
+        $chart_wave->( $sheet, $data , "Distance to GC crest");
     }
 
     print "Sheet [$sheet_name] has been generated.\n";
