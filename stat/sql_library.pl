@@ -85,7 +85,6 @@ sub ns { return AlignDB::SQL->new; }
     $sql->group( { column => 'isw.isw_distance' } );
 
     $sql_file->set( $name, $sql );
-
     print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
@@ -98,6 +97,8 @@ sub ns { return AlignDB::SQL->new; }
 #GROUP BY
 #  isw.isw_distance
 {
+    my $name = 'common-d1_combine-0';
+
     my $sql = ns();
     $sql->add_select( 'isw.isw_distance', 'distance' );
     $sql->add_select( 'COUNT(*)',         'COUNT' );
@@ -108,7 +109,8 @@ sub ns { return AlignDB::SQL->new; }
     $sql->from( ['isw'] );
     $sql->group( { column => 'isw.isw_distance' } );
 
-    $sql_file->set( 'common-d1_combine-0', $sql );
+    $sql_file->set( $name, $sql );
+    print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
 
@@ -139,7 +141,6 @@ sub ns { return AlignDB::SQL->new; }
     $sql->from( ['isw'] );
 
     $sql_file->set( $name, $sql );
-
     print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
@@ -161,7 +162,6 @@ sub ns { return AlignDB::SQL->new; }
     $sql->from( ['isw'] );
 
     $sql_file->set( $name, $sql );
-
     print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
@@ -186,7 +186,6 @@ sub ns { return AlignDB::SQL->new; }
     $sql->group( { column => 'isw.isw_distance' } );
 
     $sql_file->set( $name, $sql );
-
     print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
@@ -221,7 +220,6 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_where( 'isw.isw_coding' => { op => '<=', value => '1' } );
 
     $sql_file->set( $name, $sql );
-
     print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
@@ -255,7 +253,6 @@ sub ns { return AlignDB::SQL->new; }
     $sql->group( { column => 'isw.isw_distance' } );
 
     $sql_file->set( $name, $sql );
-
     print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
@@ -298,7 +295,6 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_where( 'indel.indel_slippage' => { op => '<=', value => '1' } );
 
     $sql_file->set( $name, $sql );
-
     print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
@@ -314,6 +310,8 @@ sub ns { return AlignDB::SQL->new; }
 #GROUP BY CONCAT(isw_type, isw_distance)
 #ORDER BY isw_distance
 {
+    my $name = 'common-dd_group-4';
+
     my $sql = ns();
     $sql->add_select( 'CONCAT(isw_type, isw_distance)', 'isw_type_distance' );
     $sql->add_select( 'AVG(isw_pi)',                    'AVG_pi' );
@@ -328,7 +326,8 @@ sub ns { return AlignDB::SQL->new; }
     $sql->group( { column => 'CONCAT(isw_type, isw_distance)' } );
     $sql->order( { column => 'isw_distance' } );
 
-    $sql_file->set( 'common-dd_group-4', $sql );
+    $sql_file->set( $name, $sql );
+    print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
 
@@ -452,7 +451,8 @@ sub ns { return AlignDB::SQL->new; }
 #FROM indel
 #GROUP BY indel_length
 {
-    my $sql = ns();
+    my $name = 'common-indel_length-0';
+    my $sql  = ns();
     $sql->add_select('indel_length');
     $sql->add_select( 'COUNT(*)',          'indel_number' );
     $sql->add_select( 'AVG(indel_gc)',     'AVG_indel_gc' );
@@ -460,7 +460,7 @@ sub ns { return AlignDB::SQL->new; }
     $sql->from( ['indel'] );
     $sql->group( { column => 'indel_length' } );
 
-    $sql_file->set( 'common-indel_length-0', $sql );
+    $sql_file->set( $name, $sql );
     print $sql->as_sql if $verbose;
 }
 
@@ -475,6 +475,8 @@ sub ns { return AlignDB::SQL->new; }
 #  INNER JOIN align ON
 #    align.align_id = indel.align_id
 {
+    my $name = 'common-align-0';
+
     my $sql = ns();
     $sql->add_select( 'isw.isw_distance', 'distance' );
     $sql->add_select( 'AVG(isw.isw_pi)',  'AVG_pi' );
@@ -496,7 +498,8 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql->group( { column => 'isw.isw_distance' } );
 
-    $sql_file->set( 'common-align-0', $sql );
+    $sql_file->set( $name, $sql );
+    print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
 
@@ -518,6 +521,8 @@ sub ns { return AlignDB::SQL->new; }
 #AND i.indel_slippage = 0
 #GROUP BY isw_distance
 {
+    my $name = 'multi-distance-0';
+
     my $sql = ns();
     $sql->add_select( 'isw_distance',                          'distance' );
     $sql->add_select( 'AVG(isw_pi)',                           'AVG_D' );
@@ -540,11 +545,14 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql->group( { column => 'isw_distance' } );
 
-    $sql_file->set( 'multi-distance-0', $sql );
+    $sql_file->set( $name, $sql );
+    print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
 
 {
+    my $name = 'multi-distance2-0';
+
     my $sql = ns();
     $sql->add_select( 'isw_distance',                            'distance' );
     $sql->add_select( 'AVG(isw_pi)',                             'AVG_D' );
@@ -567,11 +575,14 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql->group( { column => 'isw_distance' } );
 
-    $sql_file->set( 'multi-distance2-0', $sql );
+    $sql_file->set( $name, $sql );
+    print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
 
 {
+    my $name = 'multi-distance3-0';
+
     my $sql = ns();
     $sql->add_select( 'isw_distance',                            'distance' );
     $sql->add_select( 'AVG(isw_pi)',                             'AVG_D' );
@@ -594,7 +605,8 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql->group( { column => 'isw_distance' } );
 
-    $sql_file->set( 'multi-distance3-0', $sql );
+    $sql_file->set( $name, $sql );
+    print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
 
@@ -606,6 +618,8 @@ sub ns { return AlignDB::SQL->new; }
 #WHERE indel.indel_slippage = 0
 #GROUP BY indel_length
 {
+    my $name = 'multi-indel_length-0';
+
     my $sql = ns();
     $sql->add_select( 'indel_length',      'indel_length' );
     $sql->add_select( 'COUNT(*)',          'indel_number' );
@@ -615,7 +629,8 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_where( 'indel.indel_slippage' => \'= 0' );
     $sql->group( { column => 'indel_length' } );
 
-    $sql_file->set( 'multi-indel_length-0', $sql );
+    $sql_file->set( $name, $sql );
+    print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
 
@@ -647,7 +662,6 @@ sub ns { return AlignDB::SQL->new; }
     $sql->from( ['isw'] );
 
     $sql_file->set( $name, $sql );
-
     print "\n[$name]\n";
     print $sql->as_sql if $verbose;
 }
