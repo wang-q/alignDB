@@ -480,65 +480,45 @@ my $gradient = sub {
 # worksheet -- trough_gc
 #----------------------------------------------------------#
 my $trough_gc = sub {
-
-    # make combine
-    my @combined;
-    {
-        my $sql_query = q{
-            SELECT FLOOR(gsw_trough_gc / 0.01) trough_gc,
-                   COUNT(*) COUNT
-            FROM gsw g
-            GROUP BY FLOOR(gsw_trough_gc / 0.01)
-        };
-        my $standalone = [];
-        my %option     = (
-            sql_query  => $sql_query,
-            threshold  => $combine,
-            standalone => $standalone,
-            merge_last => 1,
-        );
-        @combined = @{ $write_obj->make_combine( \%option ) };
-    }
-
     my $sheet_name = 'trough_gc';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
+    # make combine
+    my $combine_sql = $sql_file->retrieve('gc-wave_combine-0');
+    $combine_sql->replace( { gsw_distance => 'FLOOR(gsw_trough_gc / 0.01)' } );
+    my $combined = $write_obj->make_combine(
+        {   sql_query  => $combine_sql->as_sql,
+            threshold  => $combine,
+            standalone => [],
+            merge_last => 1,
+        }
+    );
+
+    my $thaw_sql = $sql_file->retrieve('gc-wave_comb_pi_indel_cv-0');
+    $thaw_sql->replace( { gsw_distance => 'FLOOR(gsw_trough_gc / 0.01)' } );
+    my @names = $thaw_sql->as_header;
     {    # header
-        my @headers = qw{ AVG_trough_gc AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # contents
-        my $sql_query = q{
-            SELECT  AVG(FLOOR(gsw_trough_gc / 0.01)) AVG_trough_gc,
-                    AVG(w.window_pi) AVG_pi,
-                    STD(w.window_pi) STD_pi,
-                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                    STD(w.window_indel / w.window_length * 100) STD_indel,
-                    AVG(g.gsw_cv) AVG_cv,
-                    STD(g.gsw_cv) STD_cv,
-                    COUNT(w.window_indel) COUNT
-            FROM gsw g, window w
-            WHERE g.window_id = w.window_id
-            AND FLOOR(gsw_trough_gc / 0.01) IN 
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            combined  => \@combined,
+    my $data;
+    for my $comb ( @{$combined} ) {    # content
+        my $thaw_sql = $sql_file->retrieve('gc-wave_comb_pi_indel_cv-0');
+        $thaw_sql->add_where( 'gsw_distance' => $comb );
+        $thaw_sql->replace( { gsw_distance => 'FLOOR(gsw_trough_gc / 0.01)' } );
+
+        $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                bind_value => $comb,
+                data       => $data,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 
 };
 
@@ -546,72 +526,97 @@ my $trough_gc = sub {
 # worksheet -- crest_gc
 #----------------------------------------------------------#
 my $crest_gc = sub {
-
-    # make combine
-    my @combined;
-    {
-        my $sql_query = q{
-            SELECT FLOOR(gsw_crest_gc / 0.01) crest_gc,
-                   COUNT(*) COUNT
-            FROM gsw g
-            GROUP BY FLOOR(gsw_crest_gc / 0.01)
-        };
-        my $standalone = [];
-        my %option     = (
-            sql_query  => $sql_query,
-            threshold  => $combine,
-            standalone => $standalone,
-            merge_last => 1,
-        );
-        @combined = @{ $write_obj->make_combine( \%option ) };
-    }
-
     my $sheet_name = 'crest_gc';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
+    # make combine
+    my $combine_sql = $sql_file->retrieve('gc-wave_combine-0');
+    $combine_sql->replace( { gsw_distance => 'FLOOR(gsw_crest_gc / 0.01)' } );
+    my $combined = $write_obj->make_combine(
+        {   sql_query  => $combine_sql->as_sql,
+            threshold  => $combine,
+            standalone => [],
+            merge_last => 1,
+        }
+    );
+
+    my $thaw_sql = $sql_file->retrieve('gc-wave_comb_pi_indel_cv-0');
+    $thaw_sql->replace( { gsw_distance => 'FLOOR(gsw_crest_gc / 0.01)' } );
+    my @names = $thaw_sql->as_header;
     {    # header
-        my @headers = qw{ AVG_crest_gc AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # contents
-        my $sql_query = q{
-            SELECT  AVG(FLOOR(gsw_crest_gc / 0.01)) AVG_crest_gc,
-                    AVG(w.window_pi) AVG_pi,
-                    STD(w.window_pi) STD_pi,
-                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                    STD(w.window_indel / w.window_length * 100) STD_indel,
-                    AVG(g.gsw_cv) AVG_cv,
-                    STD(g.gsw_cv) STD_cv,
-                    COUNT(w.window_indel) COUNT
-            FROM gsw g, window w
-            WHERE g.window_id = w.window_id
-            AND FLOOR(gsw_crest_gc / 0.01) IN 
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            combined  => \@combined,
+    my $data;
+    for my $comb ( @{$combined} ) {    # content
+        my $thaw_sql = $sql_file->retrieve('gc-wave_comb_pi_indel_cv-0');
+        $thaw_sql->add_where( 'gsw_distance' => $comb );
+        $thaw_sql->replace( { gsw_distance => 'FLOOR(gsw_crest_gc / 0.01)' } );
+
+        $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                bind_value => $comb,
+                data       => $data,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
-
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
 # worksheet -- window_gc
 #----------------------------------------------------------#
 my $window_gc = sub {
+    my $sheet_name = 'window_gc';
+    my $sheet;
+    $write_obj->row(0);
+    $write_obj->column(0);
+
+    # make combine
+    my $combine_sql = q{
+        SELECT
+          FLOOR(window_average_gc / 0.01),
+          COUNT(*)
+        FROM gsw
+          INNER JOIN window ON
+            gsw.window_id = window.window_id
+        WHERE (window_average_gc IS NOT NULL)
+        GROUP BY
+          FLOOR(window_average_gc / 0.01)
+    };
+    my $combined = $write_obj->make_combine(
+        {   sql_query  => $combine_sql,
+            threshold  => $combine,
+            standalone => [],
+            merge_last => 1,
+        }
+    );
+
+    my $thaw_sql = $sql_file->retrieve('gc-wave_comb_pi_indel_cv-0');
+    $thaw_sql->replace( { gsw_distance => 'FLOOR(window_average_gc / 0.01)' } );
+    my @names = $thaw_sql->as_header;
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+    }
+
+    my $data;
+    for my $comb ( @{$combined} ) {    # content
+        my $thaw_sql = $sql_file->retrieve('gc-wave_comb_pi_indel_cv-0');
+        $thaw_sql->add_where( 'gsw_distance' => $comb );
+        $thaw_sql->replace( { gsw_distance => 'FLOOR(window_average_gc / 0.01)' } );
+
+        $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                bind_value => $comb,
+                data       => $data,
+            }
+        );
+    }
 
     # make combine
     my @combined;
@@ -634,46 +639,7 @@ my $window_gc = sub {
         @combined = @{ $write_obj->make_combine( \%option ) };
     }
 
-    my $sheet_name = 'window_gc';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # header
-        my @headers = qw{ AVG_window_gc AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv COUNT };
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
-
-    {    # contents
-        my $sql_query = q{
-            SELECT  AVG(FLOOR(w.window_average_gc / 0.01)) AVG_window_gc,
-                    AVG(w.window_pi) AVG_pi,
-                    STD(w.window_pi) STD_pi,
-                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                    STD(w.window_indel / w.window_length * 100) STD_indel,
-                    AVG(g.gsw_cv) AVG_cv,
-                    STD(g.gsw_cv) STD_cv,
-                    COUNT(w.window_indel) COUNT
-            FROM gsw g, window w
-            WHERE g.window_id = w.window_id
-            AND FLOOR(w.window_average_gc / 0.01) IN 
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            combined  => \@combined,
-        );
-        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
-    }
-
-    print "Sheet \"$sheet_name\" has been generated.\n";
-
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -1989,15 +1955,14 @@ my $segment_cv_indel_cr = sub {
 };
 
 foreach my $n (@tasks) {
-    if ( $n == 1 ) { &$summary;            &$segment_summary;   next; }
-    if ( $n == 2 ) { &$distance_to_trough; &$distance_to_crest; next; }
-    if ( $n == 3 ) { &$wave_length;        &$amplitude;         &$gradient; next; }
-    if ( $n == 4 ) { &$trough_gc;          &$crest_gc;          next; }
-    if ( $n == 5 ) { &$window_gc;            next; }
+    if ( $n == 1 ) { &$summary;              &$segment_summary;    next; }
+    if ( $n == 2 ) { &$distance_to_trough;   &$distance_to_crest;  next; }
+    if ( $n == 3 ) { &$wave_length;          &$amplitude;          &$gradient; next; }
+    if ( $n == 4 ) { &$trough_gc;            &$crest_gc;           &$window_gc; next; }
     if ( $n == 6 ) { &$d_wave_length_series; &$d_amplitude_series; next; }
-    if ( $n == 7 ) { &$d_gc_series;          next; }
-    if ( $n == 8 ) { &$d_trough_gc_series;   &$d_crest_gc_series; next; }
-    if ( $n == 9 ) { &$bed_count_trough;     &$bed_count_crest; next; }
+    if ( $n == 7 ) { &$d_gc_series;        next; }
+    if ( $n == 8 ) { &$d_trough_gc_series; &$d_crest_gc_series; next; }
+    if ( $n == 9 ) { &$bed_count_trough;   &$bed_count_crest; next; }
 
     if ( $n == 10 ) { &$segment_gc_indel;     next; }
     if ( $n == 11 ) { &$segment_std_indel;    next; }
