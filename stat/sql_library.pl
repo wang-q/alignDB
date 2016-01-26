@@ -620,6 +620,59 @@ sub ns { return AlignDB::SQL->new; }
 }
 
 #----------------------------------------------------------#
+# gene dnds
+#----------------------------------------------------------#
+
+#SELECT
+#    AVG(i.isw_distance) AVG_distance,
+#    AVG(i.isw_pi) AVG_pi,
+#    AVG(i.isw_syn) AVG_d_syn,
+#    AVG(i.isw_nsy) AVG_d_nsy,
+#    AVG(i.isw_stop) AVG_d_stop,
+#    COUNT(*) COUNT,
+#    AVG(i.isw_nsy) / AVG(i.isw_syn) `dn/ds`
+#FROM
+#    isw i
+{
+    my $name = 'dnds-d1_comb_dn_ds-0';
+
+    my $sql = ns();
+    $sql->add_select( 'AVG(isw.isw_distance)',               'AVG_distance' );
+    $sql->add_select( 'AVG(isw.isw_pi)',                     'AVG_pi' );
+    $sql->add_select( 'AVG(isw.isw_syn)',                    'AVG_d_syn' );
+    $sql->add_select( 'AVG(isw.isw_nsy)',                    'AVG_d_nsy' );
+    $sql->add_select( 'AVG(isw.isw_stop)',                   'AVG_d_stop' );
+    $sql->add_select( 'COUNT(*)',                            'COUNT' );
+    $sql->add_select( 'AVG(isw.isw_nsy) / AVG(isw.isw_syn)', '`dn/ds`' );
+    $sql->from( ['isw'] );
+
+    $sql_file->set( $name, $sql );
+
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
+{
+    my $name = 'dnds-d1_dn_ds-0';
+
+    my $sql = ns();
+    $sql->add_select( 'isw.isw_distance',                    'isw_distance' );
+    $sql->add_select( 'AVG(isw.isw_pi)',                     'AVG_pi' );
+    $sql->add_select( 'AVG(isw.isw_syn)',                    'AVG_d_syn' );
+    $sql->add_select( 'AVG(isw.isw_nsy)',                    'AVG_d_nsy' );
+    $sql->add_select( 'AVG(isw.isw_stop)',                   'AVG_d_stop' );
+    $sql->add_select( 'COUNT(*)',                            'COUNT' );
+    $sql->add_select( 'AVG(isw.isw_nsy) / AVG(isw.isw_syn)', '`dn/ds`' );
+    $sql->from( ['isw'] );
+    $sql->group( { column => 'isw_distance' } );
+
+    $sql_file->set( $name, $sql );
+
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
+#----------------------------------------------------------#
 # ld_stat_factory.pl SQL
 #----------------------------------------------------------#
 
