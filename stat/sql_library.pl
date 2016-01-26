@@ -652,6 +652,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql->from( ['gsw'] );
     $sql->group( { column => 'gsw_distance' } );
+    $sql->add_where('gsw_distance' => \'IS NOT NULL');
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";

@@ -928,6 +928,7 @@ _sql: |
     gsw_distance,
     COUNT(*)
   FROM gsw
+  WHERE (gsw_distance IS NOT NULL)
   GROUP BY
     gsw_distance
 bind: []
@@ -948,8 +949,11 @@ select_map:
 select_map_reverse:
   COUNT(*): COUNT(*)
   gsw_distance: gsw_distance
-where: []
-where_values: {}
+where:
+- (gsw_distance IS NOT NULL)
+where_values:
+  gsw_distance: !!perl/ref
+    =: IS NOT NULL
 
 [ld-indel_ld-0]
 ---
