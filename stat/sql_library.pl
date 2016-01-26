@@ -635,6 +635,66 @@ sub ns { return AlignDB::SQL->new; }
 }
 
 #----------------------------------------------------------#
+# gc
+#----------------------------------------------------------#
+
+#SELECT gsw_distance gsw_distance,
+#       COUNT(*) COUNT
+#FROM gsw
+#WHERE 1 = 1
+#GROUP BY gsw_distance
+{
+    my $name = 'gc-wave_combine-0';
+
+    my $sql = ns();
+    $sql->add_select( 'gsw_distance', );
+    $sql->add_select( 'COUNT(*)', );
+
+    $sql->from( ['gsw'] );
+    $sql->group( { column => 'gsw_distance' } );
+
+    $sql_file->set( $name, $sql );
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
+#SELECT  AVG(gsw_distance),
+#        AVG(window.window_pi) AVG_pi,
+#        STD(window.window_pi) STD_pi,
+#        AVG(window.window_indel / window.window_length * 100) AVG_indel,
+#        STD(window.window_indel / window.window_length * 100) STD_indel,
+#        AVG(gsw.gsw_cv) AVG_cv,
+#        STD(gsw.gsw_cv) STD_cv,
+#        COUNT(w.window_id) COUNT
+#FROM gsw g, window w
+#WHERE g.window_id = w.window_id
+{
+    my $name = 'gc-wave_comb_pi_indel_cv-0';
+
+    my $sql = ns();
+    $sql->add_select( 'AVG(gsw_distance)', );
+    $sql->add_select( 'AVG(window_pi)',                          'AVG_pi' );
+    $sql->add_select( 'STD(window_pi)',                          'STD_pi' );
+    $sql->add_select( 'AVG(window_indel / window_length * 100)', 'AVG_indel' );
+    $sql->add_select( 'STD(window_indel / window_length * 100)', 'STD_indel' );
+    $sql->add_select( 'AVG(gsw_cv)',                             'AVG_cv' );
+    $sql->add_select( 'STD(gsw_cv)',                             'STD_cv' );
+    $sql->add_select( 'COUNT(*)',                                'COUNT' );
+
+    $sql->add_join(
+        gsw => {
+            type      => 'inner',
+            table     => 'window',
+            condition => 'gsw.window_id = window.window_id',
+        }
+    );
+
+    $sql_file->set( $name, $sql );
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
+#----------------------------------------------------------#
 # gene dnds
 #----------------------------------------------------------#
 
