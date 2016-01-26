@@ -39,7 +39,8 @@ ofg_stat_factory.pl - OFG (other features of genome) stats for alignDB
         --by            STR     tag, type or tt
         --run       -r  STR     run special analysis
         --combine       INT     
-        --piece         INT     
+        --piece         INT
+        --replace       STR=STR replace strings in axis names
         --index                 add an index sheet
         --chart                 add charts
 
@@ -55,8 +56,9 @@ GetOptions(
     'output|o=s'   => \( my $outfile ),
     'by=s'         => \( my $by       = "tag" ),
     'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
-    'index'        => \( my $add_index_sheet, ),
-    'chart'        => \( my $add_chart, ),
+    'replace=s'    => \my %replace,
+    'index'        => \my $add_index_sheet,
+    'chart'        => \my $add_chart,
 ) or HelpMessage(1);
 
 $outfile = "$db.ofg.xlsx" unless $outfile;
@@ -94,6 +96,7 @@ my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
 my $write_obj = AlignDB::ToXLSX->new(
     dbh     => $dbh,
     outfile => $outfile,
+    replace => \%replace,
 );
 
 #----------------------------------------------------------#
