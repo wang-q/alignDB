@@ -42,6 +42,7 @@ ld_stat_factory.pl - LD stats for alignDB
         --run       -r  STR     run special analysis
         --combine       INT     
         --piece         INT     
+        --replace       STR=STR replace strings in axis names
         --index                 add an index sheet
         --chart                 add charts
 
@@ -58,6 +59,7 @@ GetOptions(
     'freq=i'       => \( my $max_freq ),
     'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
     'combine=i'    => \( my $combine  = 0 ),
+    'replace=s'    => \my %replace,
     'index'        => \( my $add_index_sheet, ),
     'chart'        => \( my $add_chart, ),
 ) or HelpMessage(1);
@@ -98,6 +100,7 @@ my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
 my $write_obj = AlignDB::ToXLSX->new(
     dbh     => $dbh,
     outfile => $outfile,
+    replace => \%replace,
 );
 
 my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::Bin/sql.lib" );
