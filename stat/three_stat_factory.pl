@@ -93,75 +93,6 @@ my $lib = "$FindBin::Bin/sql.lib";
 my $sql_file = AlignDB::SQL::Library->new( lib => $lib );
 
 #----------------------------------------------------------#
-# worksheet -- summary
-#----------------------------------------------------------#
-my $summary = sub {
-    my $sheet_name = 'summary';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # write header
-        my $query_name = 'Item';
-        my @headers    = qw{AVG MIN MAX STD COUNT SUM};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            query_name => $query_name,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
-
-    my $column_stat = sub {
-        my $query_name = shift;
-        my $table      = shift;
-        my $column     = shift;
-        my $where      = shift;
-
-        my $sql_query = q{
-            # summray stat of _COLUMN_
-            SELECT AVG(_COLUMN_) AVG,
-                   MIN(_COLUMN_) MIN,
-                   MAX(_COLUMN_) MAX,
-                   STD(_COLUMN_) STD,
-                   COUNT(_COLUMN_) COUNT,
-                   SUM(_COLUMN_) SUM
-            FROM _TABLE_
-        };
-
-        $sql_query =~ s/_TABLE_/$table/g;
-        $sql_query =~ s/_COLUMN_/$column/g;
-        $sql_query .= $where if $where;
-
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-        );
-
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    };
-
-    {    # write contents
-        &$column_stat( 'align_length',       'align', 'align_length' );
-        &$column_stat( 'indel_length',       'indel', 'indel_length' );
-        &$column_stat( 'indel_left_extand',  'indel', 'left_extand' );
-        &$column_stat( 'indel_right_extand', 'indel', 'right_extand' );
-        &$column_stat( 'indel_windows', 'isw', 'isw_length',
-            'WHERE isw_distance <= 0' );
-        &$column_stat(
-            'indel_free_windows', 'isw',
-            'isw_length',         'WHERE isw_distance > 0'
-        );
-    }
-
-    print "Sheet \"$sheet_name\" has been generated.\n";
-};
-
-#----------------------------------------------------------#
 # worksheet -- distance_dir_dnr
 #----------------------------------------------------------#
 #
@@ -185,8 +116,7 @@ my $distance_dir_dnr = sub {
             sheet_col => $sheet_col,
             header    => \@headers,
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     # write contents
@@ -203,61 +133,6 @@ my $distance_dir_dnr = sub {
             WHERE 1 =1
             AND isw_distance >= 0
             AND isw_d_ir IS NOT NULL
-            GROUP BY isw_distance
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    print "Sheet \"$sheet_name\" has been generated.\n";
-};
-
-#----------------------------------------------------------#
-# worksheet -- distance_dtr_dqr
-#----------------------------------------------------------#
-#
-my $distance_dtr_dqr = sub {
-
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
-    unless ( $write_obj->check_column( 'isw', 'isw_d_tr' ) ) {
-        return;
-    }
-
-    my $sheet_name = 'distance_dtr_dqr';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # write header
-        my @headers = qw{distance AVG_pi AVG_d_tr AVG_d_qr AVG_d_total COUNT};
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
-
-    # write contents
-    {
-        my $sql_query = q{
-            # distance effect
-            SELECT isw_distance distance,
-                   AVG(isw_pi) AVG_pi,
-                   AVG(isw_d_tr) AVG_d_tr,
-                   AVG(isw_d_qr) AVG_d_qr,
-                   AVG(isw_d_total) AVG_d_total,
-                   COUNT(*) COUNT
-            FROM isw i
-            WHERE 1 =1
-            AND isw_distance >= 0
-            AND isw_d_tr IS NOT NULL
             GROUP BY isw_distance
         };
         my %option = (
@@ -330,8 +205,7 @@ my $snp_distance = sub {
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
             );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_sql( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header_sql( $sheet_name, \%option );
         }
 
         # write contents
@@ -444,8 +318,7 @@ my $snp_LR_distance = sub {
                 sheet_row => $sheet_row,
                 sheet_col => $sheet_col,
             );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_sql( $sheet_name, \%option );
+            ( $sheet, $sheet_row ) = $write_obj->write_header_sql( $sheet_name, \%option );
         }
 
         # write contents
@@ -544,8 +417,7 @@ my $snp_indel = sub {
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_sql( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_sql( $sheet_name, \%option );
     }
 
     # write contents
@@ -593,96 +465,6 @@ my $snp_indel = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- indel_distance_slip
-#----------------------------------------------------------#
-#
-my $indel_distance_slip = sub {
-
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
-    unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
-        return;
-    }
-
-    my @slip_levels = ( [ 'non-slip', 0, 0 ], [ 'slip', 1, 1 ], );
-
-    my $write_sheet = sub {
-        my ($slip_levels) = @_;
-        my $sheet_name = 'indel_distance_' . $slip_levels->[0];
-        my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        # write header
-        {
-            my $sql_query = q~
-                # header of Table distance
-                SELECT  'distance', 'AVG_pi',
-                        'AVG_d_indel', 'AVG_d_noindel', 'AVG_d_complex',
-                        'COUNT', 'Di/Dn'
-            ~;
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-            );
-            ( $sheet, $sheet_row )
-                = $write_obj->write_header_sql( $sheet_name, \%option );
-        }
-
-        # write contents
-        {
-            my $sql_query = q{
-                # distance effect
-                SELECT isw_distance distance,
-                       AVG(isw_pi) AVG_pi,
-                       AVG(isw_d_indel) AVG_d_indel,
-                       AVG(isw_d_noindel) AVG_d_noindel,
-                       AVG(isw_d_complex) AVG_d_complex,
-                       COUNT(*) COUNT,
-                       AVG(isw_d_indel) / AVG(isw_d_noindel)  `Di/Dn`
-                FROM    isw,
-                       (SELECT isw_id
-                        FROM   isw,
-                               indel i
-                        WHERE  1= 1
-                        AND isw.indel_id = i.indel_id
-                        AND i.indel_slippage BETWEEN ? AND ?
-                        AND isw_type = 'R'
-                        UNION 
-                        SELECT isw_id
-                        FROM   isw,
-                               indel i
-                        WHERE  1 = 1
-                        AND isw.prev_indel_id = i.indel_id
-                        AND i.indel_slippage BETWEEN ? AND ?
-                        AND isw_type = 'L') i
-                WHERE  isw_distance >= 0
-                AND isw_d_indel IS NOT NULL 
-                AND isw.isw_id = i.isw_id
-                GROUP BY isw_distance
-            };
-            my %option = (
-                sql_query  => $sql_query,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [
-                    $slip_levels->[1], $slip_levels->[2],
-                    $slip_levels->[1], $slip_levels->[2]
-                ],
-            );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
-    };
-
-    foreach (@slip_levels) {
-        &$write_sheet($_);
-    }
-};
-
-#----------------------------------------------------------#
 # worksheet -- snp_base_change
 #----------------------------------------------------------#
 #
@@ -705,8 +487,7 @@ my $snp_base_change = sub {
             sheet_col  => $sheet_col,
             query_name => $query_name,
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_sql( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_sql( $sheet_name, \%option );
     }
 
     # write contents
@@ -787,8 +568,7 @@ my $distance_snp = sub {
             sheet_col => $sheet_col,
             header    => [ '', @base_pair ],
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     # write contents
@@ -854,8 +634,7 @@ my $distance_tri_trv = sub {
             sheet_col => $sheet_col,
             header    => [ '', @headers ],
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     # write contents
@@ -937,8 +716,7 @@ my $distance_snp_non_cpg = sub {
             sheet_col => $sheet_col,
             header    => [ '', @base_pair ],
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     # write contents
@@ -1005,8 +783,7 @@ my $distance_cpg = sub {
             sheet_row => $sheet_row,
             sheet_col => $sheet_col,
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_sql( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_sql( $sheet_name, \%option );
     }
 
     # write contents
@@ -1069,8 +846,7 @@ my $d_d_ref = sub {
                     }
             ],
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     # init objects
@@ -1125,12 +901,7 @@ my $d_d_ref = sub {
             = $result_matrix->[$i][3] / $result_matrix->[$i][1];
         unshift @{ $result_matrix->[$i] }, $names[$i];
         for ( my $j = 0; $j < scalar @{ $result_matrix->[$i] }; $j++ ) {
-            $sheet->write(
-                $sheet_row,
-                $j + $sheet_col,
-                $result_matrix->[$i][$j],
-                $fmt->{NORMAL}
-            );
+            $sheet->write( $sheet_row, $j + $sheet_col, $result_matrix->[$i][$j], $fmt->{NORMAL} );
         }
         $sheet_row++;
     }
@@ -1155,8 +926,7 @@ my $ds_dns = sub {
             sheet_col => $sheet_col,
             header    => [qw{distance AVG_d_snp AVG_d_nosnp COUNT Ds/Dns}],
         );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
     }
 
     # init objects
@@ -1211,16 +981,14 @@ my $ds_dns = sub {
         foreach my $rd ( keys %{ $each_interval->{$interval} } ) {
             if ( exists $each_interval->{$interval}{$rd}{T} ) {
                 $each_interval->{$interval}{$rd}{T}
-                    = $each_interval->{$interval}{$rd}{T}
-                    / $each_interval->{$interval}{$rd}{count};
+                    = $each_interval->{$interval}{$rd}{T} / $each_interval->{$interval}{$rd}{count};
             }
             else {
                 $each_interval->{$interval}{$rd}{T} = 0;
             }
             if ( exists $each_interval->{$interval}{$rd}{Q} ) {
                 $each_interval->{$interval}{$rd}{Q}
-                    = $each_interval->{$interval}{$rd}{Q}
-                    / $each_interval->{$interval}{$rd}{count};
+                    = $each_interval->{$interval}{$rd}{Q} / $each_interval->{$interval}{$rd}{count};
             }
             else {
                 $each_interval->{$interval}{$rd}{Q} = 0;
@@ -1271,25 +1039,10 @@ my $ds_dns = sub {
     foreach my $rd ( sort { $a <=> $b } keys %{$rd_count} ) {
         $rd_count->{$rd}{Ds}  = $rd_count->{$rd}{Ds} / $rd_count->{$rd}{count};
         $rd_count->{$rd}{Dns} = $rd_count->{$rd}{Dns} / $rd_count->{$rd}{count};
-        $sheet->write( $sheet_row, 0 + $sheet_col, $rd, $fmt->{NORMAL} );
-        $sheet->write(
-            $sheet_row,
-            0 + 1 + $sheet_col,
-            $rd_count->{$rd}{Ds},
-            $fmt->{NORMAL}
-        );
-        $sheet->write(
-            $sheet_row,
-            0 + 2 + $sheet_col,
-            $rd_count->{$rd}{Dns},
-            $fmt->{NORMAL}
-        );
-        $sheet->write(
-            $sheet_row,
-            0 + 3 + $sheet_col,
-            $rd_count->{$rd}{count},
-            $fmt->{NORMAL}
-        );
+        $sheet->write( $sheet_row, 0 + $sheet_col,     $rd,                     $fmt->{NORMAL} );
+        $sheet->write( $sheet_row, 0 + 1 + $sheet_col, $rd_count->{$rd}{Ds},    $fmt->{NORMAL} );
+        $sheet->write( $sheet_row, 0 + 2 + $sheet_col, $rd_count->{$rd}{Dns},   $fmt->{NORMAL} );
+        $sheet->write( $sheet_row, 0 + 3 + $sheet_col, $rd_count->{$rd}{count}, $fmt->{NORMAL} );
         $sheet->write(
             $sheet_row,
             0 + 4 + $sheet_col,
@@ -1310,13 +1063,11 @@ my $ds_dns = sub {
 };
 
 foreach my $n (@tasks) {
-    if ( $n == 1 )  { &$summary;              next; }
-    if ( $n == 10 ) { &$indel_distance_slip;  next; }
     if ( $n == 17 ) { &$snp_base_change;      next; }
     if ( $n == 19 ) { &$distance_snp;         &$distance_tri_trv; next; }
     if ( $n == 20 ) { &$distance_snp_non_cpg; next; }
     if ( $n == 22 ) { &$distance_cpg;         next; }
-    if ( $n == 23 ) { &$distance_dir_dnr;     &$distance_dtr_dqr; next; }
+    if ( $n == 23 ) { &$distance_dir_dnr;     next; }
 
     if ( $n == 4 ) { &$snp_distance; &$snp_indel; next; }
     if ( $n == 52 ) { &$ds_dns;          next; }

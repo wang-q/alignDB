@@ -21,7 +21,7 @@ use AlignDB::ToXLSX;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 =head1 NAME
 
@@ -956,7 +956,6 @@ my $combined_pigccv = sub {
         $data = $write_obj->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
-                query_name => $_->[0],
                 bind_value => $comb,
                 data       => $data,
             }

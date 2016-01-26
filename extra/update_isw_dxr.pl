@@ -293,14 +293,13 @@ __END__
 
 =head1 NAME
 
-    update_isw_dxr.pl - Add additional Dir(Dindel_ref), Dnr(Dnoindel_ref)
-                            Dtr(Dtarget_ref) and Dqr(Dquery_ref)
-                            to table isw
-                        Add Dtr and Dqr to table window
-    
+update_isw_dxr.pl - Add additional Dir(Dindel_ref), Dnr(Dnoindel_ref)
+                        Dtr(Dtarget_ref) and Dqr(Dquery_ref)
+                        to table isw
+
 =head1 SYNOPSIS
 
-    update_isw_dxr.pl [options]
+    perl update_isw_dxr.pl [options]
       Options:
         --help              brief help message
         --man               full documentation
