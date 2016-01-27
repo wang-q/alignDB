@@ -46,6 +46,7 @@ gc_stat_factory.pl - GC stats for alignDB
         --replace       STR=STR replace strings in axis names
         --index                 add an index sheet
         --chart                 add charts
+        --trend                 add trendline in draw_xy()
 
 =cut
 
@@ -64,6 +65,7 @@ GetOptions(
     'replace=s'    => \my %replace,
     'index'        => \( my $add_index_sheet, ),
     'chart'        => \( my $add_chart, ),
+    'trend'        => \( my $add_trend ),
 ) or HelpMessage(1);
 
 $outfile = "$db.gc.xlsx" unless $outfile;
@@ -227,6 +229,22 @@ my $chart_series = sub {
     $write_obj->draw_dd( $sheet, \%opt );
 };
 
+my $linear_fit = sub {
+    my $sheet = shift;
+    my $opt   = shift;
+
+    my ( $r_squared, $p_value, $intercept, $slope ) = _r_lm( $opt->{x_data}, $opt->{y_data} );
+
+    $sheet->write( $opt->{top},     16, ['r_squared'], $write_obj->format->{NORMAL} );
+    $sheet->write( $opt->{top},     17, [$r_squared],  $write_obj->format->{NORMAL} );
+    $sheet->write( $opt->{top} + 1, 16, ['p_value'],   $write_obj->format->{NORMAL} );
+    $sheet->write( $opt->{top} + 1, 17, [$p_value],    $write_obj->format->{NORMAL} );
+    $sheet->write( $opt->{top} + 2, 16, ['intercept'], $write_obj->format->{NORMAL} );
+    $sheet->write( $opt->{top} + 2, 17, [$intercept],  $write_obj->format->{NORMAL} );
+    $sheet->write( $opt->{top} + 3, 16, ['slope'],     $write_obj->format->{NORMAL} );
+    $sheet->write( $opt->{top} + 3, 17, [$slope],      $write_obj->format->{NORMAL} );
+};
+
 my $chart_segment_gc = sub {
     my $sheet = shift;
     my $data  = shift;
@@ -242,20 +260,24 @@ my $chart_segment_gc = sub {
         y_title   => "Nucleotide diversity",
         top       => 1,
         left      => 10,
+        add_trend => $add_trend,
     );
     $write_obj->draw_xy( $sheet, \%opt );
+    $linear_fit->( $sheet, \%opt );
 
     $opt{y_column} = 3;
     $opt{y_data}   = $data->[2];
     $opt{y_title}  = "Indel per 100 bp";
     $opt{top} += 18;
     $write_obj->draw_xy( $sheet, \%opt );
+    $linear_fit->( $sheet, \%opt );
 
     $opt{y_column} = 4;
     $opt{y_data}   = $data->[3];
     $opt{y_title}  = "Segment CV";
     $opt{top} += 18;
     $write_obj->draw_xy( $sheet, \%opt );
+    $linear_fit->( $sheet, \%opt );
 
     $opt{y_column} = 5;
     $opt{y_data}   = $data->[4];
@@ -1468,8 +1490,9 @@ my $segment_std_indel = sub {
             );
             @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
-        
-        my @names = qw{AVG_std AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
+
+        my @names
+            = qw{AVG_std AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
         {    # header
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
@@ -1489,7 +1512,7 @@ my $segment_std_indel = sub {
                 FROM tmp_group t
                 WHERE t_id IN
             };
- 
+
             my @group_names;
             for (@combined_segment) {
                 my @range        = @$_;
@@ -1590,8 +1613,9 @@ my $segment_cv_indel = sub {
             );
             @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
-        
-        my @names = qw{AVG_CV AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length Range_gc};
+
+        my @names
+            = qw{AVG_CV AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length Range_gc};
         {    # header
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
@@ -1612,7 +1636,7 @@ my $segment_cv_indel = sub {
                 FROM tmp_group t
                 WHERE t_id IN
             };
-            
+
             my @group_names;
             for (@combined_segment) {
                 my @range        = @$_;
@@ -1713,8 +1737,9 @@ my $segment_mdcw_indel = sub {
             );
             @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
-        
-        my @names = qw{AVG_mdcw AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
+
+        my @names
+            = qw{AVG_mdcw AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
         {    # header
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
@@ -1734,7 +1759,7 @@ my $segment_mdcw_indel = sub {
                 FROM tmp_group t
                 WHERE t_id IN
             };
-            
+
             my @group_names;
             for (@combined_segment) {
                 my @range        = @$_;
@@ -1838,7 +1863,7 @@ my $segment_coding_indel = sub {
             );
             @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
-        
+
         my @names = qw{AVG_coding AVG_pi AVG_Indel/100bp AVG_gc AVG_CV AVG_length COUNT SUM_length};
         {    # header
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
@@ -1859,7 +1884,7 @@ my $segment_coding_indel = sub {
                 FROM tmp_group t
                 WHERE t_id IN
             };
-            
+
             my @group_names;
             for (@combined_segment) {
                 my @range        = @$_;
@@ -1962,7 +1987,7 @@ my $segment_gc_indel_cr = sub {
             );
             @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
-        
+
         my @names = qw{AVG_gc AVG_pi AVG_Indel/100bp AVG_CV AVG_coding AVG_length COUNT SUM_length};
         {    # header
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
@@ -1983,7 +2008,7 @@ my $segment_gc_indel_cr = sub {
                 FROM tmp_group t
                 WHERE t_id IN
             };
-           
+
             my @group_names;
             for (@combined_segment) {
                 my @range        = @$_;
@@ -2088,7 +2113,7 @@ my $segment_cv_indel_cr = sub {
             );
             @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
-        
+
         my @names = qw{AVG_CV AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
         {    # header
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
@@ -2109,7 +2134,7 @@ my $segment_cv_indel_cr = sub {
                 FROM tmp_group t
                 WHERE t_id IN
             };
-            
+
             my @group_names;
             for (@combined_segment) {
                 my @range        = @$_;
@@ -2181,5 +2206,48 @@ if ($add_index_sheet) {
 
 $stopwatch->end_message;
 exit;
+
+# Fitting Linear Models using R
+sub _r_lm {
+    my $x = shift;
+    my $y = shift;
+
+    die "Give two array-refs to me\n" if ref $x ne 'ARRAY';
+    die "Give two array-refs to me\n" if ref $y ne 'ARRAY';
+    die "Variable lengths differ\n"   if @$x != @$y;
+    return                            if @$x <= 2;
+
+    require Statistics::R;
+
+    # Create a communication bridge with R and start R
+    my $R = Statistics::R->new;
+
+    $R->set( 'x', $x );
+    $R->set( 'y', $y );
+    $R->run(q{ fit = lm(y ~ x) });
+    $R->run(q{ r_squared <- summary(fit)$r.squared });
+    $R->run(q{ intercept <- summary(fit)$coefficients[1] });
+    $R->run(q{ slope <- summary(fit)$coefficients[2] });
+    $R->run(
+        q{
+        lmp <- function (modelobject) {
+            if (class(modelobject) != "lm") stop("Not an object of class 'lm'")
+            f <- summary(modelobject)$fstatistic
+            p <- pf(f[1],f[2],f[3],lower.tail=F)
+            attributes(p) <- NULL
+            return(p)
+        }}
+    );
+    $R->run(q{ p_value <- lmp(fit) });
+
+    my $r_squared = $R->get('r_squared');
+    my $p_value   = $R->get('p_value');
+    my $intercept = $R->get('intercept');
+    my $slope     = $R->get('slope');
+
+    $R->stop;
+
+    return ( $r_squared, $p_value, $intercept, $slope );
+}
 
 __END__
