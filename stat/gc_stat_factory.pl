@@ -10,6 +10,7 @@ use YAML qw(Dump Load DumpFile LoadFile);
 
 use DBI;
 use Statistics::R;
+use Tie::IxHash;
 use Number::Format qw(round);
 
 use AlignDB::IntSpan;
@@ -118,9 +119,9 @@ if ( $piece == 0 ) {
 #----------------------------------------------------------#
 # chart -- wave
 #----------------------------------------------------------#
-my $chart_wave = sub {
-    my $sheet = shift;
-    my $data  = shift;
+my $chart_wave_distance = sub {
+    my $sheet   = shift;
+    my $data    = shift;
     my $x_title = shift;
 
     my %opt = (
@@ -148,6 +149,44 @@ my $chart_wave = sub {
     $opt{y_title}  = "Window CV";
     $opt{top} += 18;
     $write_obj->draw_y( $sheet, \%opt );
+};
+
+my $chart_series = sub {
+    my $sheet   = shift;
+    my $data_of = shift;
+
+    # write charting data
+    my @keys = keys %{$data_of};
+    $write_obj->row(2);
+    $write_obj->column(7);
+
+    $write_obj->write_column( $sheet, { column => $data_of->{ $keys[0] }[0], } );
+    for my $key (@keys) {
+        $write_obj->write_column(
+            $sheet,
+            {   query_name => $key,
+                column     => $data_of->{$key}[1],
+            }
+        );
+    }
+
+    my %opt = (
+        x_column      => 7,
+        y_column      => 8,
+        y_last_column => 8 + @keys - 1,
+        first_row     => 2,
+        last_row      => 12,
+        x_min_scale   => 0,
+        x_max_scale   => 10,
+        y_data        => [ map { $data_of->{$_}[1] } @keys ],
+        x_title       => "Distance to GC trough",
+        y_title       => "Indel per 100 bp",
+        top           => 14,
+        left          => 7,
+        height        => 480,
+        width         => 480,
+    );
+    $write_obj->draw_dd( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -328,7 +367,7 @@ my $distance_to_trough = sub {
     }
 
     if ($add_chart) {    # chart
-        $chart_wave->( $sheet, $data , "Distance to GC trough");
+        $chart_wave_distance->( $sheet, $data, "Distance to GC trough" );
     }
 
     print "Sheet [$sheet_name] has been generated.\n";
@@ -377,7 +416,7 @@ my $distance_to_crest = sub {
     }
 
     if ($add_chart) {    # chart
-        $chart_wave->( $sheet, $data , "Distance to GC crest");
+        $chart_wave_distance->( $sheet, $data, "Distance to GC crest" );
     }
 
     print "Sheet [$sheet_name] has been generated.\n";
@@ -426,7 +465,7 @@ my $wave_length = sub {
     }
 
     if ($add_chart) {    # chart
-        $chart_wave->( $sheet, $data , "Distance to GC crest");
+        $chart_wave_distance->( $sheet, $data, "Distance to GC crest" );
     }
 
     print "Sheet [$sheet_name] has been generated.\n";
@@ -665,27 +704,6 @@ my $window_gc = sub {
         );
     }
 
-    # make combine
-    my @combined;
-    {
-        my $sql_query = q{
-            SELECT FLOOR(w.window_average_gc / 0.01) window_gc,
-                   COUNT(*) COUNT
-            FROM gsw g, window w
-            WHERE 1 = 1
-            AND g.window_id = w.window_id
-            GROUP BY FLOOR(w.window_average_gc / 0.01)
-        };
-        my $standalone = [];
-        my %option     = (
-            sql_query  => $sql_query,
-            threshold  => $combine,
-            standalone => $standalone,
-            merge_last => 1,
-        );
-        @combined = @{ $write_obj->make_combine( \%option ) };
-    }
-
     print "Sheet [$sheet_name] has been generated.\n";
 };
 
@@ -693,99 +711,107 @@ my $window_gc = sub {
 # worksheet -- d_wave_length_series
 #----------------------------------------------------------#
 my $d_wave_length_series = sub {
-
     my $sheet_name = 'd_wave_length_series';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
+    my @levels = ( [ 5, 10 ], [ 11, 20 ], [ 21, 30 ], [ 31, 999 ], );
+
+    my $sql_query = q{
+        SELECT gsw_distance distance,
+               AVG(w.window_indel / w.window_length * 100) AVG_indel,
+               COUNT(w.window_indel) COUNT,
+               STD(w.window_indel / w.window_length * 100) STD_indel
+        FROM gsw g, window w
+        WHERE g.window_id = w.window_id
+        AND g.gsw_distance <= 10
+        AND FLOOR(gsw_wave_length / 100) BETWEEN ? AND ?
+        GROUP BY g.gsw_distance
+        ORDER BY g.gsw_distance ASC
+    };
+
+    my @names = $write_obj->sql2names( $sql_query, { bind_value => $levels[0] } );
     {    # header
-        my $query_name = 'd_wave_length_series';
-        my @headers    = qw{distance AVG_indel COUNT STD_indel};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $query_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    my @levels = ( [ 5, 14 ], [ 15, 24 ], [ 25, 34 ], [ 35, 999 ], );
+    # contents
+    tie my %data_of, 'Tie::IxHash';
+    for (@levels) {
+        my $group_name = $_->[0] . "--" . $_->[1];
+        $write_obj->increase_row;
 
-    {    # contents
-        my $sql_query = q{
-            SELECT gsw_distance distance,
-                   AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                   COUNT(w.window_indel) COUNT,
-                   STD(w.window_indel / w.window_length * 100) STD_indel
-            FROM gsw g, window w
-            WHERE g.window_id = w.window_id
-            AND g.gsw_distance <= 10
-            AND FLOOR(gsw_wave_length / 100) BETWEEN ? AND ?
-            GROUP BY g.gsw_distance
-            ORDER BY g.gsw_distance ASC
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group     => \@levels,
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $sql_query,
+                query_name => $group_name,
+                bind_value => $_,
+                data       => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+        $data_of{$group_name} = $data;
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_series->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
 # worksheet -- d_amplitude_series
 #----------------------------------------------------------#
 my $d_amplitude_series = sub {
-
     my $sheet_name = 'd_amplitude_series';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
+    my @levels = ( [ 10, 20 ], [ 21, 30 ], [ 31, 100 ] );
+
+    my $sql_query = q{
+        SELECT  g.gsw_distance gsw_distance,
+                AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                COUNT(*) COUNT,
+                STD(w.window_indel / w.window_length * 100) STD_indel
+        FROM    gsw g,
+                window w
+        WHERE g.window_id = w.window_id
+        AND g.gsw_distance <= 10
+        AND FLOOR(gsw_amplitude / 0.01) BETWEEN ? AND ?
+        GROUP BY g.gsw_distance
+        ORDER BY g.gsw_distance ASC
+    };
+
+    my @names = $write_obj->sql2names( $sql_query, { bind_value => $levels[0] } );
     {    # header
-        my $query_name = 'd_amplitude_series';
-        my @headers    = qw{gsw_distance AVG_indel COUNT STD_indel};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $query_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    my @levels = ( [ 10, 19 ], [ 20, 29 ], [ 30, 100 ] );
+    # contents
+    tie my %data_of, 'Tie::IxHash';
+    for (@levels) {
+        my $group_name = $_->[0] . "--" . $_->[1];
+        $write_obj->increase_row;
 
-    {    # contents
-        my $sql_query = q{
-            SELECT  g.gsw_distance gsw_distance,
-                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                    COUNT(*) COUNT,
-                    STD(w.window_indel / w.window_length * 100) STD_indel
-            FROM    gsw g,
-                    window w
-            WHERE g.window_id = w.window_id
-            AND g.gsw_distance <= 10
-            AND FLOOR(gsw_amplitude / 0.01) BETWEEN ? AND ?
-            GROUP BY g.gsw_distance
-            ORDER BY g.gsw_distance ASC
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group     => \@levels,
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $sql_query,
+                query_name => $group_name,
+                bind_value => $_,
+                data       => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+        $data_of{$group_name} = $data;
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_series->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -860,6 +886,10 @@ my $d_amplitude_series = sub {
 # worksheet -- d_gc_series
 #----------------------------------------------------------#
 my $d_gc_series = sub {
+    my $sheet_name = 'd_gc_series';
+    my $sheet;
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     # find quartiles
     my @levels;
@@ -871,82 +901,80 @@ my $d_gc_series = sub {
             AND g.window_id = w.window_id
             AND g.gsw_distance > 0
             AND g.gsw_distance <= 10
+            AND w.window_average_gc IS NOT NULL
         };
         my %option = ( sql_query => $sql_query, );
-        my $quartiles = $write_obj->quantile_sql( \%option, 10 );
-        $_ = round( $_, 4 ) for @{$quartiles};
+        my $quartiles = $write_obj->quantile_sql( \%option, 4 );
+        $_ = round( $_, 3 ) for @{$quartiles};
         @levels = (
-
-            [ $quartiles->[0], $quartiles->[1] ], # 1/10
-            [ $quartiles->[1], $quartiles->[2] ], # 2/10
-            [ $quartiles->[2], $quartiles->[3] ], # 3/10
-            [ $quartiles->[3], $quartiles->[4] ], # 4/10
-            [ $quartiles->[5], $quartiles->[6] ], # 5/10
-            [ $quartiles->[6], $quartiles->[7] ], # 6/10
-            [ $quartiles->[7], $quartiles->[8] ], # 7/10
-            [ $quartiles->[8], $quartiles->[9] ], # 8/10
-                                                  #[ $quartiles->[9],  $quartiles->[10] ],    # 9/10
-                 #[ $quartiles->[10], $quartiles->[11] ],    # 10/10
+            [ $quartiles->[0], $quartiles->[1] ],    # 1/4
+            [ $quartiles->[1], $quartiles->[2] ],    # 2/4
+            [ $quartiles->[2], $quartiles->[3] ],    # 3/4
+            [ $quartiles->[3], $quartiles->[4] ],    # 4/4
         );
     }
 
-    my $sheet_name = 'd_gc_series';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
+    my $sql_query = q{
+        SELECT  g.gsw_distance gsw_distance,
+                AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                COUNT(*) COUNT,
+                STD(w.window_indel / w.window_length * 100) STD_indel
+        FROM    gsw g,
+                window w
+        WHERE g.window_id = w.window_id
+        AND g.gsw_distance > 0
+        AND g.gsw_distance <= 10
+        AND w.window_average_gc BETWEEN ? AND ?
+        GROUP BY g.gsw_distance 
+        ORDER BY g.gsw_distance ASC
+    };
 
-    {            # header
-        my $query_name = 'd_gc_series';
-        my @headers    = qw{gsw_distance AVG_indel COUNT STD_indel};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $query_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+    my @names = $write_obj->sql2names( $sql_query, { bind_value => $levels[0] } );
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
-    {
-        my $sql_query = q{
-            SELECT  g.gsw_distance gsw_distance,
-                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                    COUNT(*) COUNT,
-                    STD(w.window_indel / w.window_length * 100) STD_indel
-            FROM    gsw g,
-                    window w
-            WHERE g.window_id = w.window_id
-            AND g.gsw_distance > 0
-            AND g.gsw_distance <= 10
-            AND w.window_average_gc BETWEEN ? AND ?
-            GROUP BY g.gsw_distance 
-            ORDER BY g.gsw_distance ASC
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group     => \@levels,
+    tie my %data_of, 'Tie::IxHash';
+    for (@levels) {
+        my $group_name = $_->[0] . "--" . $_->[1];
+        $write_obj->increase_row;
+
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $sql_query,
+                query_name => $group_name,
+                bind_value => $_,
+                data       => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+        $data_of{$group_name} = $data;
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_series->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
 # worksheet -- d_trough_gc_series
 #----------------------------------------------------------#
 my $d_trough_gc_series = sub {
+    my $sheet_name = 'd_trough_gc_series';
+    my $sheet;
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     # find quartiles
     my @levels;
     {
         my $sql_query = q{
-            SELECT g.gsw_trough_gc
-            FROM gsw g
+            SELECT gsw_trough_gc
+            FROM gsw
             WHERE 1 = 1
+            AND gsw_trough_gc IS NOT NULL
         };
         my %option = ( sql_query => $sql_query, );
         my $quartiles = $write_obj->quantile_sql( \%option, 4 );
@@ -959,61 +987,66 @@ my $d_trough_gc_series = sub {
         );
     }
 
-    my $sheet_name = 'd_trough_gc_series';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
+    my $sql_query = q{
+        SELECT  g.gsw_distance gsw_distance,
+                AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                COUNT(*) COUNT,
+                STD(w.window_indel / w.window_length * 100) STD_indel
+        FROM    gsw g,
+                window w
+        WHERE g.window_id = w.window_id
+        AND g.gsw_distance <= 10
+        AND g.gsw_trough_gc BETWEEN ? AND ?
+        GROUP BY g.gsw_distance 
+        ORDER BY g.gsw_distance ASC
+    };
 
-    {                                                # header
-        my $query_name = 'd_trough_gc_series';
-        my @headers    = qw{gsw_trough_gc AVG_indel COUNT STD_indel};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $query_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+    my @names = $write_obj->sql2names( $sql_query, { bind_value => $levels[0] } );
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # contents
-        my $sql_query = q{
-            SELECT  g.gsw_distance gsw_distance,
-                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                    COUNT(*) COUNT,
-                    STD(w.window_indel / w.window_length * 100) STD_indel
-            FROM    gsw g,
-                    window w
-            WHERE g.window_id = w.window_id
-            AND g.gsw_distance <= 10
-            AND g.gsw_trough_gc BETWEEN ? AND ?
-            GROUP BY g.gsw_distance 
-            ORDER BY g.gsw_distance ASC
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group     => \@levels,
+    # contents
+    tie my %data_of, 'Tie::IxHash';
+    for (@levels) {
+        my $group_name = $_->[0] . "--" . $_->[1];
+        $write_obj->increase_row;
+
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $sql_query,
+                query_name => $group_name,
+                bind_value => $_,
+                data       => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+        $data_of{$group_name} = $data;
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_series->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
 # worksheet -- d_crest_gc_series
 #----------------------------------------------------------#
 my $d_crest_gc_series = sub {
+    my $sheet_name = 'd_crest_gc_series';
+    my $sheet;
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     # find quartiles
     my @levels;
     {
         my $sql_query = q{
-            SELECT g.gsw_crest_gc
-            FROM gsw g
+            SELECT gsw_crest_gc
+            FROM gsw
             WHERE 1 = 1
+            AND gsw_crest_gc IS NOT NULL
         };
         my %option = ( sql_query => $sql_query, );
         my $quartiles = $write_obj->quantile_sql( \%option, 4 );
@@ -1026,47 +1059,47 @@ my $d_crest_gc_series = sub {
         );
     }
 
-    my $sheet_name = 'd_crest_gc_series';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
+    my $sql_query = q{
+        SELECT  g.gsw_distance gsw_distance,
+                AVG(w.window_indel / w.window_length * 100) AVG_indel,
+                COUNT(*) COUNT,
+                STD(w.window_indel / w.window_length * 100) STD_indel
+        FROM    gsw g,
+                window w
+        WHERE g.window_id = w.window_id
+        AND g.gsw_distance <= 10
+        AND g.gsw_crest_gc BETWEEN ? AND ?
+        GROUP BY g.gsw_distance 
+        ORDER BY g.gsw_distance ASC
+    };
 
-    {                                                # header
-        my $query_name = 'd_crest_gc_series';
-        my @headers    = qw{gsw_crest_gc AVG_indel COUNT STD_indel};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $query_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+    my @names = $write_obj->sql2names( $sql_query, { bind_value => $levels[0] } );
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # contents
-        my $sql_query = q{
-            SELECT  g.gsw_distance gsw_distance,
-                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                    COUNT(*) COUNT,
-                    STD(w.window_indel / w.window_length * 100) STD_indel
-            FROM    gsw g,
-                    window w
-            WHERE g.window_id = w.window_id
-            AND g.gsw_distance <= 10
-            AND g.gsw_crest_gc BETWEEN ? AND ?
-            GROUP BY g.gsw_distance 
-            ORDER BY g.gsw_distance ASC
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group     => \@levels,
+    # contents
+    tie my %data_of, 'Tie::IxHash';
+    for (@levels) {
+        my $group_name = $_->[0] . "--" . $_->[1];
+        $write_obj->increase_row;
+
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $sql_query,
+                query_name => $group_name,
+                bind_value => $_,
+                data       => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+        $data_of{$group_name} = $data;
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_series->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -2001,12 +2034,12 @@ my $segment_cv_indel_cr = sub {
 
 };
 
-foreach my $n (@tasks) {
+for my $n (@tasks) {
     if ( $n == 1 ) { &$summary;              &$segment_summary;    next; }
     if ( $n == 2 ) { &$distance_to_trough;   &$distance_to_crest;  next; }
     if ( $n == 3 ) { &$wave_length;          &$amplitude;          &$gradient; next; }
     if ( $n == 4 ) { &$trough_gc;            &$crest_gc;           &$window_gc; next; }
-    if ( $n == 6 ) { &$d_wave_length_series; &$d_amplitude_series; next; }
+    if ( $n == 6 ) { &$d_wave_length_series; &$d_amplitude_series; next; }                #
     if ( $n == 7 ) { &$d_gc_series;        next; }
     if ( $n == 8 ) { &$d_trough_gc_series; &$d_crest_gc_series; next; }
     if ( $n == 9 ) { &$bed_count_trough;   &$bed_count_crest; next; }
