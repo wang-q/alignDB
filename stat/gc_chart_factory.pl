@@ -87,52 +87,6 @@ $excel_obj->jc_correction if $jc_correction;
 {
 
     #----------------------------#
-    # worksheet -- segment_gc_indel_x
-    #----------------------------#
-    foreach ( 'A', 0 .. 9, 10, 20, 30, 40, 50 ) {
-        my $sheet_name = 'segment_gc_indel_' . $_;
-        my %option     = (
-            chart_serial => 1,
-            x_column     => 2,
-            y_column     => 3,
-            x_title      => "GC proportion",
-            y_title      => "Nucleotide diversity",
-            Height       => 200,
-            Width        => 260,
-            Top          => 14.25,
-            Left         => 650,
-            without_line => 1,
-            marker_size  => 5,
-            add_trend    => $add_trend,
-        );
-        $excel_obj->draw_xy( $sheet_name, \%option );
-        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
-
-        # chart 2
-        $option{chart_serial}++;
-        $option{y_column} = 4;
-        $option{y_title}  = "Indel per 100bp";
-        $option{Top} += $option{Height} + 14.25;
-        $excel_obj->draw_xy( $sheet_name, \%option );
-        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
-
-        # chart 3
-        $option{chart_serial}++;
-        $option{y_column} = 5;
-        $option{y_title}  = "Segment CV";
-        $option{Top} += $option{Height} + 14.25;
-        $excel_obj->draw_xy( $sheet_name, \%option );
-        $excel_obj->linear_fit( $sheet_name, \%option ) if $_ eq 3;
-
-        # chart 4
-        $option{chart_serial}++;
-        $option{y_column} = 6;
-        $option{y_title}  = "Coding proportion";
-        $option{Top} += $option{Height} + 14.25;
-        $excel_obj->draw_xy( $sheet_name, \%option );
-    }
-
-    #----------------------------#
     # worksheet -- segment_std_indel_x
     #----------------------------#
     foreach ( 'A', 0 .. 9, 10, 20, 30, 40, 50 ) {

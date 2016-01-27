@@ -227,6 +227,43 @@ my $chart_series = sub {
     $write_obj->draw_dd( $sheet, \%opt );
 };
 
+my $chart_segment_gc = sub {
+    my $sheet = shift;
+    my $data  = shift;
+
+    my %opt = (
+        x_column  => 1,
+        y_column  => 2,
+        first_row => 1,
+        last_row  => scalar @{ $data->[0] },
+        x_data    => $data->[0],
+        y_data    => $data->[1],
+        x_title   => "GC proportion",
+        y_title   => "Nucleotide diversity",
+        top       => 1,
+        left      => 10,
+    );
+    $write_obj->draw_xy( $sheet, \%opt );
+
+    $opt{y_column} = 3;
+    $opt{y_data}   = $data->[2];
+    $opt{y_title}  = "Indel per 100 bp";
+    $opt{top} += 18;
+    $write_obj->draw_xy( $sheet, \%opt );
+
+    $opt{y_column} = 4;
+    $opt{y_data}   = $data->[3];
+    $opt{y_title}  = "Segment CV";
+    $opt{top} += 18;
+    $write_obj->draw_xy( $sheet, \%opt );
+
+    $opt{y_column} = 5;
+    $opt{y_data}   = $data->[4];
+    $opt{y_title}  = "Coding proportion";
+    $opt{top} += 18;
+    $write_obj->draw_xy( $sheet, \%opt );
+};
+
 #----------------------------------------------------------#
 # worksheet -- summary
 #----------------------------------------------------------#
@@ -865,8 +902,8 @@ my $d_amplitude_series = sub {
 #            FROM gsw g
 #            WHERE 1 = 1
 #        };
-#        my %option = ( sql_query => $sql_query, );
-#        my $quartiles = $write_obj->quantile_sql( \%option, 4 );
+#        my %opt = ( sql_query => $sql_query, );
+#        my $quartiles = $write_obj->quantile_sql( \%opt, 4 );
 #        $_ = round( $_, 5 ) for @{$quartiles};
 #        @levels = (
 #            [ $quartiles->[0], $quartiles->[1] ],    # 1/4
@@ -884,14 +921,14 @@ my $d_amplitude_series = sub {
 #        my $query_name = 'd_gradient_series';
 #        my @headers    = qw{gsw_distance AVG_indel COUNT STD_indel};
 #        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-#        my %option = (
+#        my %opt = (
 #            sheet_row  => $sheet_row,
 #            sheet_col  => $sheet_col,
 #            header     => \@headers,
 #            query_name => $query_name,
 #        );
 #        ( $sheet, $sheet_row )
-#            = $write_obj->write_header_direct( $sheet_name, \%option );
+#            = $write_obj->write_header_direct( $sheet_name, \%opt );
 #    }
 #
 #    {    # contents
@@ -908,13 +945,13 @@ my $d_amplitude_series = sub {
 #            GROUP BY g.gsw_distance
 #            ORDER BY g.gsw_distance ASC
 #        };
-#        my %option = (
+#        my %opt = (
 #            sql_query => $sql_query,
 #            sheet_row => $sheet_row,
 #            sheet_col => $sheet_col,
 #            group     => \@levels,
 #        );
-#        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+#        ($sheet_row) = $write_obj->write_content_series( $sheet, \%opt );
 #    }
 #
 #    print "Sheet \"$sheet_name\" has been generated.\n";
@@ -941,8 +978,8 @@ my $d_gc_series = sub {
             AND g.gsw_distance <= 10
             AND w.window_average_gc IS NOT NULL
         };
-        my %option = ( sql_query => $sql_query, );
-        my $quartiles = $write_obj->quantile_sql( \%option, 4 );
+        my %opt = ( sql_query => $sql_query, );
+        my $quartiles = $write_obj->quantile_sql( \%opt, 4 );
         $_ = round( $_, 3 ) for @{$quartiles};
         @levels = (
             [ $quartiles->[0], $quartiles->[1] ],    # 1/4
@@ -1014,8 +1051,8 @@ my $d_trough_gc_series = sub {
             WHERE 1 = 1
             AND gsw_trough_gc IS NOT NULL
         };
-        my %option = ( sql_query => $sql_query, );
-        my $quartiles = $write_obj->quantile_sql( \%option, 4 );
+        my %opt = ( sql_query => $sql_query, );
+        my $quartiles = $write_obj->quantile_sql( \%opt, 4 );
         $_ = round( $_, 4 ) for @{$quartiles};
         @levels = (
             [ $quartiles->[0], $quartiles->[1] ],    # 1/4
@@ -1086,8 +1123,8 @@ my $d_crest_gc_series = sub {
             WHERE 1 = 1
             AND gsw_crest_gc IS NOT NULL
         };
-        my %option = ( sql_query => $sql_query, );
-        my $quartiles = $write_obj->quantile_sql( \%option, 4 );
+        my %opt = ( sql_query => $sql_query, );
+        my $quartiles = $write_obj->quantile_sql( \%opt, 4 );
         $_ = round( $_, 4 ) for @{$quartiles};
         @levels = (
             [ $quartiles->[0], $quartiles->[1] ],    # 1/4
@@ -1263,12 +1300,11 @@ my $segment_gc_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_gc_indel' . "_$segment_type";
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(1);
 
         {    # create temporary table
-            my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -1287,12 +1323,11 @@ my $segment_gc_indel = sub {
                     AND s.segment_type = ?
                     ORDER BY gc DESC, pi, indel
             };
-            my %option = (
+            my %opt = (
                 sql_query  => $sql_query,
                 bind_value => [$segment_type],
-
             );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( \%opt );
         }
 
         # make group
@@ -1302,25 +1337,20 @@ my $segment_gc_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my %option = (
+            my %opt = (
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
 
+        my @names = qw{AVG_gc AVG_pi AVG_Indel/100bp AVG_CV AVG_coding AVG_length COUNT SUM_length};
         {    # header
-            my @headers
-                = qw{AVG_gc AVG_pi AVG_Indel/100bp AVG_CV AVG_coding AVG_length COUNT SUM_length};
-            ( $sheet_row, $sheet_col ) = ( 0, 1 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
+        my $data = [];
+        push @{$data}, [] for @names;
         {    # query
             my $sql_query = q{
                 SELECT AVG(t.gc) `AVG_gc`,
@@ -1334,26 +1364,48 @@ my $segment_gc_indel = sub {
                 FROM tmp_group t
                 WHERE t_id IN
             };
-            my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                group     => \@combined_segment,
-            );
 
-            ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
+            my @group_names;
+            for (@combined_segment) {
+                my @range        = @$_;
+                my $in_list      = '(' . join( ',', @range ) . ')';
+                my $sql_query_in = $sql_query . $in_list;
+                my $group_name;
+                if ( scalar @range > 1 ) {
+                    $group_name = $range[0] . "--" . $range[-1];
+                }
+                else {
+                    $group_name = $range[0];
+                }
+                push @group_names, $group_name;
+
+                my $sth = $dbh->prepare($sql_query_in);
+                $sth->execute;
+                while ( my @row = $sth->fetchrow_array ) {
+                    for my $i ( 0 .. $#names ) {
+                        push @{ $data->[$i] }, $row[$i];
+                    }
+                }
+            }
+
+            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
+            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            my %opt = ( sql_query => $sql_query, );
+            $write_obj->excute_sql( \%opt );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        if ($add_chart) {    # chart
+            $chart_segment_gc->( $sheet, $data );
+        }
+
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
-    foreach (@segment_levels) {
+    for (@segment_levels) {
         &$write_sheet($_);
     }
 
@@ -1373,12 +1425,11 @@ my $segment_std_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_std_indel' . "_$segment_type";
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(1);
 
         {    # create temporary table
-            my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -1397,12 +1448,11 @@ my $segment_std_indel = sub {
                     AND s.segment_type = ?
                     ORDER BY std DESC, pi, indel
             };
-            my %option = (
+            my %opt = (
                 sql_query  => $sql_query,
                 bind_value => [$segment_type],
-
             );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( \%opt );
         }
 
         # make group
@@ -1412,25 +1462,20 @@ my $segment_std_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my %option = (
+            my %opt = (
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
-
+        
+        my @names = qw{AVG_std AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
         {    # header
-            my @headers
-                = qw{AVG_std AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
-            ( $sheet_row, $sheet_col ) = ( 0, 1 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
+        my $data = [];
+        push @{$data}, [] for @names;
         {    # query
             my $sql_query = q{
                 SELECT AVG(t.std) `AVG_std`,
@@ -1444,26 +1489,44 @@ my $segment_std_indel = sub {
                 FROM tmp_group t
                 WHERE t_id IN
             };
-            my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                group     => \@combined_segment,
-            );
+ 
+            my @group_names;
+            for (@combined_segment) {
+                my @range        = @$_;
+                my $in_list      = '(' . join( ',', @range ) . ')';
+                my $sql_query_in = $sql_query . $in_list;
+                my $group_name;
+                if ( scalar @range > 1 ) {
+                    $group_name = $range[0] . "--" . $range[-1];
+                }
+                else {
+                    $group_name = $range[0];
+                }
+                push @group_names, $group_name;
 
-            ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
+                my $sth = $dbh->prepare($sql_query_in);
+                $sth->execute;
+                while ( my @row = $sth->fetchrow_array ) {
+                    for my $i ( 0 .. $#names ) {
+                        push @{ $data->[$i] }, $row[$i];
+                    }
+                }
+            }
+
+            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
+            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            my %opt = ( sql_query => $sql_query, );
+            $write_obj->excute_sql( \%opt );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
-    foreach (@segment_levels) {
+    for (@segment_levels) {
         &$write_sheet($_);
     }
 
@@ -1483,12 +1546,11 @@ my $segment_cv_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_cv_indel' . "_$segment_type";
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(1);
 
         {    # create temporary table
-            my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -1507,12 +1569,12 @@ my $segment_cv_indel = sub {
                     AND s.segment_type = ?
                     ORDER BY cv DESC, pi, indel
             };
-            my %option = (
+            my %opt = (
                 sql_query  => $sql_query,
                 bind_value => [$segment_type],
 
             );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( \%opt );
         }
 
         # make group
@@ -1522,25 +1584,20 @@ my $segment_cv_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my %option = (
+            my %opt = (
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
-
+        
+        my @names = qw{AVG_CV AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length Range_gc};
         {    # header
-            my @headers
-                = qw{AVG_CV AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length Range_gc};
-            ( $sheet_row, $sheet_col ) = ( 0, 1 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
+        my $data = [];
+        push @{$data}, [] for @names;
         {    # query
             my $sql_query = q{
                 SELECT AVG(t.CV) `AVG_CV`,
@@ -1555,26 +1612,44 @@ my $segment_cv_indel = sub {
                 FROM tmp_group t
                 WHERE t_id IN
             };
-            my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                group     => \@combined_segment,
-            );
+            
+            my @group_names;
+            for (@combined_segment) {
+                my @range        = @$_;
+                my $in_list      = '(' . join( ',', @range ) . ')';
+                my $sql_query_in = $sql_query . $in_list;
+                my $group_name;
+                if ( scalar @range > 1 ) {
+                    $group_name = $range[0] . "--" . $range[-1];
+                }
+                else {
+                    $group_name = $range[0];
+                }
+                push @group_names, $group_name;
 
-            ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
+                my $sth = $dbh->prepare($sql_query_in);
+                $sth->execute;
+                while ( my @row = $sth->fetchrow_array ) {
+                    for my $i ( 0 .. $#names ) {
+                        push @{ $data->[$i] }, $row[$i];
+                    }
+                }
+            }
+
+            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
+            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            my %opt = ( sql_query => $sql_query, );
+            $write_obj->excute_sql( \%opt );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
-    foreach (@segment_levels) {
+    for (@segment_levels) {
         &$write_sheet($_);
     }
 
@@ -1594,12 +1669,11 @@ my $segment_mdcw_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_mdcw_indel' . "_$segment_type";
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(1);
 
         {    # create temporary table
-            my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -1618,12 +1692,12 @@ my $segment_mdcw_indel = sub {
                     AND s.segment_type = ?
                     ORDER BY mdcw DESC, pi, indel
             };
-            my %option = (
+            my %opt = (
                 sql_query  => $sql_query,
                 bind_value => [$segment_type],
 
             );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( \%opt );
         }
 
         # make group
@@ -1633,25 +1707,20 @@ my $segment_mdcw_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my %option = (
+            my %opt = (
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
-
+        
+        my @names = qw{AVG_mdcw AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
         {    # header
-            my @headers
-                = qw{AVG_mdcw AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
-            ( $sheet_row, $sheet_col ) = ( 0, 1 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
+        my $data = [];
+        push @{$data}, [] for @names;
         {    # query
             my $sql_query = q{
                 SELECT AVG(t.mdcw) `AVG_mdcw`,
@@ -1665,26 +1734,44 @@ my $segment_mdcw_indel = sub {
                 FROM tmp_group t
                 WHERE t_id IN
             };
-            my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                group     => \@combined_segment,
-            );
+            
+            my @group_names;
+            for (@combined_segment) {
+                my @range        = @$_;
+                my $in_list      = '(' . join( ',', @range ) . ')';
+                my $sql_query_in = $sql_query . $in_list;
+                my $group_name;
+                if ( scalar @range > 1 ) {
+                    $group_name = $range[0] . "--" . $range[-1];
+                }
+                else {
+                    $group_name = $range[0];
+                }
+                push @group_names, $group_name;
 
-            ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
+                my $sth = $dbh->prepare($sql_query_in);
+                $sth->execute;
+                while ( my @row = $sth->fetchrow_array ) {
+                    for my $i ( 0 .. $#names ) {
+                        push @{ $data->[$i] }, $row[$i];
+                    }
+                }
+            }
+
+            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
+            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            my %opt = ( sql_query => $sql_query, );
+            $write_obj->excute_sql( \%opt );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
-    foreach (@segment_levels) {
+    for (@segment_levels) {
         &$write_sheet($_);
     }
 
@@ -1707,12 +1794,11 @@ my $segment_coding_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_coding_indel' . "_$segment_type";
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(1);
 
         {    # create temporary table
-            my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -1731,12 +1817,12 @@ my $segment_coding_indel = sub {
                     AND s.segment_type = ?
                     ORDER BY coding DESC, pi, indel
             };
-            my %option = (
+            my %opt = (
                 sql_query  => $sql_query,
                 bind_value => [$segment_type],
 
             );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( \%opt );
         }
 
         # make group
@@ -1746,25 +1832,20 @@ my $segment_coding_indel = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my %option = (
+            my %opt = (
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
-
+        
+        my @names = qw{AVG_coding AVG_pi AVG_Indel/100bp AVG_gc AVG_CV AVG_length COUNT SUM_length};
         {    # header
-            my @headers
-                = qw{AVG_coding AVG_pi AVG_Indel/100bp AVG_gc AVG_CV AVG_length COUNT SUM_length};
-            ( $sheet_row, $sheet_col ) = ( 0, 1 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
+        my $data = [];
+        push @{$data}, [] for @names;
         {    # query
             my $sql_query = q{
                 SELECT AVG(t.coding) `AVG_coding`,
@@ -1778,26 +1859,44 @@ my $segment_coding_indel = sub {
                 FROM tmp_group t
                 WHERE t_id IN
             };
-            my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                group     => \@combined_segment,
-            );
+            
+            my @group_names;
+            for (@combined_segment) {
+                my @range        = @$_;
+                my $in_list      = '(' . join( ',', @range ) . ')';
+                my $sql_query_in = $sql_query . $in_list;
+                my $group_name;
+                if ( scalar @range > 1 ) {
+                    $group_name = $range[0] . "--" . $range[-1];
+                }
+                else {
+                    $group_name = $range[0];
+                }
+                push @group_names, $group_name;
 
-            ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
+                my $sth = $dbh->prepare($sql_query_in);
+                $sth->execute;
+                while ( my @row = $sth->fetchrow_array ) {
+                    for my $i ( 0 .. $#names ) {
+                        push @{ $data->[$i] }, $row[$i];
+                    }
+                }
+            }
+
+            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
+            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            my %opt = ( sql_query => $sql_query, );
+            $write_obj->excute_sql( \%opt );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
-    foreach (@segment_levels) {
+    for (@segment_levels) {
         &$write_sheet($_);
     }
 
@@ -1817,12 +1916,11 @@ my $segment_gc_indel_cr = sub {
             . $feature_types->[0]
             . $feature_types->[1];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(1);
 
         {    # create temporary table
-            my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -1843,12 +1941,12 @@ my $segment_gc_indel_cr = sub {
                     AND w.window_repeats = ?
                     ORDER BY cv DESC, pi, indel
             };
-            my %option = (
+            my %opt = (
                 sql_query  => $sql_query,
                 bind_value => [ $segment_type, $feature_types->[0], $feature_types->[1] ],
 
             );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( \%opt );
         }
 
         # make group
@@ -1858,25 +1956,20 @@ my $segment_gc_indel_cr = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my %option = (
+            my %opt = (
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
-
+        
+        my @names = qw{AVG_gc AVG_pi AVG_Indel/100bp AVG_CV AVG_coding AVG_length COUNT SUM_length};
         {    # header
-            my @headers
-                = qw{AVG_gc AVG_pi AVG_Indel/100bp AVG_CV AVG_coding AVG_length COUNT SUM_length};
-            ( $sheet_row, $sheet_col ) = ( 0, 1 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
+        my $data = [];
+        push @{$data}, [] for @names;
         {    # query
             my $sql_query = q{
                 SELECT AVG(t.gc) `AVG_gc`,
@@ -1890,23 +1983,41 @@ my $segment_gc_indel_cr = sub {
                 FROM tmp_group t
                 WHERE t_id IN
             };
-            my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                group     => \@combined_segment,
-            );
+           
+            my @group_names;
+            for (@combined_segment) {
+                my @range        = @$_;
+                my $in_list      = '(' . join( ',', @range ) . ')';
+                my $sql_query_in = $sql_query . $in_list;
+                my $group_name;
+                if ( scalar @range > 1 ) {
+                    $group_name = $range[0] . "--" . $range[-1];
+                }
+                else {
+                    $group_name = $range[0];
+                }
+                push @group_names, $group_name;
 
-            ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
+                my $sth = $dbh->prepare($sql_query_in);
+                $sth->execute;
+                while ( my @row = $sth->fetchrow_array ) {
+                    for my $i ( 0 .. $#names ) {
+                        push @{ $data->[$i] }, $row[$i];
+                    }
+                }
+            }
+
+            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
+            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            my %opt = ( sql_query => $sql_query, );
+            $write_obj->excute_sql( \%opt );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
     for my $i (@segment_levels) {
@@ -1931,12 +2042,11 @@ my $segment_cv_indel_cr = sub {
             . $feature_types->[0]
             . $feature_types->[1];
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(1);
 
         {    # create temporary table
-            my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -1957,12 +2067,12 @@ my $segment_cv_indel_cr = sub {
                     AND w.window_repeats = ?
                     ORDER BY cv DESC, pi, indel
             };
-            my %option = (
+            my %opt = (
                 sql_query  => $sql_query,
                 bind_value => [ $segment_type, $feature_types->[0], $feature_types->[1] ],
 
             );
-            $write_obj->excute_sql( \%option );
+            $write_obj->excute_sql( \%opt );
         }
 
         # make group
@@ -1972,25 +2082,20 @@ my $segment_cv_indel_cr = sub {
                 SELECT t_id, length
                 FROM tmp_group
             };
-            my %option = (
+            my %opt = (
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%option ) };
+            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
         }
-
+        
+        my @names = qw{AVG_CV AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
         {    # header
-            my @headers
-                = qw{AVG_CV AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
-            ( $sheet_row, $sheet_col ) = ( 0, 1 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
+        my $data = [];
+        push @{$data}, [] for @names;
         {    # query
             my $sql_query = q{
                 SELECT AVG(t.gc) `AVG_CV`,
@@ -2004,23 +2109,41 @@ my $segment_cv_indel_cr = sub {
                 FROM tmp_group t
                 WHERE t_id IN
             };
-            my %option = (
-                sql_query => $sql_query,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                group     => \@combined_segment,
-            );
+            
+            my @group_names;
+            for (@combined_segment) {
+                my @range        = @$_;
+                my $in_list      = '(' . join( ',', @range ) . ')';
+                my $sql_query_in = $sql_query . $in_list;
+                my $group_name;
+                if ( scalar @range > 1 ) {
+                    $group_name = $range[0] . "--" . $range[-1];
+                }
+                else {
+                    $group_name = $range[0];
+                }
+                push @group_names, $group_name;
 
-            ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
+                my $sth = $dbh->prepare($sql_query_in);
+                $sth->execute;
+                while ( my @row = $sth->fetchrow_array ) {
+                    for my $i ( 0 .. $#names ) {
+                        push @{ $data->[$i] }, $row[$i];
+                    }
+                }
+            }
+
+            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
+            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
-            my %option = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%option );
+            my %opt = ( sql_query => $sql_query, );
+            $write_obj->excute_sql( \%opt );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
     for my $i (@segment_levels) {
@@ -2049,6 +2172,11 @@ for my $n (@tasks) {
 
     if ( $n == 30 ) { &$segment_gc_indel_cr; next; }
     if ( $n == 31 ) { &$segment_cv_indel_cr; next; }
+}
+
+if ($add_index_sheet) {
+    $write_obj->add_index_sheet;
+    print "Sheet [INDEX] has been generated.\n";
 }
 
 $stopwatch->end_message;
