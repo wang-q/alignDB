@@ -48,7 +48,7 @@ GetOptions(
 pod2usage(1) if $help;
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
-if (! -e $infile) {
+if ( !-e $infile ) {
     warn "[$infile] doesn't exist.\n";
     exit;
 }
@@ -84,139 +84,6 @@ $excel_obj->jc_correction if $jc_correction;
 #----------------------------------------------------------#
 # draw charts section
 #----------------------------------------------------------#
-{
-
-    #----------------------------#
-    # worksheet -- distance_to_trough
-    #----------------------------#
-    my $sheet_name = 'distance_to_trough';
-    my %option     = (
-        chart_serial => 1,
-        x_column     => 1,
-        y_column     => 2,
-        first_row    => 2,
-        last_row     => 17,
-        x_max_scale  => 15,
-        x_title      => "Distance to GC trough",
-        y_title      => "Nucleotide diversity",
-        Height       => 200,
-        Width        => 260,
-        Top          => 14.25,
-        Left         => 550,
-    );
-    $option{x_scale_unit} = 5;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    # chart 2
-    $option{chart_serial}++;
-    $option{y_column} = 4;
-    $option{y_title}  = "Indel per 100 bp";
-    $option{Top} += $option{Height} + 14.25;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    # chart 3
-    $option{chart_serial}++;
-    $option{y_column} = 6;
-    $option{y_title}  = "Window CV";
-    $option{Top} += $option{Height} + 14.25;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- distance_to_crest
-    #----------------------------#
-    $sheet_name           = 'distance_to_crest';
-    $option{chart_serial} = 1;
-    $option{y_column}     = 2;
-    $option{x_title}      = "Distance to GC crest";
-    $option{y_title}      = "Nucleotide diversity";
-    $option{Top}          = 14.25;
-    $option{x_scale_unit} = 5;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    # chart 2
-    $option{chart_serial}++;
-    $option{y_column} = 4;
-    $option{y_title}  = "Indel per 100 bp";
-    $option{Top} += $option{Height} + 14.25;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    # chart 3
-    $option{chart_serial}++;
-    $option{y_column} = 6;
-    $option{y_title}  = "Window CV";
-    $option{Top} += $option{Height} + 14.25;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- bed_count_trough
-    #----------------------------#
-    $sheet_name           = 'bed_count_trough';
-    $option{chart_serial} = 1;
-    $option{y_column}     = 2;
-    $option{x_title}      = "Distance to GC trouth";
-    $option{y_title}      = "Nucleotide diversity";
-    $option{Top}          = 14.25;
-    $option{Left}         = 650;
-    $option{x_scale_unit} = 5;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    # chart 2
-    $option{chart_serial}++;
-    $option{y_column} = 4;
-    $option{y_title}  = "Indel per 100 bp";
-    $option{Top} += $option{Height} + 14.25;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    # chart 3
-    $option{chart_serial}++;
-    $option{y_column} = 6;
-    $option{y_title}  = "Window CV";
-    $option{Top} += $option{Height} + 14.25;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    # chart 4
-    $option{chart_serial}++;
-    $option{y_column} = 8;
-    $option{y_title}  = "BED count";
-    $option{Top} += $option{Height} + 14.25;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    #----------------------------#
-    # worksheet -- bed_count_crest
-    #----------------------------#
-    $sheet_name           = 'bed_count_crest';
-    $option{chart_serial} = 1;
-    $option{y_column}     = 2;
-    $option{x_title}      = "Distance to GC crest";
-    $option{y_title}      = "Nucleotide diversity";
-    $option{Top}          = 14.25;
-    $option{Left}         = 650;
-    $option{x_scale_unit} = 5;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    # chart 2
-    $option{chart_serial}++;
-    $option{y_column} = 4;
-    $option{y_title}  = "Indel per 100 bp";
-    $option{Top} += $option{Height} + 14.25;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    # chart 3
-    $option{chart_serial}++;
-    $option{y_column} = 6;
-    $option{y_title}  = "Window CV";
-    $option{Top} += $option{Height} + 14.25;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-    # chart 4
-    $option{chart_serial}++;
-    $option{y_column} = 8;
-    $option{y_title}  = "BED count";
-    $option{Top} += $option{Height} + 14.25;
-    $excel_obj->draw_y( $sheet_name, \%option );
-
-}
-
 {
 
     #----------------------------#

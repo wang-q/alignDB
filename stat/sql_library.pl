@@ -652,7 +652,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql->from( ['gsw'] );
     $sql->group( { column => 'gsw_distance' } );
-    $sql->add_where('gsw_distance' => \'IS NOT NULL');
+    $sql->add_where( 'gsw_distance' => \'IS NOT NULL' );
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
@@ -680,6 +680,34 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_select( 'STD(window_indel / window_length * 100)', 'STD_indel' );
     $sql->add_select( 'AVG(gsw_cv)',                             'AVG_cv' );
     $sql->add_select( 'STD(gsw_cv)',                             'STD_cv' );
+    $sql->add_select( 'COUNT(*)',                                'COUNT' );
+
+    $sql->add_join(
+        gsw => {
+            type      => 'inner',
+            table     => 'window',
+            condition => 'gsw.window_id = window.window_id',
+        }
+    );
+
+    $sql_file->set( $name, $sql );
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
+{
+    my $name = 'gc-wave_comb_bed-0';
+
+    my $sql = ns();
+    $sql->add_select( 'AVG(gsw_distance)', );
+    $sql->add_select( 'AVG(window_pi)',                          'AVG_pi' );
+    $sql->add_select( 'STD(window_pi)',                          'STD_pi' );
+    $sql->add_select( 'AVG(window_indel / window_length * 100)', 'AVG_indel' );
+    $sql->add_select( 'STD(window_indel / window_length * 100)', 'STD_indel' );
+    $sql->add_select( 'AVG(gsw_cv)',                             'AVG_cv' );
+    $sql->add_select( 'STD(gsw_cv)',                             'STD_cv' );
+    $sql->add_select( 'AVG(gsw_bed_count)',                      'AVG_bed' );
+    $sql->add_select( 'STD(gsw_bed_count)',                      'STD_bed' );
     $sql->add_select( 'COUNT(*)',                                'COUNT' );
 
     $sql->add_join(

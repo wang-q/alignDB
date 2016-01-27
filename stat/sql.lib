@@ -863,6 +863,71 @@ select_map_reverse:
 where: []
 where_values: {}
 
+[gc-wave_comb_bed-0]
+---
+__CLASS__: AlignDB::SQL-1.0.0
+_sql: |
+  SELECT
+    AVG(gsw_distance),
+    AVG(window_pi) AVG_pi,
+    STD(window_pi) STD_pi,
+    AVG(window_indel / window_length * 100) AVG_indel,
+    STD(window_indel / window_length * 100) STD_indel,
+    AVG(gsw_cv) AVG_cv,
+    STD(gsw_cv) STD_cv,
+    AVG(gsw_bed_count) AVG_bed,
+    STD(gsw_bed_count) STD_bed,
+    COUNT(*) COUNT
+  FROM gsw
+    INNER JOIN window ON
+      gsw.window_id = window.window_id
+bind: []
+from: []
+having: []
+indent: '  '
+joins:
+- joins:
+  - condition: gsw.window_id = window.window_id
+    table: window
+    type: inner
+  table: gsw
+replace: {}
+select:
+- AVG(gsw_distance)
+- AVG(window_pi)
+- STD(window_pi)
+- AVG(window_indel / window_length * 100)
+- STD(window_indel / window_length * 100)
+- AVG(gsw_cv)
+- STD(gsw_cv)
+- AVG(gsw_bed_count)
+- STD(gsw_bed_count)
+- COUNT(*)
+select_map:
+  AVG(gsw_bed_count): AVG_bed
+  AVG(gsw_cv): AVG_cv
+  AVG(gsw_distance): AVG(gsw_distance)
+  AVG(window_indel / window_length * 100): AVG_indel
+  AVG(window_pi): AVG_pi
+  COUNT(*): COUNT
+  STD(gsw_bed_count): STD_bed
+  STD(gsw_cv): STD_cv
+  STD(window_indel / window_length * 100): STD_indel
+  STD(window_pi): STD_pi
+select_map_reverse:
+  AVG(gsw_distance): AVG(gsw_distance)
+  AVG_bed: AVG(gsw_bed_count)
+  AVG_cv: AVG(gsw_cv)
+  AVG_indel: AVG(window_indel / window_length * 100)
+  AVG_pi: AVG(window_pi)
+  COUNT: COUNT(*)
+  STD_bed: STD(gsw_bed_count)
+  STD_cv: STD(gsw_cv)
+  STD_indel: STD(window_indel / window_length * 100)
+  STD_pi: STD(window_pi)
+where: []
+where_values: {}
+
 [gc-wave_comb_pi_indel_cv-0]
 ---
 __CLASS__: AlignDB::SQL-1.0.0

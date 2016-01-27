@@ -151,6 +151,44 @@ my $chart_wave_distance = sub {
     $write_obj->draw_y( $sheet, \%opt );
 };
 
+my $chart_wave_bed = sub {
+    my $sheet   = shift;
+    my $data    = shift;
+    my $x_title = shift;
+
+    my %opt = (
+        x_column    => 0,
+        y_column    => 1,
+        first_row   => 1,
+        last_row    => 16,
+        x_max_scale => 15,
+        y_data      => $data->[1],
+        x_title     => $x_title,
+        y_title     => "Nucleotide diversity",
+        top         => 1,
+        left        => 10,
+    );
+    $write_obj->draw_y( $sheet, \%opt );
+
+    $opt{y_column} = 3;
+    $opt{y_data}   = $data->[3];
+    $opt{y_title}  = "Indel per 100 bp";
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
+
+    $opt{y_column} = 5;
+    $opt{y_data}   = $data->[5];
+    $opt{y_title}  = "Window CV";
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
+
+    $opt{y_column} = 7;
+    $opt{y_data}   = $data->[7];
+    $opt{y_title}  = "BED count";
+    $opt{top} += 18;
+    $write_obj->draw_y( $sheet, \%opt );
+};
+
 my $chart_series = sub {
     my $sheet   = shift;
     my $data_of = shift;
@@ -1113,68 +1151,46 @@ my $bed_count_trough = sub {
         return;
     }
 
-    # make combine
-    my @combined;
-    {
-        my $sql_query = q{
-            SELECT gsw_distance gsw_distance,
-                   COUNT(*) COUNT
-            FROM gsw g
-            WHERE 1 = 1
-            GROUP BY gsw_distance
-        };
-        my $standalone = [];
-        my %option     = (
-            sql_query  => $sql_query,
-            threshold  => $combine,
-            standalone => $standalone,
-            merge_last => 1,
-        );
-        @combined = @{ $write_obj->make_combine( \%option ) };
-    }
-
     my $sheet_name = 'bed_count_trough';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
+    # make combine
+    my $combined = $write_obj->make_combine(
+        {   sql_query  => $sql_file->retrieve('gc-wave_combine-0')->as_sql,
+            threshold  => $combine,
+            standalone => [0],
+            merge_last => 1,
+        }
+    );
+
+    my $thaw_sql = $sql_file->retrieve('gc-wave_comb_bed-0');
+
+    my @names = $thaw_sql->as_header;
     {    # header
-        my @headers
-            = qw{ AVG_distance AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv AVG_bed STD_bed COUNT };
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # contents
-        my $sql_query = q{
-            SELECT  AVG(gsw_distance) distance_to_trough,
-                    AVG(w.window_pi) AVG_pi,
-                    STD(w.window_pi) STD_pi,
-                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                    STD(w.window_indel / w.window_length * 100) STD_indel,
-                    AVG(g.gsw_cv) AVG_cv,
-                    STD(g.gsw_cv) STD_cv,
-                    AVG(g.gsw_bed_count) AVG_bed,
-                    STD(g.gsw_bed_count) STD_bed,
-                    COUNT(w.window_id) COUNT
-            FROM gsw g, window w
-            WHERE g.window_id = w.window_id
-            AND gsw_distance IN
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            combined  => \@combined,
+    my $data;
+    for my $comb ( @{$combined} ) {    # content
+        my $thaw_sql = $sql_file->retrieve('gc-wave_comb_bed-0');
+        $thaw_sql->add_where( 'gsw_distance' => $comb );
+
+        $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                bind_value => $comb,
+                data       => $data,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_wave_bed->( $sheet, $data, "Distance to GC trough" );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -1188,68 +1204,49 @@ my $bed_count_crest = sub {
         return;
     }
 
-    # make combine
-    my @combined;
-    {
-        my $sql_query = q{
-            SELECT gsw_distance_crest gsw_distance_crest,
-                   COUNT(*) COUNT
-            FROM gsw g
-            WHERE 1 = 1
-            GROUP BY gsw_distance_crest
-        };
-        my $standalone = [];
-        my %option     = (
-            sql_query  => $sql_query,
-            threshold  => $combine,
-            standalone => $standalone,
-            merge_last => 1,
-        );
-        @combined = @{ $write_obj->make_combine( \%option ) };
-    }
-
     my $sheet_name = 'bed_count_crest';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
+    # make combine
+    my $combine_sql = $sql_file->retrieve('gc-wave_combine-0');
+    $combine_sql->replace( { gsw_distance => 'gsw_distance_crest' } );
+    my $combined = $write_obj->make_combine(
+        {   sql_query  => $combine_sql->as_sql,
+            threshold  => $combine,
+            standalone => [0],
+            merge_last => 1,
+        }
+    );
+
+    my $thaw_sql = $sql_file->retrieve('gc-wave_comb_bed-0');
+    $thaw_sql->replace( { gsw_distance => 'gsw_distance_crest' } );
+    my @names = $thaw_sql->as_header;
     {    # header
-        my @headers
-            = qw{ AVG_distance AVG_pi STD_pi AVG_indel STD_indel AVG_cv STD_cv AVG_bed STD_bed COUNT };
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # contents
-        my $sql_query = q{
-            SELECT  AVG(gsw_distance_crest) distance_to_crest,
-                    AVG(w.window_pi) AVG_pi,
-                    STD(w.window_pi) STD_pi,
-                    AVG(w.window_indel / w.window_length * 100) AVG_indel,
-                    STD(w.window_indel / w.window_length * 100) STD_indel,
-                    AVG(g.gsw_cv) AVG_cv,
-                    STD(g.gsw_cv) STD_cv,
-                    AVG(g.gsw_bed_count) AVG_bed,
-                    STD(g.gsw_bed_count) STD_bed,
-                    COUNT(w.window_id) COUNT
-            FROM gsw g, window w
-            WHERE g.window_id = w.window_id
-            AND gsw_distance_crest IN
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            combined  => \@combined,
+    my $data;
+    for my $comb ( @{$combined} ) {    # content
+        my $thaw_sql = $sql_file->retrieve('gc-wave_comb_bed-0');
+        $thaw_sql->add_where( 'gsw_distance' => $comb );
+        $thaw_sql->replace( { gsw_distance => 'gsw_distance_crest' } );
+
+        $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                bind_value => $comb,
+                data       => $data,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_combine( $sheet, \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_wave_distance->( $sheet, $data, "Distance to GC crest" );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
