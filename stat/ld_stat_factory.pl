@@ -755,7 +755,6 @@ my $segment_gc_indel = sub {
             my %opt = (
                 sql_query  => $sql_query,
                 bind_value => [$segment_type],
-
             );
             $write_obj->excute_sql( \%opt );
         }
@@ -776,14 +775,13 @@ my $segment_gc_indel = sub {
 
         my @names
             = qw{AVG_gc AVG_pi AVG_Indel/100bp AVG_CV AVG_coding AVG_r2 AVG_length COUNT SUM_length};
-        my $data = [];
-        push @{$data}, [] for @names;
-
         {    # header
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
-        {    # content
+         my $data = [];
+        push @{$data}, [] for @names;
+       {    # content
             my $sql_query = q{
                 SELECT AVG(t.gc) `AVG_gc`,
                        AVG(t.pi) `AVG_pi`,
