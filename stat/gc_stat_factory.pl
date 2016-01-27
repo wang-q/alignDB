@@ -286,6 +286,88 @@ my $chart_segment_gc = sub {
     $write_obj->draw_xy( $sheet, \%opt );
 };
 
+my $chart_segment_std = sub {
+    my $sheet = shift;
+    my $data  = shift;
+
+    my %opt = (
+        x_column  => 1,
+        y_column  => 2,
+        first_row => 1,
+        last_row  => scalar @{ $data->[0] },
+        x_data    => $data->[0],
+        y_data    => $data->[1],
+        x_title   => "Segment std",
+        y_title   => "Nucleotide diversity",
+        top       => 1,
+        left      => 10,
+        add_trend => $add_trend,
+    );
+    $write_obj->draw_xy( $sheet, \%opt );
+    $linear_fit->( $sheet, \%opt );
+
+    $opt{y_column} = 3;
+    $opt{y_data}   = $data->[2];
+    $opt{y_title}  = "Indel per 100 bp";
+    $opt{top} += 18;
+    $write_obj->draw_xy( $sheet, \%opt );
+    $linear_fit->( $sheet, \%opt );
+
+    $opt{y_column} = 4;
+    $opt{y_data}   = $data->[3];
+    $opt{y_title}  = "GC proportion";
+    $opt{top} += 18;
+    $write_obj->draw_xy( $sheet, \%opt );
+    $linear_fit->( $sheet, \%opt );
+
+    $opt{y_column} = 5;
+    $opt{y_data}   = $data->[4];
+    $opt{y_title}  = "Coding proportion";
+    $opt{top} += 18;
+    $write_obj->draw_xy( $sheet, \%opt );
+};
+
+my $chart_segment_cv = sub {
+    my $sheet = shift;
+    my $data  = shift;
+
+    my %opt = (
+        x_column  => 1,
+        y_column  => 2,
+        first_row => 1,
+        last_row  => scalar @{ $data->[0] },
+        x_data    => $data->[0],
+        y_data    => $data->[1],
+        x_title   => "Segment CV",
+        y_title   => "Nucleotide diversity",
+        top       => 1,
+        left      => 10,
+        add_trend => $add_trend,
+    );
+    $write_obj->draw_xy( $sheet, \%opt );
+    $linear_fit->( $sheet, \%opt );
+
+    $opt{y_column} = 3;
+    $opt{y_data}   = $data->[2];
+    $opt{y_title}  = "Indel per 100 bp";
+    $opt{top} += 18;
+    $write_obj->draw_xy( $sheet, \%opt );
+    $linear_fit->( $sheet, \%opt );
+
+    $opt{y_column} = 4;
+    $opt{y_data}   = $data->[3];
+    $opt{y_title}  = "GC proportion";
+    $opt{top} += 18;
+    $write_obj->draw_xy( $sheet, \%opt );
+    $linear_fit->( $sheet, \%opt );
+
+    $opt{y_column} = 5;
+    $opt{y_data}   = $data->[4];
+    $opt{y_title}  = "Coding proportion";
+    $opt{top} += 18;
+    $write_obj->draw_xy( $sheet, \%opt );
+};
+
 #----------------------------------------------------------#
 # worksheet -- summary
 #----------------------------------------------------------#
@@ -1545,6 +1627,10 @@ my $segment_std_indel = sub {
             my %opt = ( sql_query => $sql_query, );
             $write_obj->excute_sql( \%opt );
         }
+        
+        if ($add_chart) {    # chart
+            $chart_segment_std->( $sheet, $data );
+        }
 
         print "Sheet [$sheet_name] has been generated.\n";
     };
@@ -1668,6 +1754,10 @@ my $segment_cv_indel = sub {
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
             my %opt = ( sql_query => $sql_query, );
             $write_obj->excute_sql( \%opt );
+        }
+        
+        if ($add_chart) {    # chart
+            $chart_segment_cv->( $sheet, $data );
         }
 
         print "Sheet [$sheet_name] has been generated.\n";
@@ -2041,6 +2131,10 @@ my $segment_gc_indel_cr = sub {
             my %opt = ( sql_query => $sql_query, );
             $write_obj->excute_sql( \%opt );
         }
+        
+        if ($add_chart) {    # chart
+            $chart_segment_gc->( $sheet, $data );
+        }
 
         print "Sheet [$sheet_name] has been generated.\n";
     };
@@ -2166,6 +2260,10 @@ my $segment_cv_indel_cr = sub {
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
             my %opt = ( sql_query => $sql_query, );
             $write_obj->excute_sql( \%opt );
+        }
+        
+        if ($add_chart) {    # chart
+            $chart_segment_cv->( $sheet, $data );
         }
 
         print "Sheet [$sheet_name] has been generated.\n";
