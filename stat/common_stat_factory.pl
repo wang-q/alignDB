@@ -606,17 +606,12 @@ my $group_distance = sub {
 
     my $sheet_name = 'group_distance';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
+    my @names = qw{AVG_distance AVG_pi COUNT STD_pi SUM_length length_proportion};
     {    # header
-        my @headers = qw{AVG_distance AVG_pi COUNT STD_pi SUM_length length_proportion};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     # make last portion
@@ -653,21 +648,30 @@ my $group_distance = sub {
         $last_portion,
     );
 
-    {    # contents
+    for my $group (@group_distance) {
         my $thaw_sql = $sql_file->retrieve('common-d1_pi_avg-0');
         $thaw_sql->add_select( "SUM(isw_length)",                     'SUM_length' );
         $thaw_sql->add_select( "SUM(isw_length) / $all_length * 100", 'length_proportion' );
-        my %option = (
-            sql_obj   => $thaw_sql,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group_col => 'isw_distance',
-            group     => \@group_distance,
+        $thaw_sql->add_where( 'isw_distance' => $group );
+
+        my $group_name;
+        if ( scalar @{$group} > 1 ) {
+            $group_name = $group->[0] . "--" . $group->[-1];
+        }
+        else {
+            $group_name = $group->[0];
+        }
+
+        $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                query_name => $group_name,
+                bind_value => $group,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_group_obj( $sheet, \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -680,17 +684,12 @@ my $group_density = sub {
 
     my $sheet_name = 'group_density';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
+    my @names = qw{AVG_density AVG_pi COUNT STD_pi SUM_length length_proportion};
     {    # header
-        my @headers = qw{AVG_density AVG_pi COUNT STD_pi SUM_length length_proportion};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     # make last portion
@@ -722,22 +721,31 @@ my $group_density = sub {
         $last_portion,
     );
 
-    {    # contents
+    for my $group (@group_density) {
         my $thaw_sql = $sql_file->retrieve('common-d1_pi_avg-0');
         $thaw_sql->add_select( "SUM(isw_length)",                     'SUM_length' );
         $thaw_sql->add_select( "SUM(isw_length) / $all_length * 100", 'length_proportion' );
+        $thaw_sql->add_where( 'isw_distance' => $group );
         $thaw_sql->replace( { distance => 'density' } );
-        my %option = (
-            sql_obj   => $thaw_sql,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group_col => 'isw_density',
-            group     => \@group_density,
+
+        my $group_name;
+        if ( scalar @{$group} > 1 ) {
+            $group_name = $group->[0] . "--" . $group->[-1];
+        }
+        else {
+            $group_name = $group->[0];
+        }
+
+        $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                query_name => $group_name,
+                bind_value => $group,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_group_obj( $sheet, \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -756,105 +764,104 @@ my $comb_coding = sub {
     my $write_sheet_d1 = sub {
         my ( $name, $feature_1, $feature_2 ) = @{ $_[0] };
 
+        my $sheet_name = "d1_comb_$name";
+        my $sheet;
+        $write_obj->row(0);
+        $write_obj->column(0);
+
         # make combine
-        my @combined;
+        my $combined;
         {
-            my $thaw_sql   = $sql_file->retrieve('common-d1_make_combine_coding-0');
-            my $standalone = [ -1, 0 ];
-            my %option     = (
-                sql_query  => $thaw_sql->as_sql,
-                threshold  => $combine,
-                standalone => $standalone,
-                bind_value => [ $feature_1, $feature_2 ],
+            my $thaw_sql = $sql_file->retrieve('common-d1_make_combine_coding-0');
+            $combined = $write_obj->make_combine(
+                {   sql_query  => $thaw_sql->as_sql,
+                    threshold  => $combine,
+                    standalone => [ -1, 0 ],
+                    bind_value => [ $feature_1, $feature_2 ],
+                    merge_last => 1,
+                }
             );
-            @combined = @{ $write_obj->make_combine( \%option ) };
         }
 
-        {
-            my $sheet_name = "d1_comb_$name";
-            my $sheet;
-            my ( $sheet_row, $sheet_col );
+        my $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
 
+        my @names = $thaw_sql->as_header;
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        }
+
+        my $data;
+        for my $comb ( @{$combined} ) {    # content
             my $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
+            $thaw_sql->add_where( 'isw.isw_distance' => $comb );
 
-            {    # header
-                my @headers = $thaw_sql->as_header;
-                ( $sheet_row, $sheet_col ) = ( 0, 0 );
-                my %option = (
-                    sheet_row => $sheet_row,
-                    sheet_col => $sheet_col,
-                    header    => \@headers,
-                );
-                ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-            }
-
-            {    # contents
-                my %option = (
-                    sql_obj     => $thaw_sql,
-                    sheet_row   => $sheet_row,
-                    sheet_col   => $sheet_col,
-                    combine_col => 'isw.isw_distance',
-                    combined    => \@combined,
-                    bind_value  => [ $feature_1, $feature_2 ],
-                );
-                ($sheet_row) = $write_obj->write_content_combine_obj( $sheet, \%option );
-            }
-
-            print "Sheet \"$sheet_name\" has been generated.\n";
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $feature_1, $feature_2, @{$comb} ],
+                    data       => $data,
+                }
+            );
         }
+
+        if ($add_chart) {    # chart
+            $chart_pigccv->( $sheet, $data );
+        }
+
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
     my $write_sheet_d2 = sub {
         my ( $name, $feature_1, $feature_2 ) = @{ $_[0] };
 
+        my $sheet_name = "d2_comb_$name";
+        my $sheet;
+        $write_obj->row(0);
+        $write_obj->column(0);
+
         # make combine
-        my @combined;
+        my $combined;
         {
             my $thaw_sql = $sql_file->retrieve('common-d1_make_combine_coding-0');
             $thaw_sql->replace( { distance => 'density' } );
-            my $standalone = [ -1, 0 ];
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                threshold  => $combine,
-                standalone => $standalone,
-                bind_value => [ $feature_1, $feature_2 ],
+            $combined = $write_obj->make_combine(
+                {   sql_query  => $thaw_sql->as_sql,
+                    threshold  => $combine,
+                    standalone => [ -1, 0 ],
+                    bind_value => [ $feature_1, $feature_2 ],
+                    merge_last => 1,
+                }
             );
-            @combined = @{ $write_obj->make_combine( \%option ) };
         }
 
-        {
-            my $sheet_name = "d2_comb_$name";
-            my $sheet;
-            my ( $sheet_row, $sheet_col );
+        my $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
+        $thaw_sql->replace( { distance => 'density' } );
 
+        my @names = $thaw_sql->as_header;
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        }
+
+        my $data;
+        for my $comb ( @{$combined} ) {    # content
             my $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
+            $thaw_sql->add_where( 'isw.isw_distance' => $comb );
             $thaw_sql->replace( { distance => 'density' } );
 
-            {    # header
-                my @headers = $thaw_sql->as_header;
-                ( $sheet_row, $sheet_col ) = ( 0, 0 );
-                my %option = (
-                    sheet_row => $sheet_row,
-                    sheet_col => $sheet_col,
-                    header    => \@headers,
-                );
-                ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-            }
-
-            {    # contents
-                my %option = (
-                    sql_obj     => $thaw_sql,
-                    sheet_row   => $sheet_row,
-                    sheet_col   => $sheet_col,
-                    combine_col => 'isw.isw_density',
-                    combined    => \@combined,
-                    bind_value  => [ $feature_1, $feature_2 ],
-                );
-                ($sheet_row) = $write_obj->write_content_combine_obj( $sheet, \%option );
-            }
-
-            print "Sheet \"$sheet_name\" has been generated.\n";
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $feature_1, $feature_2, @{$comb} ],
+                    data       => $data,
+                }
+            );
         }
+
+        if ($add_chart) {    # chart
+            $chart_pigccv->( $sheet, $data );
+        }
+
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
     for (@type_levels) {
@@ -882,105 +889,104 @@ my $comb_slippage = sub {
     my $write_sheet_d1 = sub {
         my ( $name, $feature_1, $feature_2 ) = @{ $_[0] };
 
+        my $sheet_name = "d1_comb_$name";
+        my $sheet;
+        $write_obj->row(0);
+        $write_obj->column(0);
+
         # make combine
-        my @combined;
+        my $combined;
         {
-            my $thaw_sql   = $sql_file->retrieve('common-d1_make_combine_slippage-0');
-            my $standalone = [ -1, 0 ];
-            my %option     = (
-                sql_query  => $thaw_sql->as_sql,
-                threshold  => $combine,
-                standalone => $standalone,
-                bind_value => [ $feature_1, $feature_2 ],
+            my $thaw_sql = $sql_file->retrieve('common-d1_make_combine_slippage-0');
+            $combined = $write_obj->make_combine(
+                {   sql_query  => $thaw_sql->as_sql,
+                    threshold  => $combine,
+                    standalone => [ -1, 0 ],
+                    bind_value => [ $feature_1, $feature_2 ],
+                    merge_last => 1,
+                }
             );
-            @combined = @{ $write_obj->make_combine( \%option ) };
         }
 
-        {
-            my $sheet_name = "d1_comb_$name";
-            my $sheet;
-            my ( $sheet_row, $sheet_col );
+        my $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
 
+        my @names = $thaw_sql->as_header;
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        }
+
+        my $data;
+        for my $comb ( @{$combined} ) {    # content
             my $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
+            $thaw_sql->add_where( 'isw.isw_distance' => $comb );
 
-            {    # header
-                my @headers = $thaw_sql->as_header;
-                ( $sheet_row, $sheet_col ) = ( 0, 0 );
-                my %option = (
-                    sheet_row => $sheet_row,
-                    sheet_col => $sheet_col,
-                    header    => \@headers,
-                );
-                ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-            }
-
-            {    # contents
-                my %option = (
-                    sql_obj     => $thaw_sql,
-                    sheet_row   => $sheet_row,
-                    sheet_col   => $sheet_col,
-                    combine_col => 'isw.isw_distance',
-                    combined    => \@combined,
-                    bind_value  => [ $feature_1, $feature_2 ],
-                );
-                ($sheet_row) = $write_obj->write_content_combine_obj( $sheet, \%option );
-            }
-
-            print "Sheet \"$sheet_name\" has been generated.\n";
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $feature_1, $feature_2, @{$comb} ],
+                    data       => $data,
+                }
+            );
         }
+
+        if ($add_chart) {    # chart
+            $chart_pigccv->( $sheet, $data );
+        }
+
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
     my $write_sheet_d2 = sub {
         my ( $name, $feature_1, $feature_2 ) = @{ $_[0] };
 
+        my $sheet_name = "d2_comb_$name";
+        my $sheet;
+        $write_obj->row(0);
+        $write_obj->column(0);
+
         # make combine
-        my @combined;
+        my $combined;
         {
             my $thaw_sql = $sql_file->retrieve('common-d1_make_combine_slippage-0');
             $thaw_sql->replace( { distance => 'density' } );
-            my $standalone = [ -1, 0 ];
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                threshold  => $combine,
-                standalone => $standalone,
-                bind_value => [ $feature_1, $feature_2 ],
+            $combined = $write_obj->make_combine(
+                {   sql_query  => $thaw_sql->as_sql,
+                    threshold  => $combine,
+                    standalone => [ -1, 0 ],
+                    bind_value => [ $feature_1, $feature_2 ],
+                    merge_last => 1,
+                }
             );
-            @combined = @{ $write_obj->make_combine( \%option ) };
         }
 
-        {
-            my $sheet_name = "d2_comb_$name";
-            my $sheet;
-            my ( $sheet_row, $sheet_col );
+        my $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
+        $thaw_sql->replace( { distance => 'density' } );
 
+        my @names = $thaw_sql->as_header;
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        }
+
+        my $data;
+        for my $comb ( @{$combined} ) {    # content
             my $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
+            $thaw_sql->add_where( 'isw.isw_distance' => $comb );
             $thaw_sql->replace( { distance => 'density' } );
 
-            {    # header
-                my @headers = $thaw_sql->as_header;
-                ( $sheet_row, $sheet_col ) = ( 0, 0 );
-                my %option = (
-                    sheet_row => $sheet_row,
-                    sheet_col => $sheet_col,
-                    header    => \@headers,
-                );
-                ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-            }
-
-            {    # contents
-                my %option = (
-                    sql_obj     => $thaw_sql,
-                    sheet_row   => $sheet_row,
-                    sheet_col   => $sheet_col,
-                    combine_col => 'isw.isw_density',
-                    combined    => \@combined,
-                    bind_value  => [ $feature_1, $feature_2 ],
-                );
-                ($sheet_row) = $write_obj->write_content_combine_obj( $sheet, \%option );
-            }
-
-            print "Sheet \"$sheet_name\" has been generated.\n";
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $feature_1, $feature_2, @{$comb} ],
+                    data       => $data,
+                }
+            );
         }
+
+        if ($add_chart) {    # chart
+            $chart_pigccv->( $sheet, $data );
+        }
+
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
     for (@type_levels) {
