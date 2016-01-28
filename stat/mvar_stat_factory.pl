@@ -1,54 +1,57 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long qw(HelpMessage);
 use Config::Tiny;
+use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-use AlignDB::WriteExcel;
+use DBI;
+use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
-use AlignDB::Util qw(:all);
+use AlignDB::ToXLSX;
+
+use lib "$FindBin::Bin/../lib";
 use AlignDB::Position;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-# stat parameter
-my $run = $Config->{stat}{run};
+mvar_stat_factory.pl - Variable lists for alignDB
 
-my $outfile;
+=head1 SYNOPSIS
 
-my $man  = 0;
-my $help = 0;
+    perl mvar_stat_factory.pl [options]
+      Options:
+        --help      -?          brief help message
+        --server    -s  STR     MySQL server IP/Domain name
+        --port      -P  INT     MySQL server port
+        --db        -d  STR     database name
+        --username  -u  STR     username
+        --password  -p  STR     password
+        --outfile   -o  STR     outfile filename
+        --run       -r  STR     run special analysis
+        --index                 add an index sheet
+
+=cut
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=s'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-    'output=s'   => \$outfile,
-    'run=s'      => \$run,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { HelpMessage(0) },
+    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
+    'username|u=s' => \( my $username = $Config->{database}{username} ),
+    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'output|o=s'   => \( my $outfile ),
+    'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
+    'index'        => \( my $add_index_sheet, ),
+) or HelpMessage(1);
 
 $outfile = "$db.mvar.xlsx" unless $outfile;
 
@@ -80,14 +83,12 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my $write_obj = AlignDB::WriteExcel->new(
-    mysql   => "$db:$server",
-    user    => $username,
-    passwd  => $password,
+my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
+    or die "Cannot connect to MySQL database at $db:$server";
+my $write_obj = AlignDB::ToXLSX->new(
+    dbh     => $dbh,
     outfile => $outfile,
 );
-
-my $dbh = $write_obj->dbh;
 my $pos_obj = AlignDB::Position->new( dbh => $dbh );
 
 #----------------------------#
@@ -122,27 +123,18 @@ my $all_freq;
 my $indel_basic = sub {
     my $sheet_name = 'indel_basic';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
-    {    # write header
-        my $query_name = 'Item';
-        my @headers    = qw{Type_name AVG_length STD_length COUNT};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            query_name => $query_name,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+    my @names = qw{Type_name AVG_length STD_length COUNT};
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    # write contents
+    # contents
     if ( $write_obj->check_column( 'indel', 'indel_coding' ) ) {
         my $query_name = 'Coding_type';
-        $sheet_row++;
-        my $sql_query = q{
+        my $sql_query  = q{
             SELECT CASE i.indel_coding
                      WHEN 0 THEN 'non_coding'
                      WHEN 1 THEN 'coding'
@@ -155,20 +147,18 @@ my $indel_basic = sub {
             FROM indel i
             GROUP BY coding
         };
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
-    # write contents
+    # contents
     if ( $write_obj->check_column( 'indel', 'indel_repeats' ) ) {
         my $query_name = 'Repeat_type';
-        $sheet_row++;
-        my $sql_query = q{
+        my $sql_query  = q{
             SELECT CASE i.indel_repeats
                      WHEN 0 THEN 'non_repeat'
                      WHEN 1 THEN 'repeat' 
@@ -181,20 +171,18 @@ my $indel_basic = sub {
             FROM indel i
             GROUP BY `repeat`
         };
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
-    # write contents
+    # contents
     if ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
         my $query_name = 'Slippage_type';
-        $sheet_row++;
-        my $sql_query = q{
+        my $sql_query  = q{
             SELECT CASE i.indel_slippage
                      WHEN 0 THEN 'non_slippage'
                      WHEN 1 THEN 'slippage' 
@@ -207,20 +195,18 @@ my $indel_basic = sub {
             FROM indel i
             GROUP BY slippage
         };
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
-    # write contents
+    # contents
     if ( $write_obj->check_column( 'indel', 'indel_type' ) ) {
         my $query_name = 'Indel_type';
-        $sheet_row++;
-        my $sql_query = q{
+        my $sql_query  = q{
             SELECT CASE i.indel_type
                      WHEN 'C' THEN 'Complex'
                      WHEN 'D' THEN 'Deletion' 
@@ -233,20 +219,18 @@ my $indel_basic = sub {
             FROM indel i
             GROUP BY type
         };
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
-    # write contents
+    # contents
     if ( $write_obj->check_column( 'indel', 'indel_freq' ) ) {
         my $query_name = 'Indel_freq';
-        $sheet_row++;
-        my $sql_query = q{
+        my $sql_query  = q{
             SELECT indel_freq,
                    AVG (i.indel_length) `AVG_length`,
                    STD(i.indel_length) `STD_length`,
@@ -254,20 +238,18 @@ my $indel_basic = sub {
             FROM indel i
             GROUP BY indel_freq
         };
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
-    # write contents
+    # contents
     {
         my $query_name = 'Length_group';
-        $sheet_row++;
-        my $sql_query = q{
+        my $sql_query  = q{
             SELECT CASE
                      WHEN indel_length BETWEEN 1 AND 5 THEN '1[1-5]'
                      WHEN indel_length BETWEEN 6 AND 10 THEN '2[6-10]'
@@ -281,16 +263,15 @@ my $indel_basic = sub {
             FROM indel i
             GROUP BY length
         };
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -299,27 +280,18 @@ my $indel_basic = sub {
 my $snp_basic = sub {
     my $sheet_name = 'snp_basic';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
-    {    # write header
-        my $query_name = 'Item';
-        my @headers    = qw{Type_name COUNT};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            query_name => $query_name,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+    my @names = qw{Type_name COUNT};
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    # write contents
+    # contents
     if ( $write_obj->check_column( 'snp', 'snp_coding' ) ) {
         my $query_name = 'Coding_type';
-        $sheet_row++;
-        my $sql_query = q{
+        my $sql_query  = q{
             SELECT CASE s.snp_coding
                      WHEN 0 THEN 'non_coding'
                      WHEN 1 THEN 'coding'
@@ -330,20 +302,18 @@ my $snp_basic = sub {
             FROM snp s
             GROUP BY coding
         };
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
-    # write contents
+    # contents
     if ( $write_obj->check_column( 'snp', 'snp_repeats' ) ) {
         my $query_name = 'Repeat_type';
-        $sheet_row++;
-        my $sql_query = q{
+        my $sql_query  = q{
             SELECT CASE s.snp_repeats
                      WHEN 0 THEN 'non_repeat'
                      WHEN 1 THEN 'repeat' 
@@ -354,20 +324,18 @@ my $snp_basic = sub {
             FROM snp s
             GROUP BY `repeat`
         };
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
-    # write contents
+    # contents
     if ( $write_obj->check_column( 'snp', 'snp_cpg' ) ) {
         my $query_name = 'CpG_type';
-        $sheet_row++;
-        my $sql_query = q{
+        my $sql_query  = q{
             SELECT CASE s.snp_cpg
                      WHEN 0 THEN 'non_CpG'
                      WHEN 1 THEN 'CpG' 
@@ -378,35 +346,32 @@ my $snp_basic = sub {
             FROM snp s
             GROUP BY cpg
         };
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
-    # write contents
+    # contents
     if ( $write_obj->check_column( 'snp', 'snp_freq' ) ) {
         my $query_name = 'SNP_freq';
-        $sheet_row++;
-        my $sql_query = q{
+        my $sql_query  = q{
             SELECT snp_freq,
                    COUNT(*) `COUNT`
             FROM snp s
             GROUP BY snp_freq
         };
-        my %option = (
-            query_name => $query_name,
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
+        $write_obj->write_sql(
+            $sheet,
+            {   query_name => $query_name,
+                sql_query  => $sql_query,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -415,23 +380,17 @@ my $snp_basic = sub {
 my $indel_list = sub {
     my $sheet_name = 'indel_list';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
-    {    # write header
-        my @headers = qw{indel_id common_name chr_name indel_start indel_end
-            indel_length indel_seq indel_gc indel_freq indel_occured indel_type
-            indel_slippage indel_coding indel_repeats};
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+    my @names = qw{indel_id common_name chr_name indel_start indel_end
+        indel_length indel_seq indel_gc indel_freq indel_occured indel_type
+        indel_slippage indel_coding indel_repeats};
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # write contents
+    {    # contents
         my $sql_query = q{
             SELECT 
                 i.align_id, i.indel_id, a.common_name, a.chr_name, i.indel_start,
@@ -461,17 +420,11 @@ my $indel_list = sub {
                 splice @row, $i, 1, $chr_pos;
             }
 
-            ($sheet_row) = $write_obj->write_row_direct(
-                $sheet,
-                {   row       => \@row,
-                    sheet_row => $sheet_row,
-                    sheet_col => $sheet_col,
-                }
-            );
+            $write_obj->write_row( $sheet, { row => \@row, } );
         }
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -480,23 +433,17 @@ my $indel_list = sub {
 my $snp_list = sub {
     my $sheet_name = 'snp_list';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
-    {    # write header
-        my @headers = qw{snp_id common_name chr_name snp_pos isw_distance
-            mutant_to snp_freq snp_occured
-            snp_coding snp_repeats snp_cpg};
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+    my @names = qw{snp_id common_name chr_name snp_pos isw_distance
+        mutant_to snp_freq snp_occured
+        snp_coding snp_repeats snp_cpg};
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # write contents
+    {    # contents
         my $sql_query = q{
             SELECT 
                 s.align_id, s.snp_id, a.common_name, a.chr_name, s.snp_pos,
@@ -527,13 +474,7 @@ my $snp_list = sub {
                 splice @row, $i, 1, $chr_pos;
             }
 
-            ($sheet_row) = $write_obj->write_row_direct(
-                $sheet,
-                {   row       => \@row,
-                    sheet_row => $sheet_row,
-                    sheet_col => $sheet_col,
-                }
-            );
+            $write_obj->write_row( $sheet, { row => \@row, } );
         }
     }
 
@@ -553,22 +494,15 @@ my $snp_codon_list = sub {
 
     my $sheet_name = 'snp_codon_list';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
-    {    # write header
-        my @headers
-            = qw{snp_id name mutant_to freq occured target codon_pos syn nsy };
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+    my @names = qw{snp_id name mutant_to freq occured target codon_pos syn nsy };
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # write contents
+    {    # contents
         my $sql_query = q{
             SELECT 
                 s.align_id, s.snp_id, a.chr_name, s.snp_pos, s.mutant_to,
@@ -599,20 +533,18 @@ my $snp_codon_list = sub {
             my $name = "$row[1]:$row[2]";
             my $target = substr $row[5], 0, 1;
 
-            ($sheet_row) = $write_obj->write_row_direct(
+            $write_obj->write_row(
                 $sheet,
                 {   row => [
                         $row[0], $name,   $row[3], $row[4], $row[5],
                         $target, $row[6], $row[7], $row[8],
                     ],
-                    sheet_row => $sheet_row,
-                    sheet_col => $sheet_col,
                 }
             );
         }
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -628,24 +560,18 @@ my $gene_list = sub {
 
     my $sheet_name = 'gene_list';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
-    {    # write header
-        my @headers = qw{ gene_id chr_name gene_start gene_end
-            gene_stable_id gene_external_name gene_biotype gene_strand
-            gene_is_full gene_multitrans gene_multiexons gene_subs gene_indel
-            gene_pi gene_syn gene_nsy };
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+    my @names = qw{ gene_id chr_name gene_start gene_end
+        gene_stable_id gene_external_name gene_biotype gene_strand
+        gene_is_full gene_multitrans gene_multiexons gene_subs gene_indel
+        gene_pi gene_syn gene_nsy };
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # write contents
+    {    # contents
         my $sql_query = q{
             SELECT 
                 w.align_id, g.gene_id, a.chr_name, w.window_start, w.window_end,
@@ -678,17 +604,11 @@ my $gene_list = sub {
                 splice @row, $i, 1, $chr_pos;
             }
 
-            ($sheet_row) = $write_obj->write_row_direct(
-                $sheet,
-                {   row       => \@row,
-                    sheet_row => $sheet_row,
-                    sheet_col => $sheet_col,
-                }
-            );
+            $write_obj->write_row( $sheet, { row => \@row, } );
         }
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 
 };
 
@@ -698,18 +618,12 @@ my $gene_list = sub {
 my $strain_list = sub {
     my $sheet_name = 'strain_list';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
-    {    # write header
-        my @headers = qw{strain ins del snp };
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row )
-            = $write_obj->write_header_direct( $sheet_name, \%option );
+    my @names = qw{strain ins del snp };
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     my $count_of = {
@@ -781,9 +695,9 @@ my $strain_list = sub {
         }
     }
 
-    {    # write contents
+    {    # contents
         for my $i ( 1 .. $all_freq ) {
-            ($sheet_row) = $write_obj->write_row_direct(
+            $write_obj->write_row(
                 $sheet,
                 {   row => [
                         $i,
@@ -791,17 +705,15 @@ my $strain_list = sub {
                         $count_of->{D}[ $i - 1 ],
                         $count_of->{S}[ $i - 1 ],
                     ],
-                    sheet_row => $sheet_row,
-                    sheet_col => $sheet_col,
                 }
             );
         }
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
-foreach my $n (@tasks) {
+for my $n (@tasks) {
     if ( $n == 1 )  { &$indel_basic;    next; }
     if ( $n == 2 )  { &$snp_basic;      next; }
     if ( $n == 3 )  { &$indel_list;     next; }
@@ -815,41 +727,3 @@ $stopwatch->end_message;
 exit;
 
 __END__
-
-=head1 NAME
-
-    mvar_stat_factory.pl - Generate statistical Excel files from alignDB
-
-=head1 SYNOPSIS
-
-    mvar_stat_factory.pl [options]
-     Options:
-       --help            brief help message
-       --man             full documentation
-       --server          MySQL server IP/Domain name
-       --db              database name
-       --username        username
-       --password        password
-       --output          output filename
-       --run             run special analysis
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
-
-=cut
