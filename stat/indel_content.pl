@@ -8,14 +8,12 @@ use Config::Tiny;
 use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
+use DBI;
 use Set::Scalar;
 
 use AlignDB::Stopwatch;
 use AlignDB::Util qw(calc_gc_ratio revcom);
-
-use lib "$FindBin::Bin/../lib";
-use AlignDB;
-use AlignDB::WriteExcel;
+use AlignDB::ToXLSX;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -55,7 +53,7 @@ GetOptions(
     'min_length=i' => \( my $min_length = 1 ),
     'max_length=i' => \( my $max_length = 50 ),
     'min_k=i'      => \( my $min_k      = 1 ),
-    'max_k=i'      => \( my $max_k      = 8 ),
+    'max_k=i'      => \( my $max_k      = 6 ),
 ) or HelpMessage(1);
 
 $outfile = "$db.indel.length$min_length-$max_length.xlsx" unless $outfile;
@@ -66,15 +64,12 @@ $outfile = "$db.indel.length$min_length-$max_length.xlsx" unless $outfile;
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Analysis indel content of $db...");
 
-my $write_obj = AlignDB::WriteExcel->new(
-    mysql   => "$db:$server",
-    user    => $username,
-    passwd  => $password,
+my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
+    or die "Cannot connect to MySQL database at $db:$server";
+my $write_obj = AlignDB::ToXLSX->new(
+    dbh     => $dbh,
     outfile => $outfile,
 );
-
-# Database handler
-my $dbh = $write_obj->dbh;
 
 #----------------------------------------------------------#
 # start update
@@ -84,13 +79,13 @@ my $dbh = $write_obj->dbh;
 my $indel_query = q{
     SELECT indel_seq
     FROM indel
-    WHERE align_id = ?
+    WHERE 1 = 1
     AND indel_seq NOT LIKE "%N%"
     AND indel_length between ? and ?
 };
 my $indel_sth = $dbh->prepare($indel_query);
 
-foreach my $k ( $min_k .. $max_k ) {
+for my $k ( $min_k .. $max_k ) {
 
     # write table
     my $write_sheet = sub {
@@ -98,43 +93,19 @@ foreach my $k ( $min_k .. $max_k ) {
         my $rows       = shift;
         my $sum        = shift;
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
-        # write header
-        {
-            my $header = [qw{k_nuc gc count freq}];
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                header    => $header,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-        };
+        my @names = qw{k_nuc gc count freq};
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        }
 
         for ( @{$rows} ) {
-            my %option = (
-                row       => $_,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-            );
-            ($sheet_row) = $write_obj->write_row_direct( $sheet, \%option );
+            $write_obj->write_row( $sheet, { row => $_ } );
         }
 
-        # write footer
-        {
-            $sheet_row += 2;
-            my $row = [ 'Total', '', $sum, '1.00' ];
-            my %option = (
-                row            => $row,
-                sheet_row      => $sheet_row,
-                sheet_col      => $sheet_col,
-                content_format => 'TOTAL',
-            );
-            ($sheet_row) = $write_obj->write_row_direct( $sheet, \%option );
-        }
-
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        print "Sheet [$sheet_name] has been generated.\n";
     };
 
     # total indel number, k_nuc rows, k_nuc_rc rows
@@ -143,12 +114,9 @@ foreach my $k ( $min_k .. $max_k ) {
         my %table;
 
         # for each indel
-        my $align_ids = $write_obj->get_align_ids;
-        for my $align_id ( @{$align_ids} ) {
-            $indel_sth->execute( $align_id, $min_length, $max_length );
-            while ( my ($indel_seq) = $indel_sth->fetchrow_array ) {
-                k_nuc_incr( \$indel_seq, $k, \%table );
-            }
+        $indel_sth->execute( $min_length, $max_length );
+        while ( my ($indel_seq) = $indel_sth->fetchrow_array ) {
+            k_nuc_incr( \$indel_seq, $k, \%table );
         }
 
         {    # remove invalid keys
@@ -210,9 +178,9 @@ sub k_nuc_permu {
     my @alphabets = qw{A C G T};
 
     my %table;
-    $table{$_} = '' foreach @alphabets;
-    foreach ( 2 .. $k ) {
-        foreach my $current_key ( keys %table ) {
+    $table{$_} = '' for @alphabets;
+    for ( 2 .. $k ) {
+        for my $current_key ( keys %table ) {
             $table{ $current_key . $_ } = '' foreach @alphabets;
             delete $table{$current_key};
         }
@@ -228,7 +196,7 @@ sub k_nuc_count {
     my $seq_length = length $$seq_ref;
     my %table;
 
-    foreach ( 0 .. $seq_length - $k ) {
+    for ( 0 .. $seq_length - $k ) {
         $table{ substr( $$seq_ref, $_, $k ) }++;
     }
 
@@ -242,7 +210,7 @@ sub k_nuc_incr {
 
     my $seq_length = length $$seq_ref;
 
-    foreach ( 0 .. $seq_length - $k ) {
+    for ( 0 .. $seq_length - $k ) {
         $hash_ref->{ substr( $$seq_ref, $_, $k ) }++;
     }
 }
