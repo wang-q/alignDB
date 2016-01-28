@@ -7,15 +7,14 @@ use Pod::Usage;
 use Config::Tiny;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-use Statistics::Lite qw(mean);
 use List::MoreUtils qw(firstidx all any uniq );
+use AlignDB::IntSpan;
+use AlignDB::Stopwatch;
+use AlignDB::Util qw(:all);
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
-use AlignDB::IntSpan;
-use AlignDB::Stopwatch;
-use AlignDB::Util qw(:all);
 use AlignDB::WriteExcel;
 
 #----------------------------------------------------------#
