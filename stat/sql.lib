@@ -436,6 +436,41 @@ select_map_reverse:
 where: []
 where_values: {}
 
+[common-d2_combine-0]
+---
+__CLASS__: AlignDB::SQL-1.0.0
+_sql: |
+  SELECT
+    isw.isw_density density,
+    COUNT(*) COUNT,
+    SUM(isw_length) SUM_length
+  FROM isw
+  GROUP BY
+    isw.isw_density
+bind: []
+from:
+- isw
+group:
+  column: isw.isw_density
+having: []
+indent: '  '
+joins: []
+replace: {}
+select:
+- isw.isw_density
+- COUNT(*)
+- SUM(isw_length)
+select_map:
+  COUNT(*): COUNT
+  SUM(isw_length): SUM_length
+  isw.isw_density: density
+select_map_reverse:
+  COUNT: COUNT(*)
+  SUM_length: SUM(isw_length)
+  density: isw.isw_density
+where: []
+where_values: {}
+
 [common-dd_group-4]
 ---
 __CLASS__: AlignDB::SQL-1.0.0

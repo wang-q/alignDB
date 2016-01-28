@@ -114,6 +114,24 @@ sub ns { return AlignDB::SQL->new; }
     print $sql->as_sql if $verbose;
 }
 
+{
+    my $name = 'common-d2_combine-0';
+
+    my $sql = ns();
+    $sql->add_select( 'isw.isw_density', 'density' );
+    $sql->add_select( 'COUNT(*)',        'COUNT' );
+
+    # for group last portion
+    $sql->add_select( 'SUM(isw_length)', 'SUM_length' );
+
+    $sql->from( ['isw'] );
+    $sql->group( { column => 'isw.isw_density' } );
+
+    $sql_file->set( $name, $sql );
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
 #SELECT
 #  isw.isw_distance distance,
 #  AVG(isw.isw_pi) AVG_pi,
