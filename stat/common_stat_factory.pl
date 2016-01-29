@@ -294,6 +294,50 @@ my $chart_snp_indel_ratio = sub {
     $write_obj->draw_xy( $sheet, \%opt );
 };
 
+my $chart_snp = sub {
+    my $sheet      = shift;
+    my $data_of    = shift;
+    my $sheet_name = $sheet->get_name;
+
+    # write charting data
+    my @keys = keys %{$data_of};
+    $write_obj->row(2);
+    $write_obj->column(7);
+
+    $write_obj->write_column( $sheet, { column => $data_of->{ $keys[-1] }[0], } );
+    for my $key (@keys) {
+        $write_obj->write_column(
+            $sheet,
+            {   query_name => $key,
+                column     => $data_of->{$key}[1],
+            }
+        );
+    }
+
+    my %opt = (
+        x_column      => 7,
+        y_column      => 8,
+        y_last_column => 8 + @keys - 1,
+        first_row     => 2,
+        last_row      => 18,
+        x_min_scale   => 0,
+        x_max_scale   => 15,
+        y_data        => [ map { $data_of->{$_}[1] } @keys ],
+        x_title       => "Distance to indels (d1)",
+        y_title       => "Substitutions",
+        top           => 20,
+        left          => 7,
+        height        => 480,
+        width         => 480,
+    );
+    if ( $sheet_name =~ /density/ ) {
+        $opt{x_title}     = "Indel density (d2)";
+        $opt{last_row}    = 33;
+        $opt{x_max_scale} = 30;
+    }
+    $write_obj->draw_dd( $sheet, \%opt );
+};
+
 #----------------------------------------------------------#
 # worksheet -- basic
 #----------------------------------------------------------#
@@ -1775,52 +1819,68 @@ my $distance_snp = sub {
 
     my $sheet_name = 'distance_snp';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
-    # Six base pair groups
-    my @base_pair = qw{A<=>C A<=>G A<=>T C<=>G C<=>T G<=>T};
+    # Six base groups
+    my @pairs     = qw{A<->C A<->G A<->T C<->G C<->T G<->T};
+    my $sql_query = q{
+        # base change
+        SELECT isw_distance, COUNT(snp_id) snp_number
+        FROM snp
+        inner join isw on snp.isw_id = isw.isw_id
+        WHERE 1=1
+        AND CONCAT(target_base, query_base) IN (?, ?)
+        AND isw_distance BETWEEN -1 AND 15
+        GROUP BY isw_distance
+    };
 
-    # header
-    {
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => [ 'distance', @base_pair ],
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+    {    # header
+        $sheet
+            = $write_obj->write_header( $sheet_name, { header => [ 'distance', 'snp_number' ] } );
     }
 
     # contents
-    {
-        my $sql_query1 = q{
-            # base change
-            SELECT i.isw_distance distance, COUNT(s.snp_id) snp_number
-            FROM snp s, isw i
-            WHERE s.isw_id = i.isw_id
-            AND i.isw_distance BETWEEN -1 AND 30
-            GROUP BY i.isw_distance
-        };
-        my $sql_query2 = q{
-            # base change
-            SELECT i.isw_distance distance, COUNT(s.snp_id) snp_number
-            FROM snp s, isw i
-            WHERE s.isw_id = i.isw_id
-            AND CONCAT(target_base, query_base) IN (?, ?)
-            AND i.isw_distance BETWEEN -1 AND 30
-            GROUP BY i.isw_distance
-        };
-        my %option = (
-            sql_query1 => $sql_query1,
-            sql_query2 => $sql_query2,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            base_pair  => \@base_pair,
+    tie my %data_of, 'Tie::IxHash';
+    my %sum_of;
+    for (@pairs) {
+        my $group_name = $_;
+        $write_obj->increase_row;
+
+        my $pair_1 = $_;
+        $pair_1 =~ s/\W//g;
+        my $pair_2 = reverse $pair_1;
+
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $sql_query,
+                query_name => $group_name,
+                bind_value => [ $pair_1, $pair_2 ],
+                data       => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_snp( $sheet, \%option );
+        $data_of{$group_name} = $data;
+        for my $idx ( 0 .. @{ $data->[0] } - 1 ) {
+            my $category = $data->[0][$idx];
+            my $value    = $data->[1][$idx];
+            $sum_of{$category} += $value;
+        }
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    for my $group (@pairs) {
+        my $data = $data_of{$group};
+        for my $idx ( 0 .. @{ $data->[0] } - 1 ) {
+            my $category = $data->[0][$idx];
+            my $value    = $data->[1][$idx];
+            $data->[1][$idx] = $value / $sum_of{$category};
+        }
+    }
+
+    if ($add_chart) {    # chart
+        $chart_snp->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -1833,52 +1893,68 @@ my $density_snp = sub {
 
     my $sheet_name = 'density_snp';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
-    # Six base pair groups
-    my @base_pair = qw/A<=>C A<=>G A<=>T C<=>G C<=>T G<=>T/;
+    # Six base groups
+    my @pairs     = qw{A<->C A<->G A<->T C<->G C<->T G<->T};
+    my $sql_query = q{
+        # base change
+        SELECT isw_density, COUNT(snp_id) snp_number
+        FROM snp
+        inner join isw on snp.isw_id = isw.isw_id
+        WHERE 1=1
+        AND CONCAT(target_base, query_base) IN (?, ?)
+        AND isw_density BETWEEN -1 AND 30
+        GROUP BY isw_density
+    };
 
-    # header
-    {
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => [ 'density', @base_pair ],
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+    {    # header
+        $sheet
+            = $write_obj->write_header( $sheet_name, { header => [ 'density', 'snp_number' ] } );
     }
 
     # contents
-    {
-        my $sql_query1 = q{
-            # base change
-            SELECT i.isw_density density, COUNT(s.snp_id) snp_number
-            FROM snp s, isw i
-            WHERE s.isw_id = i.isw_id
-            AND i.isw_density BETWEEN -1 AND 60
-            GROUP BY i.isw_density
-        };
-        my $sql_query2 = q{
-            # base change
-            SELECT i.isw_density density, COUNT(s.snp_id) snp_number
-            FROM snp s, isw i
-            WHERE s.isw_id = i.isw_id
-            AND CONCAT(target_base, query_base) IN (?, ?)
-            AND i.isw_density BETWEEN -1 AND 60
-            GROUP BY i.isw_density
-        };
-        my %option = (
-            sql_query1 => $sql_query1,
-            sql_query2 => $sql_query2,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            base_pair  => \@base_pair,
+    tie my %data_of, 'Tie::IxHash';
+    my %sum_of;
+    for (@pairs) {
+        my $group_name = $_;
+        $write_obj->increase_row;
+
+        my $pair_1 = $_;
+        $pair_1 =~ s/\W//g;
+        my $pair_2 = reverse $pair_1;
+
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $sql_query,
+                query_name => $group_name,
+                bind_value => [ $pair_1, $pair_2 ],
+                data       => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_snp( $sheet, \%option );
+        $data_of{$group_name} = $data;
+        for my $idx ( 0 .. @{ $data->[0] } - 1 ) {
+            my $category = $data->[0][$idx];
+            my $value    = $data->[1][$idx];
+            $sum_of{$category} += $value;
+        }
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    for my $group (@pairs) {
+        my $data = $data_of{$group};
+        for my $idx ( 0 .. @{ $data->[0] } - 1 ) {
+            my $category = $data->[0][$idx];
+            my $value    = $data->[1][$idx];
+            $data->[1][$idx] = $value / $sum_of{$category};
+        }
+    }
+
+    if ($add_chart) {    # chart
+        $chart_snp->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -1917,36 +1993,31 @@ my $align_coding = sub {
 
         my $sheet_name = "align_coding_$order";
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
+        my $thaw_sql = $sql_file->retrieve('common-align-0');
+
+        my @names = $thaw_sql->as_header;
         {    # header
-            my @headers = ( qw{distance AVG_pi COUNT STD_pi}, $low_border, $high_border );
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         {    # contents
-            my $thaw_sql = $sql_file->retrieve('common-align-0');
             $thaw_sql->add_where( 'align.align_coding' => { op => '>=', value => '1' } );
             $thaw_sql->add_where( 'align.align_coding' => { op => '<=', value => '1' } );
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $low_border, $high_border ],
+            $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $low_border, $high_border ],
+                }
             );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
     };
 
-    foreach (@coding_levels) {
+    for (@coding_levels) {
         &$write_sheet(@$_);
     }
 };
@@ -1987,41 +2058,36 @@ my $align_repeat = sub {
 
         my $sheet_name = "align_repeat_$order";
         my $sheet;
-        my ( $sheet_row, $sheet_col );
+        $write_obj->row(0);
+        $write_obj->column(0);
 
+        my $thaw_sql = $sql_file->retrieve('common-align-0');
+
+        my @names = $thaw_sql->as_header;
         {    # header
-            my @headers = ( qw{distance AVG_pi COUNT STD_pi}, $low_border, $high_border );
-            ( $sheet_row, $sheet_col ) = ( 0, 0 );
-            my %option = (
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                header    => \@headers,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         {    # contents
-            my $thaw_sql = $sql_file->retrieve('common-align-0');
             $thaw_sql->add_where( 'align.align_repeats' => { op => '>=', value => '1' } );
             $thaw_sql->add_where( 'align.align_repeats' => { op => '<=', value => '1' } );
-            my %option = (
-                sql_query  => $thaw_sql->as_sql,
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                bind_value => [ $low_border, $high_border ],
+            $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    bind_value => [ $low_border, $high_border ],
+                }
             );
-            ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
         }
 
         print "Sheet \"$sheet_name\" has been generated.\n";
     };
 
-    foreach (@repeat_levels) {
+    for (@repeat_levels) {
         &$write_sheet(@$_);
     }
 };
 
-foreach my $n (@tasks) {
+for my $n (@tasks) {
     if ( $n == 1 ) { &$basic; &$process; &$summary; next; }
     if ( $n == 2 )  { &$pi_gc_cv;             next; }
     if ( $n == 3 )  { &$comb_pi_gc_cv;        next; }
