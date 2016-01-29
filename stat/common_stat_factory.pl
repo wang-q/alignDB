@@ -1302,50 +1302,52 @@ my $indel_position_group = sub {
     unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
+    unless ( $write_obj->check_column( 'indel', 'indel_coding' ) ) {
+        return;
+    }
 
     my $sheet_name = 'indel_position_group';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # header
-        my @headers = qw{isw_distance AVG_pi COUNT STD_pi};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $sheet_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     my @groups
         = ( [ 1, 1, 0, 0 ], [ 1, 1, 1, 1 ], [ 0, 0, 0, 0 ], [ 0, 0, 1, 1 ], );
 
-    {    # contents
-        my $sql_query = q{
-            SELECT  isw.isw_distance distance,
-                    AVG(isw.isw_pi) AVG_pi,
-                    COUNT(isw.isw_pi) COUNT,
-                    STD(isw.isw_pi) STD_pi
-            FROM    indel INNER JOIN isw ON indel.indel_id = isw.isw_indel_id
-            WHERE   1 = 1
-            AND     isw.isw_distance <= 5
-            AND     indel.indel_coding BETWEEN ? AND ?
-            AND     indel.indel_repeats BETWEEN ? AND ?
-            GROUP BY isw.isw_distance
-            ORDER BY isw.isw_distance ASC
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group     => \@groups,
-        );
-        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+
+    my @names = $thaw_sql->as_header;
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    tie my %data_of, 'Tie::IxHash';
+    for my $item (@groups) {    # content
+        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        $thaw_sql->add_where( 'indel_coding'  => { op => '>=', value => '0' } );
+        $thaw_sql->add_where( 'indel_coding'  => { op => '<=', value => '0' } );
+        $thaw_sql->add_where( 'indel_repeats' => { op => '>=', value => '0' } );
+        $thaw_sql->add_where( 'indel_repeats' => { op => '<=', value => '0' } );
+
+        my $group_name = $item->[0] . "--" . $item->[2];
+        $write_obj->increase_row;
+
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                query_name => $group_name,
+                bind_value => $item,
+                data       => 1,
+            }
+        );
+        $data_of{$group_name} = $data;
+    }
+
+    if ($add_chart) {    # chart
+        $chart_series->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -1361,46 +1363,43 @@ my $indel_coding_group = sub {
 
     my $sheet_name = 'indel_coding_group';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
+    my @groups = ( [ 0, 0 ], [ 1, 1 ], );
+
+    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+
+    my @names = $thaw_sql->as_header;
     {    # header
-        my @headers = qw{isw_distance AVG_pi COUNT STD_pi};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $sheet_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    my @groups
-        = ( [ 0, 0 ], [ 1, 1 ], );
+    tie my %data_of, 'Tie::IxHash';
+    for my $item (@groups) {    # content
+        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        $thaw_sql->add_where( 'indel_coding' => { op => '>=', value => '0' } );
+        $thaw_sql->add_where( 'indel_coding' => { op => '<=', value => '0' } );
 
-    {    # contents
-        my $sql_query = q{
-            SELECT  isw.isw_distance distance,
-                    AVG(isw.isw_pi) AVG_pi,
-                    COUNT(isw.isw_pi) COUNT,
-                    STD(isw.isw_pi) STD_pi
-            FROM    indel INNER JOIN isw ON indel.indel_id = isw.isw_indel_id
-            WHERE   1 = 1
-            AND     isw.isw_distance <= 5
-            AND     indel.indel_coding BETWEEN ? AND ?
-            GROUP BY isw.isw_distance
-            ORDER BY isw.isw_distance ASC
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group     => \@groups,
+        my $group_name = $item->[0] . "--" . $item->[1];
+        $write_obj->increase_row;
+
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                query_name => $group_name,
+                bind_value => $item,
+                data       => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+        $data_of{$group_name} = $data;
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_series->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -1416,45 +1415,44 @@ my $indel_repeat_group = sub {
 
     my $sheet_name = 'indel_repeat_group';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
+    my @groups
+        = ( [ 0, 0 ], [ 1, 1 ], );
+
+    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+
+    my @names = $thaw_sql->as_header;
     {    # header
-        my @headers = qw{isw_distance AVG_pi COUNT STD_pi};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $sheet_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    my @groups = ( [ 0, 0 ], [ 1, 1 ], );
+    tie my %data_of, 'Tie::IxHash';
+    for my $item (@groups) {    # content
+        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        $thaw_sql->add_where( 'indel_repeats' => { op => '>=', value => '0' } );
+        $thaw_sql->add_where( 'indel_repeats' => { op => '<=', value => '0' } );
 
-    {    # contents
-        my $sql_query = q{
-            SELECT  isw.isw_distance distance,
-                    AVG(isw.isw_pi) AVG_pi,
-                    COUNT(isw.isw_pi) COUNT,
-                    STD(isw.isw_pi) STD_pi
-            FROM    indel INNER JOIN isw ON indel.indel_id = isw.isw_indel_id
-            WHERE   1 = 1
-            AND     isw.isw_distance <= 5
-            AND     indel.indel_repeats BETWEEN ? AND ?
-            GROUP BY isw.isw_distance
-            ORDER BY isw.isw_distance ASC
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group     => \@groups,
+        my $group_name = $item->[0] . "--" . $item->[1];
+        $write_obj->increase_row;
+
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                query_name => $group_name,
+                bind_value => $item,
+                data       => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+        $data_of{$group_name} = $data;
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_series->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -1470,45 +1468,43 @@ my $indel_slip_group = sub {
 
     my $sheet_name = 'indel_slip_group';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # header
-        my @headers = qw{isw_distance AVG_pi COUNT STD_pi};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $sheet_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     my @groups = ( [ 0, 0 ], [ 1, 1 ], );
 
-    {    # contents
-        my $sql_query = q{
-            SELECT  isw.isw_distance distance,
-                    AVG(isw.isw_pi) AVG_pi,
-                    COUNT(isw.isw_pi) COUNT,
-                    STD(isw.isw_pi) STD_pi
-            FROM    indel INNER JOIN isw ON indel.indel_id = isw.isw_indel_id
-            WHERE   1 = 1
-            AND     isw.isw_distance <= 5
-            AND     indel.indel_slippage BETWEEN ? AND ?
-            GROUP BY isw.isw_distance
-            ORDER BY isw.isw_distance ASC
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group     => \@groups,
-        );
-        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+
+    my @names = $thaw_sql->as_header;
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    tie my %data_of, 'Tie::IxHash';
+    for my $item (@groups) {    # content
+        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        $thaw_sql->add_where( 'indel_slippage' => { op => '>=', value => '0' } );
+        $thaw_sql->add_where( 'indel_slippage' => { op => '<=', value => '0' } );
+
+        my $group_name = $item->[0] . "--" . $item->[1];
+        $write_obj->increase_row;
+
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                query_name => $group_name,
+                bind_value => $item,
+                data       => 1,
+            }
+        );
+        $data_of{$group_name} = $data;
+    }
+
+    if ($add_chart) {    # chart
+        $chart_series->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -1521,46 +1517,44 @@ my $indel_gc_group = sub {
 
     my $sheet_name = 'indel_gc_group';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # header
-        my @headers = qw{isw_distance AVG_pi COUNT STD_pi};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $sheet_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     my @groups = ( [ 0, 0.2999 ], [ 0.3, 0.4999 ], [ 0.5, 1 ], );
 
-    {    # contents
-        my $sql_query = q{
-            SELECT  isw.isw_distance distance,
-                    AVG(isw.isw_pi) AVG_pi,
-                    COUNT(isw.isw_pi) COUNT,
-                    STD(isw.isw_pi) STD_pi
-            FROM    indel INNER JOIN isw ON indel.indel_id = isw.isw_indel_id
-            WHERE   1 = 1
-            AND     isw.isw_distance <= 5
-            AND     indel.indel_gc BETWEEN ? AND ?
-            AND     indel.indel_length >= 10
-            GROUP BY isw.isw_distance
-            ORDER BY isw.isw_distance ASC
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group     => \@groups,
-        );
-        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
+    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+
+    my @names = $thaw_sql->as_header;
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    tie my %data_of, 'Tie::IxHash';
+    for my $item (@groups) {    # content
+        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        $thaw_sql->add_where( 'indel_gc' => { op => '>=', value => '0' } );
+        $thaw_sql->add_where( 'indel_gc' => { op => '<=', value => '0' } );
+        $thaw_sql->add_where( 'indel_length' => \' >= 5' );
+
+        my $group_name = $item->[0] . "--" . $item->[1];
+        $write_obj->increase_row;
+
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                query_name => $group_name,
+                bind_value => $item,
+                data       => 1,
+            }
+        );
+        $data_of{$group_name} = $data;
+    }
+
+    if ($add_chart) {    # chart
+        $chart_series->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -1784,7 +1778,7 @@ my $distance_snp = sub {
     my ( $sheet_row, $sheet_col );
 
     # Six base pair groups
-    my @base_pair = qw/A<=>C A<=>G A<=>T C<=>G C<=>T G<=>T/;
+    my @base_pair = qw{A<=>C A<=>G A<=>T C<=>G C<=>T G<=>T};
 
     # header
     {
@@ -2035,7 +2029,7 @@ foreach my $n (@tasks) {
     if ( $n == 5 )  { &$comb_coding;          next; }
     if ( $n == 6 )  { &$comb_slippage;        next; }
     if ( $n == 8 )  { &$dd_group;             next; }
-    if ( $n == 9 )  { &$indel_length_group;     next; }
+    if ( $n == 9 )  { &$indel_length_group;   next; }
     if ( $n == 10 ) { &$indel_extand_group;   next; }
     if ( $n == 11 ) { &$indel_position_group; next; }
     if ( $n == 12 ) { &$indel_coding_group;   &$indel_repeat_group; next; }
