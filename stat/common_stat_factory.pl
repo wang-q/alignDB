@@ -1885,71 +1885,6 @@ my $indel_length_100 = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- snp_base_change
-#----------------------------------------------------------#
-my $snp_base_change = sub {
-    my $sheet_name = 'snp_base_change';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # header
-        my @headers = qw{base_change snp_number};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $sheet_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
-
-    {    # contents
-        $sheet_row++;
-        my $query_name = 'T2Q';
-        my $sql_query  = q{
-        SELECT s.base_change, s.snp_number / total.total * 100
-        FROM (SELECT count(*) total
-             FROM snp) total,
-             (SELECT CONCAT(target_base, "->", query_base) base_change,
-                     COUNT(snp_id) snp_number
-             FROM snp
-             GROUP BY CONCAT(target_base,  "->",query_base) ) s
-        };
-        my %option = (
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            query_name => $query_name,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    {
-        $sheet_row++;
-        my $query_name = 'Q2T';
-        my $sql_query  = q{
-        SELECT s.base_change, s.snp_number / total.total * 100
-        FROM (SELECT count(*) total
-             FROM snp) total,
-             (SELECT CONCAT(query_base, "->",target_base ) base_change,
-                     COUNT(snp_id) snp_number
-             FROM snp
-             GROUP BY CONCAT(query_base, "->",target_base ) ) s
-        };
-        my %option = (
-            sql_query  => $sql_query,
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            query_name => $query_name,
-        );
-        ($sheet_row) = $write_obj->write_content_direct( $sheet, \%option );
-    }
-
-    print "Sheet \"$sheet_name\" has been generated.\n";
-};
-
-#----------------------------------------------------------#
 # worksheet -- distance_snp
 #----------------------------------------------------------#
 my $distance_snp = sub {
@@ -2220,7 +2155,6 @@ foreach my $n (@tasks) {
     if ( $n == 13 ) { &$indel_slip_group;     &$indel_gc_group; next; }
     if ( $n == 14 ) { &$snp_indel_ratio;      next; }
     if ( $n == 15 ) { &$indel_length;         &$indel_length_100; next; }
-    if ( $n == 16 ) { &$snp_base_change;      next; }
     if ( $n == 17 ) { &$distance_snp;         &$density_snp; next; }
 
     if ( $n == 51 ) { &$align_coding; next; }

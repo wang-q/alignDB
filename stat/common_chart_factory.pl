@@ -257,32 +257,6 @@ my @sheet_names = @{ $excel_obj->sheet_names };
 {
 
     #----------------------------#
-    # worksheet -- snp_base_change
-    #----------------------------#
-    my $sheet_name = 'snp_base_change';
-    my @group_name = qw/T2Q Q2T/;
-    my %option     = (
-        chart_serial   => 1,
-        y_scale_unit   => 2,
-        x_title        => "Subsitution Type",
-        y_title        => "Proportion of substitutions",
-        Height         => 300,
-        Width          => 390,
-        Top            => 14.25 * 17,
-        Left           => 360,
-        group_name     => \@group_name,
-        section_top    => 2,
-        section_end    => 14,
-        section_length => 13,
-        x_orientation  => 90,
-    );
-
-    $excel_obj->draw_dd( $sheet_name, \%option );
-}
-
-{
-
-    #----------------------------#
     # worksheet -- density_snp
     #----------------------------#
     my $sheet_name = 'density_snp';
