@@ -9,6 +9,7 @@ use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
 
 use DBI;
+use Tie::IxHash;
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::SQL;
@@ -188,6 +189,67 @@ my $chart_pigccv = sub {
     delete $opt{y2_column};
     delete $opt{y2_data};
     delete $opt{y2_title};
+};
+
+my $chart_dd = sub {
+    my $sheet      = shift;
+    my $data_of    = shift;
+    my $sheet_name = $sheet->get_name;
+
+    # write charting data
+    my @keys = keys %{$data_of};
+    $write_obj->row(2);
+    $write_obj->column(7);
+
+    $write_obj->write_column( $sheet, { column => $data_of->{ $keys[-1] }[0], } );
+    for my $key (@keys) {
+        $write_obj->write_column(
+            $sheet,
+            {   query_name => $key,
+                column     => $data_of->{$key}[1],
+            }
+        );
+    }
+
+    my %opt = (
+        x_column      => 7,
+        y_column      => 8,
+        y_last_column => 8 + @keys - 1,
+        first_row     => 2,
+        last_row      => 12,
+        x_min_scale   => 0,
+        x_max_scale   => 10,
+        y_data        => [ map { $data_of->{$_}[1] } @keys ],
+        x_title       => "Distance to indels (d1)",
+        y_title       => "Nucleotide diversity",
+        top           => 20,
+        left          => 7,
+        height        => 480,
+        width         => 480,
+    );
+    if ( $sheet_name =~ /_gc$/ ) {
+        $opt{y_title} = "GC proportion";
+    }
+    $write_obj->draw_dd( $sheet, \%opt );
+};
+
+my $chart_snp_indel_ratio = sub {
+    my $sheet = shift;
+    my $data  = shift;
+
+    my %opt = (
+        x_column  => 1,
+        y_column  => 2,
+        first_row => 1,
+        last_row  => scalar @{ $data->[0] },
+        x_data    => $data->[0],
+        y_data    => $data->[1],
+        x_title   => "Nucleotide diversity",
+        y_title   => "SNP/Indel ratio",
+        top       => 1,
+        left      => 10,
+    );
+    $write_obj->draw_xy( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -1009,35 +1071,42 @@ my $dd_group = sub {
     {
         my $sheet_name = 'dd_group';
         my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # header
-            my @headers = qw{isw_distance AVG_pi COUNT STD_pi};
-            ( $sheet_row, $sheet_col ) = ( 0, 1 );
-            my %option = (
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                header     => \@headers,
-                query_name => $sheet_name,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
+        $write_obj->row(0);
+        $write_obj->column(1);
 
         my @dd_density_group
-            = ( [ 1, 2 ], [ 3, 6 ], [ 7, 10 ], [ 11, 18 ], [ 19, 28 ], [ 29, 999 ], );
+            = ( [ 1, 2 ], [ 3, 6 ], [ 7, 10 ], [ 11, 18 ], [ 19, 999 ], );
 
-        {    # contents
-            my $thaw_sql = $sql_file->retrieve('common-dd_group-4');
-            my %option   = (
-                sql_query => $thaw_sql->as_sql,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                group     => \@dd_density_group,
-            );
-            ($sheet_row) = $write_obj->write_content_dd( $sheet, \%option );
+        my $thaw_sql = $sql_file->retrieve('common-dd_group');
+
+        my @names = $thaw_sql->as_header;
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        tie my %data_of, 'Tie::IxHash';
+        for my $item (@dd_density_group) {    # content
+            my $thaw_sql = $sql_file->retrieve('common-dd_group');
+
+            my $group_name = $item->[0] . "--" . $item->[1];
+            $write_obj->increase_row;
+
+            my $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    query_name => $group_name,
+                    bind_value => [ @{$item}, $item->[0] ],
+                    data       => 1,
+                }
+            );
+            $data_of{$group_name} = $data;
+        }
+
+        if ($add_chart) {    # chart
+            $chart_dd->( $sheet, \%data_of );
+        }
+
+        print "Sheet [$sheet_name] has been generated.\n";
     }
 
     #----------------------------------------------------------#
@@ -1046,41 +1115,42 @@ my $dd_group = sub {
     {
         my $sheet_name = 'dd_group_gc';
         my $sheet;
-        my ( $sheet_row, $sheet_col );
-
-        {    # header
-            my @headers = qw{isw_distance AVG_gc COUNT STD_gc};
-            ( $sheet_row, $sheet_col ) = ( 0, 1 );
-            my %option = (
-                sheet_row  => $sheet_row,
-                sheet_col  => $sheet_col,
-                header     => \@headers,
-                query_name => $sheet_name,
-            );
-            ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-        }
+        $write_obj->row(0);
+        $write_obj->column(1);
 
         my @dd_density_group
-            = ( [ 1, 2 ], [ 3, 10 ], [ 11, 18 ], [ 19, 999 ], );
+            = ( [ 1, 2 ], [ 3, 6 ], [ 7, 10 ], [ 11, 18 ], [ 19, 999 ], );
 
-        {    # contents
-            my $thaw_sql = $sql_file->retrieve('common-dd_group-4');
-            $thaw_sql->replace(
-                {   AVG_pi => 'AVG_gc',
-                    STD_pi => 'STD_gc',
-                    isw_pi => 'isw_average_gc',
-                }
-            );
-            my %option = (
-                sql_query => $thaw_sql->as_sql,
-                sheet_row => $sheet_row,
-                sheet_col => $sheet_col,
-                group     => \@dd_density_group,
-            );
-            ($sheet_row) = $write_obj->write_content_dd( $sheet, \%option );
+        my $thaw_sql = $sql_file->retrieve('common-dd_group_gc');
+
+        my @names = $thaw_sql->as_header;
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
-        print "Sheet \"$sheet_name\" has been generated.\n";
+        tie my %data_of, 'Tie::IxHash';
+        for my $item (@dd_density_group) {    # content
+            my $thaw_sql = $sql_file->retrieve('common-dd_group_gc');
+
+            my $group_name = $item->[0] . "--" . $item->[1];
+            $write_obj->increase_row;
+
+            my $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $thaw_sql->as_sql,
+                    query_name => $group_name,
+                    bind_value => [ @{$item}, $item->[0] ],
+                    data       => 1,
+                }
+            );
+            $data_of{$group_name} = $data;
+        }
+
+        if ($add_chart) {    # chart
+            $chart_dd->( $sheet, \%data_of );
+        }
+
+        print "Sheet [$sheet_name] has been generated.\n";
     }
 };
 
@@ -1612,7 +1682,8 @@ my $indel_gc_group = sub {
 my $snp_indel_ratio = sub {
     my $sheet_name = 'snp_indel_ratio';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     # create temporary table
     {
@@ -1658,19 +1729,14 @@ my $snp_indel_ratio = sub {
         @group_align = @{ $write_obj->make_combine_piece( \%option ) };
     }
 
+    my @names
+        = qw{AVG_pi AVG_SNP/Indel COUNT AVG_align_length SUM_align_length AVG_SNP/kb AVG_Indel/kb};
     {    # header
-        my @headers
-            = qw{AVG_pi AVG_SNP/Indel COUNT AVG_align_length SUM_align_length AVG_SNP/kb AVG_Indel/kb};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $sheet_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
+    my $data = [];
+    push @{$data}, [] for @names;
     {    # align query
         my $sql_query = q{
             SELECT AVG(p.pi) `AVG_pi`,
@@ -1683,14 +1749,32 @@ my $snp_indel_ratio = sub {
             FROM pi_group p
             WHERE p_id IN
         };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group     => \@group_align,
-        );
 
-        ($sheet_row) = $write_obj->write_content_group( $sheet, \%option );
+        my @group_names;
+        for (@group_align) {
+            my @range        = @$_;
+            my $in_list      = '(' . join( ',', @range ) . ')';
+            my $sql_query_in = $sql_query . $in_list;
+            my $group_name;
+            if ( scalar @range > 1 ) {
+                $group_name = $range[0] . "--" . $range[-1];
+            }
+            else {
+                $group_name = $range[0];
+            }
+            push @group_names, $group_name;
+
+            my $sth = $dbh->prepare($sql_query_in);
+            $sth->execute;
+            while ( my @row = $sth->fetchrow_array ) {
+                for my $i ( 0 .. $#names ) {
+                    push @{ $data->[$i] }, $row[$i];
+                }
+            }
+        }
+
+        $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
+        $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
     }
 
     {    # drop temporary table
@@ -1701,7 +1785,11 @@ my $snp_indel_ratio = sub {
         $write_obj->excute_sql( \%option );
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_snp_indel_ratio->( $sheet, $data );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -1710,31 +1798,43 @@ my $snp_indel_ratio = sub {
 my $indel_length = sub {
     my $sheet_name = 'indel_length';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
+    my $thaw_sql = $sql_file->retrieve('common-indel_length-0');
+
+    my @names = $thaw_sql->as_header;
     {    # header
-        my @headers = qw{indel_length indel_number AVG_gc_ratio indel_sum};
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # contents
-        my $thaw_sql = $sql_file->retrieve('common-indel_length-0');
+    {    # content
+        my $sth = $dbh->prepare( $thaw_sql->as_sql );
+        $sth->execute;
 
-        my %option = (
-            sql_query => $thaw_sql->as_sql,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-        );
-        ($sheet_row) = $write_obj->write_content_highlight( $sheet, \%option );
+        my $last_number;
+        while ( my @row = $sth->fetchrow_array ) {
+
+            # Highlight 'special' indels
+            my $style = 'NORMAL';
+            if ( defined $last_number ) {
+                if ( $row[1] > $last_number ) {
+                    $style = 'HIGHLIGHT';
+                }
+            }
+            $last_number = $row[1];
+
+            for ( my $i = 0; $i < scalar @row; $i++ ) {
+                $sheet->write(
+                    $write_obj->row, $i + $write_obj->column,
+                    $row[$i],        $write_obj->format->{$style}
+                );
+            }
+            $write_obj->increase_row;
+        }
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -1743,33 +1843,45 @@ my $indel_length = sub {
 my $indel_length_100 = sub {
     my $sheet_name = 'indel_length_100';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
+    $write_obj->row(0);
+    $write_obj->column(0);
 
+    my $thaw_sql = $sql_file->retrieve('common-indel_length-0');
+    $thaw_sql->add_where( 'left_extand'  => \'>= 100' );
+    $thaw_sql->add_where( 'right_extand' => \'>= 100' );
+
+    my @names = $thaw_sql->as_header;
     {    # header
-        my @headers = qw{indel_length indel_number AVG_gc_ratio indel_sum};
-        ( $sheet_row, $sheet_col ) = ( 0, 0 );
-        my %option = (
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            header    => \@headers,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    {    # contents
-        my $thaw_sql = $sql_file->retrieve('common-indel_length-0');
-        $thaw_sql->add_where( 'left_extand'  => \'>= 100' );
-        $thaw_sql->add_where( 'right_extand' => \'>= 100' );
+    {    # content
+        my $sth = $dbh->prepare( $thaw_sql->as_sql );
+        $sth->execute;
 
-        my %option = (
-            sql_query => $thaw_sql->as_sql,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-        );
-        ($sheet_row) = $write_obj->write_content_highlight( $sheet, \%option );
+        my $last_number;
+        while ( my @row = $sth->fetchrow_array ) {
+
+            # Highlight 'special' indels
+            my $style = 'NORMAL';
+            if ( defined $last_number ) {
+                if ( $row[1] > $last_number ) {
+                    $style = 'HIGHLIGHT';
+                }
+            }
+            $last_number = $row[1];
+
+            for ( my $i = 0; $i < scalar @row; $i++ ) {
+                $sheet->write(
+                    $write_obj->row, $i + $write_obj->column,
+                    $row[$i],        $write_obj->format->{$style}
+                );
+            }
+            $write_obj->increase_row;
+        }
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#

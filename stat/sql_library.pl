@@ -328,20 +328,40 @@ sub ns { return AlignDB::SQL->new; }
 #GROUP BY CONCAT(isw_type, isw_distance)
 #ORDER BY isw_distance
 {
-    my $name = 'common-dd_group-4';
+    my $name = 'common-dd_group';
 
     my $sql = ns();
-    $sql->add_select( 'CONCAT(isw_type, isw_distance)', 'isw_type_distance' );
-    $sql->add_select( 'AVG(isw_pi)',                    'AVG_pi' );
-    $sql->add_select( 'COUNT(*)',                       'COUNT' );
-    $sql->add_select( 'STD(isw_pi)',                    'STD_pi' );
+    $sql->add_select( 'isw_distance', );
+    $sql->add_select( 'AVG(isw_pi)', 'AVG_pi' );
+    $sql->add_select( 'COUNT(*)',    'COUNT' );
+    $sql->add_select( 'STD(isw_pi)', 'STD_pi' );
     $sql->from( ['isw'] );
-    $sql->add_where( 'isw_type'     => 'L' );
-    $sql->add_where( 'isw_density'  => { op => '>=', value => '1' } );
-    $sql->add_where( 'isw_density'  => { op => '<=', value => '2' } );
+    $sql->add_where( 'isw_density' => { op => '>=', value => '1' } );
+    $sql->add_where( 'isw_density' => { op => '<=', value => '2' } );
     $sql->add_where( 'isw_distance' => \'<= (? + 1) / 2' );
 
-    $sql->group( { column => 'CONCAT(isw_type, isw_distance)' } );
+    $sql->group( { column => 'isw_distance' } );
+    $sql->order( { column => 'isw_distance' } );
+
+    $sql_file->set( $name, $sql );
+    print "\n[$name]\n";
+    print $sql->as_sql if $verbose;
+}
+
+{
+    my $name = 'common-dd_group_gc';
+
+    my $sql = ns();
+    $sql->add_select( 'isw_distance', );
+    $sql->add_select( 'AVG(isw_average_gc)', 'AVG_gc' );
+    $sql->add_select( 'COUNT(*)',    'COUNT' );
+    $sql->add_select( 'STD(isw_average_gc)', 'STD_gc' );
+    $sql->from( ['isw'] );
+    $sql->add_where( 'isw_density' => { op => '>=', value => '1' } );
+    $sql->add_where( 'isw_density' => { op => '<=', value => '2' } );
+    $sql->add_where( 'isw_distance' => \'<= (? + 1) / 2' );
+
+    $sql->group( { column => 'isw_distance' } );
     $sql->order( { column => 'isw_distance' } );
 
     $sql_file->set( $name, $sql );

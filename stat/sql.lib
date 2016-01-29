@@ -471,32 +471,30 @@ select_map_reverse:
 where: []
 where_values: {}
 
-[common-dd_group-4]
+[common-dd_group]
 ---
 __CLASS__: AlignDB::SQL-1.0.0
 _sql: |
   SELECT
-    CONCAT(isw_type, isw_distance) isw_type_distance,
+    isw_distance,
     AVG(isw_pi) AVG_pi,
     COUNT(*) COUNT,
     STD(isw_pi) STD_pi
   FROM isw
-  WHERE (isw_type = ?)
-    AND (isw_density >= ?)
+  WHERE (isw_density >= ?)
     AND (isw_density <= ?)
     AND (isw_distance <= (? + 1) / 2)
   GROUP BY
-    CONCAT(isw_type, isw_distance)
+    isw_distance
   ORDER BY
     isw_distance
 bind:
-- L
 - '1'
 - '2'
 from:
 - isw
 group:
-  column: CONCAT(isw_type, isw_distance)
+  column: isw_distance
 having: []
 indent: '  '
 joins: []
@@ -504,22 +502,21 @@ order:
   column: isw_distance
 replace: {}
 select:
-- CONCAT(isw_type, isw_distance)
+- isw_distance
 - AVG(isw_pi)
 - COUNT(*)
 - STD(isw_pi)
 select_map:
   AVG(isw_pi): AVG_pi
-  CONCAT(isw_type, isw_distance): isw_type_distance
   COUNT(*): COUNT
   STD(isw_pi): STD_pi
+  isw_distance: isw_distance
 select_map_reverse:
   AVG_pi: AVG(isw_pi)
   COUNT: COUNT(*)
   STD_pi: STD(isw_pi)
-  isw_type_distance: CONCAT(isw_type, isw_distance)
+  isw_distance: isw_distance
 where:
-- (isw_type = ?)
 - (isw_density >= ?)
 - (isw_density <= ?)
 - (isw_distance <= (? + 1) / 2)
@@ -529,7 +526,62 @@ where_values:
     value: '2'
   isw_distance: !!perl/ref
     =: <= (? + 1) / 2
-  isw_type: L
+
+[common-dd_group_gc]
+---
+__CLASS__: AlignDB::SQL-1.0.0
+_sql: |
+  SELECT
+    isw_distance,
+    AVG(isw_average_gc) AVG_gc,
+    COUNT(*) COUNT,
+    STD(isw_average_gc) STD_gc
+  FROM isw
+  WHERE (isw_density >= ?)
+    AND (isw_density <= ?)
+    AND (isw_distance <= (? + 1) / 2)
+  GROUP BY
+    isw_distance
+  ORDER BY
+    isw_distance
+bind:
+- '1'
+- '2'
+from:
+- isw
+group:
+  column: isw_distance
+having: []
+indent: '  '
+joins: []
+order:
+  column: isw_distance
+replace: {}
+select:
+- isw_distance
+- AVG(isw_average_gc)
+- COUNT(*)
+- STD(isw_average_gc)
+select_map:
+  AVG(isw_average_gc): AVG_gc
+  COUNT(*): COUNT
+  STD(isw_average_gc): STD_gc
+  isw_distance: isw_distance
+select_map_reverse:
+  AVG_gc: AVG(isw_average_gc)
+  COUNT: COUNT(*)
+  STD_gc: STD(isw_average_gc)
+  isw_distance: isw_distance
+where:
+- (isw_density >= ?)
+- (isw_density <= ?)
+- (isw_distance <= (? + 1) / 2)
+where_values:
+  isw_density:
+    op: <=
+    value: '2'
+  isw_distance: !!perl/ref
+    =: <= (? + 1) / 2
 
 [common-indel_feature_l-0]
 ---
