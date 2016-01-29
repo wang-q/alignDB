@@ -583,120 +583,58 @@ where_values:
   isw_distance: !!perl/ref
     =: <= (? + 1) / 2
 
-[common-indel_feature_l-0]
+[common-indel_isw]
 ---
 __CLASS__: AlignDB::SQL-1.0.0
 _sql: |
   SELECT
-    CONCAT(isw_type, isw_distance) isw_type_distance,
-    AVG(isw.isw_pi) AVG_pi,
+    isw_distance,
+    AVG(isw_pi) AVG_pi,
     COUNT(*) COUNT,
-    STD(isw.isw_pi) STD_pi
-  FROM indel
-    INNER JOIN isw ON
-      indel.indel_id = isw.prev_indel_id
-  WHERE (isw.isw_density > 9)
-    AND (isw.isw_distance <= 5)
-    AND (isw.isw_type = 'L')
+    STD(isw_pi) STD_pi
+  FROM isw
+    INNER JOIN indel ON
+      indel.indel_id = isw.isw_indel_id
+  WHERE (isw_density > 9)
+    AND (isw_distance <= 5)
   GROUP BY
-    CONCAT(isw.isw_type, isw.isw_distance)
+    isw_distance
 bind: []
 from: []
 group:
-  column: CONCAT(isw.isw_type, isw.isw_distance)
+  column: isw_distance
 having: []
 indent: '  '
 joins:
 - joins:
-  - condition: indel.indel_id = isw.prev_indel_id
-    table: isw
+  - condition: indel.indel_id = isw.isw_indel_id
+    table: indel
     type: inner
-  table: indel
+  table: isw
 replace: {}
 select:
-- CONCAT(isw_type, isw_distance)
-- AVG(isw.isw_pi)
+- isw_distance
+- AVG(isw_pi)
 - COUNT(*)
-- STD(isw.isw_pi)
+- STD(isw_pi)
 select_map:
-  AVG(isw.isw_pi): AVG_pi
-  CONCAT(isw_type, isw_distance): isw_type_distance
+  AVG(isw_pi): AVG_pi
   COUNT(*): COUNT
-  STD(isw.isw_pi): STD_pi
+  STD(isw_pi): STD_pi
+  isw_distance: isw_distance
 select_map_reverse:
-  AVG_pi: AVG(isw.isw_pi)
+  AVG_pi: AVG(isw_pi)
   COUNT: COUNT(*)
-  STD_pi: STD(isw.isw_pi)
-  isw_type_distance: CONCAT(isw_type, isw_distance)
+  STD_pi: STD(isw_pi)
+  isw_distance: isw_distance
 where:
-- (isw.isw_density > 9)
-- (isw.isw_distance <= 5)
-- (isw.isw_type = 'L')
+- (isw_density > 9)
+- (isw_distance <= 5)
 where_values:
-  isw.isw_density: !!perl/ref
+  isw_density: !!perl/ref
     =: '> 9'
-  isw.isw_distance: !!perl/ref
+  isw_distance: !!perl/ref
     =: <= 5
-  isw.isw_type: !!perl/ref
-    =: = 'L'
-
-[common-indel_feature_r-0]
----
-__CLASS__: AlignDB::SQL-1.0.0
-_sql: |
-  SELECT
-    CONCAT(isw_type, isw_distance) isw_type_distance,
-    AVG(isw.isw_pi) AVG_pi,
-    COUNT(*) COUNT,
-    STD(isw.isw_pi) STD_pi
-  FROM indel
-    INNER JOIN isw ON
-      indel.indel_id = isw.indel_id
-  WHERE (isw.isw_density > 9)
-    AND (isw.isw_distance <= 5)
-    AND (isw.isw_type = 'R')
-  GROUP BY
-    CONCAT(isw.isw_type, isw.isw_distance) DESC
-bind: []
-from: []
-group:
-  column: CONCAT(isw.isw_type, isw.isw_distance)
-  desc: DESC
-having: []
-indent: '  '
-joins:
-- joins:
-  - condition: indel.indel_id = isw.indel_id
-    table: isw
-    type: inner
-  table: indel
-replace: {}
-select:
-- CONCAT(isw_type, isw_distance)
-- AVG(isw.isw_pi)
-- COUNT(*)
-- STD(isw.isw_pi)
-select_map:
-  AVG(isw.isw_pi): AVG_pi
-  CONCAT(isw_type, isw_distance): isw_type_distance
-  COUNT(*): COUNT
-  STD(isw.isw_pi): STD_pi
-select_map_reverse:
-  AVG_pi: AVG(isw.isw_pi)
-  COUNT: COUNT(*)
-  STD_pi: STD(isw.isw_pi)
-  isw_type_distance: CONCAT(isw_type, isw_distance)
-where:
-- (isw.isw_density > 9)
-- (isw.isw_distance <= 5)
-- (isw.isw_type = 'R')
-where_values:
-  isw.isw_density: !!perl/ref
-    =: '> 9'
-  isw.isw_distance: !!perl/ref
-    =: <= 5
-  isw.isw_type: !!perl/ref
-    =: = 'R'
 
 [common-indel_length-0]
 ---
@@ -736,121 +674,6 @@ select_map_reverse:
   indel_sum: SUM(indel_length)
 where: []
 where_values: {}
-
-[common-indel_size_l-0]
----
-__CLASS__: AlignDB::SQL-1.0.0
-_sql: |
-  SELECT
-    CONCAT(isw_type, isw_distance) isw_type_distance,
-    AVG(isw.isw_pi) AVG_pi,
-    COUNT(*) COUNT,
-    STD(isw.isw_pi) STD_pi
-  FROM indel
-    INNER JOIN isw ON
-      indel.indel_id = isw.prev_indel_id
-  WHERE (isw.isw_density > 9)
-    AND (isw.isw_distance <= 5)
-    AND (isw.isw_type = 'L')
-  GROUP BY
-    CONCAT(isw.isw_type, isw.isw_distance)
-bind: []
-from: []
-group:
-  column: CONCAT(isw.isw_type, isw.isw_distance)
-having: []
-indent: '  '
-joins:
-- joins:
-  - condition: indel.indel_id = isw.prev_indel_id
-    table: isw
-    type: inner
-  table: indel
-replace: {}
-select:
-- CONCAT(isw_type, isw_distance)
-- AVG(isw.isw_pi)
-- COUNT(*)
-- STD(isw.isw_pi)
-select_map:
-  AVG(isw.isw_pi): AVG_pi
-  CONCAT(isw_type, isw_distance): isw_type_distance
-  COUNT(*): COUNT
-  STD(isw.isw_pi): STD_pi
-select_map_reverse:
-  AVG_pi: AVG(isw.isw_pi)
-  COUNT: COUNT(*)
-  STD_pi: STD(isw.isw_pi)
-  isw_type_distance: CONCAT(isw_type, isw_distance)
-where:
-- (isw.isw_density > 9)
-- (isw.isw_distance <= 5)
-- (isw.isw_type = 'L')
-where_values:
-  isw.isw_density: !!perl/ref
-    =: '> 9'
-  isw.isw_distance: !!perl/ref
-    =: <= 5
-  isw.isw_type: !!perl/ref
-    =: = 'L'
-
-[common-indel_size_r-0]
----
-__CLASS__: AlignDB::SQL-1.0.0
-_sql: |
-  SELECT
-    CONCAT(isw_type, isw_distance) isw_type_distance,
-    AVG(isw.isw_pi) AVG_pi,
-    COUNT(*) COUNT,
-    STD(isw.isw_pi) STD_pi
-  FROM indel
-    INNER JOIN isw ON
-      indel.indel_id = isw.indel_id
-  WHERE (isw.isw_density > 9)
-    AND (isw.isw_distance <= 5)
-    AND (isw.isw_type = 'R')
-  GROUP BY
-    CONCAT(isw.isw_type, isw.isw_distance) DESC
-bind: []
-from: []
-group:
-  column: CONCAT(isw.isw_type, isw.isw_distance)
-  desc: DESC
-having: []
-indent: '  '
-joins:
-- joins:
-  - condition: indel.indel_id = isw.indel_id
-    table: isw
-    type: inner
-  table: indel
-replace: {}
-select:
-- CONCAT(isw_type, isw_distance)
-- AVG(isw.isw_pi)
-- COUNT(*)
-- STD(isw.isw_pi)
-select_map:
-  AVG(isw.isw_pi): AVG_pi
-  CONCAT(isw_type, isw_distance): isw_type_distance
-  COUNT(*): COUNT
-  STD(isw.isw_pi): STD_pi
-select_map_reverse:
-  AVG_pi: AVG(isw.isw_pi)
-  COUNT: COUNT(*)
-  STD_pi: STD(isw.isw_pi)
-  isw_type_distance: CONCAT(isw_type, isw_distance)
-where:
-- (isw.isw_density > 9)
-- (isw.isw_distance <= 5)
-- (isw.isw_type = 'R')
-where_values:
-  isw.isw_density: !!perl/ref
-    =: '> 9'
-  isw.isw_distance: !!perl/ref
-    =: <= 5
-  isw.isw_type: !!perl/ref
-    =: = 'R'
 
 [dnds-d1_comb_dn_ds-0]
 ---

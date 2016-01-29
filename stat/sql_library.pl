@@ -354,7 +354,7 @@ sub ns { return AlignDB::SQL->new; }
     my $sql = ns();
     $sql->add_select( 'isw_distance', );
     $sql->add_select( 'AVG(isw_average_gc)', 'AVG_gc' );
-    $sql->add_select( 'COUNT(*)',    'COUNT' );
+    $sql->add_select( 'COUNT(*)',            'COUNT' );
     $sql->add_select( 'STD(isw_average_gc)', 'STD_gc' );
     $sql->from( ['isw'] );
     $sql->add_where( 'isw_density' => { op => '>=', value => '1' } );
@@ -381,105 +381,29 @@ sub ns { return AlignDB::SQL->new; }
 ##AND indel.indel_length <= ?
 #GROUP BY CONCAT(isw.isw_type, isw.isw_distance) DESC
 {
+    my $name = 'common-indel_isw';
+
     my $sql = ns();
-    $sql->add_select( 'CONCAT(isw_type, isw_distance)', 'isw_type_distance' );
-    $sql->add_select( 'AVG(isw.isw_pi)',                'AVG_pi' );
-    $sql->add_select( 'COUNT(*)',                       'COUNT' );
-    $sql->add_select( 'STD(isw.isw_pi)',                'STD_pi' );
-    $sql->add_where( 'isw.isw_density'  => \'> 9' );
-    $sql->add_where( 'isw.isw_distance' => \'<= 5' );
+    $sql->add_select('isw_distance');
+    $sql->add_select( 'AVG(isw_pi)', 'AVG_pi' );
+    $sql->add_select( 'COUNT(*)',    'COUNT' );
+    $sql->add_select( 'STD(isw_pi)', 'STD_pi' );
 
-    #$sql->add_where( 'indel.indel_length' => { op => '>=', value => '1' } );
-    #$sql->add_where( 'indel.indel_length' => { op => '<=', value => '5' } );
-
-    my $sql_R = $sql->copy;
-    $sql_R->add_join(
-        indel => [
+    $sql->add_join(
+        isw => [
             {   type      => 'inner',
-                table     => 'isw',
-                condition => 'indel.indel_id = isw.indel_id',
+                table     => 'indel',
+                condition => 'indel.indel_id = isw.isw_indel_id',
             },
         ]
     );
-    $sql_R->add_where( 'isw.isw_type' => \'= \'R\'' );
-    $sql_R->group(
-        {   column => 'CONCAT(isw.isw_type, isw.isw_distance)',
-            desc   => 'DESC'
-        }
-    );
+    $sql->add_where( 'isw_density'  => \'> 9' );
+    $sql->add_where( 'isw_distance' => \'<= 5' );
 
-    my $sql_L = $sql->copy;
-    $sql_L->add_join(
-        indel => [
-            {   type      => 'inner',
-                table     => 'isw',
-                condition => 'indel.indel_id = isw.prev_indel_id',
-            },
-        ]
-    );
-    $sql_L->add_where( 'isw.isw_type' => \'= \'L\'' );
-    $sql_L->group( { column => 'CONCAT(isw.isw_type, isw.isw_distance)' } );
+    $sql->group( { column => 'isw_distance', } );
 
-    $sql_file->set( 'common-indel_size_r-0', $sql_R );
-    $sql_file->set( 'common-indel_size_l-0', $sql_L );
-    print $sql_R->as_sql if $verbose;
-    print $sql_L->as_sql if $verbose;
-}
-
-#SELECT
-#  CONCAT(isw_type, isw_distance) isw_type_distance,
-#  AVG(isw.isw_pi) AVG_pi,
-#  COUNT(*) COUNT,
-#  STD(isw.isw_pi) STD_pi
-#FROM indel
-#  INNER JOIN isw ON
-#    indel.indel_id = isw.indel_id
-#WHERE (isw.isw_density > 9)
-#  AND (isw.isw_distance <= 5)
-#  AND (isw.isw_type = 'R')
-#GROUP BY
-#  CONCAT(isw.isw_type, isw.isw_distance) DESC
-{
-    my $sql = ns();
-    $sql->add_select( 'CONCAT(isw_type, isw_distance)', 'isw_type_distance' );
-    $sql->add_select( 'AVG(isw.isw_pi)',                'AVG_pi' );
-    $sql->add_select( 'COUNT(*)',                       'COUNT' );
-    $sql->add_select( 'STD(isw.isw_pi)',                'STD_pi' );
-    $sql->add_where( 'isw.isw_density'  => \'> 9' );
-    $sql->add_where( 'isw.isw_distance' => \'<= 5' );
-
-    my $sql_R = $sql->copy;
-    $sql_R->add_join(
-        indel => [
-            {   type      => 'inner',
-                table     => 'isw',
-                condition => 'indel.indel_id = isw.indel_id',
-            },
-        ]
-    );
-    $sql_R->add_where( 'isw.isw_type' => \'= \'R\'' );
-    $sql_R->group(
-        {   column => 'CONCAT(isw.isw_type, isw.isw_distance)',
-            desc   => 'DESC'
-        }
-    );
-
-    my $sql_L = $sql->copy;
-    $sql_L->add_join(
-        indel => [
-            {   type      => 'inner',
-                table     => 'isw',
-                condition => 'indel.indel_id = isw.prev_indel_id',
-            },
-        ]
-    );
-    $sql_L->add_where( 'isw.isw_type' => \'= \'L\'' );
-    $sql_L->group( { column => 'CONCAT(isw.isw_type, isw.isw_distance)' } );
-
-    $sql_file->set( 'common-indel_feature_r-0', $sql_R );
-    $sql_file->set( 'common-indel_feature_l-0', $sql_L );
-    print $sql_R->as_sql if $verbose;
-    print $sql_L->as_sql if $verbose;
+    $sql_file->set( $name, $sql );
+    print $sql->as_sql if $verbose;
 }
 
 #SELECT  indel_length,

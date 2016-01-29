@@ -233,6 +233,48 @@ my $chart_dd = sub {
     $write_obj->draw_dd( $sheet, \%opt );
 };
 
+my $chart_series = sub {
+    my $sheet      = shift;
+    my $data_of    = shift;
+    my $sheet_name = $sheet->get_name;
+
+    # write charting data
+    my @keys = keys %{$data_of};
+    $write_obj->row(2);
+    $write_obj->column(7);
+
+    $write_obj->write_column( $sheet, { column => $data_of->{ $keys[-1] }[0], } );
+    for my $key (@keys) {
+        $write_obj->write_column(
+            $sheet,
+            {   query_name => $key,
+                column     => $data_of->{$key}[1],
+            }
+        );
+    }
+
+    my %opt = (
+        x_column      => 7,
+        y_column      => 8,
+        y_last_column => 8 + @keys - 1,
+        first_row     => 2,
+        last_row      => 7,
+        x_min_scale   => 0,
+        x_max_scale   => 5,
+        y_data        => [ map { $data_of->{$_}[1] } @keys ],
+        x_title       => "Distance to indels (d1)",
+        y_title       => "Nucleotide diversity",
+        top           => 11,
+        left          => 7,
+        height        => 480,
+        width         => 480,
+    );
+    if ( $sheet_name =~ /_gc$/ ) {
+        $opt{y_title} = "GC proportion";
+    }
+    $write_obj->draw_dd( $sheet, \%opt );
+};
+
 my $chart_snp_indel_ratio = sub {
     my $sheet = shift;
     my $data  = shift;
@@ -1155,133 +1197,52 @@ my $dd_group = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- indel_size_group
+# worksheet -- indel_length_group
 #----------------------------------------------------------#
-my $indel_size_group = sub {
+my $indel_length_group = sub {
     unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
 
-    my $sheet_name = 'indel_size_group';
+    my $sheet_name = 'indel_length_group';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # header
-        my @headers = qw{isw_distance AVG_pi COUNT STD_pi};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $sheet_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     my @groups = ( [ 1, 5 ], [ 6, 10 ], [ 11, 50 ], [ 51, 300 ], );
 
-    {    # contents
-        my $sql_query = q{
-            SELECT  isw.isw_distance distance,
-                    AVG(isw.isw_pi) AVG_pi,
-                    COUNT(isw.isw_pi) COUNT,
-                    STD(isw.isw_pi) STD_pi
-            FROM    indel INNER JOIN isw ON indel.indel_id = isw.isw_indel_id
-            WHERE   1 = 1
-            AND     isw.isw_distance <= 5
-            AND     indel.indel_length BETWEEN ? AND ?
-            GROUP BY isw.isw_distance
-            ORDER BY isw.isw_distance ASC
-        };
-        my %option = (
-            sql_query => $sql_query,
-            sheet_row => $sheet_row,
-            sheet_col => $sheet_col,
-            group     => \@groups,
-        );
-        ($sheet_row) = $write_obj->write_content_series( $sheet, \%option );
-    }
+    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
-};
-
-#----------------------------------------------------------#
-# worksheet -- indel_size_asymmetry
-#----------------------------------------------------------#
-my $indel_size_asymmetry = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
-        return;
-    }
-
-    my $sheet_name = 'indel_size_asymmetry';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
+    my @names = $thaw_sql->as_header;
     {    # header
-        my @headers = qw{isw_distance AVG_pi COUNT STD_pi};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $sheet_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    my @indel_group
-        = ( [ 1, 10, 1, 10 ], [ 1, 10, 11, 300 ], [ 11, 300, 1, 10 ], [ 11, 300, 11, 300 ], );
+    tie my %data_of, 'Tie::IxHash';
+    for my $item (@groups) {    # content
+        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        $thaw_sql->add_where( 'indel_length' => { op => '>=', value => '1' } );
+        $thaw_sql->add_where( 'indel_length' => { op => '<=', value => '1' } );
 
-    # contents
-    {
-        my $sql_query_L = q{
-            # indel_size_asymmetry effect for L windows
-            SELECT CONCAT(isw.isw_type, isw.isw_distance) isw_distance,
-                   AVG(isw_pi) AVG_pi,
-                   COUNT(isw_pi) COUNT,
-                   STD(isw_pi) STD_pi
-            FROM isw, (SELECT i2.indel_id indel_id
-                       FROM indel i1, indel i2
-                       WHERE i1.indel_id = i2.prev_indel_id
-                       AND i1.indel_length BETWEEN ? AND ?
-                       AND i2.indel_length BETWEEN ? AND ?
-                      ) indel
-            WHERE isw.isw_type = 'L'
-            AND isw.isw_density > 9
-            AND isw.isw_distance <= 5
-            AND isw.indel_id = indel.indel_id
-            GROUP BY CONCAT(isw.isw_type, isw.isw_distance)
-        };
-        my $sql_query_R = q{
-            # indel_size_asymmetry effect for R windows
-            SELECT CONCAT(isw.isw_type, isw.isw_distance) isw_distance,
-                   AVG(isw_pi) AVG_pi,
-                   COUNT(isw_pi) COUNT,
-                   STD(isw_pi) STD_pi
-            FROM isw, (SELECT i2.indel_id indel_id
-                       FROM indel i1, indel i2
-                       WHERE i1.indel_id = i2.prev_indel_id
-                       AND i1.indel_length BETWEEN ? AND ?
-                       AND i2.indel_length BETWEEN ? AND ?
-                      ) indel
-            WHERE isw.isw_type = 'R'
-            AND isw.isw_density > 9
-            AND isw.isw_distance <= 5
-            AND isw.indel_id = indel.indel_id
-            GROUP BY CONCAT(isw.isw_type, isw.isw_distance)
-            ORDER BY CONCAT(isw.isw_type, isw.isw_distance) DESC
-        };
-        my %option = (
-            sql_query_1 => $sql_query_L,
-            sql_query_2 => $sql_query_R,
-            sheet_row   => $sheet_row,
-            sheet_col   => $sheet_col,
-            group       => \@indel_group,
+        my $group_name = $item->[0] . "--" . $item->[1];
+        $write_obj->increase_row;
+
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                query_name => $group_name,
+                bind_value => $item,
+                data       => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_indel( $sheet, \%option );
+        $data_of{$group_name} = $data;
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_series->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -1294,118 +1255,44 @@ my $indel_extand_group = sub {
 
     my $sheet_name = 'indel_extand_group';
     my $sheet;
-    my ( $sheet_row, $sheet_col );
-
-    {    # header
-        my @headers = qw{isw_distance AVG_pi COUNT STD_pi};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $sheet_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
-    }
+    $write_obj->row(0);
+    $write_obj->column(1);
 
     my @groups
         = ( [ 0, 0 ], [ 1, 2 ], [ 3, 4 ], [ 5, 9 ], [ 10, 19 ], [ 20, 999 ], );
 
-    {    # contents
-        my $thaw_sql_R = $sql_file->retrieve('common-indel_size_r-0');
-        $thaw_sql_R->add_where( 'FLOOR(indel.right_extand / 100)' => { op => '>=', value => '0' } );
-        $thaw_sql_R->add_where( 'FLOOR(indel.right_extand / 100)' => { op => '<=', value => '0' } );
+    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
 
-        my $thaw_sql_L = $sql_file->retrieve('common-indel_size_l-0');
-        $thaw_sql_L->add_where( 'FLOOR(indel.left_extand / 100)' => { op => '>=', value => '0' } );
-        $thaw_sql_L->add_where( 'FLOOR(indel.left_extand / 100)' => { op => '<=', value => '0' } );
-
-        my %option = (
-            sql_query_1 => $thaw_sql_R->as_sql,
-            sql_query_2 => $thaw_sql_L->as_sql,
-            sheet_row   => $sheet_row,
-            sheet_col   => $sheet_col,
-            group       => \@groups,
-        );
-        ($sheet_row) = $write_obj->write_content_indel( $sheet, \%option );
-    }
-
-    print "Sheet \"$sheet_name\" has been generated.\n";
-};
-
-#----------------------------------------------------------#
-# worksheet -- indel_extand_asymmetry
-#----------------------------------------------------------#
-my $indel_extand_asymmetry = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
-        return;
-    }
-
-    my $sheet_name = 'indel_extand_asymmetry';
-    my $sheet;
-    my ( $sheet_row, $sheet_col );
-
+    my @names = $thaw_sql->as_header;
     {    # header
-        my @headers = qw{isw_distance AVG_pi COUNT STD_pi};
-        ( $sheet_row, $sheet_col ) = ( 0, 1 );
-        my %option = (
-            sheet_row  => $sheet_row,
-            sheet_col  => $sheet_col,
-            header     => \@headers,
-            query_name => $sheet_name,
-        );
-        ( $sheet, $sheet_row ) = $write_obj->write_header_direct( $sheet_name, \%option );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
-    my @indel_group = ( [ 0, 4, 0, 4 ], [ 0, 4, 5, 999 ], [ 5, 999, 0, 4 ], [ 5, 999, 5, 999 ], );
+    tie my %data_of, 'Tie::IxHash';
+    for my $item (@groups) {    # content
+        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        $thaw_sql->add_where( 'FLOOR(indel.right_extand / 100)' => { op => '>=', value => '0' } );
+        $thaw_sql->add_where( 'FLOOR(indel.right_extand / 100)' => { op => '<=', value => '0' } );
 
-    # contents
-    {
-        my $sql_query_L = q{
-            # indel_extand_asymmetry effect for L windows
-            SELECT CONCAT(isw.isw_type, isw.isw_distance) isw_distance,
-                   AVG(isw_pi) AVG_pi,
-                   COUNT(isw_pi) COUNT,
-                   STD(isw_pi) STD_pi
-            FROM isw, (SELECT i2.indel_id indel_id
-                       FROM indel i1, indel i2
-                       WHERE i1.indel_id = i2.prev_indel_id
-                       AND FLOOR(i1.left_extand / 100) BETWEEN ? AND ?
-                       AND FLOOR(i2.right_extand / 100) BETWEEN ? AND ?
-                      ) indel
-            WHERE isw.isw_type = 'L'
-            AND isw.isw_density > 9
-            AND isw.isw_distance <= 5
-            AND isw.indel_id = indel.indel_id
-            GROUP BY CONCAT(isw.isw_type, isw.isw_distance)
-        };
-        my $sql_query_R = q{
-            # indel_extand_asymmetry effect for R windows
-            SELECT CONCAT(isw.isw_type, isw.isw_distance) isw_distance, AVG(isw_pi) AVG_pi, COUNT(isw_pi) COUNT, STD(isw_pi) STD_pi
-            FROM isw, (SELECT i2.indel_id indel_id
-                       FROM indel i1, indel i2
-                       WHERE i1.indel_id = i2.prev_indel_id
-                       AND FLOOR(i1.left_extand / 100) BETWEEN ? AND ?
-                       AND FLOOR(i2.right_extand / 100) BETWEEN ? AND ?
-                      ) indel
-            WHERE isw.isw_type = 'R'
-            AND isw.isw_density > 9
-            AND isw.isw_distance <= 5
-            AND isw.indel_id = indel.indel_id
-            GROUP BY CONCAT(isw.isw_type, isw.isw_distance)
-            ORDER BY CONCAT(isw.isw_type, isw.isw_distance) DESC
-        };
-        my %option = (
-            sql_query_1 => $sql_query_L,
-            sql_query_2 => $sql_query_R,
-            sheet_row   => $sheet_row,
-            sheet_col   => $sheet_col,
-            group       => \@indel_group,
+        my $group_name = $item->[0] . "--" . $item->[1];
+        $write_obj->increase_row;
+
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                query_name => $group_name,
+                bind_value => $item,
+                data       => 1,
+            }
         );
-        ($sheet_row) = $write_obj->write_content_indel( $sheet, \%option );
+        $data_of{$group_name} = $data;
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    if ($add_chart) {    # chart
+        $chart_series->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -2148,8 +2035,8 @@ foreach my $n (@tasks) {
     if ( $n == 5 )  { &$comb_coding;          next; }
     if ( $n == 6 )  { &$comb_slippage;        next; }
     if ( $n == 8 )  { &$dd_group;             next; }
-    if ( $n == 9 )  { &$indel_size_group;     &$indel_size_asymmetry; next; }
-    if ( $n == 10 ) { &$indel_extand_group;   &$indel_extand_asymmetry; next; }
+    if ( $n == 9 )  { &$indel_length_group;     next; }
+    if ( $n == 10 ) { &$indel_extand_group;   next; }
     if ( $n == 11 ) { &$indel_position_group; next; }
     if ( $n == 12 ) { &$indel_coding_group;   &$indel_repeat_group; next; }
     if ( $n == 13 ) { &$indel_slip_group;     &$indel_gc_group; next; }
