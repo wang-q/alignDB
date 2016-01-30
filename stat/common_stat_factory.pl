@@ -2178,6 +2178,11 @@ for my $n (@tasks) {
     if ( $n == 52 ) { &$align_repeat; next; }
 }
 
+if ($add_index_sheet) {
+    $write_obj->add_index_sheet;
+    print "Sheet [INDEX] has been generated.\n";
+}
+
 $stopwatch->end_message;
 exit;
 
