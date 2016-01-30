@@ -1958,6 +1958,75 @@ my $density_snp = sub {
 };
 
 #----------------------------------------------------------#
+# worksheet -- distance_tri_trv
+#----------------------------------------------------------#
+my $distance_tri_trv = sub {
+    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+        return;
+    }
+
+    my $sheet_name = 'distance_tri_trv';
+    my $sheet;
+    $write_obj->row(0);
+    $write_obj->column(1);
+
+    # base groups
+    my @pairs = ( [ 'Tri', qw{AG CT GA TC} ], [ 'Trv', qw{AC AT CA CG GC GT TA TG} ], );
+
+    my $thaw_sql = $sql_file->retrieve('common-distance_snp');
+
+    my @names = $thaw_sql->as_header;
+    {    # header
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+    }
+
+    # contents
+    tie my %data_of, 'Tie::IxHash';
+    my %sum_of;
+    for (@pairs) {
+        my $group_name = shift @{$_};
+        $write_obj->increase_row;
+
+        my $thaw_sql = $sql_file->retrieve('common-distance_snp');
+
+        $thaw_sql->add_where( 'isw_distance'                    => \'>= -1' );
+        $thaw_sql->add_where( 'isw_distance'                    => \'<= 15' );
+        $thaw_sql->add_where( 'CONCAT(target_base, query_base)' => $_ );
+
+        my $data = $write_obj->write_sql(
+            $sheet,
+            {   sql_query  => $thaw_sql->as_sql,
+                query_name => $group_name,
+                bind_value => $_,
+                data       => 1,
+            }
+        );
+        $data_of{$group_name} = $data;
+
+        for my $idx ( 0 .. @{ $data->[0] } - 1 ) {
+            my $category = $data->[0][$idx];
+            my $value    = $data->[1][$idx];
+            $sum_of{$category} += $value;
+        }
+    }
+
+    for my $group ( keys %data_of ) {
+        my $data = $data_of{$group};
+        for my $idx ( 0 .. @{ $data->[0] } - 1 ) {
+            my $category = $data->[0][$idx];
+            my $value    = $data->[1][$idx];
+            $data->[1][$idx] = $value / $sum_of{$category};
+        }
+    }
+
+    if ($add_chart) {    # chart
+        $chart_snp->( $sheet, \%data_of );
+    }
+
+    print "Sheet [$sheet_name] has been generated.\n";
+};
+
+#----------------------------------------------------------#
 # worksheet -- align_coding
 #----------------------------------------------------------#
 my $align_coding = sub {
@@ -2103,6 +2172,7 @@ for my $n (@tasks) {
     if ( $n == 14 ) { &$snp_indel_ratio;      next; }
     if ( $n == 15 ) { &$indel_length;         &$indel_length_100; next; }
     if ( $n == 17 ) { &$distance_snp;         &$density_snp; next; }
+    if ( $n == 18 ) { &$distance_tri_trv;     next; }
 
     if ( $n == 51 ) { &$align_coding; next; }
     if ( $n == 52 ) { &$align_repeat; next; }

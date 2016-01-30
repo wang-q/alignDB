@@ -583,6 +583,43 @@ where_values:
   isw_distance: !!perl/ref
     =: <= (? + 1) / 2
 
+[common-distance_snp]
+---
+__CLASS__: AlignDB::SQL-1.0.0
+_sql: |
+  SELECT
+    isw_distance,
+    COUNT(snp_id) snp_number
+  FROM snp
+    INNER JOIN isw ON
+      isw.isw_id = snp.isw_id
+  GROUP BY
+    isw_distance
+bind: []
+from: []
+group:
+  column: isw_distance
+having: []
+indent: '  '
+joins:
+- joins:
+  - condition: isw.isw_id = snp.isw_id
+    table: isw
+    type: inner
+  table: snp
+replace: {}
+select:
+- isw_distance
+- COUNT(snp_id)
+select_map:
+  COUNT(snp_id): snp_number
+  isw_distance: isw_distance
+select_map_reverse:
+  isw_distance: isw_distance
+  snp_number: COUNT(snp_id)
+where: []
+where_values: {}
+
 [common-indel_isw]
 ---
 __CLASS__: AlignDB::SQL-1.0.0

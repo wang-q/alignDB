@@ -414,6 +414,7 @@ sub ns { return AlignDB::SQL->new; }
 #GROUP BY indel_length
 {
     my $name = 'common-indel_length-0';
+    
     my $sql  = ns();
     $sql->add_select('indel_length');
     $sql->add_select( 'COUNT(*)',          'indel_number' );
@@ -421,6 +422,38 @@ sub ns { return AlignDB::SQL->new; }
     $sql->add_select( 'SUM(indel_length)', 'indel_sum' );
     $sql->from( ['indel'] );
     $sql->group( { column => 'indel_length' } );
+
+    $sql_file->set( $name, $sql );
+    print $sql->as_sql if $verbose;
+}
+
+#SELECT isw_distance, COUNT(snp_id) snp_number
+#FROM snp
+#inner join isw on snp.isw_id = isw.isw_id
+#WHERE 1=1
+#AND CONCAT(target_base, query_base) IN (?, ?)
+#AND isw_distance BETWEEN -1 AND 15
+#GROUP BY isw_distance
+{
+    my $name = 'common-distance_snp';
+
+    my $sql = ns();
+    $sql->add_select('isw_distance');
+    $sql->add_select( 'COUNT(snp_id)',    'snp_number' );
+
+    $sql->add_join(
+        snp => [
+            {   type      => 'inner',
+                table     => 'isw',
+                condition => 'isw.isw_id = snp.isw_id',
+            },
+        ]
+    );
+    #$sql->add_where( 'isw_distance' => { op => '>=', value => '1' } );
+    #$sql->add_where( 'isw_distance' => { op => '<=', value => '2' } );
+    #$sql->add_where( 'CONCAT(target_base, query_base)' => $comb );
+
+    $sql->group( { column => 'isw_distance', } );
 
     $sql_file->set( $name, $sql );
     print $sql->as_sql if $verbose;
