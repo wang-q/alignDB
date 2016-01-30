@@ -18,7 +18,7 @@ use Path::Tiny;
 use Proc::Background;
 use List::MoreUtils qw(uniq);
 
-use lib "$FindBin::Bin/../lib";
+use lib "$FindBin::RealBin/../lib";
 use AlignDB;
 
 has 'app'  => ( is => 'ro', isa => 'Object', );
@@ -728,33 +728,6 @@ sub on_button_open_dir_align_axt_clicked {
     return;
 }
 
-sub on_button_open_file_id2name_clicked {
-    my $self = shift;
-
-    my $dia = Gtk3::FileChooserDialog->new(
-        'Choose a file', $self->win, 'open',
-        'gtk-cancel' => 'cancel',
-        'gtk-ok'     => 'ok'
-    );
-
-    $dia->show;
-    $dia->signal_connect(
-        'response' => sub {
-            my ( $dia, $response_id ) = @_;
-            if ( $response_id eq 'ok' ) {
-                my $dir = $dia->get_filename;
-                if ( defined $dir ) {
-                    $self->set_value( "entry_file_id2name", $dir );
-                }
-            }
-            $dia->destroy;
-            return FALSE;
-        }
-    );
-
-    return;
-}
-
 sub on_button_open_dir_align_fas_clicked {
     my $self = shift;
 
@@ -942,7 +915,6 @@ sub on_button_gen_aligndb_fas_clicked {
     my $parallel         = $self->get_value("entry_parallel");
 
     my $dir_align  = $self->get_value("entry_dir_align_fas");
-    my $file_id_of = $self->get_value("entry_file_id2name");
 
     my $outgroup = $self->get_value("checkbutton_fas_outgroup");
     my $block    = $self->get_value("checkbutton_fas_block");
@@ -957,7 +929,6 @@ sub on_button_gen_aligndb_fas_clicked {
         . " --dir $dir_align"
         . " --length $length_threshold"
         . " --parallel $parallel"
-        . " --id $file_id_of"
         . ( $outgroup ? " --outgroup" : "" )
         . ( $block    ? " --block"    : "" );
 
@@ -1228,9 +1199,6 @@ sub on_button_stat_common_clicked {
     my $output = $self->get_value("entry_stat_file_common");
     my $run    = $self->get_value("entry_run_common");
 
-    my $combine = $self->get_value("entry_stat_combine");
-    my $piece   = $self->get_value("entry_stat_piece");
-
     my $cmd
         = "perl $FindBin::Bin/../stat/common_stat_factory.pl"
         . " -s $server"
@@ -1240,8 +1208,7 @@ sub on_button_stat_common_clicked {
         . " -d $db_name"
         . " -o $output"
         . " -r $run"
-        . ( $combine ? " --combine $combine" : "" )
-        . ( $piece   ? " --piece $piece"     : "" );
+        . " --index --chart";
 
     $self->exec_cmd($cmd);
     return;
@@ -1259,8 +1226,6 @@ sub on_button_stat_multi_clicked {
     my $output = $self->get_value("entry_stat_file_multi");
     my $run    = $self->get_value("entry_run_multi");
 
-    my $combine = $self->get_value("entry_stat_combine");
-
     my $cmd
         = "perl $FindBin::Bin/../stat/multi_stat_factory.pl"
         . " -s $server"
@@ -1270,7 +1235,7 @@ sub on_button_stat_multi_clicked {
         . " -d $db_name"
         . " -o $output"
         . " -r $run"
-        . ( $combine ? " --combine $combine" : "" );
+        . " --index --chart";
 
     $self->exec_cmd($cmd);
     return;
@@ -1285,11 +1250,8 @@ sub on_button_stat_gc_clicked {
     my $password = $self->get_value("entry_password");
     my $db_name  = $self->get_value("entry_db_name");
 
-    my $output = $self->get_value("entry_stat_file_gci");
+    my $output = $self->get_value("entry_stat_file_gc");
     my $run    = $self->get_value("entry_run_gc");
-
-    my $combine = $self->get_value("entry_stat_combine");
-    my $piece   = $self->get_value("entry_stat_piece");
 
     my $cmd
         = "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
@@ -1300,56 +1262,7 @@ sub on_button_stat_gc_clicked {
         . " -d $db_name"
         . " -o $output"
         . " -r $run"
-        . ( $combine ? " --combine $combine" : "" )
-        . ( $piece   ? " --piece $piece"     : "" );
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
-sub on_button_chart_common_clicked {
-    my $self = shift;
-
-    my $stat_file = $self->get_value("entry_stat_file_common");
-    if ( $^O ne "MSWin32" ) {
-        $self->append_text("Charting only works under Windows\n");
-        return;
-    }
-    return if !$stat_file;
-
-    my $cmd = "perl $FindBin::Bin/../stat/common_chart_factory.pl" . " -i $stat_file";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
-sub on_button_chart_multi_clicked {
-    my $self = shift;
-
-    my $stat_file = $self->get_value("entry_stat_file_muli");
-    if ( $^O ne "MSWin32" ) {
-        $self->append_text("Charting only works under Windows\n");
-        return;
-    }
-    return if !$stat_file;
-
-    my $cmd = "perl $FindBin::Bin/../stat/multi_chart_factory.pl" . " -i $stat_file";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
-sub on_button_chart_gc_clicked {
-    my $self = shift;
-
-    my $stat_file = $self->get_value("entry_stat_file_gc");
-    if ( $^O ne "MSWin32" ) {
-        $self->append_text("Charting only works under Windows\n");
-        return;
-    }
-    return if !$stat_file;
-
-    my $cmd = "perl $FindBin::Bin/../stat/gc_chart_factory.pl" . " -i $stat_file";
+        . " --index --chart";
 
     $self->exec_cmd($cmd);
     return;
