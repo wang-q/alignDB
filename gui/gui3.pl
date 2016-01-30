@@ -252,7 +252,7 @@ sub on_toolbutton_about_clicked {
         Gtk3::Window->new,
         program_name => 'AlignDB GUI3',
         version      => '0,9',
-        copyright    => "(C) 2004-2015 Qiang Wang",
+        copyright    => "(C) 2005-2015 Qiang Wang",
         authors      => ['Qiang Wang <wangq@nju.edu.cn>'],
         comments     => "The GUI interface for AlignDB",
         title        => "About AlignDB GUI3",
@@ -879,9 +879,7 @@ sub on_button_gen_aligndb_clicked {
 
     my $length_threshold = $self->get_value("entry_length_threshold");
 
-    my $target_id   = $self->get_value("entry_target_id");
     my $target_name = $self->get_value("entry_target_name");
-    my $query_id    = $self->get_value("entry_query_id");
     my $query_name  = $self->get_value("entry_query_name");
     my $dir_align   = $self->get_value("entry_dir_align_axt");
 
@@ -892,8 +890,8 @@ sub on_button_gen_aligndb_clicked {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . " -t \"$target_id,$target_name\""
-        . " -q \"$query_id,$query_name\""
+        . " -t $target_name"
+        . " -q $query_name"
         . " -dir $dir_align"
         . " -lt $length_threshold"
         . " --parallel $parallel";
@@ -914,7 +912,7 @@ sub on_button_gen_aligndb_fas_clicked {
     my $length_threshold = $self->get_value("entry_length_threshold");
     my $parallel         = $self->get_value("entry_parallel");
 
-    my $dir_align  = $self->get_value("entry_dir_align_fas");
+    my $dir_align = $self->get_value("entry_dir_align_fas");
 
     my $outgroup = $self->get_value("checkbutton_fas_outgroup");
     my $block    = $self->get_value("checkbutton_fas_block");
@@ -1197,7 +1195,6 @@ sub on_button_stat_common_clicked {
     my $db_name  = $self->get_value("entry_db_name");
 
     my $output = $self->get_value("entry_stat_file_common");
-    my $run    = $self->get_value("entry_run_common");
 
     my $cmd
         = "perl $FindBin::Bin/../stat/common_stat_factory.pl"
@@ -1207,8 +1204,7 @@ sub on_button_stat_common_clicked {
         . " --password $password"
         . " -d $db_name"
         . " -o $output"
-        . " -r $run"
-        . " --index --chart";
+        . " -r all --index --chart";
 
     $self->exec_cmd($cmd);
     return;
@@ -1224,7 +1220,6 @@ sub on_button_stat_multi_clicked {
     my $db_name  = $self->get_value("entry_db_name");
 
     my $output = $self->get_value("entry_stat_file_multi");
-    my $run    = $self->get_value("entry_run_multi");
 
     my $cmd
         = "perl $FindBin::Bin/../stat/multi_stat_factory.pl"
@@ -1234,8 +1229,7 @@ sub on_button_stat_multi_clicked {
         . " --password $password"
         . " -d $db_name"
         . " -o $output"
-        . " -r $run"
-        . " --index --chart";
+        . " -r all --index --chart";
 
     $self->exec_cmd($cmd);
     return;
@@ -1251,7 +1245,6 @@ sub on_button_stat_gc_clicked {
     my $db_name  = $self->get_value("entry_db_name");
 
     my $output = $self->get_value("entry_stat_file_gc");
-    my $run    = $self->get_value("entry_run_gc");
 
     my $cmd
         = "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
@@ -1261,8 +1254,7 @@ sub on_button_stat_gc_clicked {
         . " --password $password"
         . " -d $db_name"
         . " -o $output"
-        . " -r $run"
-        . " --index --chart";
+        . " -r all --index --chart";
 
     $self->exec_cmd($cmd);
     return;
