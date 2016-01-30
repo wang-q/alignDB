@@ -1823,21 +1823,13 @@ my $distance_snp = sub {
     $write_obj->column(1);
 
     # Six base groups
-    my @pairs     = qw{A<->C A<->G A<->T C<->G C<->T G<->T};
-    my $sql_query = q{
-        # base change
-        SELECT isw_distance, COUNT(snp_id) snp_number
-        FROM snp
-        inner join isw on snp.isw_id = isw.isw_id
-        WHERE 1=1
-        AND CONCAT(target_base, query_base) IN (?, ?)
-        AND isw_distance BETWEEN -1 AND 15
-        GROUP BY isw_distance
-    };
+    my @pairs = qw{A<->C A<->G A<->T C<->G C<->T G<->T};
 
+    my $thaw_sql = $sql_file->retrieve('common-distance_snp');
+
+    my @names = $thaw_sql->as_header;
     {    # header
-        $sheet
-            = $write_obj->write_header( $sheet_name, { header => [ 'distance', 'snp_number' ] } );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
@@ -1850,16 +1842,24 @@ my $distance_snp = sub {
         my $pair_1 = $_;
         $pair_1 =~ s/\W//g;
         my $pair_2 = reverse $pair_1;
+        my $bases = [ $pair_1, $pair_2 ];
+
+        my $thaw_sql = $sql_file->retrieve('common-distance_snp');
+
+        $thaw_sql->add_where( 'isw_distance'                    => \'>= -1' );
+        $thaw_sql->add_where( 'isw_distance'                    => \'<= 15' );
+        $thaw_sql->add_where( 'CONCAT(target_base, query_base)' => $bases );
 
         my $data = $write_obj->write_sql(
             $sheet,
-            {   sql_query  => $sql_query,
+            {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
-                bind_value => [ $pair_1, $pair_2 ],
+                bind_value => $bases,
                 data       => 1,
             }
         );
         $data_of{$group_name} = $data;
+
         for my $idx ( 0 .. @{ $data->[0] } - 1 ) {
             my $category = $data->[0][$idx];
             my $value    = $data->[1][$idx];
@@ -1897,21 +1897,13 @@ my $density_snp = sub {
     $write_obj->column(1);
 
     # Six base groups
-    my @pairs     = qw{A<->C A<->G A<->T C<->G C<->T G<->T};
-    my $sql_query = q{
-        # base change
-        SELECT isw_density, COUNT(snp_id) snp_number
-        FROM snp
-        inner join isw on snp.isw_id = isw.isw_id
-        WHERE 1=1
-        AND CONCAT(target_base, query_base) IN (?, ?)
-        AND isw_density BETWEEN -1 AND 30
-        GROUP BY isw_density
-    };
+    my @pairs = qw{A<->C A<->G A<->T C<->G C<->T G<->T};
 
+    my $thaw_sql = $sql_file->retrieve('common-distance_snp');
+
+    my @names = $thaw_sql->as_header;
     {    # header
-        $sheet
-            = $write_obj->write_header( $sheet_name, { header => [ 'density', 'snp_number' ] } );
+        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
@@ -1924,16 +1916,24 @@ my $density_snp = sub {
         my $pair_1 = $_;
         $pair_1 =~ s/\W//g;
         my $pair_2 = reverse $pair_1;
+        my $bases = [ $pair_1, $pair_2 ];
+
+        my $thaw_sql = $sql_file->retrieve('common-distance_snp');
+
+        $thaw_sql->add_where( 'isw_density'                     => \'>= -1' );
+        $thaw_sql->add_where( 'isw_density'                     => \'<= 30' );
+        $thaw_sql->add_where( 'CONCAT(target_base, query_base)' => $bases );
 
         my $data = $write_obj->write_sql(
             $sheet,
-            {   sql_query  => $sql_query,
+            {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
-                bind_value => [ $pair_1, $pair_2 ],
+                bind_value => $bases,
                 data       => 1,
             }
         );
         $data_of{$group_name} = $data;
+
         for my $idx ( 0 .. @{ $data->[0] } - 1 ) {
             my $category = $data->[0][$idx];
             my $value    = $data->[1][$idx];
