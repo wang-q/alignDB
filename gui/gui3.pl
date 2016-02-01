@@ -915,7 +915,6 @@ sub on_button_gen_aligndb_fas_clicked {
     my $dir_align = $self->get_value("entry_dir_align_fas");
 
     my $outgroup = $self->get_value("checkbutton_fas_outgroup");
-    my $block    = $self->get_value("checkbutton_fas_block");
 
     my $cmd
         = "perl $FindBin::Bin/../init/gen_alignDB_fas.pl"
@@ -927,8 +926,8 @@ sub on_button_gen_aligndb_fas_clicked {
         . " --dir $dir_align"
         . " --length $length_threshold"
         . " --parallel $parallel"
-        . ( $outgroup ? " --outgroup" : "" )
-        . ( $block    ? " --block"    : "" );
+        . " --block"
+        . ( $outgroup ? " --outgroup" : "" );
 
     $self->exec_cmd($cmd);
     return;
@@ -1133,27 +1132,6 @@ sub on_button_upd_slippage_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../init/update_indel_slippage.pl"
-        . " -s $server"
-        . " --port $port"
-        . " -u $username"
-        . " --password $password"
-        . " -d $db_name";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
-sub on_button_upd_segment_clicked {
-    my $self = shift;
-
-    my $server   = $self->get_value("entry_server");
-    my $port     = $self->get_value("entry_port");
-    my $username = $self->get_value("entry_username");
-    my $password = $self->get_value("entry_password");
-    my $db_name  = $self->get_value("entry_db_name");
-
-    my $cmd
-        = "perl $FindBin::Bin/../init/update_segment.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
