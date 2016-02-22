@@ -143,9 +143,7 @@ my $run = AlignDB::Run->new(
     parallel => $parallel,
     jobs     => \@jobs,
     code     => $worker,
-    opt      => {
-        threshold => $length_threshold,
-    },
+    opt      => { threshold => $length_threshold, },
 );
 $run->run;
 
