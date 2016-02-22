@@ -184,6 +184,7 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
+        . " --index --chart"
         . " -o $db_name.common.xlsx",
     41 => undef,
     42 => "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
@@ -192,6 +193,7 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
+        . " --index --chart"
         . " -o $db_name.gc.xlsx",
     43 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
         . " -s $server"
@@ -199,6 +201,7 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
+        . " --index --chart"
         . " -o $db_name.gene.xlsx",
     44 => "perl $FindBin::Bin/../stat/mvar_stat_factory.pl"
         . " -s $server"

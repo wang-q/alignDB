@@ -45,12 +45,12 @@ GetOptions(
     'outgroup|o'     => \my $outgroup,
     'gff_files=s'    => \my @gff_files,
     'rm_gff_files=s' => \my @rm_gff_files,
-    'block'      => \my $block,         # input is galaxy style blocked fasta
+    'block' => \my $block,    # input is galaxy style blocked fasta
     'parallel=i' => \( my $parallel = $Config->{generate}{parallel} ),
     'batch=i' => \( my $batch_number = $Config->{generate}{batch} ),
     'length_threshold|lt=i' => \( my $length_threshold = $Config->{generate}{length_threshold} ),
-    'run|r=s' => \( my $run        = "common" ),                                     # running tasks
-    'chr=s'   => \( my $init_chr   = "$FindBin::RealBin/../data/chr_length.csv" ),
+    'run|r=s' => \( my $run      = "common" ),                                     # running tasks
+    'chr=s'   => \( my $init_chr = "$FindBin::RealBin/../data/chr_length.csv" ),
 ) or HelpMessage(1);
 
 # prepare to run tasks in @tasks
@@ -100,7 +100,7 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . ( $init_chr   ? " -chr $init_chr"     : "" ),
+        . ( $init_chr ? " --chr $init_chr" : "" ),
     2 => "perl $FindBin::Bin/../init/gen_alignDB_fas.pl"
         . " -s $server"
         . " --port $port"
@@ -190,6 +190,7 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
+        . " --index --chart"
         . " -o $db_name.common.xlsx",
     41 => "perl $FindBin::Bin/../stat/multi_stat_factory.pl"
         . " -s $server"
@@ -197,6 +198,7 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
+        . " --index --chart"
         . " -o $db_name.multi.xlsx",
     42 => "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
         . " -s $server"
@@ -204,6 +206,7 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
+        . " --index --chart"
         . " -o $db_name.gc.xlsx",
     43 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
         . " -s $server"
@@ -211,6 +214,7 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
+        . " --index --chart"
         . " -o $db_name.gene.xlsx",
     44 => "perl $FindBin::Bin/../stat/mvar_stat_factory.pl"
         . " -s $server"

@@ -716,11 +716,11 @@ my $strain_list = sub {
 for my $n (@tasks) {
     if ( $n == 1 )  { &$indel_basic;    next; }
     if ( $n == 2 )  { &$snp_basic;      next; }
-    if ( $n == 3 )  { &$indel_list;     next; }
-    if ( $n == 4 )  { &$snp_list;       next; }
     if ( $n == 5 )  { &$snp_codon_list; next; }
     if ( $n == 8 )  { &$gene_list;      next; }
     if ( $n == 10 ) { &$strain_list;    next; }
+    if ( $n == 51 ) { &$indel_list;     next; }
+    if ( $n == 52 ) { &$snp_list;       next; }
 }
 
 $stopwatch->end_message;
