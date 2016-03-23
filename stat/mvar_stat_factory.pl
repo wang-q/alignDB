@@ -634,8 +634,9 @@ my $gene_list = sub {
             my $gene_indel = sum( map { $_->[12] } @records );
 
             my ($gene_pi);
-            my $total_length = sum( map { $_->[3] - $_->[2] + 1 } @records );
-            for my $record (@records) {
+            my @records_pi = grep { defined $_->[13] } @records;
+            my $total_length = sum( map { $_->[3] - $_->[2] + 1 } @records_pi );
+            for my $record (@records_pi) {
                 my $partial_length = $record->[3] - $record->[2] + 1;
                 $gene_pi += $record->[13] * $partial_length / $total_length;
             }
