@@ -13,6 +13,9 @@ use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::ToXLSX;
 
+use List::Util qw(min max sum);
+use List::MoreUtils qw(uniq);
+
 use lib "$FindBin::Bin/../lib";
 use AlignDB::Position;
 
@@ -596,6 +599,8 @@ my $gene_list = sub {
         my $sth = $dbh->prepare($sql_query);
         $sth->execute();
 
+        # write full genes
+        my @data;
         while ( my @row = $sth->fetchrow_array ) {
             my $align_id = shift @row;
             for my $i ( 2, 3 ) {
@@ -604,12 +609,47 @@ my $gene_list = sub {
                 splice @row, $i, 1, $chr_pos;
             }
 
-            $write_obj->write_row( $sheet, { row => \@row, } );
+            if ( $row[8] == 0 ) {
+                push @data, \@row;
+            }
+            else {
+                $write_obj->write_row( $sheet, { row => \@row, } );
+            }
+        }
+
+        # combine partial genes
+        my @ids = map { $_->[4] } @data;
+        @ids = uniq(@ids);
+        printf " " x 4 . "%d partial gene records\n", scalar @data;
+        printf " " x 4 . "%d partial genes\n",        scalar @ids;
+
+        for my $id (@ids) {
+            my @records = grep { $_->[4] eq $id } @data;
+
+            my $gene_id    = join ",", ( map { $_->[0] } @records );
+            my $chr_name   = $records[0]->[1];
+            my $gene_start = min( map { $_->[2] } @records );
+            my $gene_end   = max( map { $_->[3] } @records );
+            my $gene_subs  = sum( map { $_->[11] } @records );
+            my $gene_indel = sum( map { $_->[12] } @records );
+            my $gene_pi    = mean( map { $_->[13] } @records );
+            my $gene_syn   = mean( map { $_->[14] } @records );
+            my $gene_nsy   = mean( map { $_->[15] } @records );
+
+            $write_obj->write_row(
+                $sheet,
+                {   row => [
+                        $gene_id,         $chr_name,        $gene_start,       $gene_end,
+                        $records[0]->[4], $records[0]->[5], $records[0]->[6],  $records[0]->[7],
+                        $records[0]->[8], $records[0]->[9], $records[0]->[10], $gene_subs,
+                        $gene_indel,      $gene_pi,         $gene_syn,         $gene_nsy,
+                    ],
+                }
+            );
         }
     }
 
     print "Sheet [$sheet_name] has been generated.\n";
-
 };
 
 #----------------------------------------------------------#
@@ -725,5 +765,12 @@ for my $n (@tasks) {
 
 $stopwatch->end_message;
 exit;
+
+sub mean {
+    @_ = grep { defined $_ } @_;
+    return unless @_;
+    return $_[0] unless @_ > 1;
+    return sum(@_) / scalar(@_);
+}
 
 __END__
