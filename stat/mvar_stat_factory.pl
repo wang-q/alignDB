@@ -632,9 +632,24 @@ my $gene_list = sub {
             my $gene_end   = max( map { $_->[3] } @records );
             my $gene_subs  = sum( map { $_->[11] } @records );
             my $gene_indel = sum( map { $_->[12] } @records );
-            my $gene_pi    = mean( map { $_->[13] } @records );
-            my $gene_syn   = mean( map { $_->[14] } @records );
-            my $gene_nsy   = mean( map { $_->[15] } @records );
+
+            my ($gene_pi);
+            my $total_length = sum( map { $_->[3] - $_->[2] + 1 } @records );
+            for my $record (@records) {
+                my $partial_length = $record->[3] - $record->[2] + 1;
+                $gene_pi += $record->[13] * $partial_length / $total_length;
+            }
+
+            my ( $gene_syn, $gene_nsy );
+            my @records_syn_nsy = grep { defined $_->[14] } @records;
+            my $effective_length = sum( map { $_->[3] - $_->[2] + 1 } @records_syn_nsy );
+            if ($effective_length) {
+                for my $record (@records_syn_nsy) {
+                    my $partial_length = $record->[3] - $record->[2] + 1;
+                    $gene_syn += $record->[14] * $partial_length / $total_length;
+                    $gene_nsy += $record->[15] * $partial_length / $total_length;
+                }
+            }
 
             $write_obj->write_row(
                 $sheet,
