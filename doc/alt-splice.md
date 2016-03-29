@@ -7,9 +7,9 @@
 ```
 $ perl ~/Scripts/tool/list_dirtree.pl ~/data/alt-splice/ase_flanking/
 +-[ase_flanking]
-    |-ASase.bed                                   |324240 lines |     6.46M
-    |-AScse.bed                                   | 78702 lines |     1.57M
-    |-nonAS.bed                                   |  9296 lines |    189.8K
+    |-ASase.bed                                   |158522 lines |     3.16M
+    |-AScse.bed                                   | 49174 lines | 1,003.87K
+    |-nonAS.bed                                   | 20477 lines |   417.76K
 ```
 
 ### Processing
@@ -17,12 +17,12 @@ $ perl ~/Scripts/tool/list_dirtree.pl ~/data/alt-splice/ase_flanking/
 ```bash
 cd ~/data/alt-splice/ase_flanking/
 
-# Runtime 29 minutes and 53 seconds.
-perl ~/Scripts/alignDB/util/dup_db.pl -f ~/data/dumps/mysql/Human_n11cg_chimp_basic.sql.gz -g Human_n11cg_chimp_as_flanking
+# Runtime 50 minutes and 41 seconds.
+perl ~/Scripts/alignDB/util/dup_db.pl -f ~/data/dumps/mysql/Human_n12_pop.sql.gz -g Human_n12_ase_flanking
 
 # 2 days
 perl ~/Scripts/alignDB/ofg/insert_bed.pl \
-    -d Human_n11cg_chimp_as_flanking \
+    -d Human_n12_ase_flanking \
     --style center_intact \
     --parallel 12 \
     --tag intron --type ASase -f ~/data/alt-splice/ase_flanking/ASase.bed \
@@ -30,17 +30,17 @@ perl ~/Scripts/alignDB/ofg/insert_bed.pl \
     --tag intron --type nonAS -f ~/data/alt-splice/ase_flanking/nonAS.bed
 
 perl ~/Scripts/alignDB/init/update_sw_cv.pl \
-    -d Human_n11cg_chimp_as_flanking \
+    -d Human_n12_ase_flanking \
     --parallel 12
 
 perl ~/Scripts/alignDB/init/update_feature.pl \
-    -d Human_n11cg_chimp_as_flanking \
+    -d Human_n12_ase_flanking \
     -e homo_sapiens_core_82_37 \
     --parallel 12
 
 perl /home/wangq/Scripts/alignDB/stat/ofg_stat_factory.pl \
-    --by type -d Human_n11cg_chimp_as_flanking \
+    --by type -d Human_n12_ase_flanking \
     --index --chart \
-    -o Human_n11cg_chimp_as_flanking.ofg.xlsx
+    -o Human_n12_ase_flanking.ofg.xlsx
 
 ```
