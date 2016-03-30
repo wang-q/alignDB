@@ -17,10 +17,11 @@ $ perl ~/Scripts/tool/list_dirtree.pl ~/data/alt-splice/ase_flanking/
 ```bash
 cd ~/data/alt-splice/ase_flanking/
 
-# Runtime 50 minutes and 41 seconds.
-perl ~/Scripts/alignDB/util/dup_db.pl -f ~/data/dumps/mysql/Human_n12_pop.sql.gz -g Human_n12_ase_flanking
+# Runtime 19 minutes and 37 seconds.
+perl ~/Scripts/alignDB/util/dup_db.pl -f ~/data/dumps/mysql/Human_n12_pop_basic.sql.gz -g Human_n12_ase_flanking
 
-# 2 days
+# Runtime 8 hours and 42 minutes.
+# ==> Ofg in files: [228173]      Ofg inserted: [212356]
 perl ~/Scripts/alignDB/ofg/insert_bed.pl \
     -d Human_n12_ase_flanking \
     --style center_intact \
@@ -38,7 +39,7 @@ perl ~/Scripts/alignDB/init/update_feature.pl \
     -e homo_sapiens_core_82_37 \
     --parallel 12
 
-perl /home/wangq/Scripts/alignDB/stat/ofg_stat_factory.pl \
+perl ~/Scripts/alignDB/stat/ofg_stat_factory.pl \
     --by type -d Human_n12_ase_flanking \
     --index --chart \
     -o Human_n12_ase_flanking.ofg.xlsx
