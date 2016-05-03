@@ -244,6 +244,10 @@ find ScervsRM11_1a_Spar_mz -name "*.maf" -or -name "*.maf.gz" \
     | parallel --no-run-if-empty -j 8 fasops maf2fas {} -o ScervsRM11_1a_Spar_fasta/{/}.fas
 
 # refine fasta
+mkdir -p ScervsRM11_1a_Spar_refined2
+find ScervsRM11_1a_Spar_fasta -name "*.fas" \
+    | parallel --no-run-if-empty -j 8 fasops refine --msa mafft {} -o ScervsRM11_1a_Spar_refined2/{/}
+
 perl ~/Scripts/egaz/refine_fasta.pl \
     --msa mafft --block -p 8 \
     --outgroup \
