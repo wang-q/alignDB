@@ -15,7 +15,6 @@ use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
 use AlignDB::Ensembl;
 
 #----------------------------------------------------------#
@@ -41,15 +40,10 @@ write_runlist_feature.pl - extract runlists of a certain feature from alignDB
         --help      -?          brief help message
         --server    -s  STR     MySQL server IP/Domain name
         --port      -P  INT     MySQL server port
-        --db        -d  STR     database name
         --username  -u  STR     username
         --password  -p  STR     password
         --ensembl   -e  STR     ensembl database name
-        --length    -l  INT     threshold of alignment length
-        --feature       STR     feature name, default is [non_repeat]
-        --inset         INT     removing $inset bases from each end of each span of $set.
-                                If $inset is negative, then -$inset integers are added to each end of each span.
-        --invert                write inverted sets
+        --feature       STR     feature name, default is [repeat]
         --output    -o  STR     output filename
         --parallel      INT     run in parallel mode
 
@@ -57,134 +51,67 @@ write_runlist_feature.pl - extract runlists of a certain feature from alignDB
 
 GetOptions(
     'help|?' => sub { HelpMessage(0) },
-    'server|s=s'   => \( my $server           = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port             = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db               = $Config->{database}{db} ),
-    'username|u=s' => \( my $username         = $Config->{database}{username} ),
-    'password|p=s' => \( my $password         = $Config->{database}{password} ),
-    'ensembl|e=s'  => \( my $ensembl_db       = $Config->{database}{ensembl} ),
-    'length|l=i'   => \( my $length_threshold = $Config->{generate}{length_threshold} ),
-    'feature=s'    => \( my $feature          = 'non_repeat' ),
-    'inset=i'      => \my $inset,
-    'invert'       => \my $invert,
+    'server|s=s'   => \( my $server     = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port       = $Config->{database}{port} ),
+    'username|u=s' => \( my $username   = $Config->{database}{username} ),
+    'password|p=s' => \( my $password   = $Config->{database}{password} ),
+    'ensembl|e=s'  => \( my $ensembl_db = $Config->{database}{ensembl} ),
+    'feature=s'    => \( my $feature    = 'repeat' ),
     'output|o=s'   => \( my $out_file ),
-    'parallel=i'   => \( my $parallel         = $Config->{generate}{parallel} ),
+    'parallel=i'   => \( my $parallel   = $Config->{generate}{parallel} ),
 ) or HelpMessage(1);
 
 if ( !defined $out_file ) {
-    $out_file = "${db}.${feature}";
-    $out_file .= ".inset$inset" if $inset;
-    $out_file .= ".invert"      if $invert;
+    $out_file = "${ensembl_db}.${feature}";
     $out_file .= ".yml";
 }
 
 #----------------------------------------------------------#
-# Init objects
+# Run
 #----------------------------------------------------------#
-$stopwatch->start_message("Write slice files from $db...");
 
-my @jobs;
-{    # create alignDB object for this scope
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
+# ensembl handler
+my $ensembl = AlignDB::Ensembl->new(
+    server => $server,
+    db     => $ensembl_db,
+    user   => $username,
+    passwd => $password,
+);
 
-    # select all target chromosomes in this database
-    my @chrs = @{ $obj->get_chrs('target') };
-    @jobs = @chrs;
-}
+# ensembl handler
+my $db_adaptor = $ensembl->db_adaptor;
+my $slice_adaptor = $db_adaptor->get_SliceAdaptor;
 
-#----------------------------------------------------------#
-# worker
-#----------------------------------------------------------#
+# get chromosome list
+my @slices        = @{ $slice_adaptor->fetch_all('chromosome') };
+my @chrs          = sort { $a->{chr_name} cmp $b->{chr_name} }
+    map { { chr_name => $_->seq_region_name, chr_start => $_->start, chr_end => $_->end, } }
+    @slices;
+
 my $worker = sub {
     my ( $self, $chunk_ref, $chunk_id ) = @_;
     my $chr = $chunk_ref->[0];
 
-    local $| = 1;
+    my $chr_runlist = $chr->{chr_start} . "-" . $chr->{chr_end};
+    printf "%s:%s\n", $chr->{chr_name}, $chr_runlist;
 
-    #----------------------------#
-    # Init objects
-    #----------------------------#
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
-
-    # ensembl handler
-    my $ensembl = AlignDB::Ensembl->new(
-        server => $server,
-        db     => $ensembl_db,
-        user   => $username,
-        passwd => $password,
-    );
-
-    my ( $chr_id, $chr_name, $chr_length ) = @{$chr};
-    print "id => $chr_id, name => $chr_name, length => $chr_length\n";
-
-    # for each align
-    my @align_ids     = @{ $obj->get_align_ids_of_chr($chr_id) };
-    my $chr_ftr_set   = AlignDB::IntSpan->new;
-    my $chr_align_set = AlignDB::IntSpan->new;
-    for my $align_id (@align_ids) {
-        $obj->process_message($align_id);
-
-        # target
-        my $target_info      = $obj->get_target_info($align_id);
-        my $target_chr_name  = $target_info->{chr_name};
-        my $target_chr_start = $target_info->{chr_start};
-        my $target_chr_end   = $target_info->{chr_end};
-
-        $chr_align_set->add("$target_chr_start-$target_chr_end");
-
-        # make a new ensembl slice object
-        my $ensembl_chr_name = $target_chr_name;
-        $ensembl_chr_name =~ s/chr0?//i;
-
-        #print "ensembl_chr_name $ensembl_chr_name\n";
-        eval { $ensembl->set_slice( $ensembl_chr_name, $target_chr_start, $target_chr_end ); };
-        if ($@) {
-            warn "Can't get annotation\n";
-            next;
-        }
-
-        my $slice       = $ensembl->slice;
-        my $ftr_chr_set = $slice->{"_$feature\_set"};
-
-        next unless $ftr_chr_set;
-        next if $ftr_chr_set->is_empty;
-        if ($inset) {
-            $ftr_chr_set->inset($inset);
-        }
-
-        for my $set ( $ftr_chr_set->sets ) {
-            next if $set->size < $length_threshold;
-            $chr_ftr_set->add($set);
-        }
+    eval { $ensembl->set_slice( $chr->{chr_name}, $chr->{chr_start}, $chr->{chr_end} ); };
+    if ($@) {
+        warn "Can't get annotation\n";
+        return;
     }
 
-    # $chr_ftr_set should be subset of $chr_align_set
-    $chr_ftr_set = $chr_ftr_set->intersect($chr_align_set);
+    my $slice       = $ensembl->slice;
+    my $ftr_chr_set = $slice->{"_$feature\_set"};
 
-    # the inverted set
-    if ($invert) {
-        $chr_ftr_set = $chr_align_set->diff($chr_ftr_set);
-    }
-
-    MCE->gather( $chr_name, $chr_ftr_set->runlist );
+    MCE->gather( $chr->{chr_name}, $ftr_chr_set->runlist );
 };
 
-#----------------------------------------------------------#
-# start
-#----------------------------------------------------------#
 MCE::Flow::init {
     chunk_size  => 1,
     max_workers => $parallel,
 };
-my %feature_of = mce_flow $worker, \@jobs;
+my %feature_of = mce_flow $worker, \@chrs;
 MCE::Flow::finish;
 
 $stopwatch->block_message("Write output file [$out_file]");

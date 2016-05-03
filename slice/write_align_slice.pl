@@ -78,7 +78,7 @@ my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Write slice files from $db...");
 
 #----------------------------------------------------------#
-# Write .axt files from alignDB
+# Write files from alignDB
 #----------------------------------------------------------#
 print "Loading $yaml_file\n";
 my $dir = path($yaml_file)->parent->stringify;
