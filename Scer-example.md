@@ -304,17 +304,6 @@ perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
     --run basic
 ```
 
-### Yeast non-repeat regions
-
-```bash
-mkdir -p ~/Scripts/alignDB/data/feature
-cd ~/Scripts/alignDB/data/feature
- 
-perl ~/Scripts/alignDB/slice/write_runlist_feature.pl \
-    -d S288cvsRM11_1a -e yeast --feature repeat -l 500
-
-```
-
 ## Speed test
 
 ```bash
