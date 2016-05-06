@@ -7,13 +7,14 @@ use autodie;
 use Carp;
 use List::Util;
 use List::MoreUtils::PP;
+use Tie::IxHash;
 use YAML::Syck;
 
 use AlignDB::IntSpan;
 
 sub mean {
     @_ = grep { defined $_ } @_;
-    return unless @_;
+    return 0 unless @_;
     return $_[0] unless @_ > 1;
     return List::Util::sum(@_) / scalar(@_);
 }
@@ -80,6 +81,53 @@ sub pair_D {
     else {
         return $differences / $comparable_bases;
     }
+}
+
+# Split D value to D1 (substitutions in first_seq), D2( substitutions in second_seq) and Dcomplex
+# (substitutions can't be referred)
+sub ref_pair_D {
+    my $seq_refs = shift;
+
+    my $seq_count = scalar @{$seq_refs};
+    if ( $seq_count != 3 ) {
+        Carp::confess "Need three sequences\n";
+    }
+
+    my ( $d1, $d2, $dc ) = (0) x 3;
+    my $length = length $seq_refs->[0];
+
+    return ( $d1, $d2, $dc ) if $length == 0;
+
+    for my $pos ( 1 .. $length ) {
+        my $base0    = substr $seq_refs->[0], $pos - 1, 1;
+        my $base1    = substr $seq_refs->[0], $pos - 1, 1;
+        my $base_ref = substr $seq_refs->[0], $pos - 1, 1;
+        if ( $base0 ne $base1 ) {
+            if (   $base0 =~ /[atcg]/i
+                && $base1 =~ /[atcg]/i
+                && $base_ref =~ /[atcg]/i )
+            {
+                if ( $base1 eq $base_ref ) {
+                    $d1++;
+                }
+                elsif ( $base0 eq $base_ref ) {
+                    $d2++;
+                }
+                else {
+                    $dc++;
+                }
+            }
+            else {
+                $dc++;
+            }
+        }
+    }
+
+    for ( $d1, $d2, $dc ) {
+        $_ /= $length;
+    }
+
+    return ( $d1, $d2, $dc );
 }
 
 sub multi_seq_stat {
@@ -181,7 +229,6 @@ sub find_indel_set {
     $indel_set = $indel_set->intersect("1-$length");
     return $indel_set;
 }
-
 
 sub decode_header {
     my $header = shift;

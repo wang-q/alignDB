@@ -2,16 +2,14 @@ package AlignDB::Outgroup;
 use Moose;
 use autodie;
 
-use IO::Zlib;
-use List::Util qw(first max maxstr min minstr reduce shuffle sum);
-use List::MoreUtils qw(any uniq);
-use YAML qw(Dump Load DumpFile LoadFile);
+use Carp;
+use List::MoreUtils;
+use YAML::Syck;
 
 use AlignDB::IntSpan;
-use AlignDB::Util qw(:all);
 
-use FindBin;
-use lib "$FindBin::Bin/../";
+use AlignDB::Common;
+
 extends qw(AlignDB);
 
 sub _insert_ref_sequences {
@@ -29,8 +27,8 @@ sub _insert_ref_sequences {
     {
         $info_refs->[$ref_idx]{align_id} = $align_id;
         $info_refs->[$ref_idx]{seq}      = $ref_seq;
-        $info_refs->[$ref_idx]{gc}       = calc_gc_ratio($ref_seq);
-        my $seq_indel_set = find_indel_set($ref_seq);
+        $info_refs->[$ref_idx]{gc}       = AlignDB::Common::calc_gc_ratio([$ref_seq]);
+        my $seq_indel_set = AlignDB::Common::find_indel_set([$ref_seq]);
         my $seq_set       = $align_set->diff($seq_indel_set);
         $info_refs->[$ref_idx]{runlist} = $seq_set->runlist;
         $info_refs->[$ref_idx]{length}  = $seq_set->cardinality;
@@ -58,7 +56,7 @@ sub _polarize_indel {
     my $align_id = shift;
     my $ref_seq  = shift;
 
-    my $ref_indel_set = find_indel_set($ref_seq);
+    my $ref_indel_set = AlignDB::Common::find_indel_set($ref_seq);
 
     my $dbh = $self->dbh;
 
@@ -96,7 +94,7 @@ sub _polarize_indel {
         my $indel_set = AlignDB::IntSpan->new("$indel_start-$indel_end");
 
         # this line is different to AlignDB.pm
-        my @uniq_indel_seqs = uniq(@indel_seqs, $ref_bases);
+        my @uniq_indel_seqs =List::MoreUtils::PP::uniq( @indel_seqs, $ref_bases );
 
         # seqs with least '-' char wins
         my ($indel_seq) = map { $_->[0] }
@@ -104,7 +102,7 @@ sub _polarize_indel {
             map { [ $_, tr/-/-/ ] } @uniq_indel_seqs;
 
         if ( scalar @uniq_indel_seqs < 2 ) {
-            confess "no indel!\n";
+            Carp::confess "no indel!\n";
         }
         elsif ( scalar @uniq_indel_seqs > 2 ) {
             $indel_type = 'C';
@@ -115,6 +113,7 @@ sub _polarize_indel {
         else {
 
             if ( ( $ref_bases !~ /\-/ ) and ( $indel_seq ne $ref_bases ) ) {
+
                 # this section should already be judged in previes
                 # uniq_indel_seqs section, but I keep it here for safe
 
@@ -154,7 +153,7 @@ sub _polarize_indel {
                 $indel_type = 'D';
             }
             else {
-                confess "Errors when polarizing indel!\n";
+                Carp::confess "Errors when polarizing indel!\n";
             }
         }
 
@@ -231,7 +230,7 @@ sub _polarize_snp {
         my ( $mutant_to, $snp_freq, $snp_occured );
 
         if ( scalar @class < 2 ) {
-            confess "Not a real SNP\n";
+            Carp::confess "Not a real SNP\n";
         }
         elsif ( scalar @class == 2 ) {
             for my $nt (@nts) {
@@ -258,8 +257,7 @@ sub _polarize_snp {
             $snp_occured = 'unknown';
         }
 
-        $update_snp_sth->execute( $ref_base, $mutant_to, $snp_freq,
-            $snp_occured, $snp_id );
+        $update_snp_sth->execute( $ref_base, $mutant_to, $snp_freq, $snp_occured, $snp_id );
     }
 
     return;
@@ -270,27 +268,25 @@ sub add_align {
     my $info_refs = shift;
     my $seq_refs  = shift;
 
-    my $dbh = $self->dbh;
-
     my $target_idx = 0;
 
     # check align length
     my $align_length = length $seq_refs->[$target_idx];
     for ( @{$seq_refs} ) {
         if ( ( length $_ ) != $align_length ) {
-            confess "Sequences should have the same length!\n";
+            Carp::confess "Sequences should have the same length!\n";
         }
     }
 
     # check seq number
     my $seq_number = scalar @{$seq_refs};
     if ( $seq_number < 3 ) {
-        confess "Too few sequences [$seq_number]\n";
+        Carp::confess "Too few sequences [$seq_number]\n";
     }
 
     # check info and seq numbers
     if ( $seq_number != scalar @{$info_refs} ) {
-        confess "Number of infos is not equal to seqs!\n";
+        Carp::confess "Number of infos is not equal to seqs!\n";
     }
 
     # appoint reference/outgroup
@@ -303,7 +299,7 @@ sub add_align {
     #----------------------------#
     # INSERT INTO align
     #----------------------------#
-    my $align_id = $self->_insert_align( @{$ingroup_seqs} );
+    my $align_id = $self->_insert_align( $ingroup_seqs );
     printf "Prosess align [%s] at %s.%s(%s):%s-%s\n", $align_id,
         $info_refs->[$target_idx]{name},
         $info_refs->[$target_idx]{chr_name},
@@ -424,7 +420,7 @@ ISW: for my $isw_id ( @{$isw_id_ref} ) {
                     $group_n->add($i);
                 }
                 else {
-                    die "$indel_occur[$i]\n";
+                    Carp::confess "$indel_occur[$i]\n";
                 }
                 $sequences[$i] .= $snp_base[$i];
             }
@@ -432,13 +428,13 @@ ISW: for my $isw_id ( @{$isw_id_ref} ) {
             # find mutations on the deepest branches
             my @group_i = $group_i->elements;
             my @group_n = $group_n->elements;
-            my @i_snp   = uniq( @snp_base[@group_i] );
-            my @n_snp   = uniq( @snp_base[@group_n] );
+            my @i_snp   = List::MoreUtils::PP::uniq( @snp_base[@group_i] );
+            my @n_snp   = List::MoreUtils::PP::uniq( @snp_base[@group_n] );
             if ( @i_snp == 1 and $i_snp[0] ne $ref_base ) {
 
                 # removes all mutations on the deepest indel branches
                 # add bases with recombination events
-                if ( any { $_ eq $i_snp[0] } @n_snp ) {
+                if ( List::MoreUtils::PP::any { $_ eq $i_snp[0] } @n_snp ) {
                     $ref_seq3 .= $ref_base;
                     for my $i ( 0 .. $align_cnt - 1 ) {
                         $sequences3[$i] .= $snp_base[$i];
@@ -449,7 +445,7 @@ ISW: for my $isw_id ( @{$isw_id_ref} ) {
 
                 # removes all mutations on the deepest noindel branches
                 # add bases with recombination events
-                if ( any { $_ eq $n_snp[0] } @i_snp ) {
+                if ( List::MoreUtils::PP::any { $_ eq $n_snp[0] } @i_snp ) {
                     $ref_seq3 .= $ref_base;
                     for my $i ( 0 .. $align_cnt - 1 ) {
                         $sequences3[$i] .= $snp_base[$i];
@@ -470,26 +466,22 @@ ISW: for my $isw_id ( @{$isw_id_ref} ) {
 
         if ( !( $group_i->empty and $group_n->empty ) ) {
             ( $d_indel, $d_noindel, $d_bii, $d_bnn, $d_complex )
-                = _two_group_D( $group_i, $group_n, $ref_seq, \@sequences,
-                $window_length );
+                = _two_group_D( $group_i, $group_n, $ref_seq, \@sequences, $window_length );
 
             if ( @sequences2 > 0 and length $sequences2[0] > 0 ) {
                 ( $d_indel2, $d_noindel2, $d_bii2, $d_bnn2, $d_complex2 )
-                    = _two_group_D( $group_i, $group_n, $ref_seq2, \@sequences2,
-                    $window_length );
+                    = _two_group_D( $group_i, $group_n, $ref_seq2, \@sequences2, $window_length );
             }
 
             if ( @sequences3 > 0 and length $sequences3[0] > 0 ) {
                 ( $d_indel3, $d_noindel3, $d_bii3, $d_bnn3, $d_complex3 )
-                    = _two_group_D( $group_i, $group_n, $ref_seq3, \@sequences3,
-                    $window_length );
+                    = _two_group_D( $group_i, $group_n, $ref_seq3, \@sequences3, $window_length );
             }
         }
         $update_sql->execute(
-            $d_indel,   $d_noindel,  $d_bii,      $d_bnn,
-            $d_complex, $d_indel2,   $d_noindel2, $d_bii2,
-            $d_bnn2,    $d_complex2, $d_indel3,   $d_noindel3,
-            $d_bii3,    $d_bnn3,     $d_complex3, $isw_id
+            $d_indel,    $d_noindel, $d_bii,      $d_bnn,      $d_complex, $d_indel2,
+            $d_noindel2, $d_bii2,    $d_bnn2,     $d_complex2, $d_indel3,  $d_noindel3,
+            $d_bii3,     $d_bnn3,    $d_complex3, $isw_id
         );
     }
 
@@ -500,10 +492,10 @@ ISW: for my $isw_id ( @{$isw_id_ref} ) {
 # Internal Subroutines
 #----------------------------------------------------------#
 sub _D_indels {
-    my ( $ref_seq, $first_seq, $second_seq ) = @_;
+    my $seq_refs = shift;
 
-    my $length = length $ref_seq;
-    my ( $d1, $d2, $dc ) = ref_pair_D( $ref_seq, $first_seq, $second_seq );
+    my $length = length $seq_refs->[0];
+    my ( $d1, $d2, $dc ) = AlignDB::Common::ref_pair_D($seq_refs);
     for ( $d1, $d2, $dc ) {
         $_ *= $length;
     }
@@ -531,21 +523,21 @@ sub _two_group_D {
     for my $g1_side_seq (@g1_seqs) {
         for my $g2_side_seq (@g2_seqs) {
             my ( $di, $dn, $dc )
-                = _D_indels( $ref_seq, $g1_side_seq, $g2_side_seq );
+                = _D_indels( [ $ref_seq, $g1_side_seq, $g2_side_seq, $ref_seq, ] );
             push @d1, $di;
             push @d2, $dn;
             push @dc, $dc;
         }
     }
-    $d_1 = average(@d1) / $window_length;
-    $d_2 = average(@d2) / $window_length;
+    $d_1 = AlignDB::Common::mean(@d1) / $window_length;
+    $d_2 = AlignDB::Common::mean(@d2) / $window_length;
 
     my $i = 0;
     while ( $g1_seqs[ $i + 1 ] ) {
         my $j = $i + 1;
         while ( $g1_seqs[$j] ) {
             my ( $d1, $d2, $dc )
-                = _D_indels( $ref_seq, $g1_seqs[$i], $g1_seqs[$j] );
+                = _D_indels( [ $g1_seqs[$i], $g1_seqs[$j], $ref_seq, ] );
             push @db11, ( $d1 + $d2 );
             push @dc, $dc;
             $j++;
@@ -557,16 +549,16 @@ sub _two_group_D {
         my $j = $i + 1;
         while ( $g2_seqs[$j] ) {
             my ( $d1, $d2, $dc )
-                = _D_indels( $ref_seq, $g2_seqs[$i], $g2_seqs[$j] );
+                = _D_indels( [ $g2_seqs[$i], $g2_seqs[$j], $ref_seq, ] );
             push @db22, ( $d1 + $d2 );
             push @dc, $dc;
             $j++;
         }
         $i++;
     }
-    $d_b11     = average(@db11) / $window_length;
-    $d_b22     = average(@db22) / $window_length;
-    $d_complex = average(@dc) / $window_length;
+    $d_b11     = AlignDB::Common::mean(@db11) / $window_length;
+    $d_b22     = AlignDB::Common::mean(@db22) / $window_length;
+    $d_complex = AlignDB::Common::mean(@dc) / $window_length;
 
     return ( $d_1, $d_2, $d_b11, $d_b22, $d_complex );
 }
