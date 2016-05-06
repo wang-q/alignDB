@@ -5,11 +5,11 @@
 
 package AlignDB::Ensembl;
 use Moose;
+use Carp;
 
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
 use Bio::EnsEMBL::DBSQL::SliceAdaptor;
 use Bio::EnsEMBL::Mapper::RangeRegistry;
-use YAML qw(Dump Load DumpFile LoadFile);
 
 use AlignDB::IntSpan;
 
@@ -52,7 +52,7 @@ sub BUILD {
         -port   => $self->port,
         -user   => $self->user,
         -pass   => $self->passwd,
-    ) or confess "Cannot connect to EnsEMBL database\n";
+    ) or Carp::confess "Cannot connect to EnsEMBL database\n";
 
     $self->{db_adaptor} = $db_adaptor;
 
@@ -226,7 +226,7 @@ sub locate_set_position {
 
     # Check $pos_start and pos_end are in the Slice
     unless ( $pos_set->subset( $slice_hash->{_slice_set} ) ) {
-        warn "Range ", $pos_set->runlist, " is not in Slice ",
+        Carp::carp "Range ", $pos_set->runlist, " is not in Slice ",
             $slice_hash->{_start}, "-", $slice_hash->{_end}, "!\n";
     }
 
@@ -263,7 +263,7 @@ sub locate_set_position {
         }
         else {
             my $intersect = $pos_set->intersect( $slice_hash->{$repeat} );
-            my $n         = $intersect->cardinality;
+            my $n         = $intersect->size;
             if ( $n >= 1 ) {
                 $pos_in_repeats = "semi_" . $repeat;
             }
@@ -292,10 +292,10 @@ sub feature_portion {
         $set = AlignDB::IntSpan->new($pos_set);
     }
 
-    my $pos_n = $set->cardinality;
+    my $pos_n = $set->size;
     return if $pos_n <= 0;
     my $intersect       = $set->intersect( $slice_hash->{$feature} );
-    my $n               = $intersect->cardinality;
+    my $n               = $intersect->size;
     my $feature_portion = $n / $pos_n;
 
     return $feature_portion;
