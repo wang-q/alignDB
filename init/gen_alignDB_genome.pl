@@ -14,10 +14,10 @@ use Path::Tiny;
 use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
-use AlignDB::Util qw(read_fasta);
 
 use lib "$FindBin::RealBin/../lib";
 use AlignDB;
+use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -94,8 +94,8 @@ my $worker = sub {
 
     my $chr_name = path($infile)->basename('.fasta', '.fas', '.fa');
 
-    my ( $seq_of, $seq_names ) = read_fasta($infile);
-    my $chr_seq    = $seq_of->{ $seq_names->[0] };
+    my $seq_of =AlignDB::Common::read_fasta($infile);
+    my $chr_seq    = $seq_of->{ (keys %{$seq_of})[0] };
     my $chr_length = length $chr_seq;
 
     my $id_hash = $obj->get_chr_id_hash($target_name);

@@ -1,8 +1,6 @@
 package AlignDB::KaKs;
 use Moose;
-
-use List::Util qw(first max maxstr min minstr reduce shuffle sum);
-use YAML qw(Dump Load DumpFile LoadFile);
+use Carp;
 
 use Bio::Seq;
 
@@ -15,7 +13,7 @@ use Bio::Tools::Run::Alignment::Clustalw;
 # for projecting alignments from protein to R/DNA space
 use Bio::Align::Utilities qw(aa_to_dna_aln);
 
-use AlignDB::Util qw(:all);
+use AlignDB::Common;
 
 has 'aln_factory'  => ( is => 'ro', isa => 'Object', );
 has 'kaks_factory' => ( is => 'ro', isa => 'Object', );
@@ -33,17 +31,14 @@ sub BUILD {
     my $self = shift;
 
     if ( $self->fasta ) {
-        my ( $seqs, $seq_names ) = read_fasta( $self->fasta );
-        if ( @$seq_names > keys %{$seqs} ) {
-            confess "There are duplicated sequence names in input file\n";
-        }
-        $self->seq_of($seqs);
+        my $seq_of = AlignDB::Common::read_fasta( $self->fasta );
+        $self->seq_of($seq_of);
     }
 
     my $aln_factory
         = Bio::Tools::Run::Alignment::Clustalw->new( -verbose => -1 );
     unless ( $aln_factory->executable ) {
-        confess "Could not find the executable for clustalw\n";
+        Carp::confess "Could not find the executable for clustalw\n";
     }
     $self->{aln_factory} = $aln_factory;
 
@@ -55,7 +50,7 @@ sub BUILD {
         -verbose => -1,
     );
     unless ( $kaks_factory->executable ) {
-        die "Could not find the executable for codeml\n";
+        Carp::confess "Could not find the executable for codeml\n";
     }
     $self->{kaks_factory} = $kaks_factory;
 
@@ -79,7 +74,7 @@ sub run {
         # check seqs
         my $pseq = $protein->seq;
         if ( $pseq =~ /\*/ and $pseq !~ /\*$/ ) {
-            confess "provided a cDNA ["
+            Carp::confess "provided a cDNA ["
                 . $seq->display_id
                 . "] sequence with stop codon(s), PAML will choke!\n";
         }
@@ -94,7 +89,7 @@ sub run {
 
     my ( $rc, $parser ) = $self->kaks_factory->run;
     if ( $rc <= 0 ) {
-        confess $self->kaks_factory->error_string, "\n";
+        Carp::confess $self->kaks_factory->error_string, "\n";
     }
     my $result   = $parser->next_result;
     my $MLmatrix = $result->get_MLmatrix;
