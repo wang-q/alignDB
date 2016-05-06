@@ -3,10 +3,10 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML::Syck qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use Path::Tiny;
 use MCE::Flow;
@@ -39,31 +39,32 @@ write_runlist_feature.pl - extract runlists of a certain feature from alignDB
       Options:
         --help      -?          brief help message
         --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
+        --port          INT     MySQL server port
         --username  -u  STR     username
         --password  -p  STR     password
         --ensembl   -e  STR     ensembl database name
-        --feature       STR     feature name, default is [repeat]
+        --feature   -f  STR     feature name, default is [repeat]
         --output    -o  STR     output filename
         --parallel      INT     run in parallel mode
+
+    perl ~/Scripts/alignDB/util/write_runlist_feature.pl -e yeast -f repeat
 
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server     = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port       = $Config->{database}{port} ),
+    'port=i'       => \( my $port       = $Config->{database}{port} ),
     'username|u=s' => \( my $username   = $Config->{database}{username} ),
     'password|p=s' => \( my $password   = $Config->{database}{password} ),
     'ensembl|e=s'  => \( my $ensembl_db = $Config->{database}{ensembl} ),
-    'feature=s'    => \( my $feature    = 'repeat' ),
+    'feature|f=s'  => \( my $feature    = 'repeat' ),
     'output|o=s'   => \( my $out_file ),
     'parallel=i'   => \( my $parallel   = $Config->{generate}{parallel} ),
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 if ( !defined $out_file ) {
-    $out_file = "${ensembl_db}.${feature}";
-    $out_file .= ".yml";
+    $out_file = "${ensembl_db}.${feature}.yml";
 }
 
 #----------------------------------------------------------#
@@ -74,17 +75,18 @@ if ( !defined $out_file ) {
 my $ensembl = AlignDB::Ensembl->new(
     server => $server,
     db     => $ensembl_db,
+    port   => $port,
     user   => $username,
     passwd => $password,
 );
 
 # ensembl handler
-my $db_adaptor = $ensembl->db_adaptor;
+my $db_adaptor    = $ensembl->db_adaptor;
 my $slice_adaptor = $db_adaptor->get_SliceAdaptor;
 
 # get chromosome list
-my @slices        = @{ $slice_adaptor->fetch_all('chromosome') };
-my @chrs          = sort { $a->{chr_name} cmp $b->{chr_name} }
+my @slices = @{ $slice_adaptor->fetch_all('chromosome') };
+my @chrs = sort { $a->{chr_name} cmp $b->{chr_name} }
     map { { chr_name => $_->seq_region_name, chr_start => $_->start, chr_end => $_->end, } }
     @slices;
 
@@ -115,7 +117,7 @@ my %feature_of = mce_flow $worker, \@chrs;
 MCE::Flow::finish;
 
 $stopwatch->block_message("Write output file [$out_file]");
-DumpFile( $out_file, \%feature_of );
+YAML::Syck::DumpFile( $out_file, \%feature_of );
 
 $stopwatch->end_message;
 

@@ -1,3 +1,8 @@
+# A simple class to get annotations for a certain chromosomal region (slice) using ensembl database
+# and API.
+#
+# Qiang Wang
+
 package AlignDB::Ensembl;
 use Moose;
 
@@ -6,14 +11,16 @@ use Bio::EnsEMBL::DBSQL::SliceAdaptor;
 use Bio::EnsEMBL::Mapper::RangeRegistry;
 use YAML qw(Dump Load DumpFile LoadFile);
 
-use FindBin;
-use lib "$FindBin::Bin/../";
-extends qw(AlignDB);
 use AlignDB::IntSpan;
 
-has 'db_adaptor' => ( is => 'ro', isa => 'Object' );    # EnsEMBL DBAdaptor
-has 'slice_obj'  => ( is => 'ro', isa => 'Object' );    # EnsEMBL Slice object
-has 'slice' => ( is => 'rw', isa => 'HashRef', default => sub { {} } );
+has 'server'     => ( is => 'ro', isa => 'Str' );
+has 'db'         => ( is => 'ro', isa => 'Str' );
+has 'port'       => ( is => 'ro', isa => 'Int', default => sub {3306} );
+has 'user'       => ( is => 'ro', isa => 'Str' );
+has 'passwd'     => ( is => 'ro', isa => 'Str' );
+has 'db_adaptor' => ( is => 'ro', isa => 'Object' );                          # EnsEMBL DBAdaptor
+has 'slice_obj'  => ( is => 'ro', isa => 'Object' );                          # EnsEMBL Slice object
+has 'slice'      => ( is => 'rw', isa => 'HashRef', default => sub { {} } );
 
 sub BUILD {
     my $self = shift;
@@ -42,6 +49,7 @@ sub BUILD {
     my $db_adaptor = Bio::EnsEMBL::DBSQL::DBAdaptor->new(
         -host   => $self->server,
         -dbname => $self->db,
+        -port   => $self->port,
         -user   => $self->user,
         -pass   => $self->passwd,
     ) or confess "Cannot connect to EnsEMBL database\n";
@@ -61,8 +69,7 @@ sub new_slice_obj {
     my $db_adaptor    = $self->db_adaptor;
     my $slice_adaptor = $db_adaptor->get_SliceAdaptor;
 
-    my $slice
-        = $slice_adaptor->fetch_by_region( 'chromosome', $chr, $start, $end );
+    my $slice = $slice_adaptor->fetch_by_region( 'chromosome', $chr, $start, $end );
 
     return $slice;
 }
@@ -223,8 +230,7 @@ sub locate_set_position {
             $slice_hash->{_start}, "-", $slice_hash->{_end}, "!\n";
     }
 
-    # one feature, three forms
-    # coding; semi_coding; non_coding
+    # one feature, three forms: coding; semi_coding; non_coding
     my @features = qw{
         _cds_set
     };
@@ -246,8 +252,7 @@ sub locate_set_position {
     }
     $pos_location =~ s/_cds_set/coding/;
 
-    # one feature, three forms
-    # repeat; semi_repeat; non_repeat
+    # one feature, three forms: repeat; semi_repeat; non_repeat
     my @repeats = qw{
         _repeat_set
     };
@@ -315,8 +320,3 @@ sub _ftr2runlist {
 }
 
 1;
-
-# A simple class to get annotations for a certain chromosomal region (slice)
-#   using ensembl database and API.
-#
-# Author: Wang Qiang

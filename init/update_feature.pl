@@ -107,6 +107,7 @@ my $worker = sub {
     my $ensembl = AlignDB::Ensembl->new(
         server => $server,
         db     => $ensembl_db,
+        port   => $port,
         user   => $username,
         passwd => $password,
     );
