@@ -39,7 +39,7 @@ As example for egaz and alignDB. Extract from Scer_wgs of [`OPs-download.md`](ht
     mkdir -p ~/data/alignment/example/GENOMES/DOWNLOAD
     cd ~/data/alignment/example/GENOMES/DOWNLOAD
 
-    # Download S288c, EC1118 and RM11_1a separately
+    # Download S288c and RM11_1a separately
     perl ~/Scripts/withncbi/taxon/assembly_csv.pl \
         -f ftp://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/All/GCF_000146045.2.assembly.txt \
         --nuclear -name S288c \
@@ -285,15 +285,15 @@ perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
 mkdir -p ~/Scripts/alignDB/data/feature
 cd ~/Scripts/alignDB/data/feature
  
-perl ~/Scripts/alignDB/slice/write_runlist_feature.pl \
-    -d ScervsRM11_1a_Spar -e yeast --feature intergenic -l 500
+perl ~/Scripts/alignDB/util/write_runlist_feature.pl \
+    -e yeast --feature intergenic -l 500
 
 mkdir fas
-mv ScervsRM11_1a_Spar.intergenic.yml fas
+mv yeast.intergenic.yml fas
 rm fas/*.fas
 
 perl ~/Scripts/alignDB/slice/write_align_slice.pl \
-    -d ScervsRM11_1a_Spar -f fas/ScervsRM11_1a_Spar.intergenic.yml --outgroup
+    -d ScervsRM11_1a_Spar -f fas/yeast.intergenic.yml --outgroup
 
 perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
     -d S288cvsRM11_1a_intergenic \
@@ -320,7 +320,7 @@ perl ~/Scripts/alignDB/extra/two_way_batch.pl \
     * `--parallel 4`: 2m52s
     * `--parallel 8`: 2m50s
 
-* On new server (E5-2690 256G HDD)
+* On server (E5-2690 256G HDD)
     * `--parallel 4`: 4m32s
 
 * On desktop pc (E3-1245 v2 Windows)
