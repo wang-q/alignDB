@@ -36,3 +36,5 @@ doc/ofg
 *.log
 *.bak
 
+# IDE
+.idea
