@@ -3,20 +3,23 @@ use Moose;
 use autodie;
 use DBI;
 
+use Carp;
 use IO::Zlib;
-use List::Util qw(first max maxstr min minstr reduce shuffle sum);
-use List::MoreUtils qw(any all uniq);
-use YAML qw(Dump Load DumpFile LoadFile);
+use List::Util;
+use List::MoreUtils::PP;
+use YAML::Syck;
 
 use AlignDB::IntSpan;
 use AlignDB::Window;
-use AlignDB::Util qw(:all);
 
-has 'mysql'        => ( is => 'ro', isa => 'Str' );       # e.g. 'alignDB:202.119.43.5'
-has 'server'       => ( is => 'ro', isa => 'Str' );       # e.g. '202.119.43.5'
-has 'db'           => ( is => 'ro', isa => 'Str' );       # e.g. 'alignDB'
-has 'user'         => ( is => 'ro', isa => 'Str' );       # database username
-has 'passwd'       => ( is => 'ro', isa => 'Str' );       # database password
+use AlignDB::Common;
+
+has 'mysql'  => ( is => 'ro', isa => 'Str' );    # e.g. 'alignDB:202.119.43.5'
+has 'server' => ( is => 'ro', isa => 'Str' );    # e.g. '202.119.43.5'
+has 'db'     => ( is => 'ro', isa => 'Str' );    # e.g. 'alignDB'
+has 'user'   => ( is => 'ro', isa => 'Str' );    # database username
+has 'passwd' => ( is => 'ro', isa => 'Str' );    # database password
+
 has 'dbh'          => ( is => 'ro', isa => 'Ref' );       # store database handle here
 has 'window_maker' => ( is => 'ro', isa => 'Object' );    # sliding windows maker
 has 'threshold' => ( is => 'ro', isa => 'Int', default => sub {5_000} );
@@ -47,14 +50,12 @@ sub BUILD {
         # do nothing
     }
     else {
-        confess "You should provide either mysql or db-server\n";
+        Carp::confess "You should provide either mysql or db-server\n";
     }
 
     my $mysql  = $self->mysql;
     my $user   = $self->user;
     my $passwd = $self->passwd;
-    my $server = $self->server;
-    my $db     = $self->db;
 
     my $dbh = {};
     if ( !$self->mocking ) {
@@ -70,8 +71,8 @@ sub BUILD {
 }
 
 sub _insert_align {
-    my $self = shift;
-    my @seqs = @_;
+    my $self     = shift;
+    my $seq_refs = shift;
 
     my $dbh = $self->dbh;
 
@@ -92,7 +93,7 @@ sub _insert_align {
         }
     );
 
-    my $result = multi_seq_stat(@seqs);
+    my $result = AlignDB::Common::multi_seq_stat($seq_refs);
 
     $align_insert->execute(
         $result->[0], $result->[1], $result->[2], $result->[3], $result->[4],
@@ -109,7 +110,7 @@ sub _insert_seq {
     my $self     = shift;
     my $seq_info = shift;
 
-    confess "Pass a seq to this method!\n" if !defined $seq_info->{seq};
+    Carp::confess "Pass a seq to this method!\n" if !defined $seq_info->{seq};
 
     for my $key (qw{chr_id chr_name chr_start chr_end chr_strand length gc runlist}) {
         if ( !defined $seq_info->{$key} ) {
@@ -161,14 +162,13 @@ sub _insert_set_and_sequence {
     my $comparable_set = AlignDB::IntSpan->new;
 
     for my $i ( 0 .. $seq_number - 1 ) {
-        my $name = $info_refs->[$i]{name};
         $info_refs->[$i]{align_id} = $align_id;
         $info_refs->[$i]{seq}      = $seq_refs->[$i];
-        $info_refs->[$i]{gc}       = calc_gc_ratio( $seq_refs->[$i] );
-        my $seq_indel_set = find_indel_set( $seq_refs->[$i] );
+        $info_refs->[$i]{gc}       = AlignDB::Common::calc_gc_ratio( [ $seq_refs->[$i] ] );
+        my $seq_indel_set = AlignDB::Common::find_indel_set( $seq_refs->[$i] );
         my $seq_set       = $align_set->diff($seq_indel_set);
         $info_refs->[$i]{runlist} = $seq_set->runlist;
-        $info_refs->[$i]{length}  = $seq_set->cardinality;
+        $info_refs->[$i]{length}  = $seq_set->size;
 
         $indel_set->merge($seq_indel_set);
     }
@@ -185,7 +185,7 @@ sub _insert_set_and_sequence {
             WHERE align_id = ?
             }
         );
-        $align_update->execute( scalar $indel_set->spans,
+        $align_update->execute( scalar $indel_set->span_size,
             $comparable_set->runlist, $indel_set->runlist, $align_id );
 
     }
@@ -264,7 +264,7 @@ sub _insert_indel {
         my $indel_all_seqs = join "|", @indel_seqs;
 
         my $indel_type;
-        my @uniq_indel_seqs = uniq(@indel_seqs);
+        my @uniq_indel_seqs = List::MoreUtils::PP::uniq(@indel_seqs);
 
         # seqs with least '-' char wins
         my ($indel_seq) = map { $_->[0] }
@@ -315,9 +315,9 @@ sub _insert_indel {
         }
 
         # here freq is the minor allele freq
-        $indel_freq = min( $indel_freq, $seq_count - $indel_freq );
+        $indel_freq = List::Util::min( $indel_freq, $seq_count - $indel_freq );
 
-        my $indel_gc = calc_gc_ratio($indel_seq);
+        my $indel_gc = AlignDB::Common::calc_gc_ratio( [$indel_seq] );
 
         push @indel_sites,
             {
@@ -387,13 +387,24 @@ sub _insert_snp {
         }
     );
 
-    my ( $align_set, $comparable_set, $indel_set )
-        = @{ $self->get_sets($align_id) };
-
     my $seq_refs  = $self->get_seqs($align_id);
     my $seq_count = scalar @{$seq_refs};
+    my $length    = length $seq_refs->[0];
 
-    my $snp_site = multi_snp_site( @{$seq_refs} );
+    my $snp_site = {};
+    for my $pos ( 1 .. $length ) {
+        my @bases;
+        for my $i ( 0 .. $seq_count - 1 ) {
+            my $base = substr( $seq_refs->[$i], $pos - 1, 1 );
+            push @bases, $base;
+        }
+
+        if (List::MoreUtils::PP::all { $_ =~ /[agct]/i } @bases ) {
+            if (List::MoreUtils::PP::any { $_ ne $bases[0] } @bases ) {
+                $snp_site->{$pos} = \@bases;
+            }
+        }
+    }
 
     # %{$snp_site} keys are snp positions
     for my $pos ( sort { $a <=> $b } keys %{$snp_site} ) {
@@ -407,9 +418,9 @@ sub _insert_snp {
         my $mutant_to;
         my $snp_freq = 0;
         my $snp_occured;
-        my @class = uniq(@bases);
+        my @class = List::MoreUtils::PP::uniq(@bases);
         if ( scalar @class < 2 ) {
-            confess "no snp!\n";
+            Carp::confess "no snp\n";
         }
         elsif ( scalar @class > 2 ) {
             $snp_freq    = -1;
@@ -430,7 +441,7 @@ sub _insert_snp {
         }
 
         # here freq is the minor allele freq
-        $snp_freq = min( $snp_freq, $seq_count - $snp_freq );
+        $snp_freq = List::Util::min( $snp_freq, $seq_count - $snp_freq );
 
         $snp_insert->execute( $align_id, $pos, $target_base, $query_base,
             $all_bases, $mutant_to, $snp_freq, $snp_occured, );
@@ -446,7 +457,7 @@ sub insert_isw {
 
     my $dbh = $self->dbh;
 
-    my ( $align_set, $comparable_set, $indel_set )
+    my ( $align_set, undef, undef )
         = @{ $self->get_sets($align_id) };
 
     # indel_id & prev_indel_id
@@ -515,7 +526,7 @@ sub insert_isw {
         $interval_end--;
 
         if ( $interval_start > $interval_end ) {
-            print Dump(
+            print YAML::Syck::Dump(
                 {   interval_start  => $interval_start,
                     interval_end    => $interval_end,
                     interval_length => $interval_length,
@@ -617,7 +628,7 @@ sub insert_ssw {
     my $self     = shift;
     my $align_id = shift;
 
-    my ( $align_set, $comparable_set, $indel_set )
+    my ( undef, $comparable_set, undef )
         = @{ $self->get_sets($align_id) };
 
     my $dbh = $self->dbh;
@@ -756,33 +767,31 @@ sub add_align {
     my $info_refs = shift;
     my $seq_refs  = shift;
 
-    my $dbh = $self->dbh;
-
     my $target_idx = 0;
 
     # check align length
     my $align_length = length $seq_refs->[$target_idx];
     for ( @{$seq_refs} ) {
         if ( ( length $_ ) != $align_length ) {
-            confess "Sequences should have the same length!\n";
+            Carp::confess "Sequences should have the same length!\n";
         }
     }
 
     # check seq number
-    my $seq_number = scalar @{$seq_refs};
-    if ( $seq_number < 2 ) {
-        confess "Too few sequences [$seq_number]\n";
+    my $seq_count = scalar @{$seq_refs};
+    if ( $seq_count < 2 ) {
+        Carp::confess "Too few sequences [$seq_count]\n";
     }
 
     # check info and seq numbers
-    if ( $seq_number != scalar @{$info_refs} ) {
-        confess "Number of infos is not equal to seqs!\n";
+    if ( $seq_count != scalar @{$info_refs} ) {
+        Carp::confess "Number of infos is not equal to seqs!\n";
     }
 
     #----------------------------#
     # INSERT INTO align
     #----------------------------#
-    my $align_id = $self->_insert_align( @{$seq_refs} );
+    my $align_id = $self->_insert_align($seq_refs);
     printf "Prosess align [%s] at %s.%s(%s):%s-%s\n", $align_id,
         $info_refs->[$target_idx]{name},
         $info_refs->[$target_idx]{chr_name},
@@ -842,8 +851,8 @@ sub parse_axt_file {
 
         next if length $first_line < $threshold;
 
-        my ($align_serial, $first_chr,  $first_start,  $first_end, $second_chr,
-            $second_start, $second_end, $query_strand, $align_score,
+        my (undef,         $first_chr,  $first_start,  $first_end, $second_chr,
+            $second_start, $second_end, $query_strand, undef,
         ) = split /\s+/, $summary_line;
 
         if ( $query_strand eq "-" ) {
@@ -920,7 +929,7 @@ sub parse_block_fasta_file {
             #  name: S288C
             my $info_refs = [];
             for my $header (@headers) {
-                my $info_ref = decode_header($header);
+                my $info_ref = AlignDB::Common::decode_header($header);
                 $info_ref->{chr_id}
                     = $self->get_chr_id_hash( $info_ref->{name} )->{ $info_ref->{chr_name} };
 
@@ -997,7 +1006,7 @@ sub get_seqs {
     return $self->caching_seqs;
 }
 
-sub get_seq_ref {
+sub get_ref_seq {
     my $self     = shift;
     my $align_id = shift;
 
@@ -1059,7 +1068,7 @@ sub get_names {
         $sth->finish;
     }
 
-    return (@names);
+    return @names;
 }
 
 sub get_taxon_ids {
@@ -1093,7 +1102,7 @@ sub get_taxon_ids {
         $sth->finish;
     }
 
-    return (@ids);
+    return @ids;
 }
 
 sub get_name_of {
@@ -1179,7 +1188,7 @@ sub get_slice_stat {
 
     my $seqs_ref   = $self->get_seqs($align_id);
     my @seq_slices = map { $set->substr_span($_) } @$seqs_ref;
-    my $result     = multi_seq_stat(@seq_slices);
+    my $result     = AlignDB::Common::multi_seq_stat( \@seq_slices );
 
     return $result;
 }
@@ -1195,7 +1204,7 @@ sub get_slice_indel {
     # real indels in this alignment slice
     my $seqs_ref       = $self->get_seqs($align_id);
     my @seq_slices     = map { $set->substr_span($_) } @$seqs_ref;
-    my @seq_indel_sets = map { find_indel_set($_) } @seq_slices;
+    my @seq_indel_sets = map { AlignDB::Common::find_indel_set($_) } @seq_slices;
 
     my $indel_set = AlignDB::IntSpan->new;
     for (@seq_indel_sets) {
@@ -1249,7 +1258,7 @@ sub insert_window {
 
     my $window_start   = $window_set->min;
     my $window_end     = $window_set->max;
-    my $window_length  = $window_set->cardinality;
+    my $window_length  = $window_set->size;
     my $window_runlist = $window_set->runlist;
 
     # do or do not count internal indels within window_set
@@ -1323,7 +1332,7 @@ sub empty_table {
     my @table_names = $dbh->tables( '', '', '' );
 
     # returned table names are quoted by `` (back-quotes)
-    unless ( any { $_ =~ qr{`$table`} } @table_names ) {
+    unless ( List::MoreUtils::PP::any { $_ =~ qr{`$table`} } @table_names ) {
         print "Table $table does not exist\n";
         return;
     }
@@ -1381,7 +1390,7 @@ sub create_column {
         # table names are quoted by ` (back-quotes) which is the
         #   quote_identifier
         my $table_name = "`$table`";
-        unless ( any { $_ =~ /$table_name/i } @table_names ) {
+        unless ( List::MoreUtils::PP::any { $_ =~ /$table_name/i } @table_names ) {
             print "Table $table does not exist\n";
             return;
         }
@@ -1422,7 +1431,7 @@ sub check_column {
         # table names are quoted by ` (back-quotes) which is the
         #   quote_identifier
         my $table_name = "`$table`";
-        unless ( any { $_ =~ /$table_name/i } @table_names ) {
+        unless ( List::MoreUtils::PP::any { $_ =~ /$table_name/i } @table_names ) {
             print " " x 4, "Table $table does not exist\n";
             return;
         }
@@ -1845,7 +1854,7 @@ sub add_meta_stopwatch {
     );
 
     my $uuid = $stopwatch->uuid;
-    if ( !any { $_ eq $uuid } @$ary_ref ) {
+    if ( !List::MoreUtils::PP::any { $_ eq $uuid } @$ary_ref ) {
         $self->add_meta(
             {   '------'      => '------',
                 a_operation   => $stopwatch->operation,
@@ -1869,7 +1878,6 @@ __END__
 =head1 NAME
 
 AlignDB - convert alignment filea to an indel-concentrated RDBMS
-          (Default format is blastZ F<.axt>)
 
 =head1 SYNOPSIS
 
@@ -1882,12 +1890,6 @@ AlignDB - convert alignment filea to an indel-concentrated RDBMS
 
 =head1 AUTHOR
 
-B<Wang Qiang>
-
-Email: wangq{at}nju{dot}edu{dot}cn
-
-=head1 APPENDIX
-
-Internal methods are usually preceded with a _
+B<Qiang Wang>
 
 =cut

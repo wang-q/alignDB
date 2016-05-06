@@ -143,7 +143,7 @@ sub write_slice {
         my ( $target_seq, @query_seqs ) = @{ $obj->get_seqs($align_id) };
         my $ref_seq;
         if ($outgroup) {
-            $ref_seq = $obj->get_seq_ref($align_id);
+            $ref_seq = $obj->get_ref_seq($align_id);
         }
 
         my ( $target_name, @query_names ) = $obj->get_names($align_id);
