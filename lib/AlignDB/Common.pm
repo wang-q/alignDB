@@ -298,6 +298,52 @@ sub decode_header {
     return \%info;
 }
 
+sub encode_header {
+    my $info           = shift;
+    my $only_essential = shift;
+
+    my $header;
+    if ( defined $info->{name} ) {
+        if ( defined $info->{chr_name} ) {
+            $header .= $info->{name};
+            $header .= "." . $info->{chr_name};
+        }
+        else {
+            $header .= $info->{name};
+        }
+    }
+    elsif ( defined $info->{chr_name} ) {
+        $header .= $info->{chr_name};
+    }
+
+    if ( defined $info->{chr_strand} ) {
+        $header .= "(" . $info->{chr_strand} . ")";
+    }
+    if ( defined $info->{chr_start} ) {
+        $header .= ":" . $info->{chr_start};
+        if ( $info->{chr_end} != $info->{chr_start} ) {
+            $header .= "-" . $info->{chr_end};
+        }
+    }
+
+    # additional keys
+    if ( !$only_essential ) {
+        my %essential = map { $_ => 1 } qw{name chr_name chr_strand chr_start chr_end seq full_seq};
+        my @parts;
+        for my $key ( sort keys %{$info} ) {
+            if ( !$essential{$key} ) {
+                push @parts, $key . "=" . $info->{$key};
+            }
+        }
+        if (@parts) {
+            my $additional = join ";", @parts;
+            $header .= "|" . $additional;
+        }
+    }
+
+    return $header;
+}
+
 sub read_fasta {
     my $filename = shift;
 
