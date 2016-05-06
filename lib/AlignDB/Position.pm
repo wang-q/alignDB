@@ -1,7 +1,7 @@
 package AlignDB::Position;
 use Moose;
 
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use AlignDB::IntSpan;
 
@@ -173,7 +173,7 @@ sub at_target_chr {
     local $SIG{__WARN__} = sub {
         my ($sig) = @_;
         print "$sig\n";
-        print Dump {
+        print YAML::Syck::Dump {
             align_id         => $align_id,
             align_pos        => $align_pos,
             align_length     => $align_length,
@@ -187,7 +187,7 @@ sub at_target_chr {
     }
 
     my $target_pos;
-    if ( $target_set->member($align_pos) ) {
+    if ( $target_set->contains($align_pos) ) {
         $target_pos = $target_set->index($align_pos);
     }
     else {
@@ -230,7 +230,7 @@ sub at_query_chr {
     local $SIG{__WARN__} = sub {
         my ($sig) = @_;
         print "$sig\n";
-        print Dump {
+        print YAML::Syck::Dump {
             align_id        => $align_id,
             align_pos       => $align_pos,
             align_length    => $align_length,
@@ -281,7 +281,7 @@ sub target_chr_align_transform {
     {
         my $target_cursor = 0;    # target
         for ( my $i = 1; $i <= $align_length; $i++ ) {
-            if ( $target_set->contain($i) ) {
+            if ( $target_set->contains($i) ) {
                 $target_cursor++;
             }
             $target_chr_pos[$i] = $target_chr_start + $target_cursor - 1;
@@ -323,7 +323,7 @@ sub query_chr_align_transform {
         my $query_cursor = 0;    # query
         if ( $query_strand eq '+' ) {
             for ( my $i = 1; $i <= $align_length; $i++ ) {
-                if ( $query_set->contain($i) ) {
+                if ( $query_set->contains($i) ) {
                     $query_cursor++;
                 }
                 $query_chr_pos[$i] = $query_chr_start + $query_cursor - 1;
@@ -331,7 +331,7 @@ sub query_chr_align_transform {
         }
         else {
             for ( my $i = 1; $i <= $align_length; $i++ ) {
-                if ( $query_set->contain($i) ) {
+                if ( $query_set->contains($i) ) {
                     $query_cursor++;
                 }
                 $query_chr_pos[$i] = $query_chr_end - $query_cursor + 1;

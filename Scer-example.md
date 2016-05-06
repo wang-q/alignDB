@@ -308,7 +308,8 @@ perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
 
 ```bash
 perl ~/Scripts/alignDB/extra/two_way_batch.pl \
-    -d alignDB -e saccharomyces_cerevisiae_core_29_82_4 \
+    -d S288cvsRM11_1a \
+    -e saccharomyces_cerevisiae_core_29_82_4 \
     -t S288c -q RM11_1a \
     -da ~/data/alignment/example/scer/Pairwise/S288cvsRM11_1a \
     --chr ~/data/alignment/example/scer/chr_length.csv \
@@ -332,3 +333,14 @@ perl ~/Scripts/alignDB/extra/two_way_batch.pl \
 * On server (E5-2690 v3 128G SSD)
     * `--parallel 4`: 3m13s
     * `--parallel 8`: 2m22s
+
+```bash
+perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
+    -d Scer_n2_Spar \
+    -e saccharomyces_cerevisiae_core_29_82_4 \
+    --block --outgroup \
+    -da ~/data/alignment/example/scer/Scer_n2_Spar_refined \
+    -chr ~/data/alignment/example/scer/chr_length.csv \
+    -lt 1000 --run common \
+    --parallel 4 --batch 10
+```
