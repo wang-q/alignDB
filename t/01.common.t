@@ -85,4 +85,23 @@ use AlignDB::Common;
     }
 }
 
+{
+    print "#revcom\n";
+
+    my @data = (
+        [qw{ AAAA TTTT }],
+        [qw{ CCCC GGGG }],
+        [qw{ TAGGGATAACAGGGTAAT ATTACCCTGTTATCCCTA }],    # I-Sce I endonuclease
+        [qw{ GCANNNNNTGC GCANNNNNTGC }],                  # BstAP I
+    );
+
+    foreach my $i ( 0 .. @data - 1 ) {
+        my ( $ori, $expected ) = @{ $data[$i] };
+        my $result = AlignDB::Common::revcom($ori);
+        print "\n";
+        print "original: $ori\n";
+        is( $result, $expected, "revcom_$i" );
+    }
+}
+
 done_testing();
