@@ -15,9 +15,10 @@ use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
 
+use App::Fasops::Common;
+
 use lib "$FindBin::RealBin/../lib";
 use AlignDB;
-use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -92,10 +93,10 @@ my $worker = sub {
 
     die "target_name not defined\n" unless $target_name;
 
-    my $chr_name = path($infile)->basename('.fasta', '.fas', '.fa');
+    my $chr_name = path($infile)->basename( '.fasta', '.fas', '.fa' );
 
-    my $seq_of =AlignDB::Common::read_fasta($infile);
-    my $chr_seq    = $seq_of->{ (keys %{$seq_of})[0] };
+    my $seq_of     = App::Fasops::Common::read_fasta($infile);
+    my $chr_seq    = $seq_of->{ ( keys %{$seq_of} )[0] };
     my $chr_length = length $chr_seq;
 
     my $id_hash = $obj->get_chr_id_hash($target_name);

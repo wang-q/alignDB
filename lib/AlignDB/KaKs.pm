@@ -13,7 +13,7 @@ use Bio::Tools::Run::Alignment::Clustalw;
 # for projecting alignments from protein to R/DNA space
 use Bio::Align::Utilities qw(aa_to_dna_aln);
 
-use AlignDB::Common;
+use App::Fasops::Common;
 
 has 'aln_factory'  => ( is => 'ro', isa => 'Object', );
 has 'kaks_factory' => ( is => 'ro', isa => 'Object', );
@@ -31,7 +31,7 @@ sub BUILD {
     my $self = shift;
 
     if ( $self->fasta ) {
-        my $seq_of = AlignDB::Common::read_fasta( $self->fasta );
+        my $seq_of =  App::Fasops::Common::read_fasta( $self->fasta );
         $self->seq_of($seq_of);
     }
 

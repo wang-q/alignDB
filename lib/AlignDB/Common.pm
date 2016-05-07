@@ -344,33 +344,6 @@ sub encode_header {
     return $header;
 }
 
-sub read_fasta {
-    my $filename = shift;
-
-    my @lines = Path::Tiny::path($filename)->lines;
-
-    tie my %seq_of, "Tie::IxHash";
-    my $cur_name;
-    for my $line (@lines) {
-        if ( $line =~ /^\>[\w:-]+/ ) {
-            $line =~ s/\>//;
-            chomp $line;
-            $cur_name =  $line;
-            $seq_of{$line} = '';
-        }
-        elsif ( $line =~ /^[\w-]+/ ) {
-            $line =~ s/[^\w-]//g;
-            chomp $line;
-            my $seq_name = $cur_name;
-            $seq_of{$seq_name} .= $line;
-        }
-        else {    # Blank line, do nothing
-        }
-    }
-
-    return \%seq_of;
-}
-
 sub revcom {
     my $seq = shift;
 
