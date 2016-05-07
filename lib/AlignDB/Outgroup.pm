@@ -10,7 +10,7 @@ sub _insert_ref_sequences {
     my $info_refs = shift;
     my $ref_seq   = shift;
 
-    my $dbh = $self->dbh;
+    my DBI $dbh = $self->dbh;
 
     my $align_length = length $ref_seq;
     my $align_set    = AlignDB::IntSpan->new("1-$align_length");
@@ -19,14 +19,14 @@ sub _insert_ref_sequences {
     {
         $info_refs->[$ref_idx]{align_id} = $align_id;
         $info_refs->[$ref_idx]{seq}      = $ref_seq;
-        $info_refs->[$ref_idx]{gc}       = App::Fasops::Common::calc_gc_ratio([$ref_seq]);
-        my $seq_indel_set = App::Fasops::Common::indel_intspan([$ref_seq]);
-        my $seq_set       = $align_set->diff($seq_indel_set);
+        $info_refs->[$ref_idx]{gc}       = App::Fasops::Common::calc_gc_ratio( [$ref_seq] );
+        my $seq_indel_set = App::Fasops::Common::indel_intspan( [$ref_seq] );
+        my $seq_set = $align_set->diff($seq_indel_set);
         $info_refs->[$ref_idx]{runlist} = $seq_set->runlist;
         $info_refs->[$ref_idx]{length}  = $seq_set->cardinality;
     }
 
-    my $insert = $dbh->prepare(
+    my DBI $sth = $dbh->prepare(
         q{
         INSERT INTO reference (
             ref_id, seq_id, ref_raw_seq, ref_complex_indel
@@ -37,8 +37,8 @@ sub _insert_ref_sequences {
         }
     );
     my $seq_id = $self->_insert_seq( $info_refs->[$ref_idx] );
-    $insert->execute( $seq_id, $ref_seq, '-' );
-    $insert->finish;
+    $sth->execute( $seq_id, $ref_seq, '-' );
+    $sth->finish;
 
     return;
 }
@@ -50,11 +50,11 @@ sub _polarize_indel {
 
     my $ref_indel_set = App::Fasops::Common::indel_intspan($ref_seq);
 
-    my $dbh = $self->dbh;
+    my DBI $dbh = $self->dbh;
 
     # Complex indels determined without outgroup are still complex
     # polarize clear ones
-    my $indel_info_sth = $dbh->prepare(
+    my DBI $indel_info_sth = $dbh->prepare(
         q{
         SELECT indel_id, indel_start, indel_end, indel_all_seqs
         FROM indel
@@ -62,7 +62,7 @@ sub _polarize_indel {
         AND align_id = ?
         }
     );
-    my $update_indel_sth = $dbh->prepare(
+    my DBI $update_indel_sth = $dbh->prepare(
         q{
         UPDATE indel
         SET indel_ref_seq = ?,
@@ -86,7 +86,7 @@ sub _polarize_indel {
         my $indel_set = AlignDB::IntSpan->new("$indel_start-$indel_end");
 
         # this line is different to AlignDB.pm
-        my @uniq_indel_seqs =List::MoreUtils::PP::uniq( @indel_seqs, $ref_bases );
+        my @uniq_indel_seqs = List::MoreUtils::PP::uniq( @indel_seqs, $ref_bases );
 
         # seqs with least '-' char wins
         my ($indel_seq) = map { $_->[0] }
@@ -180,9 +180,9 @@ sub _polarize_snp {
     my $align_id = shift;
     my $ref_seq  = shift;
 
-    my $dbh = $self->dbh;
+    my DBI $dbh = $self->dbh;
 
-    my $snp_info_sth = $dbh->prepare(
+    my DBI $snp_info_sth = $dbh->prepare(
         q{
         SELECT snp_id, snp_pos, all_bases
         FROM snp
@@ -190,7 +190,7 @@ sub _polarize_snp {
         AND align_id = ?
         }
     );
-    my $update_snp_sth = $dbh->prepare(
+    my DBI $update_snp_sth = $dbh->prepare(
         q{
         UPDATE snp
         SET ref_base = ?,
@@ -291,7 +291,7 @@ sub add_align {
     #----------------------------#
     # INSERT INTO align
     #----------------------------#
-    my $align_id = $self->_insert_align( $ingroup_seqs );
+    my $align_id = $self->_insert_align($ingroup_seqs);
     printf "Prosess align [%s] at %s.%s(%s):%s-%s\n", $align_id,
         $info_refs->[$target_idx]{name},
         $info_refs->[$target_idx]{chr_name},
@@ -329,7 +329,7 @@ sub update_D_values {
     my $align_id = shift;
 
     # Get database handle
-    my $dbh = $self->dbh;
+    my DBI $dbh = $self->dbh;
 
     my $isw_id_ref = $dbh->selectcol_arrayref(
         q{
@@ -343,7 +343,7 @@ sub update_D_values {
         $align_id
     );
 
-    my $read_sql = $dbh->prepare(
+    my DBI $read_sth = $dbh->prepare(
         q{
         SELECT s.ref_base, s.all_bases, w.isw_length, i.indel_occured
         FROM snp s, isw w, indel i
@@ -355,7 +355,7 @@ sub update_D_values {
         }
     );
 
-    my $update_sql = $dbh->prepare(
+    my DBI $update_sth = $dbh->prepare(
         'UPDATE isw
         SET isw_d_indel = ?,
             isw_d_noindel = ?,
@@ -375,7 +375,7 @@ sub update_D_values {
         WHERE isw_id = ?'
     );
 
-ISW: for my $isw_id ( @{$isw_id_ref} ) {
+    for my $isw_id ( @{$isw_id_ref} ) {
         my $window_length;
         my ( $d_indel,  $d_noindel,  $d_bii,  $d_bnn,  $d_complex )  = (0) x 5;
         my ( $d_indel2, $d_noindel2, $d_bii2, $d_bnn2, $d_complex2 ) = (0) x 5;
@@ -395,8 +395,8 @@ ISW: for my $isw_id ( @{$isw_id_ref} ) {
         my $ref_seq3;
         my @sequences3;
 
-        $read_sql->execute($isw_id);
-        while ( my @row = $read_sql->fetchrow_array ) {
+        $read_sth->execute($isw_id);
+        while ( my @row = $read_sth->fetchrow_array ) {
             $window_length = $row[2];
             my $ref_base = $row[0];
 
@@ -470,7 +470,7 @@ ISW: for my $isw_id ( @{$isw_id_ref} ) {
                     = _two_group_D( $group_i, $group_n, $ref_seq3, \@sequences3, $window_length );
             }
         }
-        $update_sql->execute(
+        $update_sth->execute(
             $d_indel,    $d_noindel, $d_bii,      $d_bnn,      $d_complex, $d_indel2,
             $d_noindel2, $d_bii2,    $d_bnn2,     $d_complex2, $d_indel3,  $d_noindel3,
             $d_bii3,     $d_bnn3,    $d_complex3, $isw_id
@@ -496,10 +496,10 @@ sub _D_indels {
 }
 
 sub _two_group_D {
-    my $group1        = shift;                      # AlignDB::IntSpan object
-    my $group2        = shift;                      # AlignDB::IntSpan object
-    my $ref_seq       = shift;                      # string
-    my $sequences     = shift;                      # array_ref of strings
+    my AlignDB::IntSpan $group1 = shift;
+    my AlignDB::IntSpan $group2 = shift;
+    my $ref_seq                 = shift;    # string
+    my $sequences               = shift;    # array_ref of strings
     my $window_length = shift || length $ref_seq;
 
     my ( $d_1, $d_2, $d_b11, $d_b22, $d_complex ) = (0) x 5;

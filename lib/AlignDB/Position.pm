@@ -28,7 +28,7 @@ sub update_target_info {
     my $self     = shift;
     my $align_id = shift;
 
-    my $dbh = $self->dbh;
+    my DBI $dbh = $self->dbh;
 
     my $stored_align_id = $self->target_align_id;
     if ( defined $stored_align_id and $align_id == $stored_align_id ) {
@@ -46,11 +46,11 @@ sub update_target_info {
         WHERE a.align_id = ?
     };
 
-    my $align_sth = $dbh->prepare($align_query);
-    $align_sth->execute($align_id);
+    my DBI $sth = $dbh->prepare($align_query);
+    $sth->execute($align_id);
 
     my ( $align_length, $target_chr_start, $target_chr_end, $target_runlist, )
-        = $align_sth->fetchrow_array;
+        = $sth->fetchrow_array;
 
     my $target_set = AlignDB::IntSpan->new($target_runlist);
 
@@ -69,7 +69,7 @@ sub update_query_info {
     my $self     = shift;
     my $align_id = shift;
 
-    my $dbh = $self->dbh;
+    my DBI $dbh = $self->dbh;
 
     my $stored_align_id = $self->target_align_id;
     if ( defined $stored_align_id and $align_id == $stored_align_id ) {
@@ -88,12 +88,11 @@ sub update_query_info {
         WHERE a.align_id = ?
     };
 
-    my $align_sth = $dbh->prepare($align_query);
-    $align_sth->execute($align_id);
+    my DBI $sth = $dbh->prepare($align_query);
+    $sth->execute($align_id);
 
-    my ($align_length,  $query_chr_start, $query_chr_end,
-        $query_runlist, $query_strand,
-    ) = $align_sth->fetchrow_array;
+    my ( $align_length, $query_chr_start, $query_chr_end, $query_runlist, $query_strand, )
+        = $sth->fetchrow_array;
 
     my $query_set = AlignDB::IntSpan->new($query_runlist);
 
@@ -133,10 +132,10 @@ sub at_align {
     $self->update_target_info($align_id);
     my $target_info = $self->target_info;
 
-    my $align_length     = $target_info->{align_length};
-    my $target_chr_start = $target_info->{chr_start};
-    my $target_chr_end   = $target_info->{chr_end};
-    my $target_set       = $target_info->{set};
+    my $align_length                = $target_info->{align_length};
+    my $target_chr_start            = $target_info->{chr_start};
+    my $target_chr_end              = $target_info->{chr_end};
+    my AlignDB::IntSpan $target_set = $target_info->{set};
 
     my $align_pos;
     if ( $chr_pos < $target_chr_start ) {    # 0 or negtive interger
@@ -165,10 +164,10 @@ sub at_target_chr {
     $self->update_target_info($align_id);
     my $target_info = $self->target_info;
 
-    my $align_length     = $target_info->{align_length};
-    my $target_chr_start = $target_info->{chr_start};
-    my $target_chr_end   = $target_info->{chr_end};
-    my $target_set       = $target_info->{set};
+    my $align_length                = $target_info->{align_length};
+    my $target_chr_start            = $target_info->{chr_start};
+    my $target_chr_end              = $target_info->{chr_end};
+    my AlignDB::IntSpan $target_set = $target_info->{set};
 
     local $SIG{__WARN__} = sub {
         my ($sig) = @_;
@@ -221,11 +220,11 @@ sub at_query_chr {
     $self->update_query_info($align_id);
     my $query_info = $self->query_info;
 
-    my $align_length    = $query_info->{align_length};
-    my $query_chr_start = $query_info->{chr_start};
-    my $query_chr_end   = $query_info->{chr_end};
-    my $query_set       = $query_info->{set};
-    my $query_strand    = $query_info->{strand};
+    my $align_length               = $query_info->{align_length};
+    my $query_chr_start            = $query_info->{chr_start};
+    my $query_chr_end              = $query_info->{chr_end};
+    my AlignDB::IntSpan $query_set = $query_info->{set};
+    my $query_strand               = $query_info->{strand};
 
     local $SIG{__WARN__} = sub {
         my ($sig) = @_;
@@ -270,10 +269,10 @@ sub target_chr_align_transform {
     $self->update_target_info($align_id);
     my $target_info = $self->target_info;
 
-    my $align_length     = $target_info->{align_length};
-    my $target_chr_start = $target_info->{chr_start};
-    my $target_chr_end   = $target_info->{chr_end};
-    my $target_set       = $target_info->{set};
+    my $align_length                = $target_info->{align_length};
+    my $target_chr_start            = $target_info->{chr_start};
+    my $target_chr_end              = $target_info->{chr_end};
+    my AlignDB::IntSpan $target_set = $target_info->{set};
 
     # align_position to chr_position transforming array
     # the first element [0] will be ignored
@@ -310,11 +309,11 @@ sub query_chr_align_transform {
     $self->update_query_info($align_id);
     my $query_info = $self->query_info;
 
-    my $align_length    = $query_info->{align_length};
-    my $query_chr_start = $query_info->{chr_start};
-    my $query_chr_end   = $query_info->{chr_end};
-    my $query_set       = $query_info->{set};
-    my $query_strand    = $query_info->{strand};
+    my $align_length               = $query_info->{align_length};
+    my $query_chr_start            = $query_info->{chr_start};
+    my $query_chr_end              = $query_info->{chr_end};
+    my AlignDB::IntSpan $query_set = $query_info->{set};
+    my $query_strand               = $query_info->{strand};
 
     # align_position to chr_position transforming array
     # the first element [0] will be ignored

@@ -69,7 +69,7 @@ sub run {
         );
         $dna_of->{$header} = $seq;
 
-        my $protein = $seq->translate;
+        my Bio::Seq $protein = $seq->translate;
 
         # check seqs
         my $pseq = $protein->seq;

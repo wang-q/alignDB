@@ -18,8 +18,8 @@ has 'db'         => ( is => 'ro', isa => 'Str' );
 has 'port'       => ( is => 'ro', isa => 'Int', default => sub {3306} );
 has 'user'       => ( is => 'ro', isa => 'Str' );
 has 'passwd'     => ( is => 'ro', isa => 'Str' );
-has 'db_adaptor' => ( is => 'ro', isa => 'Object' );                          # EnsEMBL DBAdaptor
-has 'slice_obj'  => ( is => 'ro', isa => 'Object' );                          # EnsEMBL Slice object
+has 'db_adaptor' => ( is => 'ro', isa => 'Object' );
+has 'slice_obj'  => ( is => 'ro', isa => 'Object' );
 has 'slice'      => ( is => 'rw', isa => 'HashRef', default => sub { {} } );
 
 sub BUILD {
@@ -66,8 +66,8 @@ sub new_slice_obj {
     my $end   = shift;
 
     # obtain a slice
-    my $db_adaptor    = $self->db_adaptor;
-    my $slice_adaptor = $db_adaptor->get_SliceAdaptor;
+    my Bio::EnsEMBL::DBSQL::DBAdaptor $db_adaptor       = $self->db_adaptor;
+    my Bio::EnsEMBL::DBSQL::SliceAdaptor $slice_adaptor = $db_adaptor->get_SliceAdaptor;
 
     my $slice = $slice_adaptor->fetch_by_region( 'chromosome', $chr, $start, $end );
 
@@ -189,7 +189,7 @@ sub slice_stat {
         my $new_key = $key;
         if ( $new_key =~ /_set/ ) {
             $new_key =~ s/_(.+)_set/$1/;
-            $stat_hash{$new_key} = $slice_hash->{$key}->cardinality;
+            $stat_hash{$new_key} = $slice_hash->{$key}->size;
         }
         else {
             $new_key =~ s/_//;
@@ -216,8 +216,8 @@ sub locate_position {
 }
 
 sub locate_set_position {
-    my $self    = shift;
-    my $pos_set = shift;
+    my $self = shift;
+    my AlignDB::IntSpan $pos_set = shift;
 
     my $pos_location;      # location signal
     my $pos_in_repeats;    # repeats signal
