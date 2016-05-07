@@ -1,9 +1,9 @@
 package AlignDB;
 use Moose;
 use autodie;
-use DBI;
 
 use Carp;
+use DBI;
 use IO::Zlib;
 use List::Util;
 use List::MoreUtils::PP;
@@ -12,7 +12,7 @@ use YAML::Syck;
 use AlignDB::IntSpan;
 use AlignDB::Window;
 
-use AlignDB::Common;
+use App::Fasops::Common;
 
 has 'mysql'  => ( is => 'ro', isa => 'Str' );    # e.g. 'alignDB:202.119.43.5'
 has 'server' => ( is => 'ro', isa => 'Str' );    # e.g. '202.119.43.5'
@@ -93,11 +93,13 @@ sub _insert_align {
         }
     );
 
-    my $result = AlignDB::Common::multi_seq_stat($seq_refs);
+    my $result     = App::Fasops::Common::multi_seq_stat($seq_refs);
+    my $target_gc  = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[0] ] );
+    my $average_gc = App::Fasops::Common::calc_gc_ratio($seq_refs);
 
     $align_insert->execute(
         $result->[0], $result->[1], $result->[2], $result->[3], $result->[4],
-        $result->[5], $result->[6], $result->[7], $result->[8], $result->[9],
+        $result->[5], $result->[6], $result->[7], $target_gc,   $average_gc,
     );
     $align_insert->finish;
 
@@ -164,8 +166,8 @@ sub _insert_set_and_sequence {
     for my $i ( 0 .. $seq_number - 1 ) {
         $info_refs->[$i]{align_id} = $align_id;
         $info_refs->[$i]{seq}      = $seq_refs->[$i];
-        $info_refs->[$i]{gc}       = AlignDB::Common::calc_gc_ratio( [ $seq_refs->[$i] ] );
-        my $seq_indel_set = AlignDB::Common::find_indel_set( $seq_refs->[$i] );
+        $info_refs->[$i]{gc}       = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[$i] ] );
+        my $seq_indel_set = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
         my $seq_set       = $align_set->diff($seq_indel_set);
         $info_refs->[$i]{runlist} = $seq_set->runlist;
         $info_refs->[$i]{length}  = $seq_set->size;
@@ -317,7 +319,7 @@ sub _insert_indel {
         # here freq is the minor allele freq
         $indel_freq = List::Util::min( $indel_freq, $seq_count - $indel_freq );
 
-        my $indel_gc = AlignDB::Common::calc_gc_ratio( [$indel_seq] );
+        my $indel_gc = App::Fasops::Common::calc_gc_ratio( [$indel_seq] );
 
         push @indel_sites,
             {
@@ -399,8 +401,8 @@ sub _insert_snp {
             push @bases, $base;
         }
 
-        if (List::MoreUtils::PP::all { $_ =~ /[agct]/i } @bases ) {
-            if (List::MoreUtils::PP::any { $_ ne $bases[0] } @bases ) {
+        if ( List::MoreUtils::PP::all { $_ =~ /[agct]/i } @bases ) {
+            if ( List::MoreUtils::PP::any { $_ ne $bases[0] } @bases ) {
                 $snp_site->{$pos} = \@bases;
             }
         }
@@ -929,7 +931,7 @@ sub parse_block_fasta_file {
             #  name: S288C
             my $info_refs = [];
             for my $header (@headers) {
-                my $info_ref = AlignDB::Common::decode_header($header);
+                my $info_ref = App::Fasops::Common::decode_header($header);
                 $info_ref->{chr_id}
                     = $self->get_chr_id_hash( $info_ref->{name} )->{ $info_ref->{chr_name} };
 
@@ -1188,8 +1190,11 @@ sub get_slice_stat {
 
     my $seqs_ref   = $self->get_seqs($align_id);
     my @seq_slices = map { $set->substr_span($_) } @$seqs_ref;
-    my $result     = AlignDB::Common::multi_seq_stat( \@seq_slices );
+    my $result     = App::Fasops::Common::multi_seq_stat( \@seq_slices );
+    my $target_gc  = App::Fasops::Common::calc_gc_ratio( [ $seq_slices[0] ] );
+    my $average_gc = App::Fasops::Common::calc_gc_ratio( \@seq_slices );
 
+    push @{$result}, $target_gc, $average_gc;
     return $result;
 }
 
@@ -1204,7 +1209,7 @@ sub get_slice_indel {
     # real indels in this alignment slice
     my $seqs_ref       = $self->get_seqs($align_id);
     my @seq_slices     = map { $set->substr_span($_) } @$seqs_ref;
-    my @seq_indel_sets = map { AlignDB::Common::find_indel_set($_) } @seq_slices;
+    my @seq_indel_sets = map { App::Fasops::Common::indel_intspan($_) } @seq_slices;
 
     my $indel_set = AlignDB::IntSpan->new;
     for (@seq_indel_sets) {

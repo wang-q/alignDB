@@ -2,14 +2,6 @@ package AlignDB::Outgroup;
 use Moose;
 use autodie;
 
-use Carp;
-use List::MoreUtils;
-use YAML::Syck;
-
-use AlignDB::IntSpan;
-
-use AlignDB::Common;
-
 extends qw(AlignDB);
 
 sub _insert_ref_sequences {
@@ -27,8 +19,8 @@ sub _insert_ref_sequences {
     {
         $info_refs->[$ref_idx]{align_id} = $align_id;
         $info_refs->[$ref_idx]{seq}      = $ref_seq;
-        $info_refs->[$ref_idx]{gc}       = AlignDB::Common::calc_gc_ratio([$ref_seq]);
-        my $seq_indel_set = AlignDB::Common::find_indel_set([$ref_seq]);
+        $info_refs->[$ref_idx]{gc}       = App::Fasops::Common::calc_gc_ratio([$ref_seq]);
+        my $seq_indel_set = App::Fasops::Common::indel_intspan([$ref_seq]);
         my $seq_set       = $align_set->diff($seq_indel_set);
         $info_refs->[$ref_idx]{runlist} = $seq_set->runlist;
         $info_refs->[$ref_idx]{length}  = $seq_set->cardinality;
@@ -56,7 +48,7 @@ sub _polarize_indel {
     my $align_id = shift;
     my $ref_seq  = shift;
 
-    my $ref_indel_set = AlignDB::Common::find_indel_set($ref_seq);
+    my $ref_indel_set = App::Fasops::Common::indel_intspan($ref_seq);
 
     my $dbh = $self->dbh;
 
@@ -495,7 +487,7 @@ sub _D_indels {
     my $seq_refs = shift;
 
     my $length = length $seq_refs->[0];
-    my ( $d1, $d2, $dc ) = AlignDB::Common::ref_pair_D($seq_refs);
+    my ( $d1, $d2, $dc ) = App::Fasops::Common::ref_pair_D($seq_refs);
     for ( $d1, $d2, $dc ) {
         $_ *= $length;
     }
@@ -529,8 +521,8 @@ sub _two_group_D {
             push @dc, $dc;
         }
     }
-    $d_1 = AlignDB::Common::mean(@d1) / $window_length;
-    $d_2 = AlignDB::Common::mean(@d2) / $window_length;
+    $d_1 = App::Fasops::Common::mean(@d1) / $window_length;
+    $d_2 = App::Fasops::Common::mean(@d2) / $window_length;
 
     my $i = 0;
     while ( $g1_seqs[ $i + 1 ] ) {
@@ -556,9 +548,9 @@ sub _two_group_D {
         }
         $i++;
     }
-    $d_b11     = AlignDB::Common::mean(@db11) / $window_length;
-    $d_b22     = AlignDB::Common::mean(@db22) / $window_length;
-    $d_complex = AlignDB::Common::mean(@dc) / $window_length;
+    $d_b11     = App::Fasops::Common::mean(@db11) / $window_length;
+    $d_b22     = App::Fasops::Common::mean(@db22) / $window_length;
+    $d_complex = App::Fasops::Common::mean(@dc) / $window_length;
 
     return ( $d_1, $d_2, $d_b11, $d_b22, $d_complex );
 }
