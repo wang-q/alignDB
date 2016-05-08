@@ -1561,34 +1561,6 @@ sub find_align {
     return \@align_ids;
 }
 
-sub find_align_chr_id {
-    my $self   = shift;
-    my $chr_id = shift;
-    my $start  = shift;
-    my $end    = shift || $start;
-
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
-        q{
-        SELECT s.align_id
-        FROM sequence s
-        INNER JOIN target t ON s.seq_id = t.seq_id
-        WHERE 1 = 1
-        AND s.chr_id = ?
-        AND s.chr_start <= ?
-        AND s.chr_end >= ?
-        }
-    );
-    $sth->execute( $chr_id, $start, $end );
-
-    my @align_ids;
-    while ( my @row = $sth->fetchrow_array ) {
-        push @align_ids, $row[0];
-    }
-
-    return \@align_ids;
-}
-
 sub process_message {
     my $self     = shift;
     my $align_id = shift;
