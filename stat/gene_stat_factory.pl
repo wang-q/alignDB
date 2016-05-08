@@ -104,55 +104,6 @@ if ( $combine == 0 ) {
 }
 
 #----------------------------------------------------------#
-# chart -- coding
-#----------------------------------------------------------#
-my $chart_coding = sub {
-    my $sheet = shift;
-    my $data  = shift;
-
-    my %opt = (
-        x_column    => 0,
-        y_column    => 1,
-        first_row   => 1,
-        last_row    => 16,
-        x_min_scale => -5,
-        x_max_scale => 10,
-        y_data      => $data->[1],
-        x_title     => "Distance to coding borders",
-        y_title     => "Nucleotide diversity",
-        top         => 1,
-        left        => 10,
-    );
-    $write_obj->draw_y( $sheet, \%opt );
-
-    #cross        => -5,
-
-    $opt{y_column} = 2;
-    $opt{y_data}   = $data->[2];
-    $opt{y_title}  = "Indel per 100 bp";
-    $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
-
-    $opt{y_column} = 3;
-    $opt{y_data}   = $data->[3];
-    $opt{y_title}  = "GC proportion";
-    $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
-
-    $opt{y_column} = 4;
-    $opt{y_data}   = $data->[4];
-    $opt{y_title}  = "Window CV";
-    $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
-
-    $opt{y_column} = 5;
-    $opt{y_data}   = $data->[5];
-    $opt{y_title}  = "Repeats proportion";
-    $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
-};
-
-#----------------------------------------------------------#
 # chart -- distance_*
 #----------------------------------------------------------#
 my $chart_distance = sub {
