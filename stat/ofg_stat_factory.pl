@@ -3,10 +3,10 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use DBI;
 use Set::Scalar;
@@ -47,7 +47,7 @@ ofg_stat_factory.pl - OFG (other features of genome) stats for alignDB
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server   = $Config->{database}{server} ),
     'port|P=i'     => \( my $port     = $Config->{database}{port} ),
     'db|d=s'       => \( my $db       = $Config->{database}{db} ),
@@ -59,7 +59,7 @@ GetOptions(
     'replace=s'    => \my %replace,
     'index'        => \my $add_index_sheet,
     'chart'        => \my $add_chart,
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 $outfile = "$db.ofg.xlsx" unless $outfile;
 
@@ -140,7 +140,7 @@ my $chart_ofg = sub {
     }
     else {
         warn "X column errors\n";
-        print Dump $data;
+        print YAML::Syck::Dump $data;
         return;
     }
 
@@ -375,8 +375,8 @@ my $ofg_all = sub {
             STD(w.window_pi) `STD_pi`,
             AVG(w.window_indel / w.window_length * 100) `AVG_indel`,
             STD(w.window_indel / w.window_length * 100) `STD_indel`,
-            AVG(w.window_target_gc) `AVG_gc`,
-            STD(w.window_target_gc) `STD_gc`,
+            AVG(w.window_gc) `AVG_gc`,
+            STD(w.window_gc) `STD_gc`,
             AVG(s.ofgsw_cv) `AVG_cv`,
             STD(s.ofgsw_cv) `STD_cv`,
             AVG(w.window_repeats) `AVG_repeats`,
@@ -444,8 +444,8 @@ my $ofg_coding = sub {
                 STD(w.window_pi) `STD_pi`,
                 AVG(w.window_indel / w.window_length * 100) `AVG_indel`,
                 STD(w.window_indel / w.window_length * 100) `STD_indel`,
-                AVG(w.window_target_gc) `AVG_gc`,
-                STD(w.window_target_gc) `STD_gc`,
+                AVG(w.window_gc) `AVG_gc`,
+                STD(w.window_gc) `STD_gc`,
                 AVG(s.ofgsw_cv) `AVG_cv`,
                 STD(s.ofgsw_cv) `STD_cv`,
                 AVG(w.window_repeats) `AVG_repeats`,
@@ -526,8 +526,8 @@ my $ofg_coding_pure = sub {
                 STD(w.window_pi) `STD_pi`,
                 AVG(w.window_indel / w.window_length * 100) `AVG_indel`,
                 STD(w.window_indel / w.window_length * 100) `STD_indel`,
-                AVG(w.window_target_gc) `AVG_gc`,
-                STD(w.window_target_gc) `STD_gc`,
+                AVG(w.window_gc) `AVG_gc`,
+                STD(w.window_gc) `STD_gc`,
                 AVG(s.ofgsw_cv) `AVG_cv`,
                 STD(s.ofgsw_cv) `STD_cv`,
                 AVG(w.window_repeats) `AVG_repeats`,
@@ -601,8 +601,8 @@ my $ofg_dG = sub {
             STD(w.window_pi) `STD_pi`,
             AVG(w.window_indel / w.window_length * 100) `AVG_indel`,
             STD(w.window_indel / w.window_length * 100) `STD_indel`,
-            AVG(w.window_target_gc) `AVG_gc`,
-            STD(w.window_target_gc) `STD_gc`,
+            AVG(w.window_gc) `AVG_gc`,
+            STD(w.window_gc) `STD_gc`,
             AVG(s.ofgsw_cv) `AVG_cv`,
             STD(s.ofgsw_cv) `STD_cv`,
             AVG(s.ofgsw_dG) `avg_dG`,
@@ -684,8 +684,8 @@ my $ofg_tag_type = sub {
                 STD(w.window_pi) `STD_pi`,
                 AVG(w.window_indel / w.window_length * 100) `AVG_indel`,
                 STD(w.window_indel / w.window_length * 100) `STD_indel`,
-                AVG(w.window_target_gc) `AVG_gc`,
-                STD(w.window_target_gc) `STD_gc`,
+                AVG(w.window_gc) `AVG_gc`,
+                STD(w.window_gc) `STD_gc`,
                 AVG(s.ofgsw_cv) `AVG_cv`,
                 STD(s.ofgsw_cv) `STD_cv`,
                 AVG(w.window_repeats) `AVG_repeats`,
