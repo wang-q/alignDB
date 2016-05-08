@@ -56,8 +56,8 @@ _sql: |
     AVG(isw.isw_distance) AVG_distance,
     AVG(isw.isw_pi) AVG_pi,
     STD(isw.isw_pi) STD_pi,
-    AVG(isw.isw_average_gc) AVG_gc,
-    STD(isw.isw_average_gc) STD_gc,
+    AVG(isw.isw_gc) AVG_gc,
+    STD(isw.isw_gc) STD_gc,
     AVG(isw.isw_cv) AVG_cv,
     STD(isw.isw_cv) STD_cv,
     COUNT(*) COUNT
@@ -77,28 +77,28 @@ select:
 - AVG(isw.isw_distance)
 - AVG(isw.isw_pi)
 - STD(isw.isw_pi)
-- AVG(isw.isw_average_gc)
-- STD(isw.isw_average_gc)
+- AVG(isw.isw_gc)
+- STD(isw.isw_gc)
 - AVG(isw.isw_cv)
 - STD(isw.isw_cv)
 - COUNT(*)
 select_map:
-  AVG(isw.isw_average_gc): AVG_gc
   AVG(isw.isw_cv): AVG_cv
   AVG(isw.isw_distance): AVG_distance
+  AVG(isw.isw_gc): AVG_gc
   AVG(isw.isw_pi): AVG_pi
   COUNT(*): COUNT
-  STD(isw.isw_average_gc): STD_gc
   STD(isw.isw_cv): STD_cv
+  STD(isw.isw_gc): STD_gc
   STD(isw.isw_pi): STD_pi
 select_map_reverse:
   AVG_cv: AVG(isw.isw_cv)
   AVG_distance: AVG(isw.isw_distance)
-  AVG_gc: AVG(isw.isw_average_gc)
+  AVG_gc: AVG(isw.isw_gc)
   AVG_pi: AVG(isw.isw_pi)
   COUNT: COUNT(*)
   STD_cv: STD(isw.isw_cv)
-  STD_gc: STD(isw.isw_average_gc)
+  STD_gc: STD(isw.isw_gc)
   STD_pi: STD(isw.isw_pi)
 where:
 - (isw.isw_coding >= ?)
@@ -116,8 +116,8 @@ _sql: |
     AVG(isw.isw_distance) AVG_distance,
     AVG(isw.isw_pi) AVG_pi,
     STD(isw.isw_pi) STD_pi,
-    AVG(isw.isw_average_gc) AVG_gc,
-    STD(isw.isw_average_gc) STD_gc,
+    AVG(isw.isw_gc) AVG_gc,
+    STD(isw.isw_gc) STD_gc,
     AVG(isw.isw_cv) AVG_cv,
     STD(isw.isw_cv) STD_cv,
     COUNT(*) COUNT
@@ -133,28 +133,28 @@ select:
 - AVG(isw.isw_distance)
 - AVG(isw.isw_pi)
 - STD(isw.isw_pi)
-- AVG(isw.isw_average_gc)
-- STD(isw.isw_average_gc)
+- AVG(isw.isw_gc)
+- STD(isw.isw_gc)
 - AVG(isw.isw_cv)
 - STD(isw.isw_cv)
 - COUNT(*)
 select_map:
-  AVG(isw.isw_average_gc): AVG_gc
   AVG(isw.isw_cv): AVG_cv
   AVG(isw.isw_distance): AVG_distance
+  AVG(isw.isw_gc): AVG_gc
   AVG(isw.isw_pi): AVG_pi
   COUNT(*): COUNT
-  STD(isw.isw_average_gc): STD_gc
   STD(isw.isw_cv): STD_cv
+  STD(isw.isw_gc): STD_gc
   STD(isw.isw_pi): STD_pi
 select_map_reverse:
   AVG_cv: AVG(isw.isw_cv)
   AVG_distance: AVG(isw.isw_distance)
-  AVG_gc: AVG(isw.isw_average_gc)
+  AVG_gc: AVG(isw.isw_gc)
   AVG_pi: AVG(isw.isw_pi)
   COUNT: COUNT(*)
   STD_cv: STD(isw.isw_cv)
-  STD_gc: STD(isw.isw_average_gc)
+  STD_gc: STD(isw.isw_gc)
   STD_pi: STD(isw.isw_pi)
 where: []
 where_values: {}
@@ -167,8 +167,8 @@ _sql: |
     AVG(isw.isw_distance) AVG_distance,
     AVG(isw.isw_pi) AVG_pi,
     STD(isw.isw_pi) STD_pi,
-    AVG(isw.isw_average_gc) AVG_gc,
-    STD(isw.isw_average_gc) STD_gc,
+    AVG(isw.isw_gc) AVG_gc,
+    STD(isw.isw_gc) STD_gc,
     AVG(isw.isw_cv) AVG_cv,
     STD(isw.isw_cv) STD_cv,
     COUNT(*) COUNT
@@ -194,28 +194,28 @@ select:
 - AVG(isw.isw_distance)
 - AVG(isw.isw_pi)
 - STD(isw.isw_pi)
-- AVG(isw.isw_average_gc)
-- STD(isw.isw_average_gc)
+- AVG(isw.isw_gc)
+- STD(isw.isw_gc)
 - AVG(isw.isw_cv)
 - STD(isw.isw_cv)
 - COUNT(*)
 select_map:
-  AVG(isw.isw_average_gc): AVG_gc
   AVG(isw.isw_cv): AVG_cv
   AVG(isw.isw_distance): AVG_distance
+  AVG(isw.isw_gc): AVG_gc
   AVG(isw.isw_pi): AVG_pi
   COUNT(*): COUNT
-  STD(isw.isw_average_gc): STD_gc
   STD(isw.isw_cv): STD_cv
+  STD(isw.isw_gc): STD_gc
   STD(isw.isw_pi): STD_pi
 select_map_reverse:
   AVG_cv: AVG(isw.isw_cv)
   AVG_distance: AVG(isw.isw_distance)
-  AVG_gc: AVG(isw.isw_average_gc)
+  AVG_gc: AVG(isw.isw_gc)
   AVG_pi: AVG(isw.isw_pi)
   COUNT: COUNT(*)
   STD_cv: STD(isw.isw_cv)
-  STD_gc: STD(isw.isw_average_gc)
+  STD_gc: STD(isw.isw_gc)
   STD_pi: STD(isw.isw_pi)
 where:
 - (indel.indel_slippage >= ?)
@@ -389,8 +389,8 @@ _sql: |
     isw.isw_distance distance,
     AVG(isw.isw_pi) AVG_pi,
     STD(isw.isw_pi) STD_pi,
-    AVG(isw.isw_average_gc) AVG_gc,
-    STD(isw.isw_average_gc) STD_gc,
+    AVG(isw.isw_gc) AVG_gc,
+    STD(isw.isw_gc) STD_gc,
     AVG(isw.isw_cv) AVG_cv,
     STD(isw.isw_cv) STD_cv,
     COUNT(*) COUNT
@@ -410,27 +410,27 @@ select:
 - isw.isw_distance
 - AVG(isw.isw_pi)
 - STD(isw.isw_pi)
-- AVG(isw.isw_average_gc)
-- STD(isw.isw_average_gc)
+- AVG(isw.isw_gc)
+- STD(isw.isw_gc)
 - AVG(isw.isw_cv)
 - STD(isw.isw_cv)
 - COUNT(*)
 select_map:
-  AVG(isw.isw_average_gc): AVG_gc
   AVG(isw.isw_cv): AVG_cv
+  AVG(isw.isw_gc): AVG_gc
   AVG(isw.isw_pi): AVG_pi
   COUNT(*): COUNT
-  STD(isw.isw_average_gc): STD_gc
   STD(isw.isw_cv): STD_cv
+  STD(isw.isw_gc): STD_gc
   STD(isw.isw_pi): STD_pi
   isw.isw_distance: distance
 select_map_reverse:
   AVG_cv: AVG(isw.isw_cv)
-  AVG_gc: AVG(isw.isw_average_gc)
+  AVG_gc: AVG(isw.isw_gc)
   AVG_pi: AVG(isw.isw_pi)
   COUNT: COUNT(*)
   STD_cv: STD(isw.isw_cv)
-  STD_gc: STD(isw.isw_average_gc)
+  STD_gc: STD(isw.isw_gc)
   STD_pi: STD(isw.isw_pi)
   distance: isw.isw_distance
 where: []
@@ -533,9 +533,9 @@ __CLASS__: AlignDB::SQL-1.0.0
 _sql: |
   SELECT
     isw_distance,
-    AVG(isw_average_gc) AVG_gc,
+    AVG(isw_gc) AVG_gc,
     COUNT(*) COUNT,
-    STD(isw_average_gc) STD_gc
+    STD(isw_gc) STD_gc
   FROM isw
   WHERE (isw_density >= ?)
     AND (isw_density <= ?)
@@ -559,18 +559,18 @@ order:
 replace: {}
 select:
 - isw_distance
-- AVG(isw_average_gc)
+- AVG(isw_gc)
 - COUNT(*)
-- STD(isw_average_gc)
+- STD(isw_gc)
 select_map:
-  AVG(isw_average_gc): AVG_gc
+  AVG(isw_gc): AVG_gc
   COUNT(*): COUNT
-  STD(isw_average_gc): STD_gc
+  STD(isw_gc): STD_gc
   isw_distance: isw_distance
 select_map_reverse:
-  AVG_gc: AVG(isw_average_gc)
+  AVG_gc: AVG(isw_gc)
   COUNT: COUNT(*)
-  STD_gc: STD(isw_average_gc)
+  STD_gc: STD(isw_gc)
   isw_distance: isw_distance
 where:
 - (isw_density >= ?)

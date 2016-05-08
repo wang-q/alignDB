@@ -61,8 +61,8 @@ sub ns { return AlignDB::SQL->new; }
 #  isw.isw_distance distance,
 #  AVG(isw.isw_pi) AVG_pi,
 #  STD(isw.isw_pi) STD_pi,
-#  AVG(isw.isw_average_gc) AVG_gc,
-#  STD(isw.isw_average_gc) STD_gc,
+#  AVG(isw.isw_gc) AVG_gc,
+#  STD(isw.isw_gc) STD_gc,
 #  AVG(isw.isw_cv) AVG_cv,
 #  STD(isw.isw_cv) STD_cv,
 #  COUNT(*) COUNT
@@ -73,14 +73,14 @@ sub ns { return AlignDB::SQL->new; }
     my $name = 'common-d1_pi_gc_cv-0';
 
     my $sql = ns();
-    $sql->add_select( 'isw.isw_distance',        'distance' );
-    $sql->add_select( 'AVG(isw.isw_pi)',         'AVG_pi' );
-    $sql->add_select( 'STD(isw.isw_pi)',         'STD_pi' );
-    $sql->add_select( 'AVG(isw.isw_average_gc)', 'AVG_gc' );
-    $sql->add_select( 'STD(isw.isw_average_gc)', 'STD_gc' );
-    $sql->add_select( 'AVG(isw.isw_cv)',         'AVG_cv' );
-    $sql->add_select( 'STD(isw.isw_cv)',         'STD_cv' );
-    $sql->add_select( 'COUNT(*)',                'COUNT' );
+    $sql->add_select( 'isw.isw_distance', 'distance' );
+    $sql->add_select( 'AVG(isw.isw_pi)',  'AVG_pi' );
+    $sql->add_select( 'STD(isw.isw_pi)',  'STD_pi' );
+    $sql->add_select( 'AVG(isw.isw_gc)',  'AVG_gc' );
+    $sql->add_select( 'STD(isw.isw_gc)',  'STD_gc' );
+    $sql->add_select( 'AVG(isw.isw_cv)',  'AVG_cv' );
+    $sql->add_select( 'STD(isw.isw_cv)',  'STD_cv' );
+    $sql->add_select( 'COUNT(*)',         'COUNT' );
     $sql->from( ['isw'] );
     $sql->group( { column => 'isw.isw_distance' } );
 
@@ -136,8 +136,8 @@ sub ns { return AlignDB::SQL->new; }
 #  isw.isw_distance distance,
 #  AVG(isw.isw_pi) AVG_pi,
 #  STD(isw.isw_pi) STD_pi,
-#  AVG(isw.isw_average_gc) AVG_gc,
-#  STD(isw.isw_average_gc) STD_gc,
+#  AVG(isw.isw_gc) AVG_gc,
+#  STD(isw.isw_gc) STD_gc,
 #  AVG(isw.isw_cv) AVG_cv,
 #  STD(isw.isw_cv) STD_cv,
 #  COUNT(*) COUNT
@@ -148,14 +148,14 @@ sub ns { return AlignDB::SQL->new; }
     my $name = 'common-d1_comb_pi_gc_cv-0';
 
     my $sql = ns();
-    $sql->add_select( 'AVG(isw.isw_distance)',   'AVG_distance' );
-    $sql->add_select( 'AVG(isw.isw_pi)',         'AVG_pi' );
-    $sql->add_select( 'STD(isw.isw_pi)',         'STD_pi' );
-    $sql->add_select( 'AVG(isw.isw_average_gc)', 'AVG_gc' );
-    $sql->add_select( 'STD(isw.isw_average_gc)', 'STD_gc' );
-    $sql->add_select( 'AVG(isw.isw_cv)',         'AVG_cv' );
-    $sql->add_select( 'STD(isw.isw_cv)',         'STD_cv' );
-    $sql->add_select( 'COUNT(*)',                'COUNT' );
+    $sql->add_select( 'AVG(isw.isw_distance)', 'AVG_distance' );
+    $sql->add_select( 'AVG(isw.isw_pi)',       'AVG_pi' );
+    $sql->add_select( 'STD(isw.isw_pi)',       'STD_pi' );
+    $sql->add_select( 'AVG(isw.isw_gc)',       'AVG_gc' );
+    $sql->add_select( 'STD(isw.isw_gc)',       'STD_gc' );
+    $sql->add_select( 'AVG(isw.isw_cv)',       'AVG_cv' );
+    $sql->add_select( 'STD(isw.isw_cv)',       'STD_cv' );
+    $sql->add_select( 'COUNT(*)',              'COUNT' );
     $sql->from( ['isw'] );
 
     $sql_file->set( $name, $sql );
@@ -212,8 +212,8 @@ sub ns { return AlignDB::SQL->new; }
 #  AVG(isw.isw_distance) AVG_distance,
 #  AVG(isw.isw_pi) AVG_pi,
 #  STD(isw.isw_pi) STD_pi,
-#  AVG(isw.isw_average_gc) AVG_gc,
-#  STD(isw.isw_average_gc) STD_gc,
+#  AVG(isw.isw_gc) AVG_gc,
+#  STD(isw.isw_gc) STD_gc,
 #  AVG(isw.isw_cv) AVG_cv,
 #  STD(isw.isw_cv) STD_cv,
 #  COUNT(*) COUNT
@@ -224,14 +224,14 @@ sub ns { return AlignDB::SQL->new; }
     my $name = 'common-d1_comb_coding-0';
 
     my $sql = ns();
-    $sql->add_select( 'AVG(isw.isw_distance)',   'AVG_distance' );
-    $sql->add_select( 'AVG(isw.isw_pi)',         'AVG_pi' );
-    $sql->add_select( 'STD(isw.isw_pi)',         'STD_pi' );
-    $sql->add_select( 'AVG(isw.isw_average_gc)', 'AVG_gc' );
-    $sql->add_select( 'STD(isw.isw_average_gc)', 'STD_gc' );
-    $sql->add_select( 'AVG(isw.isw_cv)',         'AVG_cv' );
-    $sql->add_select( 'STD(isw.isw_cv)',         'STD_cv' );
-    $sql->add_select( 'COUNT(*)',                'COUNT' );
+    $sql->add_select( 'AVG(isw.isw_distance)', 'AVG_distance' );
+    $sql->add_select( 'AVG(isw.isw_pi)',       'AVG_pi' );
+    $sql->add_select( 'STD(isw.isw_pi)',       'STD_pi' );
+    $sql->add_select( 'AVG(isw.isw_gc)',       'AVG_gc' );
+    $sql->add_select( 'STD(isw.isw_gc)',       'STD_gc' );
+    $sql->add_select( 'AVG(isw.isw_cv)',       'AVG_cv' );
+    $sql->add_select( 'STD(isw.isw_cv)',       'STD_cv' );
+    $sql->add_select( 'COUNT(*)',              'COUNT' );
     $sql->from( ['isw'] );
 
     $sql->add_where( 'isw.isw_coding' => { op => '>=', value => '1' } );
@@ -279,8 +279,8 @@ sub ns { return AlignDB::SQL->new; }
 #  AVG(isw.isw_distance) AVG_distance,
 #  AVG(isw.isw_pi) AVG_pi,
 #  STD(isw.isw_pi) STD_pi,
-#  AVG(isw.isw_average_gc) AVG_gc,
-#  STD(isw.isw_average_gc) STD_gc,
+#  AVG(isw.isw_gc) AVG_gc,
+#  STD(isw.isw_gc) STD_gc,
 #  AVG(isw.isw_cv) AVG_cv,
 #  STD(isw.isw_cv) STD_cv,
 #  COUNT(*) COUNT
@@ -293,14 +293,14 @@ sub ns { return AlignDB::SQL->new; }
     my $name = 'common-d1_comb_slippage-0';
 
     my $sql = ns();
-    $sql->add_select( 'AVG(isw.isw_distance)',   'AVG_distance' );
-    $sql->add_select( 'AVG(isw.isw_pi)',         'AVG_pi' );
-    $sql->add_select( 'STD(isw.isw_pi)',         'STD_pi' );
-    $sql->add_select( 'AVG(isw.isw_average_gc)', 'AVG_gc' );
-    $sql->add_select( 'STD(isw.isw_average_gc)', 'STD_gc' );
-    $sql->add_select( 'AVG(isw.isw_cv)',         'AVG_cv' );
-    $sql->add_select( 'STD(isw.isw_cv)',         'STD_cv' );
-    $sql->add_select( 'COUNT(*)',                'COUNT' );
+    $sql->add_select( 'AVG(isw.isw_distance)', 'AVG_distance' );
+    $sql->add_select( 'AVG(isw.isw_pi)',       'AVG_pi' );
+    $sql->add_select( 'STD(isw.isw_pi)',       'STD_pi' );
+    $sql->add_select( 'AVG(isw.isw_gc)',       'AVG_gc' );
+    $sql->add_select( 'STD(isw.isw_gc)',       'STD_gc' );
+    $sql->add_select( 'AVG(isw.isw_cv)',       'AVG_cv' );
+    $sql->add_select( 'STD(isw.isw_cv)',       'STD_cv' );
+    $sql->add_select( 'COUNT(*)',              'COUNT' );
 
     $sql->add_join(
         isw => {
@@ -353,9 +353,9 @@ sub ns { return AlignDB::SQL->new; }
 
     my $sql = ns();
     $sql->add_select( 'isw_distance', );
-    $sql->add_select( 'AVG(isw_average_gc)', 'AVG_gc' );
-    $sql->add_select( 'COUNT(*)',            'COUNT' );
-    $sql->add_select( 'STD(isw_average_gc)', 'STD_gc' );
+    $sql->add_select( 'AVG(isw_gc)', 'AVG_gc' );
+    $sql->add_select( 'COUNT(*)',    'COUNT' );
+    $sql->add_select( 'STD(isw_gc)', 'STD_gc' );
     $sql->from( ['isw'] );
     $sql->add_where( 'isw_density' => { op => '>=', value => '1' } );
     $sql->add_where( 'isw_density' => { op => '<=', value => '2' } );
@@ -414,8 +414,8 @@ sub ns { return AlignDB::SQL->new; }
 #GROUP BY indel_length
 {
     my $name = 'common-indel_length-0';
-    
-    my $sql  = ns();
+
+    my $sql = ns();
     $sql->add_select('indel_length');
     $sql->add_select( 'COUNT(*)',          'indel_number' );
     $sql->add_select( 'AVG(indel_gc)',     'AVG_indel_gc' );
@@ -439,7 +439,7 @@ sub ns { return AlignDB::SQL->new; }
 
     my $sql = ns();
     $sql->add_select('isw_distance');
-    $sql->add_select( 'COUNT(snp_id)',    'snp_number' );
+    $sql->add_select( 'COUNT(snp_id)', 'snp_number' );
 
     $sql->add_join(
         snp => [
@@ -449,6 +449,7 @@ sub ns { return AlignDB::SQL->new; }
             },
         ]
     );
+
     #$sql->add_where( 'isw_distance' => { op => '>=', value => '1' } );
     #$sql->add_where( 'isw_distance' => { op => '<=', value => '2' } );
     #$sql->add_where( 'CONCAT(target_base, query_base)' => $comb );
