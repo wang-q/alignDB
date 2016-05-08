@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
@@ -49,13 +49,13 @@ my $min_reps = {
 };
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server       = $Config->{database}{server} ),
     'port|P=i'     => \( my $port         = $Config->{database}{port} ),
     'db|d=s'       => \( my $db           = $Config->{database}{db} ),
     'username|u=s' => \( my $username     = $Config->{database}{username} ),
     'password|p=s' => \( my $password     = $Config->{database}{password} ),
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # init
@@ -69,7 +69,7 @@ my $obj = AlignDB->new(
 );
 
 # Database handler
-my $dbh = $obj->dbh;
+my DBI $dbh = $obj->dbh;
 
 #----------------------------------------------------------#
 # start update
@@ -84,7 +84,7 @@ my $dbh = $obj->dbh;
         FROM indel
         WHERE align_id = ?
     };
-    my $indel_sth = $dbh->prepare($indel_query);
+    my DBI $indel_sth = $dbh->prepare($indel_query);
 
     # update indel table in the new feature column
     my $indel_update = q{
@@ -92,33 +92,7 @@ my $dbh = $obj->dbh;
         SET indel_slippage = ?
         WHERE indel_id = ?
     };
-    my $indel_update_sth = $dbh->prepare($indel_update);
-
-    # window
-    my $window_query = q{
-        SELECT window_id
-        FROM window
-        WHERE align_id = ?
-        AND window_indel > 0
-        AND window_start < ?
-        AND window_end > ?
-    };
-    my $window_sth = $dbh->prepare($window_query);
-
-    # update window table with slippage-like indel number
-    my $window_update = q{
-        UPDATE window
-        SET window_ns_indel = IFNULL(window_ns_indel, 0) + 1
-        WHERE window_id = ?
-    };
-    my $window_update_sth = $dbh->prepare($window_update);
-
-    my $window_ns = q{
-        UPDATE window
-        SET window_ns_indel = window_indel - IFNULL(window_ns_indel, 0)
-        WHERE align_id = ?
-    };
-    my $window_ns_sth = $dbh->prepare($window_ns);
+    my DBI $indel_update_sth = $dbh->prepare($indel_update);
 
     # for indel
     for my $align_id (@align_ids) {
@@ -188,21 +162,9 @@ my $dbh = $obj->dbh;
             }
 
             $indel_update_sth->execute( $indel_slippage, $indel_id );
-
-            if ($indel_slippage) {
-                $window_sth->execute( $align_id, $indel_start, $indel_end );
-                while ( my @row = $window_sth->fetchrow_array ) {
-                    my ($window_id) = @row;
-                    $window_update_sth->execute($window_id);
-                }
-            }
         }
-        $window_ns_sth->execute($align_id);
     }
 
-    $window_ns_sth->finish;
-    $window_update_sth->finish;
-    $window_sth->finish;
     $indel_update_sth->finish;
     $indel_sth->finish;
 }
