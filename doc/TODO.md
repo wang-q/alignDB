@@ -8,4 +8,4 @@
 
 * Update insert_ssw.pl from three-way style to multi-way
 
-* Don't trim outgroup only seq to keep complex indel info
+* ~~Don't trim outgroup only seq to keep complex indel info~~
