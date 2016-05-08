@@ -742,7 +742,7 @@ my $segment_gc_indel = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           w.window_average_gc `gc`,
+                           w.window_gc `gc`,
                            s.segment_gc_CV `cv`,
                            w.window_coding `coding`,
                            s.segment_r2_s `r2`,
@@ -877,7 +877,7 @@ my $segment_cv_indel = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           w.window_average_gc `gc`,
+                           w.window_gc `gc`,
                            s.segment_gc_CV `cv`,
                            w.window_coding `coding`,
                            s.segment_r2_s `r2`,

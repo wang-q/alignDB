@@ -844,14 +844,14 @@ my $window_gc = sub {
     # make combine
     my $combine_sql = q{
         SELECT
-          FLOOR(window_average_gc / 0.01),
+          FLOOR(window_gc / 0.01),
           COUNT(*)
         FROM gsw
           INNER JOIN window ON
             gsw.window_id = window.window_id
-        WHERE (window_average_gc IS NOT NULL)
+        WHERE (window_gc IS NOT NULL)
         GROUP BY
-          FLOOR(window_average_gc / 0.01)
+          FLOOR(window_gc / 0.01)
     };
     my $combined = $write_obj->make_combine(
         {   sql_query  => $combine_sql,
@@ -862,7 +862,7 @@ my $window_gc = sub {
     );
 
     my $thaw_sql = $sql_file->retrieve('gc-wave_comb_pi_indel_cv-0');
-    $thaw_sql->replace( { gsw_distance => 'FLOOR(window_average_gc / 0.01)' } );
+    $thaw_sql->replace( { gsw_distance => 'FLOOR(window_gc / 0.01)' } );
     my @names = $thaw_sql->as_header;
     {    # header
         $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
@@ -872,7 +872,7 @@ my $window_gc = sub {
     for my $comb ( @{$combined} ) {    # content
         my $thaw_sql = $sql_file->retrieve('gc-wave_comb_pi_indel_cv-0');
         $thaw_sql->add_where( 'gsw_distance' => $comb );
-        $thaw_sql->replace( { gsw_distance => 'FLOOR(window_average_gc / 0.01)' } );
+        $thaw_sql->replace( { gsw_distance => 'FLOOR(window_gc / 0.01)' } );
 
         $data = $write_obj->write_sql(
             $sheet,
@@ -1074,13 +1074,13 @@ my $d_gc_series = sub {
     my @levels;
     {
         my $sql_query = q{
-            SELECT w.window_average_gc
+            SELECT w.window_gc
             FROM gsw g, window w
             WHERE 1 = 1
             AND g.window_id = w.window_id
             AND g.gsw_distance > 0
             AND g.gsw_distance <= 10
-            AND w.window_average_gc IS NOT NULL
+            AND w.window_gc IS NOT NULL
         };
         my %opt = ( sql_query => $sql_query, );
         my $quartiles = $write_obj->quantile_sql( \%opt, 4 );
@@ -1103,7 +1103,7 @@ my $d_gc_series = sub {
         WHERE g.window_id = w.window_id
         AND g.gsw_distance > 0
         AND g.gsw_distance <= 10
-        AND w.window_average_gc BETWEEN ? AND ?
+        AND w.window_gc BETWEEN ? AND ?
         GROUP BY g.gsw_distance 
         ORDER BY g.gsw_distance ASC
     };
@@ -1418,7 +1418,7 @@ my $segment_gc_indel = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           w.window_average_gc `gc`,
+                           w.window_gc `gc`,
                            s.segment_gc_cv `cv`,
                            w.window_coding `coding`,
                            w.window_length `length`
@@ -1543,7 +1543,7 @@ my $segment_std_indel = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           w.window_average_gc `gc`,
+                           w.window_gc `gc`,
                            s.segment_gc_std `std`,
                            w.window_coding `coding`,
                            w.window_length `length`
@@ -1627,7 +1627,7 @@ my $segment_std_indel = sub {
             my %opt = ( sql_query => $sql_query, );
             $write_obj->excute_sql( \%opt );
         }
-        
+
         if ($add_chart) {    # chart
             $chart_segment_std->( $sheet, $data );
         }
@@ -1669,7 +1669,7 @@ my $segment_cv_indel = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           w.window_average_gc `gc`,
+                           w.window_gc `gc`,
                            s.segment_gc_cv `cv`,
                            w.window_coding `coding`,
                            w.window_length `length`
@@ -1755,7 +1755,7 @@ my $segment_cv_indel = sub {
             my %opt = ( sql_query => $sql_query, );
             $write_obj->excute_sql( \%opt );
         }
-        
+
         if ($add_chart) {    # chart
             $chart_segment_cv->( $sheet, $data );
         }
@@ -1797,7 +1797,7 @@ my $segment_mdcw_indel = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           w.window_average_gc `gc`,
+                           w.window_gc `gc`,
                            s.segment_gc_mdcw `mdcw`,
                            w.window_coding `coding`,
                            w.window_length `length`
@@ -1923,7 +1923,7 @@ my $segment_coding_indel = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           w.window_average_gc `gc`,
+                           w.window_gc `gc`,
                            s.segment_gc_CV `cv`,
                            w.window_coding `coding`,
                            w.window_length `length`
@@ -2045,7 +2045,7 @@ my $segment_gc_indel_cr = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           w.window_average_gc `gc`,
+                           w.window_gc `gc`,
                            s.segment_gc_CV `cv`,
                            w.window_coding `coding`,
                            w.window_length `length`
@@ -2131,7 +2131,7 @@ my $segment_gc_indel_cr = sub {
             my %opt = ( sql_query => $sql_query, );
             $write_obj->excute_sql( \%opt );
         }
-        
+
         if ($add_chart) {    # chart
             $chart_segment_gc->( $sheet, $data );
         }
@@ -2175,7 +2175,7 @@ my $segment_cv_indel_cr = sub {
                     ENGINE=MyISAM
                     SELECT w.window_pi `pi`,
                            w.window_indel `indel`,
-                           w.window_average_gc `gc`,
+                           w.window_gc `gc`,
                            s.segment_gc_CV `cv`,
                            w.window_coding `coding`,
                            w.window_length `length`
@@ -2261,7 +2261,7 @@ my $segment_cv_indel_cr = sub {
             my %opt = ( sql_query => $sql_query, );
             $write_obj->excute_sql( \%opt );
         }
-        
+
         if ($add_chart) {    # chart
             $chart_segment_cv->( $sheet, $data );
         }

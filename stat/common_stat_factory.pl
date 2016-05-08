@@ -445,7 +445,7 @@ my $basic = sub {
     {    # contents
         my $query_name = 'GC-content';
         my $sql_query  = q{
-            SELECT sum(a.align_length * a.align_average_gc )
+            SELECT sum(a.align_length * a.align_gc )
                    / sum(a.align_length)
             FROM align a
         };

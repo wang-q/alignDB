@@ -1,11 +1,12 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
 use Getopt::Long;
-use Pod::Usage;
 use Config::Tiny;
-use YAML qw(Dump Load DumpFile LoadFile);
+use FindBin;
+use YAML::Syck;
 
 use AlignDB::GC;
 use AlignDB::IntSpan;
@@ -13,14 +14,13 @@ use AlignDB::Run;
 use AlignDB::Stopwatch;
 
 use FindBin;
-use lib "$FindBin::Bin/../lib";
+use lib "$FindBin::RealBin/../lib";
 use AlignDB;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -29,12 +29,40 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
+
+insert_gc.pl - Add GC ralated tables to alignDB
+
+=head1 SYNOPSIS
+
+    insert_gc.pl [options]
+      Options:
+        --help              brief help message
+        --man               full documentation
+        --server            MySQL server IP/Domain name
+        --db                database name
+        --username          username
+        --password          password
+        --insert_gc         insert gc or not
+        --insert_segment    insert segment or not
+        --parallel          run in parallel mode
+        --batch             number of alignments process in one child process
+
+    perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl -d HumanvsCGOR \
+        -e human_65 --block --id 9606 -lt 5000 -st 0 --parallel 12 \
+        -f /home/wangq/data/alignment/primates/HumanvsCGOR_mft --run 1
+
+    perl /home/wangq/Scripts/alignDB/init/insert_gc.pl -d=HumanvsCGOR --parallel 12
+
+    perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d HumanvsCGOR -g HumanvsCGOR_alt_level
+    perl /home/wangq/Scripts/alignDB/init/insert_gc.pl -d HumanvsCGOR_alt_level --parallel 12 --alt_level
+    perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl -d HumanvsCGOR_alt_level \
+        -e human_65 --block --id 9606 -lt 5000 -st 0 --parallel 12 \
+        -f /home/wangq/data/alignment/primates/HumanvsCGOR_mft \
+        --run 21,30,40
+    perl /home/wangq/Scripts/alignDB/stat/gc_stat_factory.pl -d HumanvsCGOR_alt_level --alt_level -t 0
+
+=cut
 
 # AlignDB::GC options
 my $wave_window_size = $Config->{gc}{wave_window_size};
@@ -45,42 +73,21 @@ my $gsw_size         = $Config->{gc}{gsw_size};
 my $stat_window_size = $Config->{gc}{stat_window_size};
 my $stat_window_step = $Config->{gc}{stat_window_step};
 
-my $insert_gc      = $Config->{gc}{insert_gc};
-my $insert_segment = $Config->{gc}{insert_segment};
-
-# run in parallel mode
-my $parallel = $Config->{generate}{parallel};
-
-# number of alignments process in one child process
-my $batch_number = $Config->{generate}{batch};
-
-# use alternative segment levels 200 .. 1000, 2000 .. 5000
-my $alt_level = 0;
-
-# use 100 level
-my $one_level = 0;
-
-my $man  = 0;
-my $help = 0;
-
 GetOptions(
-    'help|?'           => \$help,
-    'man'              => \$man,
-    's|server=s'       => \$server,
-    'P|port=i'         => \$port,
-    'u|username=s'     => \$username,
-    'p|password=s'     => \$password,
-    'd|db=s'           => \$db,
-    'insert_gc=s'      => \$insert_gc,
-    'insert_segment=s' => \$insert_segment,
-    'alt_level'        => \$alt_level,
-    'one_level'        => \$one_level,
-    'parallel=i'       => \$parallel,
-    'batch=i'          => \$batch_number,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
+    'server|s=s'       => \( my $server         = $Config->{database}{server} ),
+    'port|P=i'         => \( my $port           = $Config->{database}{port} ),
+    'db|d=s'           => \( my $db             = $Config->{database}{db} ),
+    'username|u=s'     => \( my $username       = $Config->{database}{username} ),
+    'password|p=s'     => \( my $password       = $Config->{database}{password} ),
+    'insert_gc=s'      => \( my $insert_gc      = $Config->{gc}{insert_gc} ),
+    'insert_segment=s' => \( my $insert_segment = $Config->{gc}{insert_segment} ),
+    'alt_level'        => \( my $alt_level      = 0 )
+    ,    # use alternative segment levels 200 .. 1000, 2000 .. 5000
+    'one_level'  => \( my $one_level    = 0 ),                               # use 100 level
+    'parallel=i' => \( my $parallel     = $Config->{generate}{parallel} ),
+    'batch=i'    => \( my $batch_number = $Config->{generate}{batch} ),
+) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # init
@@ -95,9 +102,6 @@ my @jobs;
         passwd => $password,
     );
 
-    # Database handler
-    my $dbh = $obj->dbh;
-
     print "Emptying tables...\n";
 
     # empty tables: segment, gsw, extreme
@@ -106,7 +110,6 @@ my @jobs;
     $obj->empty_table( 'extreme', 'with_window' );
 
     my @align_ids = @{ $obj->get_align_ids };
-
     while ( scalar @align_ids ) {
         my @batching = splice @align_ids, 0, $batch_number;
         push @jobs, [@batching];
@@ -136,21 +139,22 @@ my $worker = sub {
     );
 
     # Database handler
-    my $dbh = $obj->dbh;
+    my DBI $dbh = $obj->dbh;
 
     # alignments' chromosomal location, target_seq and query_seq
-    my $align_seq_query = q{
+    my DBI $sth = $dbh->prepare(
+        q{
         SELECT  a.align_comparable_runlist
         FROM    align a
         WHERE   a.align_id = ?
-    };
-    my $align_seq_sth = $dbh->prepare($align_seq_query);
+        }
+    );
 
     # for each alignment
     for my $align_id (@align_ids) {
         $obj->process_message($align_id);
-        $align_seq_sth->execute($align_id);
-        my ($comparable_runlist) = $align_seq_sth->fetchrow_array;
+        $sth->execute($align_id);
+        my ($comparable_runlist) = $sth->fetchrow_array;
 
         # comparable runlist
         my $comparable_set = AlignDB::IntSpan->new($comparable_runlist);
@@ -168,7 +172,6 @@ my $worker = sub {
             }
             elsif ($one_level) {
                 $style = 'one_level';
-
             }
             insert_segment( $obj_gc, $obj, $align_id, $comparable_set, $style );
         }
@@ -201,13 +204,14 @@ END {
 exit;
 
 sub insert_extreme {
-    my $obj_gc         = shift;
-    my $obj            = shift;
-    my $align_id       = shift;
-    my $comparable_set = shift;
+    my AlignDB::GC $obj_gc              = shift;
+    my AlignDB $obj                     = shift;
+    my $align_id                        = shift;
+    my AlignDB::IntSpan $comparable_set = shift;
 
-    my $dbh      = $obj->dbh;
+    my DBI $dbh = $obj->dbh;
     my $seqs_ref = $obj->get_seqs($align_id);
+    $seqs_ref = [ $seqs_ref->[0] ];    # only calc target gc
 
     my @extreme_site;
     my @slidings = $obj_gc->gc_wave( $seqs_ref, $comparable_set );
@@ -228,12 +232,10 @@ sub insert_extreme {
     for ( my $i = 0; $i < scalar @extreme_site; $i++ ) {
 
         # wave_length
-        my $extreme_set         = $extreme_site[$i]->{set};
-        my $extreme_middle_left = $extreme_set->at($half_length);
-        my $extreme_middle_left_idx
-            = $comparable_set->index($extreme_middle_left);
-        my $left_wave_length
-            = $extreme_middle_left_idx - $prev_extreme_middle_right_idx + 1;
+        my AlignDB::IntSpan $extreme_set = $extreme_site[$i]->{set};
+        my $extreme_middle_left          = $extreme_set->at($half_length);
+        my $extreme_middle_left_idx      = $comparable_set->index($extreme_middle_left);
+        my $left_wave_length = $extreme_middle_left_idx - $prev_extreme_middle_right_idx + 1;
         $prev_extreme_middle_right_idx = $extreme_middle_left_idx + 1;
         $extreme_site[$i]->{left_wave_length} = $left_wave_length;
 
@@ -245,17 +247,15 @@ sub insert_extreme {
     }
 
     # right
-    my $next_extreme_middle_left_idx = $comparable_set->cardinality;
+    my $next_extreme_middle_left_idx = $comparable_set->size;
     my $next_extreme_gc              = $slidings[-1]->{gc};
     for ( my $i = scalar @extreme_site - 1; $i >= 0; $i-- ) {
 
         # wave_length
-        my $extreme_set          = $extreme_site[$i]->{set};
-        my $extreme_middle_right = $extreme_set->at( $half_length + 1 );
-        my $extreme_middle_right_idx
-            = $comparable_set->index($extreme_middle_right);
-        my $right_wave_length
-            = $next_extreme_middle_left_idx - $extreme_middle_right_idx + 1;
+        my AlignDB::IntSpan $extreme_set = $extreme_site[$i]->{set};
+        my $extreme_middle_right         = $extreme_set->at( $half_length + 1 );
+        my $extreme_middle_right_idx     = $comparable_set->index($extreme_middle_right);
+        my $right_wave_length = $next_extreme_middle_left_idx - $extreme_middle_right_idx + 1;
         $next_extreme_middle_left_idx = $extreme_middle_right_idx - 1;
         $extreme_site[$i]->{right_wave_length} = $right_wave_length;
 
@@ -280,7 +280,7 @@ sub insert_extreme {
         )
     };
 
-    my $extreme_insert = $dbh->prepare($extreme_sql);
+    my DBI $sth = $dbh->prepare($extreme_sql);
 
     my $prev_extreme_id = 0;
     for (@extreme_site) {
@@ -288,33 +288,32 @@ sub insert_extreme {
 
         my ($cur_window_id) = $obj->insert_window( $align_id, $extreme_set );
 
-        $extreme_insert->execute(
-            $prev_extreme_id,      $cur_window_id,
-            $_->{high_low_flag},   $_->{left_amplitude},
-            $_->{right_amplitude}, $_->{left_wave_length},
+        $sth->execute(
+            $prev_extreme_id,     $cur_window_id,        $_->{high_low_flag},
+            $_->{left_amplitude}, $_->{right_amplitude}, $_->{left_wave_length},
             $_->{right_wave_length}
         );
 
         $prev_extreme_id = $obj->last_insert_id;
     }
-    $extreme_insert->finish;
+    $sth->finish;
 
     return;
 }
 
 sub insert_gsw {
-    my $obj_gc         = shift;
-    my $obj            = shift;
-    my $align_id       = shift;
-    my $comparable_set = shift;
+    my AlignDB::GC $obj_gc              = shift;
+    my AlignDB $obj                     = shift;
+    my $align_id                        = shift;
+    my AlignDB::IntSpan $comparable_set = shift;
 
-    my $dbh = $obj->dbh;
+    my DBI $dbh = $obj->dbh;
 
     # get gc sliding windows' sizes
     my $gsw_size = $obj_gc->gsw_size;
 
     # extreme_id & prev_extreme_id
-    my $fetch_ex_id = $dbh->prepare(
+    my DBI $fetch_ex_id = $dbh->prepare(
         q{
         SELECT e.extreme_id,
                 e.prev_extreme_id,
@@ -326,11 +325,11 @@ sub insert_gsw {
     );
     $fetch_ex_id->execute($align_id);
 
-    # extreme_runlist, _amplitude and _average_gc
-    my $fetch_ex_attr = $dbh->prepare(
+    # extreme_runlist, _amplitude and _gc
+    my DBI $fetch_ex_attr = $dbh->prepare(
         q{
         SELECT w.window_runlist,
-                w.window_average_gc,
+                w.window_gc,
                 e.extreme_left_amplitude,
                 e.extreme_left_wave_length
         FROM extreme e, window w
@@ -340,7 +339,7 @@ sub insert_gsw {
     );
 
     # prepare gsw_insert
-    my $gsw_insert = $dbh->prepare(
+    my DBI $gsw_insert = $dbh->prepare(
         q{
         INSERT INTO gsw (
             gsw_id, extreme_id, prev_extreme_id, window_id,
@@ -367,8 +366,7 @@ sub insert_gsw {
 
         # get attrs of the two extremes
         $fetch_ex_attr->execute($prev_ex_id);
-        my ( $prev_ex_runlist, $prev_ex_gc, undef, undef )
-            = $fetch_ex_attr->fetchrow_array;
+        my ( $prev_ex_runlist, $prev_ex_gc, undef, undef ) = $fetch_ex_attr->fetchrow_array;
         my $prev_ex_set = AlignDB::IntSpan->new($prev_ex_runlist);
 
         $fetch_ex_attr->execute($ex_id);
@@ -378,22 +376,20 @@ sub insert_gsw {
 
         # determining $gsw_density here, which is different from isw_density
         my $half_length = int( $ex_set->cardinality / 2 );
-        my $gsw_density
-            = int( ( $ex_left_wave_length - $half_length ) / $gsw_size );
+        my $gsw_density = int( ( $ex_left_wave_length - $half_length ) / $gsw_size );
 
         # wave length, amplitude, trough_gc and gradient
         my $gsw_wave_length = $ex_left_wave_length;
         my $gsw_amplitude   = $ex_left_amplitude;
         my $gsw_trough_gc   = $ex_type eq 'T' ? $ex_gc : $prev_ex_gc;
         my $gsw_crest_gc    = $ex_type eq 'T' ? $prev_ex_gc : $ex_gc;
-        my $gsw_gradient
-            = int( $gsw_amplitude / $ex_left_wave_length / 0.00001 );
+        my $gsw_gradient    = int( $gsw_amplitude / $ex_left_wave_length / 0.00001 );
 
         # determining $gsw_type here, ascend and descent
         my $gsw_type;
         my @gsw_windows;
         if ( $ex_type eq 'T' ) {    # push trough to gsw
-            $gsw_type = 'D';        # descend, left of trough£¬right of crest
+            $gsw_type = 'D';        # descend, left of trough, right of crest
             push @gsw_windows,
                 {
                 type           => 'T',
@@ -459,12 +455,10 @@ sub insert_gsw {
                     = $obj->insert_window( $align_id, $gsw->{set} );
 
                 $gsw_insert->execute(
-                    $ex_id,           $prev_ex_id,
-                    $cur_window_id,   $gsw->{type},
-                    $gsw->{distance}, $gsw->{distance_crest},
-                    $gsw_wave_length, $gsw_amplitude,
-                    $gsw_trough_gc,   $gsw_crest_gc,
-                    $gsw_gradient,
+                    $ex_id,           $prev_ex_id,      $cur_window_id,
+                    $gsw->{type},     $gsw->{distance}, $gsw->{distance_crest},
+                    $gsw_wave_length, $gsw_amplitude,   $gsw_trough_gc,
+                    $gsw_crest_gc,    $gsw_gradient,
                 );
             }
         }
@@ -474,18 +468,18 @@ sub insert_gsw {
 }
 
 sub insert_segment {
-    my $obj_gc         = shift;
-    my $obj            = shift;
-    my $align_id       = shift;
-    my $comparable_set = shift;
-    my $style          = shift || 'normal';
+    my AlignDB::GC $obj_gc              = shift;
+    my AlignDB $obj                     = shift;
+    my $align_id                        = shift;
+    my AlignDB::IntSpan $comparable_set = shift;
 
-    my $dbh = $obj->dbh;
+    my $style = shift || 'normal';
+
+    my DBI $dbh = $obj->dbh;
 
     my @segment_levels;
     if ( $style eq "alt_level" ) {
-        @segment_levels = reverse map { [ $_, $_ * 100, $_ * 100 ] }
-            ( 2 .. 10, 20, 30, 40, 50 );
+        @segment_levels = reverse map { [ $_, $_ * 100, $_ * 100 ] } ( 2 .. 10, 20, 30, 40, 50 );
     }
     elsif ( $style eq "one_level" ) {
         @segment_levels = ( [ 100, 100, 100 ] );
@@ -500,11 +494,11 @@ sub insert_segment {
         my $segment_size = $_->[1];
         my $segment_step = $_->[2];
 
-        my @segment_site
-            = $obj_gc->segment( $comparable_set, $segment_size, $segment_step );
+        my @segment_site = $obj_gc->segment( $comparable_set, $segment_size, $segment_step );
 
         # prepare segment_insert
-        my $segment_sql = qq{
+        my DBI $sth = $dbh->prepare(
+            q{
             INSERT INTO segment (
                 segment_id, window_id, segment_type,
                 segment_gc_mean, segment_gc_std,
@@ -515,72 +509,33 @@ sub insert_segment {
                 ?, ?,
                 ?, ?
             )
-        };
-
-        my $segment_insert = $dbh->prepare($segment_sql);
+            }
+        );
 
         for my $segment_set (@segment_site) {
 
-            my ($cur_window_id)
-                = $obj->insert_window( $align_id, $segment_set );
+            my ($cur_window_id) = $obj->insert_window( $align_id, $segment_set );
 
             my $seqs_ref = $obj->get_seqs($align_id);
+            $seqs_ref = [ $seqs_ref->[0] ];    # only calc target gc
 
             if ( $style ne "one_level" ) {
                 my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
                     = $obj_gc->segment_gc_stat( $seqs_ref, $segment_set );
 
-                $segment_insert->execute( $cur_window_id, $segment_type,
-                    $gc_mean, $gc_std, $gc_cv, $gc_mdcw );
+                $sth->execute( $cur_window_id, $segment_type, $gc_mean, $gc_std, $gc_cv, $gc_mdcw );
             }
             else {
                 my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-                    = $obj_gc->segment_gc_stat_one( $seqs_ref, $comparable_set,
-                    $segment_set );
+                    = $obj_gc->segment_gc_stat_one( $seqs_ref, $comparable_set, $segment_set );
 
-                $segment_insert->execute( $cur_window_id, $segment_type,
-                    $gc_mean, $gc_std, $gc_cv, $gc_mdcw );
+                $sth->execute( $cur_window_id, $segment_type, $gc_mean, $gc_std, $gc_cv, $gc_mdcw );
             }
         }
-        $segment_insert->finish;
+        $sth->finish;
     }
 
     return;
 }
 
 __END__
-
-=head1 NAME
-
-insert_gc.pl - Add GC ralated tables to alignDB
-
-=head1 SYNOPSIS
-
-    insert_gc.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-        --insert_gc         insert gc or not
-        --insert_segment    insert segment or not
-        --parallel          run in parallel mode
-        --batch             number of alignments process in one child process
-
-=cut
-
-perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl -d HumanvsCGOR \
-    -e human_65 --block --id 9606 -lt 5000 -st 0 --parallel 12 \
-    -f /home/wangq/data/alignment/primates/HumanvsCGOR_mft --run 1
-
-perl /home/wangq/Scripts/alignDB/init/insert_gc.pl -d=HumanvsCGOR --parallel 12
-
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d HumanvsCGOR -g HumanvsCGOR_alt_level
-perl /home/wangq/Scripts/alignDB/init/insert_gc.pl -d HumanvsCGOR_alt_level --parallel 12 --alt_level
-perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl -d HumanvsCGOR_alt_level \
-    -e human_65 --block --id 9606 -lt 5000 -st 0 --parallel 12 \
-    -f /home/wangq/data/alignment/primates/HumanvsCGOR_mft \
-    --run 21,30,40
-perl /home/wangq/Scripts/alignDB/stat/gc_stat_factory.pl -d HumanvsCGOR_alt_level --alt_level -t 0
