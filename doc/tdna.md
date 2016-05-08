@@ -22,13 +22,13 @@ mkdir -p ~/data/salk/OstaJap
 for name in CMT CSHL FLAG GABI IMAL MX RATM SAIL SALK SK WISC
 do
     echo $name;
-    perl ~/Scripts/alignDB/ofg/tdna2bed.pl -i ~/data/salk/database/tdnaexpress/T-DNA.$name -o ~/data/salk/Atha/T-DNA.$name.bed;
+    perl ~/Scripts/alignDB/ofg/tdna2position.pl -i ~/data/salk/database/tdnaexpress/T-DNA.$name -o ~/data/salk/Atha/T-DNA.$name.txt;
 done
 
 for name in affjp cirad csiro genoplante gsnu ostid PFG_FSTs rifgp rmd ship trim ucd
 do
     echo $name;
-    perl ~/Scripts/alignDB/ofg/tdna2bed.pl -i ~/data/salk/database/RiceGE/T-DNA.$name -o ~/data/salk/OstaJap/T-DNA.$name.bed;
+    perl ~/Scripts/alignDB/ofg/tdna2position.pl -i ~/data/salk/database/RiceGE/T-DNA.$name -o ~/data/salk/OstaJap/T-DNA.$name.txt;
 done
 
 ```
