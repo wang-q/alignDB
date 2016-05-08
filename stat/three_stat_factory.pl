@@ -535,16 +535,9 @@ my $ds_dns = sub {
 };
 
 for my $n (@tasks) {
-    if ( $n == 17 ) { &$snp_base_change;      next; }
-    if ( $n == 19 ) { &$distance_snp;          next; }
-    if ( $n == 22 ) { &$distance_cpg;         next; }
-    if ( $n == 23 ) { &$distance_dir_dnr;     next; }
-
     if ( $n == 4 ) { &$snp_distance; &$snp_indel; next; }
     if ( $n == 52 ) { &$ds_dns;          next; }
     if ( $n == 56 ) { &$snp_LR_distance; next; }
-
-    if ( $n == 60 ) { &$d_d_ref; next; }
 }
 
 $stopwatch->end_message();
