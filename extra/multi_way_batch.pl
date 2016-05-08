@@ -131,7 +131,7 @@ my $dispatch = {
         . " -d $db_name"
         . " --parallel $parallel"
         . " --batch $batch_number",
-    20 => "perl $FindBin::Bin/../gene/insert_gene.pl"
+    20 => "perl $FindBin::Bin/../init/insert_gene.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -178,7 +178,7 @@ my $dispatch = {
         . " -u $username"
         . " --password $password"
         . " -d $db_name",
-    33 => "perl $FindBin::Bin/../gene/update_snp_dnds.pl"
+    33 => "perl $FindBin::Bin/../init/update_snp_dnds.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
