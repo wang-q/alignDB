@@ -1,4 +1,4 @@
-* Merge alignDB_graph.pl and egas/cover_figure.pl
+* ~~Merge alignDB_graph.pl and egas/cover_figure.pl~~
 
 * Split out AlignDB::Ensembl
 
