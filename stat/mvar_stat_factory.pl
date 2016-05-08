@@ -3,18 +3,18 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use DBI;
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::ToXLSX;
 
-use List::Util qw(min max sum);
-use List::MoreUtils qw(uniq);
+use List::Util;
+use List::MoreUtils::PP;
 
 use lib "$FindBin::Bin/../lib";
 use AlignDB::Position;
@@ -45,7 +45,7 @@ mvar_stat_factory.pl - Variable lists for alignDB
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server   = $Config->{database}{server} ),
     'port|P=i'     => \( my $port     = $Config->{database}{port} ),
     'db|d=s'       => \( my $db       = $Config->{database}{db} ),
@@ -54,7 +54,7 @@ GetOptions(
     'output|o=s'   => \( my $outfile ),
     'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
     'index'        => \( my $add_index_sheet, ),
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 $outfile = "$db.mvar.xlsx" unless $outfile;
 
@@ -86,7 +86,7 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
+my DBI $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
     or die "Cannot connect to MySQL database at $db:$server";
 my $write_obj = AlignDB::ToXLSX->new(
     dbh     => $dbh,
@@ -99,14 +99,15 @@ my $pos_obj = AlignDB::Position->new( dbh => $dbh );
 #----------------------------#
 my $all_freq;
 {
-
-    my $sql_query = q{
-            SELECT DISTINCT COUNT(q.query_id) + 1
-            FROM  query q, sequence s
-            WHERE q.seq_id = s.seq_id
-            GROUP BY s.align_id
-        };
-    my $sth = $dbh->prepare($sql_query);
+    my DBI $sth = $dbh->prepare(
+        q{
+        SELECT DISTINCT COUNT(s.seq_id) + 1
+        FROM  sequence s
+        WHERE 1 = 1
+        AND s.seq_role = "Q"
+        GROUP BY s.align_id
+        }
+    );
 
     my @counts;
     $sth->execute;
@@ -412,7 +413,7 @@ my $indel_list = sub {
                         AND se.chr_id = c.chr_id) a ON i.align_id = a.align_id
             ORDER BY a.chr_name, a.chr_start
         };
-        my $sth = $dbh->prepare($sql_query);
+        my DBI $sth = $dbh->prepare($sql_query);
         $sth->execute();
 
         while ( my @row = $sth->fetchrow_array ) {
@@ -466,7 +467,7 @@ my $snp_list = sub {
                 isw i ON s.isw_id = i.isw_id
             ORDER BY a.chr_name, a.chr_start
         };
-        my $sth = $dbh->prepare($sql_query);
+        my DBI $sth = $dbh->prepare($sql_query);
         $sth->execute();
 
         while ( my @row = $sth->fetchrow_array ) {
@@ -522,7 +523,7 @@ my $snp_codon_list = sub {
                         AND se.chr_id = c.chr_id) a ON s.align_id = a.align_id
             ORDER BY a.chr_name, a.chr_start
         };
-        my $sth = $dbh->prepare($sql_query);
+        my DBI $sth = $dbh->prepare($sql_query);
         $sth->execute();
 
         while ( my @row = $sth->fetchrow_array ) {
@@ -596,7 +597,7 @@ my $gene_list = sub {
                         AND se.chr_id = c.chr_id) a ON w.align_id = a.align_id
             ORDER BY a.chr_name , a.chr_start
         };
-        my $sth = $dbh->prepare($sql_query);
+        my DBI $sth = $dbh->prepare($sql_query);
         $sth->execute();
 
         # write full genes
@@ -619,7 +620,7 @@ my $gene_list = sub {
 
         # combine partial genes
         my @ids = map { $_->[4] } @data;
-        @ids = uniq(@ids);
+        @ids = List::MoreUtils::PP::uniq(@ids);
         printf " " x 4 . "%d partial gene records\n", scalar @data;
         printf " " x 4 . "%d partial genes\n",        scalar @ids;
 
@@ -628,14 +629,14 @@ my $gene_list = sub {
 
             my $gene_id    = join ",", ( map { $_->[0] } @records );
             my $chr_name   = $records[0]->[1];
-            my $gene_start = min( map { $_->[2] } @records );
-            my $gene_end   = max( map { $_->[3] } @records );
-            my $gene_subs  = sum( map { $_->[11] } @records );
-            my $gene_indel = sum( map { $_->[12] } @records );
+            my $gene_start = List::Util::min( map { $_->[2] } @records );
+            my $gene_end   = List::Util::max( map { $_->[3] } @records );
+            my $gene_subs  = List::Util::sum( map { $_->[11] } @records );
+            my $gene_indel = List::Util::sum( map { $_->[12] } @records );
 
             my ($gene_pi);
             my @records_pi = grep { defined $_->[13] } @records;
-            my $total_length = sum( map { $_->[3] - $_->[2] + 1 } @records_pi );
+            my $total_length = List::Util::sum( map { $_->[3] - $_->[2] + 1 } @records_pi );
             for my $record (@records_pi) {
                 my $partial_length = $record->[3] - $record->[2] + 1;
                 $gene_pi += $record->[13] * $partial_length / $total_length;
@@ -643,7 +644,8 @@ my $gene_list = sub {
 
             my ( $gene_syn, $gene_nsy );
             my @records_syn_nsy = grep { defined $_->[14] } @records;
-            my $effective_length = sum( map { $_->[3] - $_->[2] + 1 } @records_syn_nsy );
+            my $effective_length
+                = List::Util::sum( map { $_->[3] - $_->[2] + 1 } @records_syn_nsy );
             if ($effective_length) {
                 for my $record (@records_syn_nsy) {
                     my $partial_length = $record->[3] - $record->[2] + 1;
@@ -696,7 +698,7 @@ my $strain_list = sub {
         };
 
         for my $type ( 'I', 'D' ) {
-            my $sth = $dbh->prepare($sql_query);
+            my DBI $sth = $dbh->prepare($sql_query);
             $sth->execute($type);
 
             while ( my ( $id, $string ) = $sth->fetchrow_array ) {
@@ -727,7 +729,7 @@ my $strain_list = sub {
             FROM    snp s
             WHERE   s.snp_occured <> 'unknown'
         };
-        my $sth = $dbh->prepare($sql_query);
+        my DBI $sth = $dbh->prepare($sql_query);
         $sth->execute();
 
         while ( my ( $id, $string ) = $sth->fetchrow_array ) {
@@ -786,7 +788,7 @@ sub mean {
     @_ = grep { defined $_ } @_;
     return unless @_;
     return $_[0] unless @_ > 1;
-    return sum(@_) / scalar(@_);
+    return List::Util::sum(@_) / scalar(@_);
 }
 
 __END__

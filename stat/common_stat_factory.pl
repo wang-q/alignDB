@@ -3,10 +3,10 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use DBI;
 use Tie::IxHash;
@@ -46,7 +46,7 @@ common_stat_factory.pl - Common stats for alignDB
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server   = $Config->{database}{server} ),
     'port|P=i'     => \( my $port     = $Config->{database}{port} ),
     'db|d=s'       => \( my $db       = $Config->{database}{db} ),
@@ -59,7 +59,7 @@ GetOptions(
     'replace=s'    => \my %replace,
     'index'        => \( my $add_index_sheet, ),
     'chart'        => \( my $add_chart, ),
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 # prepare to run tasks in @tasks
 my @tasks;
@@ -92,7 +92,7 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
+my DBI $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
     or die "Cannot connect to MySQL database at $db:$server";
 my $write_obj = AlignDB::ToXLSX->new(
     dbh     => $dbh,
@@ -117,14 +117,15 @@ if ( $piece == 0 ) {
 #----------------------------#
 my $all_freq;
 {
-    my $sql_query = q{
-            SELECT DISTINCT COUNT(s.seq_id) + 1
-            FROM  sequence s
-            WHERE 1 = 1
-            AND s.seq_role = "Q"
-            GROUP BY s.align_id
-        };
-    my $sth = $dbh->prepare($sql_query);
+    my DBI $sth = $dbh->prepare(
+        q{
+        SELECT DISTINCT COUNT(s.seq_id) + 1
+        FROM  sequence s
+        WHERE 1 = 1
+        AND s.seq_role = "Q"
+        GROUP BY s.align_id
+        }
+    );
 
     my @counts;
     $sth->execute;
@@ -594,7 +595,7 @@ my $pi_gc_cv = sub {
         $write_obj->row(0);
         $write_obj->column(0);
 
-        my $thaw_sql = $sql_file->retrieve('common-d1_pi_gc_cv-0');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_pi_gc_cv-0');
 
         my @names = $thaw_sql->as_header;
         {    # header
@@ -624,7 +625,7 @@ my $pi_gc_cv = sub {
         $write_obj->row(0);
         $write_obj->column(0);
 
-        my $thaw_sql = $sql_file->retrieve('common-d1_pi_gc_cv-0');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_pi_gc_cv-0');
         $thaw_sql->replace( { distance => 'density' } );
 
         my @names = $thaw_sql->as_header;
@@ -672,16 +673,15 @@ my $comb_pi_gc_cv = sub {
             }
         );
 
-        my $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
-
-        my @names = $thaw_sql->as_header;
         {    # header
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
+            my @names = $thaw_sql->as_header;
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         for my $comb ( @{$combined} ) {    # content
-            my $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
             $thaw_sql->add_where( 'isw.isw_distance' => $comb );
 
             $data = $write_obj->write_sql(
@@ -714,17 +714,16 @@ my $comb_pi_gc_cv = sub {
             }
         );
 
-        my $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
-        $thaw_sql->replace( { distance => 'density' } );
-
-        my @names = $thaw_sql->as_header;
         {    # header
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
+            $thaw_sql->replace( { distance => 'density' } );
+            my @names = $thaw_sql->as_header;
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         for my $comb ( @{$combined} ) {    # content
-            my $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
             $thaw_sql->add_where( 'isw.isw_distance' => $comb );
             $thaw_sql->replace( { distance => 'density' } );
 
@@ -766,9 +765,9 @@ my $group_distance = sub {
     # make last portion
     my ( $all_length, $last_portion );
     {
-        my $thaw_sql = $sql_file->retrieve('common-d1_combine-0');
-        my $portion  = 0.05;
-        my %option   = (
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_combine-0');
+        my $portion               = 0.05;
+        my %option                = (
             sql_query => $thaw_sql->as_sql,
             portion   => $portion,
         );
@@ -798,7 +797,7 @@ my $group_distance = sub {
     );
 
     for my $group (@group_distance) {
-        my $thaw_sql = $sql_file->retrieve('common-d1_pi_avg-0');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_pi_avg-0');
         $thaw_sql->add_select( "SUM(isw_length)",                     'SUM_length' );
         $thaw_sql->add_select( "SUM(isw_length) / $all_length * 100", 'length_proportion' );
         $thaw_sql->add_where( 'isw_distance' => $group );
@@ -844,7 +843,7 @@ my $group_density = sub {
     # make last portion
     my ( $all_length, $last_portion );
     {
-        my $thaw_sql = $sql_file->retrieve('common-d1_combine-0');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_combine-0');
         $thaw_sql->replace( { distance => 'density' } );
         my $portion = 0.05;
         my %option  = (
@@ -871,7 +870,7 @@ my $group_density = sub {
     );
 
     for my $group (@group_density) {
-        my $thaw_sql = $sql_file->retrieve('common-d1_pi_avg-0');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_pi_avg-0');
         $thaw_sql->add_select( "SUM(isw_length)",                     'SUM_length' );
         $thaw_sql->add_select( "SUM(isw_length) / $all_length * 100", 'length_proportion' );
         $thaw_sql->add_where( 'isw_distance' => $group );
@@ -921,7 +920,7 @@ my $comb_coding = sub {
         # make combine
         my $combined;
         {
-            my $thaw_sql = $sql_file->retrieve('common-d1_make_combine_coding-0');
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_make_combine_coding-0');
             $combined = $write_obj->make_combine(
                 {   sql_query  => $thaw_sql->as_sql,
                     threshold  => $combine,
@@ -932,16 +931,15 @@ my $comb_coding = sub {
             );
         }
 
-        my $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
-
-        my @names = $thaw_sql->as_header;
         {    # header
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
+            my @names = $thaw_sql->as_header;
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         for my $comb ( @{$combined} ) {    # content
-            my $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
             $thaw_sql->add_where( 'isw.isw_distance' => $comb );
 
             $data = $write_obj->write_sql(
@@ -971,7 +969,7 @@ my $comb_coding = sub {
         # make combine
         my $combined;
         {
-            my $thaw_sql = $sql_file->retrieve('common-d1_make_combine_coding-0');
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_make_combine_coding-0');
             $thaw_sql->replace( { distance => 'density' } );
             $combined = $write_obj->make_combine(
                 {   sql_query  => $thaw_sql->as_sql,
@@ -983,17 +981,16 @@ my $comb_coding = sub {
             );
         }
 
-        my $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
-        $thaw_sql->replace( { distance => 'density' } );
-
-        my @names = $thaw_sql->as_header;
         {    # header
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
+            $thaw_sql->replace( { distance => 'density' } );
+            my @names = $thaw_sql->as_header;
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         for my $comb ( @{$combined} ) {    # content
-            my $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
             $thaw_sql->add_where( 'isw.isw_distance' => $comb );
             $thaw_sql->replace( { distance => 'density' } );
 
@@ -1046,7 +1043,7 @@ my $comb_slippage = sub {
         # make combine
         my $combined;
         {
-            my $thaw_sql = $sql_file->retrieve('common-d1_make_combine_slippage-0');
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_make_combine_slippage-0');
             $combined = $write_obj->make_combine(
                 {   sql_query  => $thaw_sql->as_sql,
                     threshold  => $combine,
@@ -1057,16 +1054,15 @@ my $comb_slippage = sub {
             );
         }
 
-        my $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
-
-        my @names = $thaw_sql->as_header;
         {    # header
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
+            my @names = $thaw_sql->as_header;
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         for my $comb ( @{$combined} ) {    # content
-            my $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
             $thaw_sql->add_where( 'isw.isw_distance' => $comb );
 
             $data = $write_obj->write_sql(
@@ -1096,7 +1092,7 @@ my $comb_slippage = sub {
         # make combine
         my $combined;
         {
-            my $thaw_sql = $sql_file->retrieve('common-d1_make_combine_slippage-0');
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_make_combine_slippage-0');
             $thaw_sql->replace( { distance => 'density' } );
             $combined = $write_obj->make_combine(
                 {   sql_query  => $thaw_sql->as_sql,
@@ -1108,17 +1104,16 @@ my $comb_slippage = sub {
             );
         }
 
-        my $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
-        $thaw_sql->replace( { distance => 'density' } );
-
-        my @names = $thaw_sql->as_header;
         {    # header
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
+            $thaw_sql->replace( { distance => 'density' } );
+            my @names = $thaw_sql->as_header;
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         for my $comb ( @{$combined} ) {    # content
-            my $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
             $thaw_sql->add_where( 'isw.isw_distance' => $comb );
             $thaw_sql->replace( { distance => 'density' } );
 
@@ -1164,16 +1159,15 @@ my $dd_group = sub {
         my @dd_density_group
             = ( [ 1, 2 ], [ 3, 6 ], [ 7, 10 ], [ 11, 18 ], [ 19, 999 ], );
 
-        my $thaw_sql = $sql_file->retrieve('common-dd_group');
-
-        my @names = $thaw_sql->as_header;
         {    # header
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-dd_group');
+            my @names = $thaw_sql->as_header;
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         tie my %data_of, 'Tie::IxHash';
         for my $item (@dd_density_group) {    # content
-            my $thaw_sql = $sql_file->retrieve('common-dd_group');
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-dd_group');
 
             my $group_name = $item->[0] . "--" . $item->[1];
             $write_obj->increase_row;
@@ -1208,16 +1202,15 @@ my $dd_group = sub {
         my @dd_density_group
             = ( [ 1, 2 ], [ 3, 6 ], [ 7, 10 ], [ 11, 18 ], [ 19, 999 ], );
 
-        my $thaw_sql = $sql_file->retrieve('common-dd_group_gc');
-
-        my @names = $thaw_sql->as_header;
         {    # header
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-dd_group_gc');
+            my @names = $thaw_sql->as_header;
             $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
         }
 
         tie my %data_of, 'Tie::IxHash';
         for my $item (@dd_density_group) {    # content
-            my $thaw_sql = $sql_file->retrieve('common-dd_group_gc');
+            my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-dd_group_gc');
 
             my $group_name = $item->[0] . "--" . $item->[1];
             $write_obj->increase_row;
@@ -1256,16 +1249,15 @@ my $indel_length_group = sub {
 
     my @groups = ( [ 1, 5 ], [ 6, 10 ], [ 11, 50 ], [ 51, 300 ], );
 
-    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
-
-    my @names = $thaw_sql->as_header;
     {    # header
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my @names = $thaw_sql->as_header;
         $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
     for my $item (@groups) {    # content
-        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         $thaw_sql->add_where( 'indel_length' => { op => '>=', value => '1' } );
         $thaw_sql->add_where( 'indel_length' => { op => '<=', value => '1' } );
 
@@ -1306,16 +1298,15 @@ my $indel_extand_group = sub {
     my @groups
         = ( [ 0, 0 ], [ 1, 2 ], [ 3, 4 ], [ 5, 9 ], [ 10, 19 ], [ 20, 999 ], );
 
-    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
-
-    my @names = $thaw_sql->as_header;
     {    # header
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my @names = $thaw_sql->as_header;
         $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
     for my $item (@groups) {    # content
-        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         $thaw_sql->add_where( 'FLOOR(indel.right_extand / 100)' => { op => '>=', value => '0' } );
         $thaw_sql->add_where( 'FLOOR(indel.right_extand / 100)' => { op => '<=', value => '0' } );
 
@@ -1359,16 +1350,15 @@ my $indel_position_group = sub {
     my @groups
         = ( [ 1, 1, 0, 0 ], [ 1, 1, 1, 1 ], [ 0, 0, 0, 0 ], [ 0, 0, 1, 1 ], );
 
-    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
-
-    my @names = $thaw_sql->as_header;
     {    # header
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my @names = $thaw_sql->as_header;
         $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
     for my $item (@groups) {    # content
-        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         $thaw_sql->add_where( 'indel_coding'  => { op => '>=', value => '0' } );
         $thaw_sql->add_where( 'indel_coding'  => { op => '<=', value => '0' } );
         $thaw_sql->add_where( 'indel_repeats' => { op => '>=', value => '0' } );
@@ -1413,16 +1403,15 @@ my $indel_coding_group = sub {
 
     my @groups = ( [ 0, 0 ], [ 1, 1 ], );
 
-    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
-
-    my @names = $thaw_sql->as_header;
     {    # header
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my @names = $thaw_sql->as_header;
         $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
     for my $item (@groups) {    # content
-        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         $thaw_sql->add_where( 'indel_coding' => { op => '>=', value => '0' } );
         $thaw_sql->add_where( 'indel_coding' => { op => '<=', value => '0' } );
 
@@ -1466,16 +1455,15 @@ my $indel_repeat_group = sub {
     my @groups
         = ( [ 0, 0 ], [ 1, 1 ], );
 
-    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
-
-    my @names = $thaw_sql->as_header;
     {    # header
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my @names = $thaw_sql->as_header;
         $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
     for my $item (@groups) {    # content
-        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         $thaw_sql->add_where( 'indel_repeats' => { op => '>=', value => '0' } );
         $thaw_sql->add_where( 'indel_repeats' => { op => '<=', value => '0' } );
 
@@ -1518,16 +1506,15 @@ my $indel_slip_group = sub {
 
     my @groups = ( [ 0, 0 ], [ 1, 1 ], );
 
-    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
-
-    my @names = $thaw_sql->as_header;
     {    # header
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my @names = $thaw_sql->as_header;
         $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
     for my $item (@groups) {    # content
-        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         $thaw_sql->add_where( 'indel_slippage' => { op => '>=', value => '0' } );
         $thaw_sql->add_where( 'indel_slippage' => { op => '<=', value => '0' } );
 
@@ -1567,16 +1554,15 @@ my $indel_gc_group = sub {
 
     my @groups = ( [ 0, 0.2999 ], [ 0.3, 0.4999 ], [ 0.5, 1 ], );
 
-    my $thaw_sql = $sql_file->retrieve('common-indel_isw');
-
-    my @names = $thaw_sql->as_header;
     {    # header
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my @names = $thaw_sql->as_header;
         $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
     for my $item (@groups) {    # content
-        my $thaw_sql = $sql_file->retrieve('common-indel_isw');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         $thaw_sql->add_where( 'indel_gc' => { op => '>=', value => '0' } );
         $thaw_sql->add_where( 'indel_gc' => { op => '<=', value => '0' } );
         $thaw_sql->add_where( 'indel_length' => \' >= 5' );
@@ -1690,7 +1676,7 @@ my $snp_indel_ratio = sub {
             }
             push @group_names, $group_name;
 
-            my $sth = $dbh->prepare($sql_query_in);
+            my DBI $sth = $dbh->prepare($sql_query_in);
             $sth->execute;
             while ( my @row = $sth->fetchrow_array ) {
                 for my $i ( 0 .. $#names ) {
@@ -1727,7 +1713,7 @@ my $indel_length = sub {
     $write_obj->row(0);
     $write_obj->column(0);
 
-    my $thaw_sql = $sql_file->retrieve('common-indel_length-0');
+    my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_length-0');
 
     my @names = $thaw_sql->as_header;
     {    # header
@@ -1735,7 +1721,7 @@ my $indel_length = sub {
     }
 
     {    # content
-        my $sth = $dbh->prepare( $thaw_sql->as_sql );
+        my DBI $sth = $dbh->prepare( $thaw_sql->as_sql );
         $sth->execute;
 
         my $last_number;
@@ -1772,7 +1758,7 @@ my $indel_length_100 = sub {
     $write_obj->row(0);
     $write_obj->column(0);
 
-    my $thaw_sql = $sql_file->retrieve('common-indel_length-0');
+    my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_length-0');
     $thaw_sql->add_where( 'left_extand'  => \'>= 100' );
     $thaw_sql->add_where( 'right_extand' => \'>= 100' );
 
@@ -1782,7 +1768,7 @@ my $indel_length_100 = sub {
     }
 
     {    # content
-        my $sth = $dbh->prepare( $thaw_sql->as_sql );
+        my DBI $sth = $dbh->prepare( $thaw_sql->as_sql );
         $sth->execute;
 
         my $last_number;
@@ -1826,10 +1812,9 @@ my $distance_snp = sub {
     # Six base groups
     my @pairs = qw{A<->C A<->G A<->T C<->G C<->T G<->T};
 
-    my $thaw_sql = $sql_file->retrieve('common-distance_snp');
-
-    my @names = $thaw_sql->as_header;
     {    # header
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-distance_snp');
+        my @names = $thaw_sql->as_header;
         $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
@@ -1845,7 +1830,7 @@ my $distance_snp = sub {
         my $pair_2 = reverse $pair_1;
         my $bases = [ $pair_1, $pair_2 ];
 
-        my $thaw_sql = $sql_file->retrieve('common-distance_snp');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-distance_snp');
 
         $thaw_sql->add_where( 'isw_distance'                    => \'>= -1' );
         $thaw_sql->add_where( 'isw_distance'                    => \'<= 15' );
@@ -1900,10 +1885,9 @@ my $density_snp = sub {
     # Six base groups
     my @pairs = qw{A<->C A<->G A<->T C<->G C<->T G<->T};
 
-    my $thaw_sql = $sql_file->retrieve('common-distance_snp');
-
-    my @names = $thaw_sql->as_header;
     {    # header
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-distance_snp');
+        my @names = $thaw_sql->as_header;
         $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
@@ -1919,7 +1903,7 @@ my $density_snp = sub {
         my $pair_2 = reverse $pair_1;
         my $bases = [ $pair_1, $pair_2 ];
 
-        my $thaw_sql = $sql_file->retrieve('common-distance_snp');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-distance_snp');
 
         $thaw_sql->add_where( 'isw_density'                     => \'>= -1' );
         $thaw_sql->add_where( 'isw_density'                     => \'<= 30' );
@@ -1974,10 +1958,9 @@ my $distance_tri_trv = sub {
     # base groups
     my @pairs = ( [ 'Tri', qw{AG CT GA TC} ], [ 'Trv', qw{AC AT CA CG GC GT TA TG} ], );
 
-    my $thaw_sql = $sql_file->retrieve('common-distance_snp');
-
-    my @names = $thaw_sql->as_header;
     {    # header
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-distance_snp');
+        my @names = $thaw_sql->as_header;
         $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
     }
 
@@ -1988,7 +1971,7 @@ my $distance_tri_trv = sub {
         my $group_name = shift @{$_};
         $write_obj->increase_row;
 
-        my $thaw_sql = $sql_file->retrieve('common-distance_snp');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-distance_snp');
 
         $thaw_sql->add_where( 'isw_distance'                    => \'>= -1' );
         $thaw_sql->add_where( 'isw_distance'                    => \'<= 15' );
@@ -2066,7 +2049,7 @@ my $align_coding = sub {
         $write_obj->row(0);
         $write_obj->column(0);
 
-        my $thaw_sql = $sql_file->retrieve('common-align-0');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-align-0');
 
         my @names = $thaw_sql->as_header;
         {    # header
@@ -2131,7 +2114,7 @@ my $align_repeat = sub {
         $write_obj->row(0);
         $write_obj->column(0);
 
-        my $thaw_sql = $sql_file->retrieve('common-align-0');
+        my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-align-0');
 
         my @names = $thaw_sql->as_header;
         {    # header
