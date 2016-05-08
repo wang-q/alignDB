@@ -51,7 +51,7 @@ sub BUILD {
         # do nothing
     }
     else {
-        Carp::confess "You should provide either mysql or db-server\n";
+        Carp::confess "You should provide either mysql or db:server\n";
     }
 
     my $mysql  = $self->mysql;
@@ -82,7 +82,7 @@ sub _insert_align {
             align_id, align_length,
             align_comparables, align_identities, align_differences,
             align_gaps, align_ns, align_error,
-            align_pi, align_target_gc, align_average_gc
+            align_pi, align_gc, align_average_gc
         )
         VALUES (
             NULL, ?,
@@ -108,43 +108,76 @@ sub _insert_align {
     return $align_id;
 }
 
+sub get_chr_id {
+    my $self        = shift;
+    my $common_name = shift;
+    my $chr_name    = shift;
+
+    my DBI $dbh = $self->dbh;
+    my DBI $sth = $dbh->prepare(
+        q{
+        SELECT c.chr_id
+        FROM chromosome c
+        WHERE 1=1
+        and c.common_name = ?
+        and c.chr_name = ?
+        }
+    );
+    $sth->execute( $common_name, $chr_name );
+    my ($chr_id) = $sth->fetchrow_array;
+    $sth->finish;
+
+    return $chr_id;
+}
+
 sub _insert_seq {
     my $self     = shift;
+    my $align_id = shift;
     my $seq_info = shift;
 
-    Carp::confess "Pass a seq to this method!\n" if !defined $seq_info->{seq};
+    Carp::confess "Need align_id\n" if !defined $align_id;
+    Carp::confess "Need seq_info\n" if !defined $seq_info || ref $seq_info ne "HASH";
 
-    for my $key (qw{chr_id chr_name chr_start chr_end chr_strand length gc runlist}) {
+    Carp::confess "Need common_name\n"             if !defined $seq_info->{name};
+    Carp::confess "Need chr_name\n"                if !defined $seq_info->{chr_name};
+    Carp::confess "T, Q, or O\n"                   if !defined $seq_info->{seq_role};
+    Carp::confess "Need positions in alignments\n" if !defined $seq_info->{seq_position};
+    Carp::confess "Pass a seq to this method\n"    if !defined $seq_info->{seq};
+
+    for my $key (qw{chr_start chr_end chr_strand length gc runlist}) {
         if ( !defined $seq_info->{$key} ) {
             $seq_info->{$key} = undef;
         }
     }
+
+    my $chr_id = $self->get_chr_id( $seq_info->{name}, $seq_info->{chr_name} );
 
     # Get database handle
     my DBI $dbh = $self->dbh;
     my DBI $sth = $dbh->prepare(
         q{
         INSERT INTO sequence (
-            seq_id, chr_id, align_id, chr_name, chr_start, chr_end,
-            chr_strand, seq_length, seq_seq, seq_gc, seq_runlist
+            seq_id, align_id, chr_id,
+            seq_role, seq_position, common_name,
+            chr_name, chr_start, chr_end, chr_strand,
+            seq_length, seq_gc, seq_runlist, seq_seq
         )
         VALUES (
-            NULL, ?, ?, ?, ?, ?,
-            ?, ?, ?, ?, ?
+            NULL, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?, ?,
+            ?, ?, ?, ?
         )
         }
     );
 
     $sth->execute(
-        $seq_info->{chr_id},    $seq_info->{align_id}, $seq_info->{chr_name},
-        $seq_info->{chr_start}, $seq_info->{chr_end},  $seq_info->{chr_strand},
-        $seq_info->{length},    $seq_info->{seq},      $seq_info->{gc},
-        $seq_info->{runlist},
+        $align_id,                 $chr_id,              $seq_info->{seq_role},
+        $seq_info->{seq_position}, $seq_info->{name},    $seq_info->{chr_name},
+        $seq_info->{chr_start},    $seq_info->{chr_end}, $seq_info->{chr_strand},
+        $seq_info->{length},       $seq_info->{gc},      $seq_info->{runlist},
+        $seq_info->{seq},
     );
-
-    my $seq_id = $self->last_insert_id;
-
-    return $seq_id;
 }
 
 sub _insert_set_and_sequence {
@@ -163,9 +196,8 @@ sub _insert_set_and_sequence {
         my $indel_set      = AlignDB::IntSpan->new;
         my $comparable_set = AlignDB::IntSpan->new;
         for my $i ( 0 .. $seq_number - 1 ) {
-            $info_refs->[$i]{align_id} = $align_id;
-            $info_refs->[$i]{seq}      = $seq_refs->[$i];
-            $info_refs->[$i]{gc}       = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[$i] ] );
+            $info_refs->[$i]{seq} = $seq_refs->[$i];
+            $info_refs->[$i]{gc} = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[$i] ] );
             my $seq_indel_set = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
             my $seq_set       = $align_set->diff($seq_indel_set);
             $info_refs->[$i]{runlist} = $seq_set->runlist;
@@ -189,35 +221,155 @@ sub _insert_set_and_sequence {
     }
 
     {    # target
-        my DBI $sth = $dbh->prepare(
-            q{
-            INSERT INTO target ( target_id, seq_id )
-            VALUES ( NULL, ? )
-            }
-        );
-        my $seq_id = $self->_insert_seq( $info_refs->[0] );
-        $sth->execute($seq_id);
-        $sth->finish;
+        $info_refs->[0]{seq_role}     = "T";
+        $info_refs->[0]{seq_position} = 0;
+        $self->_insert_seq( $align_id, $info_refs->[0] );
     }
 
     {    # and queries
-        my DBI $sth = $dbh->prepare(
-            q{
-            INSERT INTO query (
-                query_id, seq_id, query_strand, query_position
-            )
-            VALUES ( NULL, ?, ?, ? )
-            }
-        );
         for my $i ( 1 .. $seq_number - 1 ) {
-            my $seq_id = $self->_insert_seq( $info_refs->[$i] );
-            $sth->execute( $seq_id, $info_refs->[$i]{chr_strand}, $i - 1 );
+            $info_refs->[$i]{seq_role}     = "Q";
+            $info_refs->[$i]{seq_position} = $i;
+            $self->_insert_seq( $align_id, $info_refs->[$i] );
         }
-        $sth->finish;
     }
 
+    return;
+}
+
+# Add a new alignment to the database
+# This method is the most important one in this module.
+# All generating operations are performed here.
+sub add_align {
+    my $self      = shift;
+    my $info_refs = shift;
+
+    my $seq_refs = [ map { $_->{seq} } @{$info_refs} ];
+
+    my $target_idx = 0;
+
+    # check align length
+    my $align_length = length $seq_refs->[$target_idx];
+    for ( @{$seq_refs} ) {
+        if ( ( length $_ ) != $align_length ) {
+            Carp::confess "Sequences should have the same length!\n";
+        }
+    }
+
+    # check seq number
+    my $seq_count = scalar @{$seq_refs};
+    if ( $seq_count < 2 ) {
+        Carp::confess "Too few sequences [$seq_count]\n";
+    }
+
+    #----------------------------#
+    # INSERT INTO align
+    #----------------------------#
+    my $align_id = $self->_insert_align($seq_refs);
+    printf "Prosess align [%s] at %s.%s(%s):%s-%s\n", $align_id,
+        $info_refs->[$target_idx]{name},
+        $info_refs->[$target_idx]{chr_name},
+        $info_refs->[$target_idx]{chr_strand},
+        $info_refs->[$target_idx]{chr_start},
+        $info_refs->[$target_idx]{chr_end};
     $self->{caching_id}   = $align_id;
     $self->{caching_seqs} = $seq_refs;
+
+    #----------------------------#
+    # UPDATE align, INSERT INTO sequence, target, queries
+    #----------------------------#
+    $self->_insert_set_and_sequence( $align_id, $info_refs, $seq_refs );
+
+    #----------------------------#
+    # INSERT INTO indel
+    #----------------------------#
+    $self->_insert_indel($align_id);
+
+    #----------------------------#
+    # INSERT INTO snp
+    #----------------------------#
+    $self->_insert_snp($align_id);
+
+    return $align_id;
+}
+
+sub parse_axt_file {
+    my $self   = shift;
+    my $infile = shift;
+    my $opt    = shift;
+
+    # minimal length
+    my $threshold = $opt->{threshold};
+    $threshold ||= $self->threshold;
+
+    my $query_length_of = $self->get_chr_legnth_of( $opt->{qname} );
+
+    my $in_fh = IO::Zlib->new( $infile, "rb" );
+    my $content = '';    # content of one block
+    while (1) {
+        last if $in_fh->eof and $content eq '';
+        my $line = '';
+        if ( !$in_fh->eof ) {
+            $line = $in_fh->getline;
+        }
+
+        if ( substr( $line, 0, 1 ) eq "#" ) {
+            next;
+        }
+        elsif ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
+            my $info_refs = App::Fasops::Common::parse_axt_block( $content, $query_length_of );
+            $content = '';
+
+            next if length( $info_refs->[0]{seq} ) < $threshold;
+
+            $info_refs->[0]{name} = $opt->{tname};
+            $info_refs->[1]{name} = $opt->{qname};
+
+            $self->add_align($info_refs);
+        }
+        else {
+            $content .= $line;
+        }
+    }
+    $in_fh->close;
+
+    return;
+}
+
+# blocked fasta format
+sub parse_fas_file {
+    my $self   = shift;
+    my $infile = shift;
+    my $opt    = shift;
+
+    # minimal length
+    my $threshold = $opt->{threshold};
+    $threshold ||= $self->threshold;
+
+    my $in_fh = IO::Zlib->new( $infile, "rb" );
+
+    my $content = '';    # content of one block
+    while (1) {
+        last if $in_fh->eof and $content eq '';
+        my $line = '';
+        if ( !$in_fh->eof ) {
+            $line = $in_fh->getline;
+        }
+        if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
+            my $info_of = App::Fasops::Common::parse_block($content);
+            $content = '';
+
+            my $info_refs = [ map { $info_of->{$_} } keys %{$info_of} ];
+            next if length( $info_refs->[0]{seq} ) < $threshold;
+
+            $self->add_align($info_refs);
+        }
+        else {
+            $content .= $line;
+        }
+    }
+
+    $in_fh->close;
 
     return;
 }
@@ -227,7 +379,6 @@ sub _insert_indel {
     my $align_id = shift;
 
     my DBI $dbh = $self->dbh;
-
     my DBI $sth = $dbh->prepare(
         q{
         INSERT INTO indel (
@@ -758,195 +909,6 @@ sub insert_ssw {
     return;
 }
 
-# Add a new alignment to the database
-# This method is the most important one in this module.
-# All generating operations are performed here.
-sub add_align {
-    my $self      = shift;
-    my $info_refs = shift;
-    my $seq_refs  = shift;
-
-    my $target_idx = 0;
-
-    # check align length
-    my $align_length = length $seq_refs->[$target_idx];
-    for ( @{$seq_refs} ) {
-        if ( ( length $_ ) != $align_length ) {
-            Carp::confess "Sequences should have the same length!\n";
-        }
-    }
-
-    # check seq number
-    my $seq_count = scalar @{$seq_refs};
-    if ( $seq_count < 2 ) {
-        Carp::confess "Too few sequences [$seq_count]\n";
-    }
-
-    # check info and seq numbers
-    if ( $seq_count != scalar @{$info_refs} ) {
-        Carp::confess "Number of infos is not equal to seqs!\n";
-    }
-
-    #----------------------------#
-    # INSERT INTO align
-    #----------------------------#
-    my $align_id = $self->_insert_align($seq_refs);
-    printf "Prosess align [%s] at %s.%s(%s):%s-%s\n", $align_id,
-        $info_refs->[$target_idx]{name},
-        $info_refs->[$target_idx]{chr_name},
-        $info_refs->[$target_idx]{chr_strand},
-        $info_refs->[$target_idx]{chr_start},
-        $info_refs->[$target_idx]{chr_end};
-
-    #----------------------------#
-    # UPDATE align, INSERT INTO sequence, target, queries
-    #----------------------------#
-    $self->_insert_set_and_sequence( $align_id, $info_refs, $seq_refs );
-
-    #----------------------------#
-    # INSERT INTO indel
-    #----------------------------#
-    $self->_insert_indel($align_id);
-
-    #----------------------------#
-    # INSERT INTO snp
-    #----------------------------#
-    $self->_insert_snp($align_id);
-
-    return $align_id;
-}
-
-# read in alignments and chromosome position info from .axt file then pass them
-#   to add_align method
-sub parse_axt_file {
-    my $self   = shift;
-    my $infile = shift;
-    my $opt    = shift;
-
-    my $target_name = $opt->{target_name};
-    my $query_name  = $opt->{query_name};
-    my $threshold   = $opt->{threshold};
-
-    my $target_chr_id_of = $self->get_chr_id_hash($target_name);
-    my $query_chr_id_of  = $self->get_chr_id_hash($query_name);
-    my $query_length_of  = $self->get_chr_legnth_hash($query_name);
-
-    # minimal length
-    $threshold ||= $self->threshold;
-
-    my $in_fh = IO::Zlib->new( $infile, "rb" );
-
-    while (1) {
-        my $summary_line = <$in_fh>;
-        last unless $summary_line;
-        next if $summary_line =~ /^#/;
-
-        chomp $summary_line;
-        chomp( my $first_line = <$in_fh> );
-        $first_line = uc $first_line;
-        chomp( my $second_line = <$in_fh> );
-        $second_line = uc $second_line;
-        <$in_fh>;    # skip one line
-
-        next if length $first_line < $threshold;
-
-        my (undef,         $first_chr,  $first_start,  $first_end, $second_chr,
-            $second_start, $second_end, $query_strand, undef,
-        ) = split /\s+/, $summary_line;
-
-        if ( $query_strand eq "-" ) {
-            if ( exists $query_length_of->{$second_chr} ) {
-                $second_start = $query_length_of->{$second_chr} - $second_start + 1;
-                $second_end   = $query_length_of->{$second_chr} - $second_end + 1;
-                ( $second_start, $second_end ) = ( $second_end, $second_start );
-            }
-        }
-
-        my $info_refs = [
-            {   name       => $target_name,
-                chr_name   => $first_chr,
-                chr_id     => $target_chr_id_of->{$first_chr},
-                chr_start  => $first_start,
-                chr_end    => $first_end,
-                chr_strand => '+',
-            },
-            {   name       => $query_name,
-                chr_name   => $second_chr,
-                chr_id     => $query_chr_id_of->{$second_chr},
-                chr_start  => $second_start,
-                chr_end    => $second_end,
-                chr_strand => $query_strand,
-            },
-        ];
-
-        $self->add_align( $info_refs, [ $first_line, $second_line ], );
-    }
-
-    $in_fh->close;
-
-    return;
-}
-
-# blocked fasta format
-sub parse_block_fasta_file {
-    my $self    = shift;
-    my $in_file = shift;
-    my $opt     = shift;
-
-    my $threshold = $opt->{threshold};
-
-    my $in_fh = IO::Zlib->new( $in_file, "rb" );
-
-    my $content = '';
-    while ( my $line = <$in_fh> ) {
-        if ( $line =~ /^\s+$/ and $content =~ /\S/ ) {
-            my @lines = grep {/\S/} split /\n/, $content;
-            $content = '';
-            die "headers not equal to seqs\n" if @lines % 2;
-            die "Two few lines in block\n" if @lines < 4;
-
-            my ( @headers, @seqs );
-            while (@lines) {
-                my $header = shift @lines;
-                $header =~ s/^\>//;
-                chomp $header;
-                my $seq = shift @lines;
-                chomp $seq;
-                $seq = uc $seq;
-                push @headers, $header;
-                push @seqs,    $seq;
-            }
-
-            next if length $seqs[0] < $threshold;
-
-            #S288C:
-            #  chr_end: 667886
-            #  chr_id: 265
-            #  chr_name: IV
-            #  chr_start: 652404
-            #  chr_strand: +
-            #  name: S288C
-            my $info_refs = [];
-            for my $header (@headers) {
-                my $info_ref = App::RL::Common::decode_header($header);
-                $info_ref->{chr_id}
-                    = $self->get_chr_id_hash( $info_ref->{name} )->{ $info_ref->{chr_name} };
-
-                push @{$info_refs}, $info_ref;
-            }
-
-            $self->add_align( $info_refs, \@seqs );
-        }
-        else {
-            $content .= $line;
-        }
-    }
-
-    $in_fh->close;
-
-    return;
-}
-
 sub get_seqs {
     my $self     = shift;
     my $align_id = shift;
@@ -1087,27 +1049,7 @@ sub get_sets {
     return [ $align_set, $comparable_set, $indel_set ];
 }
 
-sub get_chr_id_hash {
-    my $self        = shift;
-    my $common_name = shift;
-
-    my %id_of   = ();
-    my DBI $dbh = $self->dbh;
-    my DBI $std = $dbh->prepare(
-        q{
-        SELECT * FROM chromosome WHERE common_name = ?
-        }
-    );
-    $std->execute($common_name);
-    while ( my $ref = $std->fetchrow_hashref ) {
-        $id_of{ $ref->{chr_name} } = $ref->{chr_id};
-    }
-    $std->finish;
-
-    return \%id_of;
-}
-
-sub get_chr_legnth_hash {
+sub get_chr_legnth_of {
     my $self        = shift;
     my $common_name = shift;
 
@@ -1136,9 +1078,8 @@ sub get_slice_stat {
     my @seq_slices = map { $set->substr_span($_) } @$seqs_ref;
     my $result     = App::Fasops::Common::multi_seq_stat( \@seq_slices );
     my $target_gc  = App::Fasops::Common::calc_gc_ratio( [ $seq_slices[0] ] );
-    my $average_gc = App::Fasops::Common::calc_gc_ratio( \@seq_slices );
 
-    push @{$result}, $target_gc, $average_gc;
+    push @{$result}, $target_gc;
     return $result;
 }
 
@@ -1185,13 +1126,13 @@ sub insert_window {
             window_id, align_id, window_start, window_end, window_length,
             window_runlist, window_comparables, window_identities,
             window_differences, window_indel, window_pi,
-            window_target_gc, window_average_gc
+            window_gc
         )
         VALUES (
             NULL, ?, ?, ?, ?,
             ?, ?, ?,
             ?, ?, ?,
-            ?, ?
+            ?
         )
         }
     );
@@ -1219,7 +1160,7 @@ sub insert_window {
     $sth->execute(
         $align_id,       $window_start,     $window_end,       $window_length,
         $window_runlist, $window_stat->[1], $window_stat->[2], $window_stat->[3],
-        $window_indel,   $window_stat->[7], $window_stat->[8], $window_stat->[9],
+        $window_indel,   $window_stat->[7], $window_stat->[8],
     );
 
     return $self->last_insert_id;

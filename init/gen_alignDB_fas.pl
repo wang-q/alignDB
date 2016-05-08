@@ -129,7 +129,7 @@ my $worker = sub {
 
     for my $infile (@infiles) {
         print "process " . path($infile)->basename . "\n";
-        $obj->parse_block_fasta_file( $infile, $opt );
+        $obj->parse_fas_file( $infile, $opt );
         print "Done.\n\n";
     }
 

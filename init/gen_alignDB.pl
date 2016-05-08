@@ -3,10 +3,10 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use File::Find::Rule;
 
@@ -52,7 +52,7 @@ gen_alignDB.pl - Generate alignDB from axt files
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'         => \( my $server           = $Config->{database}{server} ),
     'port|P=i'           => \( my $port             = $Config->{database}{port} ),
     'db|d=s'             => \( my $db               = $Config->{database}{db} ),
@@ -63,21 +63,17 @@ GetOptions(
     'query=s'            => \( my $query_name       = $Config->{taxon}{query_name} ),
     'length|lt|l=i'      => \( my $length_threshold = $Config->{generate}{length_threshold} ),
     'parallel=i'         => \( my $parallel         = $Config->{generate}{parallel} ),
-    'gzip'               => \my $gzip,
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # Search for all files and push their paths to @files
 #----------------------------------------------------------#
 my @files;
-if ( !$gzip ) {
-    @files = sort File::Find::Rule->file->name('*.axt')->in($dir_align);
-    printf "\n----Total .axt Files: %4s----\n\n", scalar @files;
-}
-if ( scalar @files == 0 or $gzip ) {
+@files = sort File::Find::Rule->file->name('*.axt')->in($dir_align);
+printf "\n----Total .axt Files: %4s----\n\n", scalar @files;
+if ( scalar @files == 0 ) {
     @files = sort File::Find::Rule->file->name('*.axt.gz')->in($dir_align);
     printf "\n----Total .axt.gz Files: %4s----\n\n", scalar @files;
-    $gzip++;
 }
 
 #----------------------------------------------------------#
@@ -100,9 +96,9 @@ my $worker = sub {
 
     $obj->parse_axt_file(
         $infile,
-        {   target_name => $target_name,
-            query_name  => $query_name,
-            threshold   => $length_threshold,
+        {   tname     => $target_name,
+            qname     => $query_name,
+            threshold => $length_threshold,
         }
     );
 

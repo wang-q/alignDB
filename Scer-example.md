@@ -313,8 +313,9 @@ perl ~/Scripts/alignDB/extra/two_way_batch.pl \
     -t S288c -q RM11_1a \
     -da ~/data/alignment/example/scer/Pairwise/S288cvsRM11_1a \
     --chr ~/data/alignment/example/scer/chr_length.csv \
-    -lt 10000 --run common \
-    --parallel 4 --batch 10
+    -lt 10000 \
+    --parallel 4 --batch 10 \
+    --run common
 ```
 
 * On Hackintosh (4790k SSD)
