@@ -6,8 +6,6 @@ use autodie;
 use Path::Tiny;
 use FindBin;
 
-my $init_file = "init.sql";
-
 my $content = path( $FindBin::RealBin, "crebas.sql" )->slurp;
 
 $content =~ s/\r//g;
@@ -39,9 +37,9 @@ CREATE INDEX chr_chr_name ON chromosome
 #----------------------------#
 # sequence
 #----------------------------#
-CREATE INDEX seq_chr_id ON sequence
+CREATE INDEX seq_chr_common_name ON sequence
 (
-    chr_id, chr_start, chr_end
+    common_name, chr_name, chr_start, chr_end
 );
 
 CREATE INDEX seq_chr_name ON sequence
@@ -52,6 +50,16 @@ CREATE INDEX seq_chr_name ON sequence
 CREATE INDEX seq_chr_start ON sequence
 (
     chr_start, chr_end
+);
+
+CREATE INDEX seq_role ON sequence
+(
+    seq_role
+);
+
+CREATE INDEX seq_position ON sequence
+(
+    seq_position
 );
 
 #----------------------------#
@@ -126,6 +134,19 @@ CREATE INDEX isw_density ON isw
 CREATE INDEX isw_type ON isw
 (
     isw_type
+);
+
+#----------------------------#
+# window
+#----------------------------#
+CREATE INDEX window_align_id ON window
+(
+    align_id, window_start, window_end
+);
+
+CREATE INDEX window_start ON window
+(
+    window_start, window_end
 );
 
 };

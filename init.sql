@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     1/24/2016 09:07:28                           */
+/* Created on:     5/8/2016 11:33:12                            */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -18,7 +18,7 @@ create table align
    align_error                    int,
    align_pi                       double,
    align_indels                   int,
-   align_target_gc                double,
+   align_gc                       double,
    align_average_gc               double,
    align_comparable_runlist       text,
    align_indel_runlist            text,
@@ -36,46 +36,13 @@ ENGINE = MyISAM;
 create table chromosome
 (
    chr_id                         int                            not null AUTO_INCREMENT,
-   common_name                    char(64)                       not null,
+   common_name                    char(64),
    taxon_id                       int,
-   chr_name                       char(64)                       not null,
-   chr_length                     int                            not null,
+   chr_name                       char(64),
+   chr_length                     int,
    primary key (chr_id)
 )
 ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Table: codingsw                                              */
-/*==============================================================*/
-create table codingsw
-(
-   codingsw_id                    int                            not null AUTO_INCREMENT,
-   exon_id                        int,
-   prev_exon_id                   int,
-   window_id                      int,
-   codingsw_type                  char(8),
-   codingsw_distance              int,
-   codingsw_cv                    double,
-   primary key (codingsw_id)
-)
-ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Index: exon_codingsw_FK                                      */
-/*==============================================================*/
-create index exon_codingsw_FK on codingsw
-(
-   exon_id,
-   prev_exon_id
-);
-
-/*==============================================================*/
-/* Index: window_codingsw_FK                                    */
-/*==============================================================*/
-create index window_codingsw_FK on codingsw
-(
-   window_id
-);
 
 /*==============================================================*/
 /* Table: exon                                                  */
@@ -84,8 +51,8 @@ create table exon
 (
    exon_id                        int                            not null AUTO_INCREMENT,
    prev_exon_id                   int                            not null,
-   window_id                      int,
-   gene_id                        int,
+   window_id                      int                            not null,
+   gene_id                        int                            not null,
    exon_stable_id                 char(64)                       not null,
    exon_strand                    char(1),
    exon_phase                     int,
@@ -94,8 +61,8 @@ create table exon
    exon_rank                      int,
    exon_is_full                   int,
    exon_tl_runlist                text,
-   exon_seq                       longtext,
-   exon_peptide                   longtext,
+   exon_seq                       text,
+   exon_peptide                   text,
    primary key (exon_id, prev_exon_id),
    key AK_exon_stable_id (exon_stable_id)
 )
@@ -124,7 +91,7 @@ create table extreme
 (
    extreme_id                     int                            not null AUTO_INCREMENT,
    prev_extreme_id                int                            not null,
-   window_id                      int,
+   window_id                      int                            not null,
    extreme_type                   char(8),
    extreme_left_amplitude         double,
    extreme_right_amplitude        double,
@@ -148,7 +115,7 @@ create index window_extreme_FK on extreme
 create table gene
 (
    gene_id                        int                            not null AUTO_INCREMENT,
-   window_id                      int,
+   window_id                      int                            not null,
    gene_stable_id                 char(64)                       not null,
    gene_external_name             char(64),
    gene_biotype                   char(64),
@@ -181,9 +148,9 @@ create index window_gene_FK on gene
 create table gsw
 (
    gsw_id                         int                            not null AUTO_INCREMENT,
-   extreme_id                     int,
-   prev_extreme_id                int,
-   window_id                      int,
+   extreme_id                     int                            not null,
+   prev_extreme_id                int                            not null,
+   window_id                      int                            not null,
    gsw_type                       char(8),
    gsw_distance                   int,
    gsw_distance_crest             int,
@@ -221,7 +188,7 @@ create table indel
 (
    indel_id                       int                            not null AUTO_INCREMENT,
    prev_indel_id                  int                            not null,
-   align_id                       int,
+   align_id                       int                            not null,
    indel_start                    int,
    indel_end                      int,
    indel_length                   int,
@@ -255,9 +222,9 @@ create index align_indel_FK on indel
 create table isw
 (
    isw_id                         int                            not null AUTO_INCREMENT,
-   indel_id                       int,
-   prev_indel_id                  int,
-   align_id                       int,
+   indel_id                       int                            not null,
+   prev_indel_id                  int                            not null,
+   align_id                       int                            not null,
    isw_indel_id                   int,
    isw_start                      int,
    isw_end                        int,
@@ -267,8 +234,7 @@ create table isw
    isw_density                    int,
    isw_differences                int,
    isw_pi                         double,
-   isw_target_gc                  double,
-   isw_average_gc                 double,
+   isw_gc                         double,
    isw_cv                         double,
    isw_d_indel                    double,
    isw_d_noindel                  double,
@@ -327,7 +293,7 @@ ENGINE = MyISAM;
 create table ofg
 (
    ofg_id                         int                            not null AUTO_INCREMENT,
-   window_id                      int,
+   window_id                      int                            not null,
    ofg_tag                        char(64),
    ofg_type                       char(64),
    primary key (ofg_id)
@@ -348,8 +314,8 @@ create index window_ofg_FK on ofg
 create table ofgsw
 (
    ofgsw_id                       int                            not null AUTO_INCREMENT,
-   ofg_id                         int,
-   window_id                      int,
+   ofg_id                         int                            not null,
+   window_id                      int                            not null,
    ofgsw_type                     char(8),
    ofgsw_distance                 int,
    ofgsw_cv                       double,
@@ -374,54 +340,12 @@ create index window_ofgsw_FK on ofgsw
 );
 
 /*==============================================================*/
-/* Table: query                                                 */
-/*==============================================================*/
-create table query
-(
-   query_id                       int                            not null AUTO_INCREMENT,
-   seq_id                         int,
-   query_strand                   char(1),
-   query_position                 int,
-   primary key (query_id)
-)
-ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Index: sequence_query_FK                                     */
-/*==============================================================*/
-create index sequence_query_FK on query
-(
-   seq_id
-);
-
-/*==============================================================*/
-/* Table: reference                                             */
-/*==============================================================*/
-create table reference
-(
-   ref_id                         int                            not null AUTO_INCREMENT,
-   seq_id                         int,
-   ref_raw_seq                    longtext,
-   ref_complex_indel              text,
-   primary key (ref_id)
-)
-ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Index: sequence_reference_FK                                 */
-/*==============================================================*/
-create index sequence_reference_FK on reference
-(
-   seq_id
-);
-
-/*==============================================================*/
 /* Table: segment                                               */
 /*==============================================================*/
 create table segment
 (
    segment_id                     int                            not null AUTO_INCREMENT,
-   window_id                      int,
+   window_id                      int                            not null,
    segment_type                   char(8),
    segment_gc_mean                double,
    segment_gc_std                 double,
@@ -445,16 +369,19 @@ create index window_segment_FK on segment
 create table sequence
 (
    seq_id                         int                            not null AUTO_INCREMENT,
-   align_id                       int,
-   chr_id                         int,
+   align_id                       int                            not null,
+   chr_id                         int                            not null,
+   seq_role                       char(8)                        not null,
+   seq_position                   int,
+   common_name                    char(64),
    chr_name                       char(64),
    chr_start                      int,
    chr_end                        int,
    chr_strand                     char(1),
    seq_length                     int,
-   seq_seq                        longtext,
    seq_gc                         double,
    seq_runlist                    text,
+   seq_seq                        longtext,
    primary key (seq_id)
 )
 ENGINE = MyISAM;
@@ -482,7 +409,7 @@ create table snp
 (
    snp_id                         int                            not null AUTO_INCREMENT,
    isw_id                         int,
-   align_id                       int,
+   align_id                       int                            not null,
    snp_pos                        int,
    target_base                    char(1),
    query_base                     char(1),
@@ -520,8 +447,8 @@ create index isw_snp_FK on snp
 create table ssw
 (
    ssw_id                         int                            not null AUTO_INCREMENT,
-   snp_id                         int,
-   window_id                      int,
+   snp_id                         int                            not null,
+   window_id                      int                            not null,
    ssw_type                       char(8),
    ssw_distance                   int,
    ssw_d_snp                      double,
@@ -548,31 +475,12 @@ create index snp_ssw_FK on ssw
 );
 
 /*==============================================================*/
-/* Table: target                                                */
-/*==============================================================*/
-create table target
-(
-   target_id                      int                            not null AUTO_INCREMENT,
-   seq_id                         int,
-   primary key (target_id)
-)
-ENGINE = MyISAM;
-
-/*==============================================================*/
-/* Index: sequence_target_FK                                    */
-/*==============================================================*/
-create index sequence_target_FK on target
-(
-   seq_id
-);
-
-/*==============================================================*/
 /* Table: window                                                */
 /*==============================================================*/
 create table window
 (
    window_id                      int                            not null AUTO_INCREMENT,
-   align_id                       int,
+   align_id                       int                            not null,
    window_start                   int,
    window_end                     int,
    window_length                  int,
@@ -582,11 +490,9 @@ create table window
    window_differences             int,
    window_indel                   int,
    window_pi                      double,
-   window_target_gc               double,
-   window_average_gc              double,
+   window_gc                      double,
    window_coding                  double,
    window_repeats                 double,
-   window_ns_indel                double,
    primary key (window_id)
 )
 ENGINE = MyISAM;
@@ -621,9 +527,9 @@ CREATE INDEX chr_chr_name ON chromosome
 #----------------------------#
 # sequence
 #----------------------------#
-CREATE INDEX seq_chr_id ON sequence
+CREATE INDEX seq_chr_common_name ON sequence
 (
-    chr_id, chr_start, chr_end
+    common_name, chr_name, chr_start, chr_end
 );
 
 CREATE INDEX seq_chr_name ON sequence
@@ -634,6 +540,16 @@ CREATE INDEX seq_chr_name ON sequence
 CREATE INDEX seq_chr_start ON sequence
 (
     chr_start, chr_end
+);
+
+CREATE INDEX seq_role ON sequence
+(
+    seq_role
+);
+
+CREATE INDEX seq_position ON sequence
+(
+    seq_position
 );
 
 #----------------------------#
@@ -708,5 +624,18 @@ CREATE INDEX isw_density ON isw
 CREATE INDEX isw_type ON isw
 (
     isw_type
+);
+
+#----------------------------#
+# window
+#----------------------------#
+CREATE INDEX window_align_id ON window
+(
+    align_id, window_start, window_end
+);
+
+CREATE INDEX window_start ON window
+(
+    window_start, window_end
 );
 
