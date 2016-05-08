@@ -196,7 +196,6 @@ sub _insert_set_and_sequence {
         my $indel_set      = AlignDB::IntSpan->new;
         my $comparable_set = AlignDB::IntSpan->new;
         for my $i ( 0 .. $seq_number - 1 ) {
-            $info_refs->[$i]{seq} = $seq_refs->[$i];
             $info_refs->[$i]{gc} = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[$i] ] );
             my $seq_indel_set = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
             my $seq_set       = $align_set->diff($seq_indel_set);
@@ -644,13 +643,13 @@ sub insert_isw {
             isw_id, indel_id, prev_indel_id, align_id, isw_indel_id,
             isw_start, isw_end, isw_length, isw_type,
             isw_distance, isw_density, isw_differences, isw_pi,
-            isw_target_gc, isw_average_gc
+            isw_gc
         )
         VALUES (
             NULL, ?, ?, ?, ?,
             ?, ?, ?, ?,
             ?, ?, ?, ?,
-            ?, ?
+            ?
         )
         }
     );
@@ -710,7 +709,7 @@ sub insert_isw {
                 $indel_id,        $prev_indel_id,  $align_id,      $isw_indel_id,
                 $isw_start,       $isw_end,        $isw_length,    $isw->{type},
                 $isw->{distance}, $isw->{density}, $isw_stat->[3], $isw_stat->[7],
-                $isw_stat->[8],   $isw_stat->[9],
+                $isw_stat->[8],
             );
         }
     }
@@ -927,15 +926,14 @@ sub get_seqs {
     }
 
     if ($flag) {
-
-        my DBI $dbh = $self->dbh;
-
+        my DBI $dbh        = $self->dbh;
         my DBI $target_sth = $dbh->prepare(
             q{
             SELECT s.seq_seq
             FROM sequence s
-            INNER JOIN target t on s.seq_id = t.seq_id
-            WHERE s.align_id = ?
+            WHERE 1 = 1
+            AND s.seq_role = "T"
+            AND s.align_id = ?
             }
         );
 
@@ -943,9 +941,10 @@ sub get_seqs {
             q{
             SELECT s.seq_seq
             FROM sequence s
-            INNER JOIN query q on s.seq_id = q.seq_id
-            WHERE s.align_id = ?
-            ORDER BY q.query_position
+            WHERE 1 = 1
+            AND s.seq_role = "Q"
+            AND s.align_id = ?
+            ORDER BY s.seq_position
             }
         );
 
@@ -994,32 +993,21 @@ sub get_names {
 
     my DBI $dbh = $self->dbh;
 
-    my @names;
-    for my $table (qw{target query reference}) {
-        my $sql = qq{
-            SELECT 
-                c.common_name
-            FROM
-                sequence s
-                    INNER JOIN
-                _TABLE_ ON s.seq_id = _TABLE_.seq_id
-                    INNER JOIN
-                chromosome c ON c.chr_id = s.chr_id
-            WHERE
-                s.align_id = ?
-        };
-
-        $sql =~ s/_TABLE_/$table/g;
-
-        $sql .= "ORDER BY query.query_position" if $table eq 'query';
-
-        my DBI $sth = $dbh->prepare($sql);
-        $sth->execute($align_id);
-        while ( my ($name) = $sth->fetchrow_array ) {
-            push @names, $name;
+    my DBI $sth = $dbh->prepare(
+        q{
+        SELECT s.common_name
+        FROM sequence s
+        WHERE s.align_id = ?
+        ORDER BY s.seq_position
         }
-        $sth->finish;
+    );
+    $sth->execute($align_id);
+
+    my @names;
+    while ( my ($name) = $sth->fetchrow_array ) {
+        push @names, $name;
     }
+    $sth->finish;
 
     return @names;
 }
@@ -1397,10 +1385,10 @@ sub get_align_ids_of_chr_name {
         q{
         SELECT a.align_id
         FROM sequence s
-        INNER JOIN target t ON s.seq_id = t.seq_id
         INNER JOIN align a ON s.align_id = a.align_id
-        INNER JOIN chromosome c on s.chr_id = c.chr_id
-        WHERE c.chr_name = ?
+        WHERE 1 = 1
+        AND s.seq_role = "T"
+        AND s.chr_name = ?
         ORDER BY a.align_id
         }
     );
@@ -1437,10 +1425,11 @@ sub get_target_info {
                    s.seq_runlist,
                    a.align_length
             FROM sequence s
-            INNER JOIN target t ON s.seq_id = t.seq_id
             LEFT JOIN chromosome c ON s.chr_id = c.chr_id
             INNER JOIN align a ON s.align_id = a.align_id
-            WHERE s.align_id = ?
+            WHERE 1 = 1
+            AND s.seq_role = "T"
+            AND s.align_id = ?
             }
         );
         $sth->execute($align_id);
@@ -1492,49 +1481,7 @@ sub get_queries_info {
     return @array;
 }
 
-sub get_target_chr_info {
-    my $self     = shift;
-    my $align_id = shift;
-
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
-        q{
-        SELECT c.chr_id, c.chr_name, c.chr_length
-        FROM sequence s
-        INNER JOIN target t ON s.seq_id = t.seq_id
-        INNER JOIN chromosome c ON s.chr_id = c.chr_id
-        WHERE s.align_id = ?
-        }
-    );
-    $sth->execute($align_id);
-    my ( $chr_id, $chr_name, $chr_length ) = $sth->fetchrow_array;
-    $sth->finish;
-
-    return ( $chr_id, $chr_name, $chr_length );
-}
-
-sub get_query_chr_info {
-    my $self     = shift;
-    my $align_id = shift;
-
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
-        q{
-        SELECT c.chr_id, c.chr_name, c.chr_length
-        FROM sequence s
-        INNER JOIN query q ON s.seq_id = q.seq_id
-        INNER JOIN chromosome c ON s.chr_id = c.chr_id
-        WHERE s.align_id = ?
-        }
-    );
-    $sth->execute($align_id);
-
-    my ( $chr_id, $chr_name, $chr_length ) = $sth->fetchrow_array;
-    $sth->finish;
-
-    return ( $chr_id, $chr_name, $chr_length );
-}
-
+# TODO
 sub get_chrs {
     my $self = shift;
     my $goal = shift || 'target';
@@ -1567,9 +1514,9 @@ sub get_freq {
     my DBI $dbh = $self->dbh;
     my DBI $sth = $dbh->prepare(
         q{
-        SELECT DISTINCT COUNT(q.query_id) + 1
-        FROM  query q, sequence s
-        WHERE q.seq_id = s.seq_id
+        SELECT DISTINCT COUNT(s.seq_id) + 1
+        FROM  sequence s
+        WHERE s.seq_role = "Q"
         GROUP BY s.align_id
         }
     );
@@ -1597,8 +1544,8 @@ sub find_align {
         q{
         SELECT s.align_id
         FROM sequence s
-        INNER JOIN target t ON s.seq_id = t.seq_id
         WHERE 1 = 1
+        AND s.seq_role = "T"
         AND s.chr_name = ?
         AND s.chr_start <= ?
         AND s.chr_end >= ?
