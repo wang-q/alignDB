@@ -357,8 +357,6 @@ my $summary_ofg = sub {
 #----------------------------------------------------------#
 my $ofg_all = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
         return;
     }
@@ -419,8 +417,6 @@ my $ofg_all = sub {
 #----------------------------------------------------------#
 my $ofg_coding = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
         return;
     }
@@ -501,8 +497,6 @@ my $ofg_coding = sub {
 #----------------------------------------------------------#
 my $ofg_coding_pure = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
         return;
     }
@@ -583,8 +577,6 @@ my $ofg_coding_pure = sub {
 #----------------------------------------------------------#
 my $ofg_dG = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_dG' ) ) {
         return;
     }
@@ -642,8 +634,6 @@ my $ofg_dG = sub {
 
 my $ofg_tag_type = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
         return;
     }

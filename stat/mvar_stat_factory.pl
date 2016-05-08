@@ -397,21 +397,15 @@ my $indel_list = sub {
     {    # contents
         my $sql_query = q{
             SELECT 
-                i.align_id, i.indel_id, a.common_name, a.chr_name, i.indel_start,
+                i.align_id, i.indel_id, s.common_name, s.chr_name, i.indel_start,
                 i.indel_end, i.indel_length, i.indel_seq, i.indel_gc,
                 i.indel_freq, i.indel_occured, i.indel_type, i.indel_slippage,
                 i.indel_coding, i.indel_repeats
             FROM
                 indel i
                     INNER JOIN
-                (SELECT 
-                    se.align_id, c.common_name, c.chr_name, se.chr_start
-                FROM
-                    sequence se, target t, chromosome c
-                WHERE
-                    se.seq_id = t.seq_id
-                        AND se.chr_id = c.chr_id) a ON i.align_id = a.align_id
-            ORDER BY a.chr_name, a.chr_start
+                sequence s ON i.align_id = s.align_id
+            ORDER BY s.chr_name, s.chr_start
         };
         my DBI $sth = $dbh->prepare($sql_query);
         $sth->execute();
@@ -450,22 +444,16 @@ my $snp_list = sub {
     {    # contents
         my $sql_query = q{
             SELECT 
-                s.align_id, s.snp_id, a.common_name, a.chr_name, s.snp_pos,
+                s.align_id, s.snp_id, se.common_name, se.chr_name, s.snp_pos,
                 i.isw_distance, s.mutant_to, s.snp_freq, s.snp_occured,
                 s.snp_coding, s.snp_repeats, s.snp_cpg
             FROM
                 snp s
                     INNER JOIN
-                (SELECT 
-                    se.align_id, c.common_name, c.chr_name, se.chr_start
-                FROM
-                    sequence se, target t, chromosome c
-                WHERE
-                    se.seq_id = t.seq_id
-                        AND se.chr_id = c.chr_id) a ON s.align_id = a.align_id
+                sequence se ON s.align_id = se.align_id
                     LEFT JOIN
                 isw i ON s.isw_id = i.isw_id
-            ORDER BY a.chr_name, a.chr_start
+            ORDER BY se.chr_name, se.chr_start
         };
         my DBI $sth = $dbh->prepare($sql_query);
         $sth->execute();
@@ -490,8 +478,6 @@ my $snp_list = sub {
 #----------------------------------------------------------#
 my $snp_codon_list = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'snp', 'snp_codon_pos' ) ) {
         return;
     }
@@ -509,19 +495,13 @@ my $snp_codon_list = sub {
     {    # contents
         my $sql_query = q{
             SELECT 
-                s.align_id, s.snp_id, a.chr_name, s.snp_pos, s.mutant_to,
+                s.align_id, s.snp_id, se.chr_name, s.snp_pos, s.mutant_to,
                 s.snp_freq, s.snp_occured, s.snp_codon_pos, s.snp_syn, s.snp_nsy
             FROM
                 snp s
                     INNER JOIN
-                (SELECT 
-                    se.align_id, c.common_name, c.chr_name, se.chr_start
-                FROM
-                    sequence se, target t, chromosome c
-                WHERE
-                    se.seq_id = t.seq_id
-                        AND se.chr_id = c.chr_id) a ON s.align_id = a.align_id
-            ORDER BY a.chr_name, a.chr_start
+                sequence se ON s.align_id = se.align_id
+            ORDER BY se.chr_name, se.chr_start
         };
         my DBI $sth = $dbh->prepare($sql_query);
         $sth->execute();
@@ -556,8 +536,6 @@ my $snp_codon_list = sub {
 #----------------------------------------------------------#
 my $gene_list = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'gene', 'gene_syn' ) ) {
         return;
     }
@@ -578,7 +556,7 @@ my $gene_list = sub {
     {    # contents
         my $sql_query = q{
             SELECT 
-                w.align_id, g.gene_id, a.chr_name, w.window_start, w.window_end,
+                w.align_id, g.gene_id, s.chr_name, w.window_start, w.window_end,
                 g.gene_stable_id, g.gene_external_name, g.gene_biotype,
                 g.gene_strand, g.gene_is_full, g.gene_multitrans,
                 g.gene_multiexons, w.window_differences, w.window_indel,
@@ -588,14 +566,8 @@ my $gene_list = sub {
                     INNER JOIN
                 window w ON g.window_id = w.window_id
                     INNER JOIN
-                (SELECT 
-                    se.align_id, c.common_name, c.chr_name, se.chr_start
-                FROM
-                    sequence se, target t, chromosome c
-                WHERE
-                    se.seq_id = t.seq_id
-                        AND se.chr_id = c.chr_id) a ON w.align_id = a.align_id
-            ORDER BY a.chr_name , a.chr_start
+                sequence s ON w.align_id = s.align_id
+            ORDER BY s.chr_name, s.chr_start
         };
         my DBI $sth = $dbh->prepare($sql_query);
         $sth->execute();

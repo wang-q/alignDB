@@ -1286,8 +1286,6 @@ my $d_crest_gc_series = sub {
 #----------------------------------------------------------#
 my $bed_count_trough = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'gsw', 'gsw_bed_count' ) ) {
         return;
     }
@@ -1339,8 +1337,6 @@ my $bed_count_trough = sub {
 #----------------------------------------------------------#
 my $bed_count_crest = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'gsw', 'gsw_bed_count' ) ) {
         return;
     }

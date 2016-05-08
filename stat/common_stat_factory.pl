@@ -901,8 +901,6 @@ my $group_density = sub {
 #----------------------------------------------------------#
 my $comb_coding = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'isw', 'isw_coding' ) ) {
         return;
     }
@@ -1024,8 +1022,6 @@ my $comb_coding = sub {
 #----------------------------------------------------------#
 my $comb_slippage = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
         return;
     }
@@ -1390,8 +1386,6 @@ my $indel_position_group = sub {
 #----------------------------------------------------------#
 my $indel_coding_group = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'indel', 'indel_coding' ) ) {
         return;
     }
@@ -1441,8 +1435,6 @@ my $indel_coding_group = sub {
 #----------------------------------------------------------#
 my $indel_repeat_group = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'indel', 'indel_repeats' ) ) {
         return;
     }
@@ -1493,8 +1485,6 @@ my $indel_repeat_group = sub {
 #----------------------------------------------------------#
 my $indel_slip_group = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
         return;
     }
@@ -2015,8 +2005,6 @@ my $distance_tri_trv = sub {
 #----------------------------------------------------------#
 my $align_coding = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'align', 'align_coding' ) ) {
         return;
     }
@@ -2080,8 +2068,6 @@ my $align_coding = sub {
 #----------------------------------------------------------#
 my $align_repeat = sub {
 
-    # if the target column of the target table does not contain
-    #   any values, skip this stat
     unless ( $write_obj->check_column( 'align', 'align_repeats' ) ) {
         return;
     }
