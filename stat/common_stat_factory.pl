@@ -118,9 +118,10 @@ if ( $piece == 0 ) {
 my $all_freq;
 {
     my $sql_query = q{
-            SELECT DISTINCT COUNT(q.query_id) + 1
-            FROM  query q, sequence s
-            WHERE q.seq_id = s.seq_id
+            SELECT DISTINCT COUNT(s.seq_id) + 1
+            FROM  sequence s
+            WHERE 1 = 1
+            AND s.seq_role = "Q"
             GROUP BY s.align_id
         };
     my $sth = $dbh->prepare($sql_query);
@@ -370,8 +371,8 @@ my $basic = sub {
         my $query_name = 'Target length (Mb)';
         my $sql_query  = q{
             SELECT  SUM(s.seq_length) / 1000000.00
-            FROM    sequence s, target t
-            WHERE   s.seq_id = t.seq_id
+            FROM    sequence s
+            WHERE   s.seq_role = "T"
         };
         $write_obj->write_sql(
             $sheet,
@@ -459,8 +460,8 @@ my $basic = sub {
         my $query_name = 'Target length (coding) (Mb)';
         my $sql_query  = q{
             SELECT  SUM(s.seq_length * a.align_coding) / 1000000.00 
-            FROM    sequence s, target t, align a
-            WHERE   s.seq_id = t.seq_id
+            FROM    sequence s, align a
+            WHERE   s.seq_role = "T"
             AND     s.align_id = a.align_id
         };
         $write_obj->write_sql(
@@ -475,8 +476,8 @@ my $basic = sub {
         my $query_name = 'Target length (repeats) (Mb)';
         my $sql_query  = q{
             SELECT  SUM(s.seq_length * a.align_repeats) / 1000000.00 
-            FROM    sequence s, target t, align a
-            WHERE   s.seq_id = t.seq_id
+            FROM    sequence s, align a
+            WHERE   s.seq_role = "T"
             AND     s.align_id = a.align_id
         };
         $write_obj->write_sql(
