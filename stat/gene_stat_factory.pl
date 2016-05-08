@@ -3,10 +3,10 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use DBI;
 use AlignDB::IntSpan;
@@ -44,7 +44,7 @@ gene_stat_factory.pl - Gene stats for alignDB
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server   = $Config->{database}{server} ),
     'port|P=i'     => \( my $port     = $Config->{database}{port} ),
     'db|d=s'       => \( my $db       = $Config->{database}{db} ),
@@ -56,7 +56,7 @@ GetOptions(
     'replace=s'    => \my %replace,
     'index'        => \my $add_index_sheet,
     'chart'        => \my $add_chart,
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 $outfile = "$db.gene.xlsx" unless $outfile;
 
@@ -312,85 +312,6 @@ my $summary_gene = sub {
 };
 
 #----------------------------------------------------------#
-# worksheet -- coding_all
-#----------------------------------------------------------#
-my $coding_all = sub {
-
-    # if the target column of the target table does not contain any values,
-    # skip this stat
-    return unless $write_obj->check_column( 'codingsw', 'codingsw_id' );
-
-    my $sheet_name = "coding_all";
-    my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
-
-    my @names = qw{ distance AVG_pi AVG_Indel/100bp AVG_gc AVG_CV AVG_repeats COUNT };
-    {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
-    }
-
-    my $data;
-    {    # query
-        my $sql_query = q{
-            SELECT sw.codingsw_distance `distance`,
-                   AVG (w.window_pi) `avg_pi`,
-                   AVG (w.window_indel / w.window_length * 100)
-                   `avg_indel/100bp`,
-                   AVG (w.window_target_gc) `avg_gc`,
-                   AVG (sw.codingsw_cv) `avg_cv`,
-                   AVG (w.window_repeats) `avg_repeats`,
-                   count(*) count
-            FROM codingsw sw,
-                 window w
-            WHERE sw.window_id = w.window_id 
-              AND sw.codingsw_distance < 0
-              AND w.window_coding = 1
-            GROUP BY sw.codingsw_distance
-            ORDER BY sw.codingsw_distance ASC
-        };
-        $data = $write_obj->write_sql(
-            $sheet,
-            {   sql_query => $sql_query,
-                data      => $data,
-            }
-        );
-    }
-
-    {    # query
-        my $sql_query = q{
-            SELECT sw.codingsw_distance `distance`,
-                   AVG (w.window_pi) `avg_pi`,
-                   AVG (w.window_indel / w.window_length * 100)
-                   `avg_indel/100bp`,
-                   AVG (w.window_target_gc) `avg_gc`,
-                   AVG (sw.codingsw_cv) `avg_cv`,
-                   AVG (w.window_repeats) `avg_repeats`,
-                   count(*) count
-            FROM codingsw sw,
-                 window w
-            WHERE sw.window_id = w.window_id
-              AND sw.codingsw_distance > 0
-              AND w.window_coding = 0
-            GROUP BY sw.codingsw_distance
-            ORDER BY sw.codingsw_distance ASC
-        };
-        $data = $write_obj->write_sql(
-            $sheet,
-            {   sql_query => $sql_query,
-                data      => $data,
-            }
-        );
-    }
-
-    if ($add_chart) {    # chart
-        $chart_coding->( $sheet, $data );
-    }
-
-    print "Sheet [$sheet_name] has been generated.\n";
-};
-
-#----------------------------------------------------------#
 # worksheet -- combined_dnds
 #----------------------------------------------------------#
 my $combined_dnds = sub {
@@ -497,7 +418,6 @@ my $frequency_dnds = sub {
 
 for my $n (@tasks) {
     if ( $n == 1 )  { &$summary_gene;   next; }
-    if ( $n == 2 )  { &$coding_all;     next; }
     if ( $n == 10 ) { &$combined_dnds;  next; }
     if ( $n == 11 ) { &$frequency_dnds; next; }
 }

@@ -4,9 +4,9 @@ use warnings;
 use autodie;
 
 use Getopt::Long;
-use Pod::Usage;
 use Config::Tiny;
-use YAML qw(Dump Load DumpFile LoadFile);
+use FindBin;
+use YAML::Syck;
 
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 
@@ -17,15 +17,14 @@ use AlignDB::Run;
 use AlignDB::Stopwatch;
 
 use FindBin;
-use lib "$FindBin::Bin/../lib";
+use lib "$FindBin::RealBin/../lib";
 use AlignDB;
 use AlignDB::Position;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -34,41 +33,38 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# Database init values
-my $server     = $Config->{database}{server};
-my $port       = $Config->{database}{port};
-my $username   = $Config->{database}{username};
-my $password   = $Config->{database}{password};
-my $db         = $Config->{database}{db};
-my $ensembl_db = $Config->{database}{ensembl};
+=head1 NAME
 
-my $reg_conf = "$FindBin::Bin/../ensembl.initrc.pm";
+insert_gene.pl - Add annotation info to alignDB
 
-# run in parallel mode
-my $parallel = $Config->{generate}{parallel};
+=head1 SYNOPSIS
 
-# number of alignments process in one child process
-my $batch_number = $Config->{generate}{batch};
+    insert_gene.pl [options]
+      Options:
+        --help              brief help message
+        --man               full documentation
+        --server            MySQL server IP/Domain name
+        --db                database name
+        --username          username
+        --password          password
+        --ensembl           ensembl database name
+        --parallel          run in parallel mode
+        --batch             number of alignments process in one child process
 
-my $man  = 0;
-my $help = 0;
+=cut
 
 GetOptions(
-    'help|?'       => \$help,
-    'man'          => \$man,
-    's|server=s'   => \$server,
-    'P|port=i'     => \$port,
-    'u|username=s' => \$username,
-    'p|password=s' => \$password,
-    'd|db=s'       => \$db,
-    'e|ensembl=s'  => \$ensembl_db,
-    'reg_conf=s'   => \$reg_conf,
-    'parallel=i'   => \$parallel,
-    'batch=i'      => \$batch_number,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
+    'server|s=s'   => \( my $server       = $Config->{database}{server} ),
+    'port=i'       => \( my $port         = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db           = $Config->{database}{db} ),
+    'username|u=s' => \( my $username     = $Config->{database}{username} ),
+    'password|p=s' => \( my $password     = $Config->{database}{password} ),
+    'ensembl|e=s'  => \( my $ensembl_db   = $Config->{database}{ensembl} ),
+    'reg_conf=s'   => \( my $reg_conf     = "$FindBin::RealBin/../ensembl.initrc.pm" ),
+    'parallel=i'   => \( my $parallel     = $Config->{generate}{parallel} ),
+    'batch=i'      => \( my $batch_number = $Config->{generate}{batch} ),
+) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # init
@@ -86,15 +82,11 @@ my @jobs;
         passwd => $password,
     );
 
-    # Database handler
-    my $dbh = $obj->dbh;
-
     print "Emptying tables...\n";
 
     # empty tables: gene, exon, codingsw
-    $obj->empty_table( 'gene',     'with_window' );
-    $obj->empty_table( 'exon',     'with_window' );
-    $obj->empty_table( 'codingsw', 'with_window' );
+    $obj->empty_table( 'gene', 'with_window' );
+    $obj->empty_table( 'exon', 'with_window' );
 
     my @align_ids = @{ $obj->get_align_ids };
 
@@ -116,15 +108,14 @@ my $worker = sub {
         user   => $username,
         passwd => $password,
     );
-    my $dbh          = $obj->dbh;
+    my DBI $dbh          = $obj->dbh;
     my $pos_obj      = AlignDB::Position->new( dbh => $dbh );
     my $window_maker = $obj->window_maker;
 
-    my $slice_adaptor
-        = Bio::EnsEMBL::Registry->get_adaptor( $ensembl_db, 'core', 'Slice' );
+    my $slice_adaptor = Bio::EnsEMBL::Registry->get_adaptor( $ensembl_db, 'core', 'Slice' );
 
     # insert into gene
-    my $gene_sth = $dbh->prepare(
+    my DBI $gene_sth = $dbh->prepare(
         q{
         INSERT INTO gene (
             gene_id, window_id, gene_stable_id,
@@ -142,7 +133,7 @@ my $worker = sub {
     );
 
     # insert into exon
-    my $exon_sth = $dbh->prepare(
+    my DBI $exon_sth = $dbh->prepare(
         q{
         INSERT INTO exon (
             exon_id, prev_exon_id, window_id, gene_id, exon_stable_id,
@@ -177,8 +168,8 @@ my $worker = sub {
         my $target_set = AlignDB::IntSpan->new($target_runlist);
 
         # obtain a slice
-        my $slice = $slice_adaptor->fetch_by_region( 'chromosome', $chr_name,
-            $chr_start, $chr_end );
+        my $slice
+            = $slice_adaptor->fetch_by_region( 'chromosome', $chr_name, $chr_start, $chr_end );
 
         my $slice_chr_set = AlignDB::IntSpan->new("$chr_start-$chr_end");
 
@@ -230,8 +221,8 @@ my $worker = sub {
             $gene_set = $gene_set->intersect($target_set);
 
             # window
-            my $cur_gene_window_id = $obj->insert_window( $align_id, $gene_set,
-                $internal_indel_flag );
+            my $cur_gene_window_id
+                = $obj->insert_window( $align_id, $gene_set, $internal_indel_flag );
 
             # Has many transcripts?
             # we use the longest one
@@ -286,8 +277,7 @@ my $worker = sub {
                 $exon_info{strand} = $exon_info{strand} > 0 ? "+" : "-";
 
                 # Is this exon in the align?
-                my $i_set = $slice_chr_set->intersect(
-                    "$exon_info{start}-$exon_info{end}");
+                my $i_set = $slice_chr_set->intersect("$exon_info{start}-$exon_info{end}");
                 next if $i_set->is_empty;
 
                 # Is this exon a subset of align?
@@ -308,9 +298,8 @@ my $worker = sub {
                 }
 
                 # exon position set
-                my $exon_start
-                    = $pos_obj->at_align( $align_id, $exon_info{start} );
-                my $exon_end = $pos_obj->at_align( $align_id, $exon_info{end} );
+                my $exon_start = $pos_obj->at_align( $align_id, $exon_info{start} );
+                my $exon_end   = $pos_obj->at_align( $align_id, $exon_info{end} );
                 if ( $exon_start >= $exon_end ) {
                     print "Exon $exon_info{stable_id} wrong, start >= end\n";
                     next;
@@ -331,13 +320,12 @@ my $worker = sub {
                         $exon_info{coding_region_end} = $chr_end;
                         $exon_is_full = 0;
                     }
-                    my $coding_region_start = $pos_obj->at_align( $align_id,
-                        $exon_info{coding_region_start} );
-                    my $coding_region_end = $pos_obj->at_align( $align_id,
-                        $exon_info{coding_region_end} );
+                    my $coding_region_start
+                        = $pos_obj->at_align( $align_id, $exon_info{coding_region_start} );
+                    my $coding_region_end
+                        = $pos_obj->at_align( $align_id, $exon_info{coding_region_end} );
                     if ( $coding_region_start >= $coding_region_end ) {
-                        warn
-                            "Exon $exon_info{stable_id} coding_region wrong, start >= end\n";
+                        warn "Exon $exon_info{stable_id} coding_region wrong, start >= end\n";
                         next;
                     }
                     $coding_set->add("$coding_region_start-$coding_region_end");
@@ -358,12 +346,10 @@ my $worker = sub {
 
             # insert to table
             $gene_sth->execute(
-                $cur_gene_window_id,       $gene_info{stable_id},
-                $gene_info{external_name}, $gene_info{biotype},
-                $gene_info{strand},        $gene_is_full,
-                $gene_info{is_known},      $gene_multitrans,
-                $gene_multiexons,          $gene_tc_set->runlist,
-                $gene_tl_set->runlist,     $gene_info{description}
+                $cur_gene_window_id,   $gene_info{stable_id}, $gene_info{external_name},
+                $gene_info{biotype},   $gene_info{strand},    $gene_is_full,
+                $gene_info{is_known},  $gene_multitrans,      $gene_multiexons,
+                $gene_tc_set->runlist, $gene_tl_set->runlist, $gene_info{description}
             );
             my $gene_id = $obj->last_insert_id;
 
@@ -376,130 +362,17 @@ my $worker = sub {
 
                 # window
                 my ($cur_exon_window_id)
-                    = $obj->insert_window( $align_id, $exon_site->{set},
-                    $internal_indel_flag );
+                    = $obj->insert_window( $align_id, $exon_site->{set}, $internal_indel_flag );
 
                 $exon_sth->execute(
-                    $prev_exon_id,           $cur_exon_window_id,
-                    $gene_id,                $exon_site->{stable_id},
-                    $exon_site->{strand},    $exon_site->{phase},
-                    $exon_site->{end_phase}, $exon_site->{frame},
-                    $exon_site->{is_full},   $exon_site->{tl_runlist},
-                    $exon_site->{seq},       $exon_site->{peptide}
+                    $prev_exon_id,            $cur_exon_window_id,  $gene_id,
+                    $exon_site->{stable_id},  $exon_site->{strand}, $exon_site->{phase},
+                    $exon_site->{end_phase},  $exon_site->{frame},  $exon_site->{is_full},
+                    $exon_site->{tl_runlist}, $exon_site->{seq},    $exon_site->{peptide}
                 );
 
                 ($prev_exon_id) = $obj->last_insert_id;
             }
-        }
-
-        #----------------------------#
-        # INSERT INTO codingsw
-        #----------------------------#
-        {
-
-            # exon_id
-            my $fetch_exon_id = $dbh->prepare(
-                q{
-                SELECT exon_id, prev_exon_id
-                FROM exon e, window w
-                WHERE e.window_id = w.window_id
-                AND align_id = ?
-                }
-            );
-            $fetch_exon_id->execute($align_id);
-
-            # exon_info
-            my $fetch_exon_info = $dbh->prepare(
-                q{
-                SELECT e.exon_tl_runlist, g.gene_strand
-                FROM exon e, gene g
-                WHERE 1 = 1
-                AND e.gene_id = g.gene_id
-                AND exon_id = ?
-                }
-            );
-
-            # prepare exonsw_insert
-            my $codingsw_insert = $dbh->prepare(
-                q{
-                INSERT INTO codingsw (
-                    codingsw_id, window_id, exon_id, prev_exon_id, 
-                    codingsw_type, codingsw_distance
-                )
-                VALUES (
-                    NULL, ?, ?, ?,
-                    ?, ?
-                )
-                }
-            );
-
-            while ( my $ref = $fetch_exon_id->fetchrow_hashref ) {
-                my $exon_id      = $ref->{exon_id};
-                my $prev_exon_id = $ref->{prev_exon_id};
-
-                $fetch_exon_info->execute($exon_id);
-                my ($exon_tl_runlist, $gene_strand) = $fetch_exon_info->fetchrow_array;
-
-                next if !defined $exon_tl_runlist;
-                next if $exon_tl_runlist eq '-';
-                my $exon_tl_set = AlignDB::IntSpan->new($exon_tl_runlist);
-
-                # outside sliding
-                my @outside_windows
-                    = $window_maker->outside_window( $target_set,
-                    $exon_tl_set->min, $exon_tl_set->max );
-
-                for my $outside_window (@outside_windows) {
-                    my ($cur_window_id)
-                        = $obj->insert_window( $align_id,
-                        $outside_window->{set},
-                        $internal_indel_flag );
-
-                    $codingsw_insert->execute(
-                        $cur_window_id, $exon_id, $prev_exon_id,
-                        $outside_window->{type},
-                        $outside_window->{distance}
-                    );
-                }
-
-                # inside sliding
-                my @inside_windows
-                    = $window_maker->inside_window( $target_set,
-                    $exon_tl_set->min, $exon_tl_set->max );
-
-                for my $inside_window (@inside_windows) {
-                    my ($cur_window_id)
-                        = $obj->insert_window( $align_id,
-                        $inside_window->{set}, $internal_indel_flag );
-
-                    $codingsw_insert->execute(
-                        $cur_window_id, $exon_id, $prev_exon_id,
-                        $inside_window->{type},
-                        $inside_window->{distance}
-                    );
-                }
-
-                # strand sliding
-                my @strand_windows
-                    = $window_maker->strand_window( $target_set,
-                    $exon_tl_set->min, $exon_tl_set->max, 100, $gene_strand );
-
-                for my $strand_window (@strand_windows) {
-                    my ($cur_window_id)
-                        = $obj->insert_window( $align_id,
-                        $strand_window->{set}, $internal_indel_flag );
-
-                    $codingsw_insert->execute(
-                        $cur_window_id, $exon_id, $prev_exon_id,
-                        $strand_window->{type},
-                        $strand_window->{distance}
-                    );
-                }
-            }
-
-            $codingsw_insert->finish;
-            $fetch_exon_info->finish;
-            $fetch_exon_id->finish;
         }
     }
 
@@ -530,42 +403,3 @@ END {
 exit;
 
 __END__
-
-=head1 NAME
-
-    insert_gene.pl - Add annotation info to alignDB
-
-=head1 SYNOPSIS
-
-    insert_gene.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-        --ensembl           ensembl database name
-        --parallel          run in parallel mode
-        --batch             number of alignments process in one child process
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do someting
-useful with the contents thereof.
-
-=cut
