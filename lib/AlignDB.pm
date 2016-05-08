@@ -1341,26 +1341,6 @@ sub check_column {
     }
 }
 
-# get the chr_name and chr_length of a given chr_id
-sub get_chr_info {
-    my $self   = shift;
-    my $chr_id = shift;
-
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
-        qq{
-        SELECT c.chr_name, c.chr_length
-        FROM chromosome c
-        WHERE c.chr_id = ?
-        }
-    );
-    $sth->execute($chr_id);
-    my ( $chr_name, $chr_length ) = $sth->fetchrow_array;
-    $sth->finish;
-
-    return ( $chr_name, $chr_length );
-}
-
 # get an array_ref of align_ids
 sub get_align_ids {
     my $self = shift;
@@ -1479,33 +1459,6 @@ sub get_queries_info {
     $sth->finish;
 
     return @array;
-}
-
-# TODO
-sub get_chrs {
-    my $self = shift;
-    my $goal = shift || 'target';
-
-    my DBI $dbh = $self->dbh;
-
-    # select all _GOAL_ chromosomes in this database
-    my $chr_query = q{
-        # Processed chr
-        SELECT c.chr_id, c.chr_name, c.chr_length
-        FROM sequence s 
-        INNER JOIN _GOAL_ G ON s.seq_id = G.seq_id
-        INNER JOIN chromosome c ON s.chr_id = c.chr_id
-        GROUP BY c.chr_id
-        ORDER BY c.chr_id
-    };
-    $chr_query =~ s/_GOAL_/$goal/;
-    my DBI $sth = $dbh->prepare($chr_query);
-    $sth->execute;
-
-    my $array_ref = $sth->fetchall_arrayref;
-    $sth->finish;
-
-    return $array_ref;
 }
 
 sub get_freq {
