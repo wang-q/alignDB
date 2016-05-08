@@ -76,8 +76,7 @@ sub _insert_align {
     my $seq_refs = shift;
 
     my DBI $dbh = $self->dbh;
-
-    my DBI $align_insert = $dbh->prepare(
+    my DBI $sth = $dbh->prepare(
         q{
         INSERT INTO align (
             align_id, align_length,
@@ -98,11 +97,11 @@ sub _insert_align {
     my $target_gc  = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[0] ] );
     my $average_gc = App::Fasops::Common::calc_gc_ratio($seq_refs);
 
-    $align_insert->execute(
+    $sth->execute(
         $result->[0], $result->[1], $result->[2], $result->[3], $result->[4],
         $result->[5], $result->[6], $result->[7], $target_gc,   $average_gc,
     );
-    $align_insert->finish;
+    $sth->finish;
 
     my $align_id = $self->last_insert_id;
 
@@ -123,8 +122,7 @@ sub _insert_seq {
 
     # Get database handle
     my DBI $dbh = $self->dbh;
-
-    my DBI $seq_insert = $dbh->prepare(
+    my DBI $sth = $dbh->prepare(
         q{
         INSERT INTO sequence (
             seq_id, chr_id, align_id, chr_name, chr_start, chr_end,
@@ -137,7 +135,7 @@ sub _insert_seq {
         }
     );
 
-    $seq_insert->execute(
+    $sth->execute(
         $seq_info->{chr_id},    $seq_info->{align_id}, $seq_info->{chr_name},
         $seq_info->{chr_start}, $seq_info->{chr_end},  $seq_info->{chr_strand},
         $seq_info->{length},    $seq_info->{seq},      $seq_info->{gc},
@@ -160,26 +158,24 @@ sub _insert_set_and_sequence {
     my $seq_number   = scalar @{$seq_refs};
     my $align_length = length $seq_refs->[0];
 
-    my $align_set      = AlignDB::IntSpan->new("1-$align_length");
-    my $indel_set      = AlignDB::IntSpan->new;
-    my $comparable_set = AlignDB::IntSpan->new;
-
-    for my $i ( 0 .. $seq_number - 1 ) {
-        $info_refs->[$i]{align_id} = $align_id;
-        $info_refs->[$i]{seq}      = $seq_refs->[$i];
-        $info_refs->[$i]{gc}       = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[$i] ] );
-        my $seq_indel_set = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
-        my $seq_set       = $align_set->diff($seq_indel_set);
-        $info_refs->[$i]{runlist} = $seq_set->runlist;
-        $info_refs->[$i]{length}  = $seq_set->size;
-
-        $indel_set->merge($seq_indel_set);
-    }
-
-    $comparable_set = $align_set->diff($indel_set);
-
     {    # sets
-        my DBI $align_update = $dbh->prepare(
+        my $align_set      = AlignDB::IntSpan->new("1-$align_length");
+        my $indel_set      = AlignDB::IntSpan->new;
+        my $comparable_set = AlignDB::IntSpan->new;
+        for my $i ( 0 .. $seq_number - 1 ) {
+            $info_refs->[$i]{align_id} = $align_id;
+            $info_refs->[$i]{seq}      = $seq_refs->[$i];
+            $info_refs->[$i]{gc}       = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[$i] ] );
+            my $seq_indel_set = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
+            my $seq_set       = $align_set->diff($seq_indel_set);
+            $info_refs->[$i]{runlist} = $seq_set->runlist;
+            $info_refs->[$i]{length}  = $seq_set->size;
+
+            $indel_set->merge($seq_indel_set);
+        }
+        $comparable_set = $align_set->diff($indel_set);
+
+        my DBI $sth = $dbh->prepare(
             q{
             UPDATE align
             SET align_indels = ?,
@@ -188,25 +184,24 @@ sub _insert_set_and_sequence {
             WHERE align_id = ?
             }
         );
-        $align_update->execute( scalar $indel_set->span_size,
+        $sth->execute( scalar $indel_set->span_size,
             $comparable_set->runlist, $indel_set->runlist, $align_id );
-
     }
 
     {    # target
-        my DBI $insert = $dbh->prepare(
+        my DBI $sth = $dbh->prepare(
             q{
             INSERT INTO target ( target_id, seq_id )
             VALUES ( NULL, ? )
             }
         );
         my $seq_id = $self->_insert_seq( $info_refs->[0] );
-        $insert->execute($seq_id);
-        $insert->finish;
+        $sth->execute($seq_id);
+        $sth->finish;
     }
 
     {    # and queries
-        my DBI $insert = $dbh->prepare(
+        my DBI $sth = $dbh->prepare(
             q{
             INSERT INTO query (
                 query_id, seq_id, query_strand, query_position
@@ -216,9 +211,9 @@ sub _insert_set_and_sequence {
         );
         for my $i ( 1 .. $seq_number - 1 ) {
             my $seq_id = $self->_insert_seq( $info_refs->[$i] );
-            $insert->execute( $seq_id, $info_refs->[$i]{chr_strand}, $i - 1 );
+            $sth->execute( $seq_id, $info_refs->[$i]{chr_strand}, $i - 1 );
         }
-        $insert->finish;
+        $sth->finish;
     }
 
     $self->{caching_id}   = $align_id;
@@ -233,7 +228,7 @@ sub _insert_indel {
 
     my DBI $dbh = $self->dbh;
 
-    my DBI $indel_insert = $dbh->prepare(
+    my DBI $sth = $dbh->prepare(
         q{
         INSERT INTO indel (
             indel_id, prev_indel_id, align_id,
@@ -356,7 +351,7 @@ sub _insert_indel {
 
     my $prev_indel_id = 0;
     for (@indel_sites) {
-        $indel_insert->execute(
+        $sth->execute(
             $prev_indel_id,     $align_id, $_->{start},    $_->{end},
             $_->{length},       $_->{seq}, $_->{all_seqs}, $_->{left_extand},
             $_->{right_extand}, $_->{gc},  $_->{freq},     $_->{occured},
@@ -365,7 +360,7 @@ sub _insert_indel {
         ($prev_indel_id) = $self->last_insert_id;
     }
 
-    $indel_insert->finish;
+    $sth->finish;
 
     return;
 }
@@ -374,8 +369,8 @@ sub _insert_snp {
     my $self     = shift;
     my $align_id = shift;
 
-    my DBI $dbh        = $self->dbh;
-    my DBI $snp_insert = $dbh->prepare(
+    my DBI $dbh = $self->dbh;
+    my DBI $sth = $dbh->prepare(
         q{
         INSERT INTO snp (
             snp_id, align_id, snp_pos,
@@ -446,10 +441,10 @@ sub _insert_snp {
         # here freq is the minor allele freq
         $snp_freq = List::Util::min( $snp_freq, $seq_count - $snp_freq );
 
-        $snp_insert->execute( $align_id, $pos, $target_base, $query_base,
+        $sth->execute( $align_id, $pos, $target_base, $query_base,
             $all_bases, $mutant_to, $snp_freq, $snp_occured, );
     }
-    $snp_insert->finish;
+    $sth->finish;
 
     return;
 }
@@ -491,8 +486,8 @@ sub insert_isw {
         }
     );
 
-    # prepare isw_insert
-    my DBI $isw_insert = $dbh->prepare(
+    # prepare insert isw
+    my DBI $sth = $dbh->prepare(
         q{
         INSERT INTO isw (
             isw_id, indel_id, prev_indel_id, align_id, isw_indel_id,
@@ -560,7 +555,7 @@ sub insert_isw {
                 $isw_indel_id = $prev_indel_id;
             }
             my $isw_stat = $self->get_slice_stat( $align_id, $isw_set );
-            $isw_insert->execute(
+            $sth->execute(
                 $indel_id,        $prev_indel_id,  $align_id,      $isw_indel_id,
                 $isw_start,       $isw_end,        $isw_length,    $isw->{type},
                 $isw->{distance}, $isw->{density}, $isw_stat->[3], $isw_stat->[7],
@@ -569,7 +564,7 @@ sub insert_isw {
         }
     }
 
-    $isw_insert->finish;
+    $sth->finish;
     $fetch_prev_indel_end->finish;
     $fetch_indel_start->finish;
     $fetch_indel_id_isw->finish;
@@ -601,7 +596,7 @@ sub isw_snp_fk {
         }
     );
 
-    my DBI $snp_update = $dbh->prepare(
+    my DBI $sth = $dbh->prepare(
         q{
         UPDATE snp
         SET isw_id = ?
@@ -616,11 +611,11 @@ sub isw_snp_fk {
         my ($isw_id) = $fetch_isw_id->fetchrow_array;
 
         if ($isw_id) {
-            $snp_update->execute( $isw_id, $snp_id );
+            $sth->execute( $isw_id, $snp_id );
         }
     }
 
-    $snp_update->finish;
+    $sth->finish;
     $fetch_isw_id->finish;
     $fetch_snp_id->finish;
 
@@ -653,7 +648,7 @@ sub insert_ssw {
     $fetch_snp_id->execute($align_id);
 
     # prepare ssw_insert
-    my DBI $ssw_insert = $dbh->prepare(
+    my DBI $sth = $dbh->prepare(
         q{
         INSERT INTO ssw (
             ssw_id, snp_id, window_id,
@@ -745,7 +740,7 @@ sub insert_ssw {
 
                 my ($cur_window_id) = $self->insert_window( $align_id, $ssw_set );
 
-                $ssw_insert->execute( $snp_id, $cur_window_id, $ssw_type,
+                $sth->execute( $snp_id, $cur_window_id, $ssw_type,
                     $ssw_distance, $d_snp, $d_nosnp, $d_complex );
 
                 if ( $ssw_type eq 'R' ) {
@@ -1015,7 +1010,6 @@ sub get_ref_seq {
     my $align_id = shift;
 
     my DBI $dbh = $self->dbh;
-
     my DBI $sth = $dbh->prepare(
         q{
         SELECT s.seq_seq
@@ -1068,60 +1062,6 @@ sub get_names {
     return @names;
 }
 
-sub get_taxon_ids {
-    my $self = shift;
-    my $align_id = shift || 1;
-
-    my DBI $dbh = $self->dbh;
-
-    my @ids;
-    for my $table (qw{target query reference}) {
-        my $query = qq{
-            SELECT 
-                c.taxon_id
-            FROM
-                sequence s
-                    INNER JOIN
-                _TABLE_ ON s.seq_id = _TABLE_.seq_id
-                    INNER JOIN
-                chromosome c ON c.chr_id = s.chr_id
-            WHERE
-                s.align_id = ?
-        };
-
-        $query =~ s/_TABLE_/$table/g;
-
-        my DBI $sth = $dbh->prepare($query);
-        $sth->execute($align_id);
-        while ( my ($id) = $sth->fetchrow_array ) {
-            push @ids, $id;
-        }
-        $sth->finish;
-    }
-
-    return @ids;
-}
-
-sub get_name_of {
-    my $self     = shift;
-    my $taxon_id = shift;
-
-    my DBI $dbh = $self->dbh;
-
-    my $query = q{
-        select distinct common_name
-        from chromosome
-        where taxon_id = ?
-    };
-
-    my DBI $sth = $dbh->prepare($query);
-    $sth->execute($taxon_id);
-    my ($name) = $sth->fetchrow_array;
-    $sth->finish;
-
-    return $name;
-}
-
 #@returns AlignDB::IntSpan
 sub get_sets {
     my $self     = shift;
@@ -1153,7 +1093,11 @@ sub get_chr_id_hash {
 
     my %id_of   = ();
     my DBI $dbh = $self->dbh;
-    my DBI $std = $dbh->prepare(q{SELECT * FROM chromosome WHERE common_name = ?});
+    my DBI $std = $dbh->prepare(
+        q{
+        SELECT * FROM chromosome WHERE common_name = ?
+        }
+    );
     $std->execute($common_name);
     while ( my $ref = $std->fetchrow_hashref ) {
         $id_of{ $ref->{chr_name} } = $ref->{chr_id};
@@ -1169,7 +1113,11 @@ sub get_chr_legnth_hash {
 
     my %length_of = ();
     my DBI $dbh   = $self->dbh;
-    my DBI $std   = $dbh->prepare(q{SELECT * FROM chromosome WHERE common_name = ?});
+    my DBI $std   = $dbh->prepare(
+        q{
+        SELECT * FROM chromosome WHERE common_name = ?
+        }
+    );
     $std->execute($common_name);
     while ( my $ref = $std->fetchrow_hashref ) {
         $length_of{ $ref->{chr_name} } = $ref->{chr_length};
@@ -1231,8 +1179,8 @@ sub insert_window {
     my $internal_indel              = shift;
 
     my DBI $dbh = $self->dbh;
-
-    my $window_sql = q{
+    my DBI $sth = $dbh->prepare(
+        q{
         INSERT INTO window (
             window_id, align_id, window_start, window_end, window_length,
             window_runlist, window_comparables, window_identities,
@@ -1245,8 +1193,8 @@ sub insert_window {
             ?, ?, ?,
             ?, ?
         )
-    };
-    my DBI $sth = $dbh->prepare($window_sql);
+        }
+    );
 
     my $window_start   = $window_set->min;
     my $window_end     = $window_set->max;
@@ -1281,7 +1229,11 @@ sub last_insert_id {
     my $self = shift;
 
     my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(q{SELECT LAST_INSERT_ID()});
+    my DBI $sth = $dbh->prepare(
+        q{
+        SELECT LAST_INSERT_ID()
+        }
+    );
     $sth->execute;
     my ($last_insert_id) = $sth->fetchrow_array;
 
@@ -1319,20 +1271,24 @@ sub empty_table {
     }
 
     if ( !$with_window ) {
-        $dbh->do(qq{DELETE FROM $table});
+        $dbh->do(
+            qq{
+            DELETE FROM $table
+            }
+        );
     }
     else {
 
-        # In MySQL 4.1, you must use the alias (if one was given)
-        #   when referring to a table name
-        my $sql = qq{
+        # In MySQL 4.1, you must use the alias (if one was given) when referring to a table name
+        $dbh->do(
+            qq{
             DELETE t,
                    w
             FROM $table t,
                  window w
             WHERE t.window_id = w.window_id
-        };
-        $dbh->do($sql);
+            }
+        );
     }
 
     # set AUTO_INCREMENT to 1 for this table
@@ -1371,20 +1327,29 @@ sub create_column {
     # check column existing
     # then create column
     {
-        my $sql_query = qq{
+        my DBI $sth = $dbh->prepare(
+            qq{
             SHOW FIELDS
             FROM $table
             LIKE "$column"
-        };
-        my DBI $sth = $dbh->prepare($sql_query);
+            }
+        );
         $sth->execute;
         my ($field) = $sth->fetchrow_array;
 
         if ($field) {
-            $dbh->do(qq{ALTER TABLE $table DROP COLUMN $column});
+            $dbh->do(
+                qq{
+                ALTER TABLE $table DROP COLUMN $column
+                }
+            );
         }
 
-        $dbh->do(qq{ALTER TABLE $table ADD COLUMN $column $column_definition});
+        $dbh->do(
+            qq{
+            ALTER TABLE $table ADD COLUMN $column $column_definition
+            }
+        );
     }
 
     return;
@@ -1411,12 +1376,13 @@ sub check_column {
 
     # check column existing
     {
-        my $sql_query = qq{
+        my DBI $sth = $dbh->prepare(
+            qq{
             SHOW FIELDS
             FROM $table
             LIKE "$column"
-        };
-        my DBI $sth = $dbh->prepare($sql_query);
+            }
+        );
         $sth->execute;
         my ($field) = $sth->fetchrow_array;
 
@@ -1429,11 +1395,12 @@ sub check_column {
     # check values in column
     # return row number (maybe 0 row)
     {
-        my $sql_query = qq{
+        my DBI $sth = $dbh->prepare(
+            qq{
             SELECT COUNT($column)
             FROM $table
-        };
-        my DBI $sth = $dbh->prepare($sql_query);
+            }
+        );
         $sth->execute;
         my ($count) = $sth->fetchrow_array;
 
@@ -1451,14 +1418,13 @@ sub get_chr_info {
     my $chr_id = shift;
 
     my DBI $dbh = $self->dbh;
-
-    my $query = qq{
+    my DBI $sth = $dbh->prepare(
+        qq{
         SELECT c.chr_name, c.chr_length
         FROM chromosome c
         WHERE c.chr_id = ?
-    };
-
-    my DBI $sth = $dbh->prepare($query);
+        }
+    );
     $sth->execute($chr_id);
     my ( $chr_name, $chr_length ) = $sth->fetchrow_array;
     $sth->finish;
@@ -1471,42 +1437,14 @@ sub get_align_ids {
     my $self = shift;
 
     my DBI $dbh = $self->dbh;
-
-    my $query = q{
+    my $align_ids = $dbh->selectcol_arrayref(
+        q{
         SELECT a.align_id
         FROM align a
-    };
-
-    my $align_ids = $dbh->selectcol_arrayref($query);
+        }
+    );
 
     return $align_ids;
-}
-
-sub get_align_ids_of_chr {
-    my $self   = shift;
-    my $chr_id = shift;
-
-    my DBI $dbh = $self->dbh;
-
-    my $query = q{
-        SELECT a.align_id
-        FROM sequence s
-        INNER JOIN target t ON s.seq_id = t.seq_id
-        INNER JOIN align a ON s.align_id = a.align_id
-        WHERE s.chr_id = ?
-        ORDER BY a.align_id
-    };
-
-    my @align_ids;
-
-    my DBI $sth = $dbh->prepare($query);
-    $sth->execute($chr_id);
-    while ( my @row = $sth->fetchrow_array ) {
-        my ($align_id) = @row;
-        push @align_ids, $align_id;
-    }
-
-    return \@align_ids;
 }
 
 sub get_align_ids_of_chr_name {
@@ -1514,8 +1452,8 @@ sub get_align_ids_of_chr_name {
     my $chr_name = shift;
 
     my DBI $dbh = $self->dbh;
-
-    my $query = q{
+    my DBI $sth = $dbh->prepare(
+        q{
         SELECT a.align_id
         FROM sequence s
         INNER JOIN target t ON s.seq_id = t.seq_id
@@ -1523,12 +1461,11 @@ sub get_align_ids_of_chr_name {
         INNER JOIN chromosome c on s.chr_id = c.chr_id
         WHERE c.chr_name = ?
         ORDER BY a.align_id
-    };
+        }
+    );
+    $sth->execute($chr_name);
 
     my @align_ids;
-
-    my DBI $sth = $dbh->prepare($query);
-    $sth->execute($chr_name);
     while ( my @row = $sth->fetchrow_array ) {
         my ($align_id) = @row;
         push @align_ids, $align_id;
@@ -1545,8 +1482,8 @@ sub get_target_info {
 
     if ( !exists $caching_info->{$align_id} ) {
         my DBI $dbh = $self->dbh;
-
-        my $query = q{
+        my DBI $sth = $dbh->prepare(
+            q{
             SELECT c.common_name,
                    c.chr_id,
                    c.chr_name,
@@ -1558,15 +1495,15 @@ sub get_target_info {
                    s.seq_gc,
                    s.seq_runlist,
                    a.align_length
-            FROM sequence s 
+            FROM sequence s
             INNER JOIN target t ON s.seq_id = t.seq_id
             LEFT JOIN chromosome c ON s.chr_id = c.chr_id
             INNER JOIN align a ON s.align_id = a.align_id
             WHERE s.align_id = ?
-        };
-
-        my DBI $sth = $dbh->prepare($query);
+            }
+        );
         $sth->execute($align_id);
+
         my $hash_ref = $sth->fetchrow_hashref;
         $sth->finish;
         $caching_info->{$align_id} = $hash_ref;
@@ -1581,8 +1518,8 @@ sub get_queries_info {
     my $align_id = shift;
 
     my DBI $dbh = $self->dbh;
-
-    my $query = q{
+    my DBI $sth = $dbh->prepare(
+        q{
         SELECT c.common_name,
                c.chr_id,
                c.chr_name,
@@ -1596,15 +1533,15 @@ sub get_queries_info {
                a.align_length,
                q.query_strand,
                q.query_position
-        FROM sequence s 
+        FROM sequence s
         INNER JOIN query q ON s.seq_id = q.seq_id
         LEFT JOIN chromosome c ON s.chr_id = c.chr_id
         INNER JOIN align a ON s.align_id = a.align_id
         WHERE s.align_id = ?
-    };
-
-    my DBI $sth = $dbh->prepare($query);
+        }
+    );
     $sth->execute($align_id);
+
     my @array;
     while ( my $hash_ref = $sth->fetchrow_hashref ) {
         push @array, $hash_ref;
@@ -1619,16 +1556,15 @@ sub get_target_chr_info {
     my $align_id = shift;
 
     my DBI $dbh = $self->dbh;
-
-    my $query = q{
+    my DBI $sth = $dbh->prepare(
+        q{
         SELECT c.chr_id, c.chr_name, c.chr_length
-        FROM sequence s 
+        FROM sequence s
         INNER JOIN target t ON s.seq_id = t.seq_id
         INNER JOIN chromosome c ON s.chr_id = c.chr_id
         WHERE s.align_id = ?
-    };
-
-    my DBI $sth = $dbh->prepare($query);
+        }
+    );
     $sth->execute($align_id);
     my ( $chr_id, $chr_name, $chr_length ) = $sth->fetchrow_array;
     $sth->finish;
@@ -1641,17 +1577,17 @@ sub get_query_chr_info {
     my $align_id = shift;
 
     my DBI $dbh = $self->dbh;
-
-    my $query = q{
+    my DBI $sth = $dbh->prepare(
+        q{
         SELECT c.chr_id, c.chr_name, c.chr_length
-        FROM sequence s 
+        FROM sequence s
         INNER JOIN query q ON s.seq_id = q.seq_id
         INNER JOIN chromosome c ON s.chr_id = c.chr_id
         WHERE s.align_id = ?
-    };
-
-    my DBI $sth = $dbh->prepare($query);
+        }
+    );
     $sth->execute($align_id);
+
     my ( $chr_id, $chr_name, $chr_length ) = $sth->fetchrow_array;
     $sth->finish;
 
@@ -1688,17 +1624,17 @@ sub get_freq {
     my $self = shift;
 
     my DBI $dbh = $self->dbh;
-
-    my $sql_query = q{
+    my DBI $sth = $dbh->prepare(
+        q{
         SELECT DISTINCT COUNT(q.query_id) + 1
         FROM  query q, sequence s
         WHERE q.seq_id = s.seq_id
         GROUP BY s.align_id
-    };
-    my DBI $sth = $dbh->prepare($sql_query);
+        }
+    );
+    $sth->execute;
 
     my @counts;
-    $sth->execute;
     while ( my ($count) = $sth->fetchrow_array ) {
         push @counts, $count;
     }
@@ -1716,8 +1652,8 @@ sub find_align {
     my $end      = shift || $start;
 
     my DBI $dbh = $self->dbh;
-
-    my $align_id_query = q{
+    my DBI $sth = $dbh->prepare(
+        q{
         SELECT s.align_id
         FROM sequence s
         INNER JOIN target t ON s.seq_id = t.seq_id
@@ -1725,9 +1661,10 @@ sub find_align {
         AND s.chr_name = ?
         AND s.chr_start <= ?
         AND s.chr_end >= ?
-    };
-    my DBI $sth = $dbh->prepare($align_id_query);
+        }
+    );
     $sth->execute( $chr_name, $start, $end );
+
     my @align_ids;
     while ( my @row = $sth->fetchrow_array ) {
         push @align_ids, $row[0];
@@ -1743,8 +1680,8 @@ sub find_align_chr_id {
     my $end    = shift || $start;
 
     my DBI $dbh = $self->dbh;
-
-    my $align_id_query = q{
+    my DBI $sth = $dbh->prepare(
+        q{
         SELECT s.align_id
         FROM sequence s
         INNER JOIN target t ON s.seq_id = t.seq_id
@@ -1752,9 +1689,10 @@ sub find_align_chr_id {
         AND s.chr_id = ?
         AND s.chr_start <= ?
         AND s.chr_end >= ?
-    };
-    my DBI $sth = $dbh->prepare($align_id_query);
+        }
+    );
     $sth->execute( $chr_id, $start, $end );
+
     my @align_ids;
     while ( my @row = $sth->fetchrow_array ) {
         push @align_ids, $row[0];
@@ -1781,13 +1719,12 @@ sub add_meta {
     my $meta_hash = shift;
 
     my DBI $dbh = $self->dbh;
-
-    my $query = q{
+    my DBI $sth = $dbh->prepare(
+        q{
         INSERT INTO meta ( meta_id, meta_key, meta_value )
         VALUES ( NULL, ?, ? )
-    };
-
-    my DBI $sth = $dbh->prepare($query);
+        }
+    );
 
     for my $key ( sort keys %$meta_hash ) {
         $sth->execute( $key, $meta_hash->{$key} );
