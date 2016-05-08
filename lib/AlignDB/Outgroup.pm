@@ -390,8 +390,7 @@ sub update_D_values {
         my $ref_seq2;
         my @sequences2;
 
-        # removes all mutations on the deepest indel branches
-        # without recombinatio
+        # removes all mutations on the deepest indel branches without recombinations
         my $ref_seq3;
         my @sequences3;
 

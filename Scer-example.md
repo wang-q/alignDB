@@ -342,6 +342,7 @@ perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
     --block --outgroup \
     -da ~/data/alignment/example/scer/Scer_n2_Spar_refined \
     -chr ~/data/alignment/example/scer/chr_length.csv \
-    -lt 1000 --run common \
-    --parallel 4 --batch 10
+    -lt 1000 \
+    --parallel 4 --batch 10 \
+    --run common
 ```
