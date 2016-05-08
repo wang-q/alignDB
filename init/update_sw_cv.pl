@@ -30,7 +30,7 @@ my $stopwatch = AlignDB::Stopwatch->new(
 
 =head1 NAME
 
-update_sw_cv.pl - CV for codingsw, ofgsw, isw and gsw
+update_sw_cv.pl - CV for isw, gsw and ofgsw
 
 =head1 SYNOPSIS
 
@@ -71,7 +71,7 @@ $stopwatch->start_message("Update $db...");
 #----------------------------#
 # Create columnas and find all align_ids
 #----------------------------#
-my @align_ids;
+my @jobs;
 {
     my $obj = AlignDB->new(
         mysql  => "$db:$server",
@@ -80,26 +80,23 @@ my @align_ids;
     );
 
     # add column
-    $obj->create_column( "codingsw", "codingsw_intra_cv", "DOUBLE" );
-    $obj->create_column( "gsw",      "gsw_intra_cv",      "DOUBLE" );
-    print "Table codingsw, ofgsw, isw and gsw altered\n";
+    $obj->create_column( "gsw", "gsw_intra_cv", "DOUBLE" );
+    print "Table gsw altered\n";
 
-    @align_ids = @{ $obj->get_align_ids };
-}
+    my @align_ids = @{ $obj->get_align_ids };
 
-my @jobs;
-while ( scalar @align_ids ) {
-    my @batching = splice @align_ids, 0, $batch_number;
-    push @jobs, [@batching];
+    while ( scalar @align_ids ) {
+        my @batching = splice @align_ids, 0, $batch_number;
+        push @jobs, [@batching];
+    }
 }
 
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
-
 my $worker = sub {
     my $job       = shift;
-    my @align_ids = @$job;
+    my @align_ids = @{$job};
 
     my $obj = AlignDB->new(
         mysql  => "$db:$server",
@@ -112,27 +109,9 @@ my $worker = sub {
     );
 
     # Database handler
-    my $dbh = $obj->dbh;
+    my DBI $dbh = $obj->dbh;
 
-    my $codingsw_sth = $dbh->prepare(
-        q{
-        SELECT s.codingsw_id, w.window_runlist
-        FROM codingsw s, window w
-        where s.window_id = w.window_id
-        and w.align_id = ?
-        }
-    );
-
-    my $codingsw_update_sth = $dbh->prepare(
-        q{
-        UPDATE codingsw
-        SET codingsw_cv = ?,
-            codingsw_intra_cv = ?
-        WHERE codingsw_id = ?
-        }
-    );
-
-    my $ofgsw_sth = $dbh->prepare(
+    my DBI $ofgsw_sth = $dbh->prepare(
         q{
         SELECT s.ofgsw_id, w.window_runlist
         FROM ofgsw s, window w
@@ -141,7 +120,7 @@ my $worker = sub {
         }
     );
 
-    my $ofgsw_update_sth = $dbh->prepare(
+    my DBI $ofgsw_update_sth = $dbh->prepare(
         q{
         UPDATE ofgsw
         SET ofgsw_cv = ?
@@ -149,7 +128,7 @@ my $worker = sub {
         }
     );
 
-    my $isw_sth = $dbh->prepare(
+    my DBI $isw_sth = $dbh->prepare(
         q{
         SELECT s.isw_id, s.isw_start, s.isw_end
         FROM isw s, indel i
@@ -158,7 +137,7 @@ my $worker = sub {
         }
     );
 
-    my $isw_update_sth = $dbh->prepare(
+    my DBI $isw_update_sth = $dbh->prepare(
         q{
         UPDATE isw
         SET isw_cv = ?
@@ -166,7 +145,7 @@ my $worker = sub {
         }
     );
 
-    my $gsw_sth = $dbh->prepare(
+    my DBI $gsw_sth = $dbh->prepare(
         q{
         SELECT s.gsw_id, w.window_runlist
         FROM gsw s, window w
@@ -175,7 +154,7 @@ my $worker = sub {
         }
     );
 
-    my $gsw_update_sth = $dbh->prepare(
+    my DBI $gsw_update_sth = $dbh->prepare(
         q{
         UPDATE gsw
         SET gsw_cv = ?,
@@ -193,27 +172,11 @@ my $worker = sub {
         # sliding in target_set
         my $target_set = AlignDB::IntSpan->new($target_runlist);
 
-        $codingsw_sth->execute($align_id);
-        while ( my @row = $codingsw_sth->fetchrow_array ) {
-            my ( $codingsw_id, $window_runlist ) = @row;
-            my $window_set = AlignDB::IntSpan->new($window_runlist);
-            my $resize_set
-                = center_resize( $window_set, $target_set, $stat_segment_size );
-
-            my $seqs_ref = $obj->get_seqs($align_id);
-            my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-                = $obj_gc->segment_gc_stat( $seqs_ref, $resize_set );
-            my ( undef, undef, $gc_intra_cv, undef )
-                = $obj_gc->segment_gc_stat( $seqs_ref, $window_set, 20, 20 );
-            $codingsw_update_sth->execute( $gc_cv, $gc_intra_cv, $codingsw_id );
-        }
-
         $ofgsw_sth->execute($align_id);
         while ( my @row = $ofgsw_sth->fetchrow_array ) {
             my ( $ofgsw_id, $window_runlist ) = @row;
             my $window_set = AlignDB::IntSpan->new($window_runlist);
-            my $resize_set
-                = center_resize( $window_set, $target_set, $stat_segment_size );
+            my $resize_set = center_resize( $window_set, $target_set, $stat_segment_size );
 
             next unless $resize_set;
 
@@ -227,8 +190,7 @@ my $worker = sub {
         while ( my @row = $isw_sth->fetchrow_array ) {
             my ( $isw_id, $start, $end ) = @row;
             my $window_set = AlignDB::IntSpan->new("$start-$end");
-            my $resize_set
-                = center_resize( $window_set, $target_set, $stat_segment_size );
+            my $resize_set = center_resize( $window_set, $target_set, $stat_segment_size );
 
             next unless $resize_set;
 
@@ -242,8 +204,7 @@ my $worker = sub {
         while ( my @row = $gsw_sth->fetchrow_array ) {
             my ( $gsw_id, $window_runlist ) = @row;
             my $window_set = AlignDB::IntSpan->new($window_runlist);
-            my $resize_set
-                = center_resize( $window_set, $target_set, $stat_segment_size );
+            my $resize_set = center_resize( $window_set, $target_set, $stat_segment_size );
 
             next unless $resize_set;
 
@@ -281,9 +242,9 @@ END {
 exit;
 
 sub center_resize {
-    my $old_set    = shift;
-    my $parent_set = shift;
-    my $resize     = shift;
+    my AlignDB::IntSpan $old_set    = shift;
+    my AlignDB::IntSpan $parent_set = shift;
+    my $resize                      = shift;
 
     # find the middles of old_set
     my $half_size           = int( $old_set->size / 2 );
