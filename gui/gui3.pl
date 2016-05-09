@@ -9,7 +9,7 @@ use MooseX::AttributeHelpers;
 
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use Gtk3 '-init';
 use Glib qw(TRUE FALSE);
@@ -48,7 +48,6 @@ sub BUILD {
     $self->{app}->connect_signals( undef, $self );
 
     $self->read_config;
-    $self->fill_combobox;
 
     {    # Init the console textview
         my $textview   = $self->{app}->get_object('textview_console');
@@ -213,32 +212,6 @@ sub read_config {
     $self->set_value( "checkbutton_insert_gc",      $Config->{gc}{insert_gc} );
     $self->set_value( "checkbutton_insert_segment", $Config->{gc}{insert_segment} );
 
-    # three-way
-    $self->set_value( "entry_first_db",  "S288cvsRM11" );
-    $self->set_value( "entry_second_db", "S288cvsSpar" );
-
-    return;
-}
-
-sub fill_combobox {
-    my $self = shift;
-
-    my $model = Gtk3::ListStore->new('Glib::String');
-    for (qw{ 0target 0query 1target 1query }) {
-        $model->set( $model->append, 0, $_ );
-    }
-    for (qw{ combobox_first combobox_second combobox_outgroup }) {
-        my $cb = $self->{app}->get_object($_);
-        $cb->set_model($model);
-        my $cr = Gtk3::CellRendererText->new;
-        $cb->pack_start( $cr, TRUE );
-        $cb->add_attribute( $cr, 'text', 0 );
-    }
-
-    $self->{app}->get_object("combobox_first")->set_active(0);
-    $self->{app}->get_object("combobox_second")->set_active(1);
-    $self->{app}->get_object("combobox_outgroup")->set_active(3);
-
     return;
 }
 
@@ -287,7 +260,7 @@ sub on_toolbutton_process_clicked {
         $proc->alive;
         if ( $proc->alive ) {
             $self->append_text(
-                Dump {
+                YAML::Syck::Dump {
                     start => scalar localtime $proc->start_time,
                     pid   => $proc->pid,
                     cmd   => $proc->{cmd},
@@ -296,7 +269,7 @@ sub on_toolbutton_process_clicked {
         }
         else {
             $self->append_text(
-                Dump {
+                YAML::Syck::Dump {
                     end => scalar localtime $proc->end_time,
                     cmd => $proc->{cmd},
                 }
@@ -831,7 +804,7 @@ sub on_button_test_clicked {
         passwd => $password,
     )->dbh;
     my @row_ary = $dbh->selectrow_array("SELECT 123456789");
-    print Dump @row_ary;
+    print YAML::Syck::Dump @row_ary;
 
     my $success = grep {/123456789/} @row_ary;
 
@@ -984,63 +957,6 @@ sub on_button_insert_isw_fas_clicked {
     return;
 }
 
-sub on_button_insert_isw_join_clicked {
-    my $self = shift;
-
-    my $server   = $self->get_value("entry_server");
-    my $port     = $self->get_value("entry_port");
-    my $username = $self->get_value("entry_username");
-    my $password = $self->get_value("entry_password");
-    my $db_name  = $self->get_value("entry_db_name");
-
-    my $parallel = $self->get_value("entry_parallel");
-
-    my $cmd
-        = "perl $FindBin::Bin/../init/insert_isw.pl"
-        . " -s $server"
-        . " --port $port"
-        . " -u $username"
-        . " --password $password"
-        . " -d $db_name"
-        . " --parallel $parallel"
-        . " --outgroup";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
-sub on_button_join_dbs_clicked {
-    my $self = shift;
-
-    my $server   = $self->get_value("entry_server");
-    my $port     = $self->get_value("entry_port");
-    my $username = $self->get_value("entry_username");
-    my $password = $self->get_value("entry_password");
-
-    my $first_db  = $self->get_value("entry_first_db");
-    my $second_db = $self->get_value("entry_second_db");
-    my $goal_db   = $self->get_value("entry_db_name");
-
-    my $first    = $self->get_value("combobox_first");
-    my $second   = $self->get_value("combobox_second");
-    my $outgroup = $self->get_value("combobox_outgroup");
-
-    my $cmd
-        = "perl $FindBin::Bin/../extra/join_dbs.pl"
-        . " -s $server"
-        . " --port $port"
-        . " -u $username"
-        . " --password $password"
-        . " --dbs $first_db,$second_db"
-        . " --goal_db $goal_db"
-        . " --target $first"
-        . " --queries $second"
-        . " --outgroup $outgroup";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
 sub on_button_insert_gc_clicked {
     my $self = shift;
 
@@ -1132,27 +1048,6 @@ sub on_button_upd_slippage_clicked {
 
     my $cmd
         = "perl $FindBin::Bin/../init/update_indel_slippage.pl"
-        . " -s $server"
-        . " --port $port"
-        . " -u $username"
-        . " --password $password"
-        . " -d $db_name";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
-sub on_button_upd_cpg_clicked {
-    my $self = shift;
-
-    my $server   = $self->get_value("entry_server");
-    my $port     = $self->get_value("entry_port");
-    my $username = $self->get_value("entry_username");
-    my $password = $self->get_value("entry_password");
-    my $db_name  = $self->get_value("entry_goal_db");
-
-    my $cmd
-        = "perl $FindBin::Bin/../extra/update_snp_cpg.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"

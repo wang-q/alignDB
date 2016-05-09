@@ -10,6 +10,7 @@ use List::MoreUtils::PP;
 use YAML::Syck;
 
 use AlignDB::IntSpan;
+use AlignDB::Stopwatch;
 use AlignDB::Window;
 
 use App::RL::Common;
