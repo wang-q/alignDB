@@ -120,6 +120,7 @@ if ( $combine == 0 ) {
 #----------------------------#
 # count freq
 #----------------------------#
+# for alignments without outgroup, $max_indel_freq is folded
 my $seq_count = $aligndb_obj->get_seq_count;
 my $max_indel_freq = $aligndb_obj->get_max_indel_freq;
 
