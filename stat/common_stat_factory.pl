@@ -8,13 +8,15 @@ use Config::Tiny;
 use FindBin;
 use YAML::Syck;
 
-use DBI;
 use Tie::IxHash;
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::SQL;
 use AlignDB::SQL::Library;
 use AlignDB::ToXLSX;
+
+use lib "$FindBin::RealBin/../lib";
+use AlignDB;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -92,15 +94,18 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my DBI $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
-    or die "Cannot connect to MySQL database at $db:$server";
+my $aligndb_obj = AlignDB->new(
+    mysql  => "$db:$server",
+    user   => $username,
+    passwd => $password,
+);
+my $dbh = $aligndb_obj->dbh;
+
 my $write_obj = AlignDB::ToXLSX->new(
     dbh     => $dbh,
     outfile => $outfile,
     replace => \%replace,
 );
-
-my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::RealBin/sql.lib" );
 
 # auto detect combine threshold
 if ( $combine == 0 ) {
@@ -112,32 +117,11 @@ if ( $piece == 0 ) {
     ( undef, $piece ) = $write_obj->calc_threshold;
 }
 
-#----------------------------#
 # count freq
-#----------------------------#
-my $all_freq;
-{
-    my DBI $sth = $dbh->prepare(
-        q{
-        SELECT DISTINCT COUNT(s.seq_id) + 1
-        FROM  sequence s
-        WHERE 1 = 1
-        AND s.seq_role = "Q"
-        GROUP BY s.align_id
-        }
-    );
+my $seq_count = $aligndb_obj->get_seq_count;
 
-    my @counts;
-    $sth->execute;
-    while ( my ($count) = $sth->fetchrow_array ) {
-        push @counts, $count;
-    }
-    if ( scalar @counts > 1 ) {
-        die "Database corrupts, freqs are not consistent\n";
-    }
-
-    $all_freq = $counts[0];
-}
+# sql library
+my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::RealBin/sql.lib" );
 
 #----------------------------------------------------------#
 # chart -- pigccv_*
@@ -363,7 +347,7 @@ my $basic = sub {
         $write_obj->write_row(
             $sheet,
             {   query_name => 'No. of strains',
-                row        => [$all_freq],
+                row        => [$seq_count],
             }
         );
     }

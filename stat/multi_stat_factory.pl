@@ -3,12 +3,11 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
-use DBI;
 use Statistics::R;
 use Tie::IxHash;
 
@@ -17,6 +16,9 @@ use AlignDB::Stopwatch;
 use AlignDB::SQL;
 use AlignDB::SQL::Library;
 use AlignDB::ToXLSX;
+
+use lib "$FindBin::RealBin/../lib";
+use AlignDB;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -49,7 +51,7 @@ ld_stat_factory.pl - LD stats for alignDB
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server   = $Config->{database}{server} ),
     'port|P=i'     => \( my $port     = $Config->{database}{port} ),
     'db|d=s'       => \( my $db       = $Config->{database}{db} ),
@@ -62,7 +64,7 @@ GetOptions(
     'replace=s'    => \my %replace,
     'index'        => \( my $add_index_sheet, ),
     'chart'        => \( my $add_chart, ),
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 # prepare to run tasks in @tasks
 my @tasks;
@@ -95,8 +97,13 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
-    or die "Cannot connect to MySQL database at $db:$server";
+my $aligndb_obj = AlignDB->new(
+    mysql  => "$db:$server",
+    user   => $username,
+    passwd => $password,
+);
+my $dbh = $aligndb_obj->dbh;
+
 my $write_obj = AlignDB::ToXLSX->new(
     dbh     => $dbh,
     outfile => $outfile,
@@ -113,13 +120,13 @@ if ( $combine == 0 ) {
 #----------------------------#
 # count freq
 #----------------------------#
-my $largest    = get_freq($dbh);
-my $seq_number = get_seq_number($dbh);
+my $seq_count = $aligndb_obj->get_seq_count;
+my $max_indel_freq = $aligndb_obj->get_max_indel_freq;
 
 my @freqs;
 if ($max_freq) {
     for ( 1 .. $max_freq - 1 ) {
-        my $name = $_ . "of" . $largest;
+        my $name = $_ . "of" . $seq_count;
         push @freqs, [ $name, $_, $_ ];
     }
 }
@@ -127,24 +134,24 @@ else {
 
     # for 22 flies, low, mid, high
     {
-        my @all_freqs = 1 .. $largest;
+        my @all_freqs = 1 .. $max_indel_freq;
         if ( scalar @all_freqs <= 3 ) {
             for (@all_freqs) {
-                my $name = $_ . "of" . $seq_number;
+                my $name = $_ . "of" . $seq_count;
                 push @freqs, [ $name, $_, $_ ];
             }
         }
         else {
-            my @to_be_combs = @all_freqs[ 0 .. $largest - 1 ];
+            my @to_be_combs = @all_freqs[ 0 .. $max_indel_freq - 1 ];
             my @chunks      = reverse apportion( scalar @to_be_combs, 3 );
             my @chunks_freq = multi_slice( \@to_be_combs, @chunks );
             for my $chunk (@chunks_freq) {
                 if ( $chunk->[0] == $chunk->[-1] ) {
-                    my $name = $chunk->[0] . "of" . $seq_number;
+                    my $name = $chunk->[0] . "of" . $seq_count;
                     push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
                 }
                 else {
-                    my $name = join( '_', $chunk->[0], $chunk->[-1] ) . "of" . $seq_number;
+                    my $name = join( '_', $chunk->[0], $chunk->[-1] ) . "of" . $seq_count;
                     push @freqs, [ $name, $chunk->[0], $chunk->[-1] ];
                 }
             }
@@ -152,11 +159,10 @@ else {
     }
 }
 
-print Dump [
+print YAML::Syck::Dump [
     { combine => $combine, },
-    {   largest    => $largest,
-        seq_number => $seq_number,
-        freq       => \@freqs,
+    {   all_freq => $seq_count,
+        freq     => \@freqs,
     }
 ];
 
@@ -1248,53 +1254,6 @@ sub multi_slice {
         $hi_i += $_;
         [ @$aref[ $lo_i .. $hi_i ] ]
     } @chunk_sizes;
-}
-
-sub get_seq_number {
-    my $dbh = shift;
-
-    my $sql_query = q{
-        SELECT DISTINCT
-            COUNT(q.query_id) + 1
-        FROM
-            query q,
-            sequence s
-        WHERE
-            q.seq_id = s.seq_id
-        GROUP BY s.align_id
-    };
-    my $sth = $dbh->prepare($sql_query);
-
-    my @counts;
-    $sth->execute;
-    while ( my ($count) = $sth->fetchrow_array ) {
-        push @counts, $count;
-    }
-    if ( scalar @counts > 1 ) {
-        warn "Database with non-consistent query numbers!\n";
-    }
-
-    return $counts[0];
-}
-
-sub get_freq {
-    my $dbh = shift;
-
-    my $sql_query = q{
-        SELECT 
-            MAX(indel_freq)
-        FROM
-            indel
-    };
-    my $sth = $dbh->prepare($sql_query);
-
-    my @counts;
-    $sth->execute;
-    while ( my ($count) = $sth->fetchrow_array ) {
-        push @counts, $count;
-    }
-
-    return $counts[0];
 }
 
 # t-test using R
