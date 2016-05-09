@@ -3,10 +3,10 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use File::Find::Rule;
 use Path::Tiny;
@@ -56,7 +56,7 @@ gen_alignDB_genome.pl - Generate alignDB from genome fasta files
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server   = $Config->{database}{server} ),
     'port|P=i'     => \( my $port     = $Config->{database}{port} ),
     'db|d=s'       => \( my $db       = $Config->{database}{db} ),
@@ -68,7 +68,7 @@ GetOptions(
     'fill=i'             => \( my $fill = 50 ),
     'min=i'              => \( my $min_length = 5000 ),
     'parallel=i'         => \( my $parallel = $Config->{generate}{parallel} ),
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # Search for all files and push their paths to @axt_files
@@ -95,13 +95,11 @@ my $worker = sub {
 
     my $chr_name = path($infile)->basename( '.fasta', '.fas', '.fa' );
 
-    my $seq_of     = App::Fasops::Common::read_fasta($infile);
-    my $chr_seq    = $seq_of->{ ( keys %{$seq_of} )[0] };
-    my $chr_length = length $chr_seq;
+    my $seq_of = App::Fasops::Common::read_fasta($infile);
+    printf "File [%s] loaded\n", $infile;
 
-    my $id_hash = $obj->get_chr_id_hash($target_name);
-    my $chr_id  = $id_hash->{$chr_name};
-    return unless $chr_id;
+    my $chr_seq = $seq_of->{ ( keys %{$seq_of} )[0] };
+    my $chr_length = length $chr_seq;
 
     my $ambiguous_set = AlignDB::IntSpan->new;
     for ( my $pos = 0; $pos < $chr_length; $pos++ ) {
@@ -111,16 +109,16 @@ my $worker = sub {
         }
     }
 
-    print "Ambiguous chromosome region for $chr_name:\n    " . $ambiguous_set->runlist . "\n";
+    printf "Ambiguous chromosome region for [%s]:\n    %s\n", $chr_name, $ambiguous_set->runlist;
 
     my $valid_set = AlignDB::IntSpan->new("1-$chr_length");
     $valid_set->subtract($ambiguous_set);
     $valid_set = $valid_set->fill( $fill - 1 );    # fill gaps smaller than $fill
 
-    print "Valid chromosome region for $chr_name:\n    " . $valid_set->runlist . "\n";
+    printf "Valid chromosome region for [%s]:\n    %s\n", $chr_name, $valid_set->runlist;
 
     my @regions;                                   # ([start, end], [start, end], ...)
-    for my $set ( $valid_set->sets ) {
+    for my AlignDB::IntSpan $set ( $valid_set->sets ) {
         my $size = $set->size;
         next if $size < $min_length;
 
@@ -148,7 +146,6 @@ my $worker = sub {
 
         my $info_refs = [
             {   name       => $target_name,
-                chr_id     => $chr_id,
                 chr_name   => $chr_name,
                 chr_start  => $start,
                 chr_end    => $end,
@@ -156,7 +153,6 @@ my $worker = sub {
                 seq        => $seq,
             },
             {   name       => $target_name,
-                chr_id     => $chr_id,
                 chr_name   => $chr_name,
                 chr_start  => $start,
                 chr_end    => $end,
@@ -165,7 +161,7 @@ my $worker = sub {
             },
         ];
 
-        $obj->add_align( $info_refs, [ $seq, $seq ], );
+        $obj->add_align($info_refs);
     }
 
     $inner_watch->block_message( "$infile has been processed.", "duration" );
