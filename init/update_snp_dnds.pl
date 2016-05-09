@@ -1,27 +1,27 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use autodie;
 
 use Getopt::Long;
 use Pod::Usage;
 use Config::Tiny;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use AlignDB::Codon;
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
-use AlignDB::Util qw(:all);
+
+use App::Fasops::Common;
 
 use FindBin;
-use lib "$FindBin::Bin/../lib";
+use lib "$FindBin::RealBin/../lib";
 use AlignDB;
-use AlignDB::Position;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -30,44 +30,46 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-my $man  = 0;
-my $help = 0;
+update_snp_dnds.pl - Add synonymous/non-synonymous/stop info
+
+=head1 SYNOPSIS
+
+    update_snp_dnds.pl [options]
+      Options:
+        --help              brief help message
+        --man               full documentation
+        --server            MySQL server IP/Domain name
+        --db                database name
+        --username          username
+        --password          password
+
+=cut
 
 GetOptions(
-    'help|?'     => \$help,
-    'man'        => \$man,
-    'server=s'   => \$server,
-    'port=i'     => \$port,
-    'db=s'       => \$db,
-    'username=s' => \$username,
-    'password=s' => \$password,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
+    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db_name  = $Config->{database}{db} ),
+    'username|u=s' => \( my $username = $Config->{database}{username} ),
+    'password|p=s' => \( my $password = $Config->{database}{password} ),
+) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # init
 #----------------------------------------------------------#
-$stopwatch->start_message("Update dnds info of $db...");
+$stopwatch->start_message("Update dnds info of $db_name...");
 
 my $obj = AlignDB->new(
-    mysql  => "$db:$server",
+    mysql  => "$db_name:$server",
     user   => $username,
     passwd => $password,
 );
 
 # Database handler
-my $dbh = $obj->dbh;
+my DBI $dbh = $obj->dbh;
 
-my $pos_obj = AlignDB::Position->new( dbh => $dbh );
 my $codon_obj = AlignDB::Codon->new;
 
 # add columns
@@ -95,27 +97,30 @@ my $codon_obj = AlignDB::Codon->new;
 # start update
 #----------------------------------------------------------#
 # select all exons which contain the snp
-my $exon_query = q{
-    SELECT  e.exon_id, e.exon_strand, 
+my DBI $exon_sth = $dbh->prepare(
+    q{
+    SELECT  e.exon_id, e.exon_strand,
             e.exon_tl_runlist, e.exon_seq, e.exon_peptide
     FROM exon e, window w
     WHERE e.window_id = w.window_id
     AND w.align_id = ?
     AND e.exon_tl_runlist != '-'
-};
-my $exon_sth = $dbh->prepare($exon_query);
+    }
+);
 
 # select all coding snps in this alignment
-my $snp_query = q{
+my DBI $snp_sth = $dbh->prepare(
+    q{
     SELECT  s.snp_id, s.snp_pos
     FROM snp s
     WHERE s.align_id = ?
     AND s.snp_coding = 1
-};
-my $snp_sth = $dbh->prepare($snp_query);
+    }
+);
 
 # update snp table in the new feature column
-my $snp_update = q{
+my DBI $snp_update_sth = $dbh->prepare(
+    q{
     UPDATE snp
     SET exon_id = ?,
         snp_codon_pos = ?,
@@ -124,41 +129,34 @@ my $snp_update = q{
         snp_nsy = ?,
         snp_stop = ?
     WHERE snp_id = ?
-};
-my $snp_update_sth = $dbh->prepare($snp_update);
+    }
+);
 
 my @align_ids = @{ $obj->get_align_ids };
 ALIGN: for my $align_id (@align_ids) {
 
-    my $target_info    = $obj->get_target_info($align_id);
-    my $chr_name       = $target_info->{chr_name};
-    my $target_runlist = $target_info->{seq_runlist};
-    my $align_length   = $target_info->{align_length};
+    my $target_info = $obj->get_target_info($align_id);
+    my $chr_name    = $target_info->{chr_name};
 
     next ALIGN if $chr_name =~ /rand|un|contig|hap|scaf/i;
 
     $obj->process_message($align_id);
     my ( $target_seq, @query_seqs ) = @{ $obj->get_seqs($align_id) };
-    $_ = uc $_ for ( $target_seq, @query_seqs ) ;
-
-    # target runlist
-    my $target_set = AlignDB::IntSpan->new($target_runlist);
+    $_ = uc $_ for ( $target_seq, @query_seqs );
 
     # get all exons
     my @exons;
     $exon_sth->execute($align_id);
 EXON: while ( my @row = $exon_sth->fetchrow_array ) {
-        my ( $exon_id, $exon_strand, $exon_tl_runlist, $exon_seq,
-            $exon_peptide, )
-            = @row;
-        
+        my ( $exon_id, $exon_strand, $exon_tl_runlist, $exon_seq, $exon_peptide, ) = @row;
+
         $exon_seq = uc $exon_seq;
 
         # extract exon seq in this align
         my $exon_tl_set    = AlignDB::IntSpan->new($exon_tl_runlist);
         my $exon_align_seq = $exon_tl_set->substr_span($target_seq);
         if ( $exon_strand eq '-' ) {
-            $exon_align_seq = revcom($exon_align_seq);
+            $exon_align_seq = App::Fasops::Common::revcom($exon_align_seq);
         }
         if ( index( $exon_seq, $exon_align_seq ) == -1 ) {
             print " " x 4, "Exon sequence does not match alignment\n";
@@ -173,8 +171,7 @@ EXON: while ( my @row = $exon_sth->fetchrow_array ) {
         # determine exon (may be truncated) frame in this align
         my $exon_frame;
         for ( 0 .. 2 ) {
-            my $exon_align_peptide
-                = $codon_obj->translate( $exon_align_seq, $_ );
+            my $exon_align_peptide = $codon_obj->translate( $exon_align_seq, $_ );
             $exon_align_peptide =~ s/\*//g;
             if ( index( $exon_peptide, $exon_align_peptide ) != -1 ) {
                 $exon_frame = $_;
@@ -205,7 +202,7 @@ SNP: while ( my @row = $snp_sth->fetchrow_array ) {
         # only analysis the first exon match this snp
         my $exon;
         for (@exons) {
-            if ( $_->{exon_tl_set}->contain($snp_pos) ) {
+            if ( $_->{exon_tl_set}->contains($snp_pos) ) {
                 $exon = $_;
                 last;
             }
@@ -281,13 +278,13 @@ SNP: while ( my @row = $snp_sth->fetchrow_array ) {
         # target codon and query codon
         my $codon_t = $codon_set->substr_span($target_seq);
         if ( $exon_strand eq '-' ) {
-            $codon_t = revcom($codon_t);
+            $codon_t = App::Fasops::Common::revcom($codon_t);
         }
         my @codons = ($codon_t);
         for my $query_seq (@query_seqs) {
             my $codon_q = $codon_set->substr_span($query_seq);
             if ( $exon_strand eq '-' ) {
-                $codon_q = revcom($codon_q);
+                $codon_q = App::Fasops::Common::revcom($codon_q);
             }
             push @codons, $codon_q;
         }
@@ -312,9 +309,7 @@ SNP: while ( my @row = $snp_sth->fetchrow_array ) {
                     $stop = 1;
                 }
                 else {
-                    ( $syn, $nsy )
-                        = $codon_obj->comp_codons( $codon1, $codon2,
-                        $snp_codon_pos );
+                    ( $syn, $nsy ) = $codon_obj->comp_codons( $codon1, $codon2, $snp_codon_pos );
                 }
                 push @syns,  $syn;
                 push @nsys,  $nsy;
@@ -322,9 +317,13 @@ SNP: while ( my @row = $snp_sth->fetchrow_array ) {
             }
         }
 
-        $snp_update_sth->execute( $exon_id, $snp_codon_pos,
+        $snp_update_sth->execute(
+            $exon_id, $snp_codon_pos,
             join( "|", @codons ),
-            average(@syns), average(@nsys), average(@stops), $snp_id );
+            App::Fasops::Common::mean(@syns),
+            App::Fasops::Common::mean(@nsys),
+            App::Fasops::Common::mean(@stops), $snp_id
+        );
     }
 }
 $snp_update_sth->finish;
@@ -336,7 +335,8 @@ $snp_sth->finish;
 {
     print "Processing isw_syn, nsy, stop\n";
 
-    my $isw_query = q{
+    my DBI $isw_sth = $dbh->prepare(
+        q{
         SELECT  i.isw_id id,
                 SUM(s.snp_syn) /i.isw_length syn,
                 SUM(s.snp_nsy) /i.isw_length nsy,
@@ -345,18 +345,19 @@ $snp_sth->finish;
         WHERE i.isw_id = s.isw_id
         AND s.exon_id IS NOT NULL
         GROUP BY i.isw_id
-    };
-    my $isw_sth = $dbh->prepare($isw_query);
+        }
+    );
 
     # update isw table in the new feature column
-    my $isw_update = q{
+    my DBI $isw_update_sth = $dbh->prepare(
+        q{
         UPDATE isw
         SET isw_syn = ?,
             isw_nsy = ?,
             isw_stop = ?
         WHERE isw_id = ?
-    };
-    my $isw_update_sth = $dbh->prepare($isw_update);
+        }
+    );
 
     # for isw
     $isw_sth->execute;
@@ -372,28 +373,30 @@ $snp_sth->finish;
 {
     print "Processing gene_syn, nsy, stop\n";
 
-    my $gene_query = q{
+    my DBI $gene_sth = $dbh->prepare(
+        q{
         SELECT  g.gene_id id,
                 g.gene_tl_runlist runlist,
                 SUM(s.snp_syn) syn,
                 SUM(s.snp_nsy) nsy,
                 SUM(s.snp_stop) stop
-        FROM gene g 
+        FROM gene g
         inner join exon e on g.gene_id = e.gene_id
         inner join snp s on s.exon_id = e.exon_id
         GROUP BY g.gene_id
-    };
-    my $gene_sth = $dbh->prepare($gene_query);
+        }
+    );
 
     # update gene table in the new feature column
-    my $gene_update = q{
+    my DBI $gene_update_sth = $dbh->prepare(
+        q{
         UPDATE gene
         SET gene_syn = ?,
             gene_nsy = ?,
             gene_stop = ?
         WHERE gene_id = ?
-    };
-    my $gene_update_sth = $dbh->prepare($gene_update);
+        }
+    );
 
     # for gene
     $gene_sth->execute;
@@ -401,12 +404,7 @@ $snp_sth->finish;
         my ( $gene_id, $runlist, $syn, $nsy, $stop ) = @row;
         my $set    = AlignDB::IntSpan->new($runlist);
         my $length = $set->cardinality;
-        $gene_update_sth->execute(
-            $syn / $length,
-            $nsy / $length,
-            $stop / $length,
-            $gene_id
-        );
+        $gene_update_sth->execute( $syn / $length, $nsy / $length, $stop / $length, $gene_id );
     }
 }
 
@@ -416,7 +414,7 @@ $stopwatch->end_message;
 # this AlignDB object is just for storing meta info
 END {
     AlignDB->new(
-        mysql  => "$db:$server",
+        mysql  => "$db_name:$server",
         user   => $username,
         passwd => $password,
     )->add_meta_stopwatch($stopwatch);
@@ -424,41 +422,3 @@ END {
 exit;
 
 __END__
-
-=head1 NAME
-
-    update_snp_dnds.pl - Add additional synonymous/non-synonymous/stop info
-                         to alignDB
-
-=head1 SYNOPSIS
-
-    update_snp_dnds.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<-help>
-
-Print a brief help message and exits.
-
-=item B<-man>
-
-Prints the manual page and exits.
-
-=back
-
-=head1 DESCRIPTION
-
-B<update_snp_cpg.pl> will Add additional CpG info to alignDB,
-1 for CpG and 0 for non.
-
-=cut
-
