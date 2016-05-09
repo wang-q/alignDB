@@ -23,8 +23,7 @@ use AlignDB;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new();
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -78,7 +77,7 @@ $stopwatch->start_message("Update LD of $db...");
 #----------------------------#
 # Add columns
 #----------------------------#
-my $all_freq;
+my $seq_count;
 my @jobs;
 {
     my $obj = AlignDB->new(
@@ -86,26 +85,8 @@ my @jobs;
         user   => $username,
         passwd => $password,
     );
-    my $dbh = $obj->dbh;
 
-    my $sql_query = q{
-        SELECT DISTINCT COUNT(q.query_id) + 1
-        FROM  query q, sequence s
-        WHERE q.seq_id = s.seq_id
-        GROUP BY s.align_id
-    };
-    my $sth = $dbh->prepare($sql_query);
-
-    my @counts;
-    $sth->execute;
-    while ( my ($count) = $sth->fetchrow_array ) {
-        push @counts, $count;
-    }
-    if ( scalar @counts > 1 ) {
-        die "Database corrupts, freqs are not consistent\n";
-    }
-    $all_freq = $counts[0];
-    print "all_freq is $all_freq\n";
+    $seq_count = $obj->get_seq_count;
 
     # r and D' with nearest indel
     $obj->create_column( "snp", "snp_r",      "DOUBLE" );
@@ -242,15 +223,13 @@ my $worker = sub {
         # average LD with near snps
         if ( scalar @{$all_snps} > 1 ) {
             for my $cur_snp ( @{$all_snps} ) {
-                my $snp_id  = $cur_snp->[0];
-                my $snp_pos = $cur_snp->[3];
-                my $near_snps
-                    = find_near_snps( $all_snps, $snp_pos, $near_range );
+                my $snp_id          = $cur_snp->[0];
+                my $snp_pos         = $cur_snp->[3];
+                my $near_snps       = find_near_snps( $all_snps, $snp_pos, $near_range );
                 my $near_snp_number = scalar @{$near_snps};
                 my ( $r2_s, $dprime_abs_s ) = combo_ld($near_snps);
 
-                $update_snps_sth->execute( $near_snp_number, $r2_s,
-                    $dprime_abs_s, $snp_id );
+                $update_snps_sth->execute( $near_snp_number, $r2_s, $dprime_abs_s, $snp_id );
             }
         }
 
@@ -268,14 +247,13 @@ my $worker = sub {
             );
 
             for my $cur_segment ( @{$all_segments} ) {
-                my $segment_id  = $cur_segment->[0];
-                my $segment_set = AlignDB::IntSpan->new(
-                    $cur_segment->[1] . '-' . $cur_segment->[2] );
+                my $segment_id = $cur_segment->[0];
+                my $segment_set
+                    = AlignDB::IntSpan->new( $cur_segment->[1] . '-' . $cur_segment->[2] );
                 my $set_snps = find_set_snps( $all_snps, $segment_set );
                 my ( $r2_seg, $dprime_abs_seg ) = combo_ld($set_snps);
 
-                $update_segment_snps_sth->execute( $r2_seg, $dprime_abs_seg,
-                    $segment_id );
+                $update_segment_snps_sth->execute( $r2_seg, $dprime_abs_seg, $segment_id );
             }
         }
 
@@ -286,7 +264,7 @@ my $worker = sub {
 
             my $group_i  = AlignDB::IntSpan->new;
             my $group_ni = AlignDB::IntSpan->new;
-            for my $i ( 0 .. $all_freq - 1 ) {
+            for my $i ( 0 .. $seq_count - 1 ) {
                 my $ichar = substr $indel_occured, $i, 1;
                 if ( $ichar eq 'o' ) {
                     $group_i->add( $i + 1 );
@@ -309,20 +287,15 @@ my $worker = sub {
                 $update_indel_snp_sth->execute( $r, $dprime, $snp_id );
 
                 my ( $r2_i, $dprime_abs_i, $r2_ni, $dprime_abs_ni, );
-                my $near_snps
-                    = find_near_snps( $all_snps, $snp_pos, $near_range );
+                my $near_snps = find_near_snps( $all_snps, $snp_pos, $near_range );
                 my $near_snp_number = scalar @{$near_snps};
                 if ( $near_snp_number > 1 ) {
-                    my @near_snps_i = map {
-                        [   $_->[0],                          $_->[1],
-                            $group_i->substr_span( $_->[2] ), $_->[3],
-                        ]
-                    } @{$near_snps};
-                    my @near_snps_ni = map {
-                        [   $_->[0],                           $_->[1],
-                            $group_ni->substr_span( $_->[2] ), $_->[3],
-                        ]
-                    } @{$near_snps};
+                    my @near_snps_i
+                        = map { [ $_->[0], $_->[1], $group_i->substr_span( $_->[2] ), $_->[3], ] }
+                        @{$near_snps};
+                    my @near_snps_ni
+                        = map { [ $_->[0], $_->[1], $group_ni->substr_span( $_->[2] ), $_->[3], ] }
+                        @{$near_snps};
 
                     ( $r2_i,  $dprime_abs_i )  = combo_ld( \@near_snps_i );
                     ( $r2_ni, $dprime_abs_ni ) = combo_ld( \@near_snps_ni );
