@@ -11,8 +11,7 @@ cd ~/Scripts/alignDB
 
 1. `perl init/init_alignDB.pl -d S288cvsRM11`
 
-    ```text
-    ==============================
+    ```
     Init S288cvsRM11...
     Start at: Fri Jan  8 17:09:36 2016
     
@@ -29,7 +28,6 @@ cd ~/Scripts/alignDB
     
     End at: Fri Jan  8 17:09:37 2016
     Runtime 1 second.
-    ==============================
     ```
 
 2. `perl init/gen_alignDB.pl -d S288cvsRM11 -t S288c -q RM11 -da data/S288CvsRM11_1a -lt 5000 --parallel 2`
@@ -65,13 +63,11 @@ cd ~/Scripts/alignDB
     All files have been processed.
     End at: Fri Jan  8 17:11:55 2016
     Runtime 45 seconds.
-    ==============================
     ```
 
 3. `perl init/insert_isw.pl -d S288cvsRM11 --parallel 2`
 
     ```
-    ==============================
     Update isw-indel relationship of S288cvsRM11...
     Start at: Fri Jul 17 23:07:58 2015
     
@@ -88,13 +84,11 @@ cd ~/Scripts/alignDB
     
     End at: Fri Jul 17 23:09:36 2015
     Runtime 1 minute and 38 seconds.
-    ==============================
     ```
 
 4. `perl init/insert_gc.pl -d S288cvsRM11 --parallel 2`
 
     ```
-    ==============================
     Update GC tables of S288cvsRM11...
     Start at: Fri Jul 17 23:16:49 2015
     
@@ -112,13 +106,11 @@ cd ~/Scripts/alignDB
     
     End at: Fri Jul 17 23:20:19 2015
     Runtime 3 minutes and 30 seconds.
-    ==============================
     ```
 
 5. `perl init/update_sw_cv.pl -d S288cvsRM11 --parallel 2`
 
     ```
-    ==============================
     Update S288cvsRM11...
     Start at: Fri Jul 17 23:56:05 2015
     
@@ -135,13 +127,11 @@ cd ~/Scripts/alignDB
     
     End at: Fri Jul 17 23:57:14 2015
     Runtime 1 minute and 9 seconds.
-    ==============================
     ```
 
 6. `perl init/update_feature.pl -d S288cvsRM11 -e yeast_82 --parallel 2`
 
     ```
-    ==============================
     Update annotations of S288cvsRM11...
     Start at: Fri Jul 17 23:59:25 2015
     
@@ -157,13 +147,11 @@ cd ~/Scripts/alignDB
     
     End at: Sat Jul 18 00:03:44 2015
     Runtime 4 minutes and 19 seconds.
-    ==============================
     ```
 
 7. `perl init/update_indel_slippage.pl -d S288cvsRM11`
 
     ```
-    ==============================
     Update indel-slippage of S288cvsRM11...
     Start at: Sat Jul 18 00:09:55 2015
     
@@ -177,13 +165,11 @@ cd ~/Scripts/alignDB
     
     End at: Sat Jul 18 00:10:14 2015
     Runtime 19 seconds.
-    ==============================
     ```
 
 8. `perl stat/common_stat_factory.pl -d S288cvsRM11`
 
     ```
-    ==============================
     Do stat for S288cvsRM11...
     Start at: Sat Jul 18 00:11:40 2015
     
@@ -224,7 +210,6 @@ cd ~/Scripts/alignDB
     
     End at: Sat Jul 18 00:12:08 2015
     Runtime 28 seconds.
-    ==============================
     ```
 
 ## two-way batch
