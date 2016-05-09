@@ -7,22 +7,24 @@ use Pod::Usage;
 use Config::Tiny;
 use YAML::Syck;
 
-use List::Util qw(first max maxstr min minstr reduce shuffle sum);
-use List::MoreUtils qw(any all);
-use Scalar::Util qw(looks_like_number);
+use List::Util;
+use List::MoreUtils::PP;
+use Math::Combinatorics;
+
+use App::Fasops::Common;
 
 use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
 
 use FindBin;
-use lib "$FindBin::Bin/../lib";
+use lib "$FindBin::RealBin/../lib";
 use AlignDB;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -33,7 +35,7 @@ my $stopwatch = AlignDB::Stopwatch->new(
 
 =head1 NAME
 
-    update_snp_ld.pl -  Add snp LD to the nearest indel
+update_snp_ld.pl -  LD values of SNPs to the nearest indel and to nearby SNPs
 
 =head1 SYNOPSIS
 
@@ -51,11 +53,12 @@ my $stopwatch = AlignDB::Stopwatch->new(
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'        => \( my $server         = $Config->{database}{server} ),
-    'port|P=i'          => \( my $port           = $Config->{database}{port} ),
+    'port=i'            => \( my $port           = $Config->{database}{port} ),
     'db|d=s'            => \( my $db             = $Config->{database}{db} ),
     'username|u=s'      => \( my $username       = $Config->{database}{username} ),
     'password|p=s'      => \( my $password       = $Config->{database}{password} ),
     'insert_segment=s'  => \( my $insert_segment = 1 ),
+    'insert_ofg=s'      => \( my $insert_ofg     = 1 ),
     'near|near_range=i' => \( my $near_range     = 100 ),
     'parallel=i'        => \( my $parallel       = $Config->{generate}{parallel} ),
     'batch=i'           => \( my $batch_number   = $Config->{generate}{batch} ),
@@ -80,6 +83,8 @@ my @jobs;
 
     $seq_count = $obj->get_seq_count;
 
+    print "Add columns to tables\n";
+
     # r and D' with nearest indel
     $obj->create_column( "snp", "snp_r",      "DOUBLE" );
     $obj->create_column( "snp", "snp_dprime", "DOUBLE" );
@@ -101,6 +106,11 @@ my @jobs;
     if ($insert_segment) {
         $obj->create_column( "segment", "segment_r2_s",         "DOUBLE" );
         $obj->create_column( "segment", "segment_dprime_abs_s", "DOUBLE" );
+    }
+
+    if ($insert_ofg) {
+        $obj->create_column( "ofgsw", "ofgsw_r2_s",         "DOUBLE" );
+        $obj->create_column( "ofgsw", "ofgsw_dprime_abs_s", "DOUBLE" );
     }
 
     #  r and D' with nearest snp
@@ -145,7 +155,7 @@ my $worker = sub {
         }
     );
 
-    # select all isw in this indel
+    # select all SNPs belongs to this indel
     my DBI $snp_sth = $dbh->prepare(
         q{
         SELECT s.snp_id, s.snp_freq, s.snp_occured, s.snp_pos
@@ -204,10 +214,22 @@ my $worker = sub {
         }
     );
 
+    my DBI $update_ofgsw_snps_sth = $dbh->prepare(
+        q{
+        UPDATE
+            ofgsw sw
+        SET
+            sw.ofgsw_r2_s         = ?,
+            sw.ofgsw_dprime_abs_s = ?
+        WHERE sw.ofgsw_id = ?
+        }
+    );
+
     # for each align
     for my $align_id (@align_ids) {
         $obj->process_message($align_id);
 
+        # all SNPs in this alignment
         my $all_snps = $dbh->selectall_arrayref(
             q{
             SELECT s.snp_id, s.snp_freq, s.snp_occured, s.snp_pos
@@ -218,7 +240,7 @@ my $worker = sub {
             }, {}, $align_id
         );
 
-        # average LD with near snps
+        # average LD with nearby snps
         if ( scalar @{$all_snps} > 1 ) {
             for my $cur_snp ( @{$all_snps} ) {
                 my $snp_id          = $cur_snp->[0];
@@ -255,10 +277,33 @@ my $worker = sub {
             }
         }
 
+        if ($insert_ofg) {
+
+            # snps in ofgsw
+            my $all_ofgsws = $dbh->selectall_arrayref(
+                q{
+                SELECT s.ofgsw_id, w.window_start, w.window_end
+                FROM ofgsw s
+                    INNER JOIN window w ON s.window_id = w.window_id
+                WHERE w.align_id = ?
+                }, {}, $align_id
+            );
+
+            for my $cur_ofgsw ( @{$all_ofgsws} ) {
+                my $ofgsw_id = $cur_ofgsw->[0];
+                my $ofgsw_set
+                    = AlignDB::IntSpan->new( $cur_ofgsw->[1] . '-' . $cur_ofgsw->[2] );
+                my $set_snps = find_set_snps( $all_snps, $ofgsw_set );
+                my ( $r2_ofgsw, $dprime_abs_ofgsw ) = combo_ld($set_snps);
+
+                $update_ofgsw_snps_sth->execute( $r2_ofgsw, $dprime_abs_ofgsw, $ofgsw_id );
+            }
+        }
+
         # LD with nearest indel
         $indel_sth->execute($align_id);
         while ( my @row = $indel_sth->fetchrow_array ) {
-            my ( $indel_id, $indel_freq, $indel_occured ) = @row;
+            my ( $indel_id, undef, $indel_occured ) = @row;
 
             my $group_i  = AlignDB::IntSpan->new;
             my $group_ni = AlignDB::IntSpan->new;
@@ -276,8 +321,8 @@ my $worker = sub {
             }
 
             $snp_sth->execute($indel_id);
-            while ( my @row = $snp_sth->fetchrow_array ) {
-                my ( $snp_id, $snp_freq, $snp_occured, $snp_pos ) = @row;
+            while ( my @row2 = $snp_sth->fetchrow_array ) {
+                my ( $snp_id, undef, $snp_occured, $snp_pos ) = @row2;
 
                 # LD with nearest indel
                 my ( $r, $dprime );
@@ -303,6 +348,8 @@ my $worker = sub {
             }
         }
     }
+
+    # finish all sths
     $update_segment_snps_sth->finish;
     $update_sub_snps_sth->finish;
     $update_snps_sth->finish;
@@ -332,8 +379,12 @@ END {
         passwd => $password,
     )->add_meta_stopwatch($stopwatch);
 }
+
 exit;
 
+#----------------------------------------------------------#
+# Subroutines
+#----------------------------------------------------------#
 sub calc_ld {
     my $strA = shift;
     my $strB = shift;
@@ -360,7 +411,7 @@ sub calc_ld {
     my $fB      = $B_count / $size;
     my $fb      = 1 - $fB;
 
-    if ( any { $_ == 0 } ( $fA, $fa, $fB, $fb ) ) {
+    if ( List::MoreUtils::PP::any { $_ == 0 } ( $fA, $fa, $fB, $fb ) ) {
         return ( undef, undef );
     }
 
@@ -381,10 +432,10 @@ sub calc_ld {
     $r = $DAB / sqrt( $fA * $fa * $fB * $fb );
 
     if ( $DAB < 0 ) {
-        $dprime = $DAB / min( $fA * $fB, $fa * $fb );
+        $dprime = $DAB / List::Util::min( $fA * $fB, $fa * $fb );
     }
     else {
-        $dprime = $DAB / min( $fA * $fb, $fa * $fB );
+        $dprime = $DAB / List::Util::min( $fA * $fb, $fa * $fB );
     }
 
     return ( $r, $dprime );
@@ -417,11 +468,11 @@ sub find_near_snps {
 
 sub find_set_snps {
     my $all_ary = shift;
-    my $set     = shift;    # AlignDB::IntSpan object
+    my AlignDB::IntSpan $set = shift;
 
     my @sorted = map { $_->[0] }
         sort { $a->[1] <=> $b->[1] }
-        grep { $set->contain( $_->[1] ) }
+        grep { $set->contains( $_->[1] ) }
         map { [ $_, $_->[3] ] } @{$all_ary};
 
     return \@sorted;
@@ -445,8 +496,8 @@ sub combo_ld {
             push @dprime_abs, abs($pair_dprime);
         }
         if ( scalar @r2 > 0 ) {
-            $r2         = average(@r2);
-            $dprime_abs = average(@dprime_abs);
+            $r2         = App::Fasops::Common::mean(@r2);
+            $dprime_abs = App::Fasops::Common::mean(@dprime_abs);
         }
     }
 

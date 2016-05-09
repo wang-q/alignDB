@@ -10,7 +10,7 @@ use YAML::Syck;
 
 use DBI;
 use Set::Scalar;
-use List::MoreUtils qw( first_index);
+use List::MoreUtils qw(first_index);
 
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
@@ -105,6 +105,7 @@ my $write_obj = AlignDB::ToXLSX->new(
 my $chart_ofg = sub {
     my $sheet = shift;
     my $data  = shift;
+    my $is_ld = shift;
 
     my $x_set = Set::Scalar->new( @{ $data->[0] } );
 
@@ -173,7 +174,7 @@ my $chart_ofg = sub {
     # chart 4
     $opt{y_column} = 9;
     $opt{y_data}   = $data->[9];
-    $opt{y_title}  = "Repeats proportion";
+    $opt{y_title}  = $is_ld ? "r^2" : "Repeats proportion";
     $opt{top} += 18;
     $write_obj->draw_y( $sheet, \%opt );
 
@@ -218,7 +219,7 @@ my $chart_ofg = sub {
         # chart 9
         $opt{y_column} = 9;
         $opt{y_data}   = $data->[9];
-        $opt{y_title}  = "Repeats proportion";
+        $opt{y_title}  = $is_ld ? "r^2" : "Repeats proportion";
         $opt{top} += 18;
         $write_obj->draw_y( $sheet, \%opt );
     }
@@ -650,16 +651,16 @@ my $ofg_tag_type = sub {
     }
 
     my $write_sheet = sub {
-        my ( $by, $bind ) = @_;
+        my ( $by_this, $bind ) = @_;
 
         my $sheet_name;
-        if ( $by eq "tag" ) {
+        if ( $by_this eq "tag" ) {
             $sheet_name = "ofg_tag_$bind";
         }
-        elsif ( $by eq "type" ) {
+        elsif ( $by_this eq "type" ) {
             $sheet_name = "ofg_type_$bind";
         }
-        elsif ( $by eq "tt" ) {
+        elsif ( $by_this eq "tt" ) {
             $sheet_name = "ofg_tt_$bind";
         }
         $sheet_name = substr $sheet_name, 0, 31;    # excel sheet name limit
@@ -689,13 +690,13 @@ my $ofg_tag_type = sub {
                 o.ofg_id = s.ofg_id
                     AND s.window_id = w.window_id
         };
-        if ( $by eq "tag" ) {
+        if ( $by_this eq "tag" ) {
             $sql_query .= "AND o.ofg_tag = ? GROUP BY s.ofgsw_distance";
         }
-        elsif ( $by eq "type" ) {
+        elsif ( $by_this eq "type" ) {
             $sql_query .= "AND o.ofg_type = ? GROUP BY s.ofgsw_distance";
         }
-        elsif ( $by eq "tt" ) {
+        elsif ( $by_this eq "tt" ) {
             $sql_query .= q{AND CONCAT(o.ofg_tag, "_", o.ofg_type) = ? GROUP BY s.ofgsw_distance};
         }
 
@@ -727,13 +728,109 @@ my $ofg_tag_type = sub {
     }
 };
 
+my $ofg_ld_tag_type = sub {
+
+    unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_r2_s' ) ) {
+        return;
+    }
+
+    my $ary_ref;
+    if ( $by eq "tag" ) {
+        $ary_ref = get_tags($dbh);
+    }
+    elsif ( $by eq "type" ) {
+        $ary_ref = get_types($dbh);
+    }
+    elsif ( $by eq "tt" ) {
+        $ary_ref = get_tts($dbh);
+    }
+
+    my $write_sheet = sub {
+        my ( $by_this, $bind ) = @_;
+
+        my $sheet_name;
+        if ( $by_this eq "tag" ) {
+            $sheet_name = "ofg_tag_$bind";
+        }
+        elsif ( $by_this eq "type" ) {
+            $sheet_name = "ofg_type_$bind";
+        }
+        elsif ( $by_this eq "tt" ) {
+            $sheet_name = "ofg_tt_$bind";
+        }
+        $sheet_name = substr $sheet_name, 0, 31;    # excel sheet name limit
+        my $sheet;
+        $write_obj->row(0);
+        $write_obj->column(0);
+
+        my $sql_query = q{
+            SELECT
+                s.ofgsw_distance `distance`,
+                AVG(w.window_pi) `AVG_pi`,
+                STD(w.window_pi) `STD_pi`,
+                AVG(w.window_indel / w.window_length * 100) `AVG_indel`,
+                STD(w.window_indel / w.window_length * 100) `STD_indel`,
+                AVG(w.window_gc) `AVG_gc`,
+                STD(w.window_gc) `STD_gc`,
+                AVG(s.ofgsw_cv) `AVG_cv`,
+                STD(s.ofgsw_cv) `STD_cv`,
+                AVG(s.ofgsw_r2_s) `AVG_r^2`,
+                STD(s.ofgsw_r2_s) `STD_r^2`,
+                COUNT(*) COUNT
+            FROM
+                ofg o,
+                ofgsw s,
+                window w
+            WHERE
+                o.ofg_id = s.ofg_id
+                    AND s.window_id = w.window_id
+        };
+        if ( $by_this eq "tag" ) {
+            $sql_query .= "AND o.ofg_tag = ? GROUP BY s.ofgsw_distance";
+        }
+        elsif ( $by_this eq "type" ) {
+            $sql_query .= "AND o.ofg_type = ? GROUP BY s.ofgsw_distance";
+        }
+        elsif ( $by_this eq "tt" ) {
+            $sql_query .= q{AND CONCAT(o.ofg_tag, "_", o.ofg_type) = ? GROUP BY s.ofgsw_distance};
+        }
+
+        my @names = $write_obj->sql2names($sql_query);
+        {    # header
+            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        }
+
+        my $data;
+        {    # content
+            $data = $write_obj->write_sql(
+                $sheet,
+                {   sql_query  => $sql_query,
+                    bind_value => [ $bind, ],
+                    data       => 1,
+                }
+            );
+        }
+
+        if ($add_chart) {    # chart
+            $chart_ofg->( $sheet, $data, 1 );
+        }
+
+        print "Sheet [$sheet_name] has been generated.\n";
+    };
+
+    for ( @{$ary_ref} ) {
+        $write_sheet->( $by, $_ );
+    }
+};
+
 for my $n (@tasks) {
-    if ( $n == 1 ) { &$summary_ofg;     next; }
-    if ( $n == 2 ) { &$ofg_all;         next; }
-    if ( $n == 3 ) { &$ofg_coding;      next; }
-    if ( $n == 4 ) { &$ofg_coding_pure; next; }
-    if ( $n == 5 ) { &$ofg_dG;          next; }
-    if ( $n == 6 ) { &$ofg_tag_type;    next; }
+    if ( $n == 1 )  { &$summary_ofg;     next; }
+    if ( $n == 2 )  { &$ofg_all;         next; }
+    if ( $n == 3 )  { &$ofg_coding;      next; }
+    if ( $n == 4 )  { &$ofg_coding_pure; next; }
+    if ( $n == 5 )  { &$ofg_dG;          next; }
+    if ( $n == 6 )  { &$ofg_tag_type;    next; }
+    if ( $n == 21 ) { &$ofg_ld_tag_type; next; }
 }
 
 if ($add_index_sheet) {
@@ -747,13 +844,13 @@ exit;
 sub get_tags {
     my $dbh = shift;
 
-    my $query = q{
+    my $ary_ref = $dbh->selectcol_arrayref(
+        q{
         SELECT DISTINCT o.ofg_tag
         FROM ofg o
         ORDER BY o.ofg_tag
-    };
-
-    my $ary_ref = $dbh->selectcol_arrayref($query);
+        }
+    );
 
     return $ary_ref;
 }
@@ -761,13 +858,13 @@ sub get_tags {
 sub get_types {
     my $dbh = shift;
 
-    my $query = q{
+    my $ary_ref = $dbh->selectcol_arrayref(
+        q{
         SELECT DISTINCT o.ofg_type
         FROM ofg o
         ORDER BY o.ofg_type
-    };
-
-    my $ary_ref = $dbh->selectcol_arrayref($query);
+        }
+    );
 
     return $ary_ref;
 }
@@ -775,13 +872,13 @@ sub get_types {
 sub get_tts {
     my $dbh = shift;
 
-    my $query = q{
+    my $ary_ref = $dbh->selectcol_arrayref(
+        q{
         SELECT DISTINCT CONCAT(o.ofg_tag, "_", o.ofg_type)
         FROM ofg o
         ORDER BY CONCAT(o.ofg_tag, "_", o.ofg_type)
-    };
-
-    my $ary_ref = $dbh->selectcol_arrayref($query);
+        }
+    );
 
     return $ary_ref;
 }
