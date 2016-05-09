@@ -184,7 +184,7 @@ sub read_config {
     my $self = shift;
 
     my $Config = Config::Tiny->new;
-    $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+    $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
     # parallel init values
     $self->set_value( "entry_parallel", $Config->{generate}{parallel} );
@@ -732,7 +732,8 @@ sub on_button_auto_stat_file_common_clicked {
     my $self = shift;
 
     my $db_name = $self->get_value("entry_db_name");
-    my $outfile = path( $FindBin::Bin, '..', 'stat', "$db_name.common.xlsx" )->absolute->stringify;
+    my $outfile
+        = path( $FindBin::RealBin, '..', 'stat', "$db_name.common.xlsx" )->absolute->stringify;
     $self->set_value( "entry_stat_file_common", $outfile );
 
     return;
@@ -742,7 +743,7 @@ sub on_button_auto_stat_file_gc_clicked {
     my $self = shift;
 
     my $db_name = $self->get_value("entry_db_name");
-    my $outfile = path( $FindBin::Bin, '..', 'stat', "$db_name.gc.xlsx" )->absolute->stringify;
+    my $outfile = path( $FindBin::RealBin, '..', 'stat', "$db_name.gc.xlsx" )->absolute->stringify;
     $self->set_value( "entry_stat_file_gc", $outfile );
 
     return;
@@ -752,7 +753,8 @@ sub on_button_auto_stat_file_multi_clicked {
     my $self = shift;
 
     my $db_name = $self->get_value("entry_db_name");
-    my $outfile = path( $FindBin::Bin, '..', 'stat', "$db_name.multi.xlsx" )->absolute->stringify;
+    my $outfile
+        = path( $FindBin::RealBin, '..', 'stat', "$db_name.multi.xlsx" )->absolute->stringify;
     $self->set_value( "entry_stat_file_multi", $outfile );
 
     return;
@@ -828,7 +830,7 @@ sub on_button_init_aligndb_clicked {
     my $db_name  = $self->get_value("entry_db_name");
 
     my $cmd
-        = "perl $FindBin::Bin/../init/init_alignDB.pl"
+        = "perl $FindBin::RealBin/../init/init_alignDB.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -857,7 +859,7 @@ sub on_button_gen_aligndb_clicked {
     my $dir_align   = $self->get_value("entry_dir_align_axt");
 
     my $cmd
-        = "perl $FindBin::Bin/../init/gen_alignDB.pl"
+        = "perl $FindBin::RealBin/../init/gen_alignDB.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -890,7 +892,7 @@ sub on_button_gen_aligndb_fas_clicked {
     my $outgroup = $self->get_value("checkbutton_fas_outgroup");
 
     my $cmd
-        = "perl $FindBin::Bin/../init/gen_alignDB_fas.pl"
+        = "perl $FindBin::RealBin/../init/gen_alignDB_fas.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -918,7 +920,7 @@ sub on_button_insert_isw_axt_clicked {
     my $parallel = $self->get_value("entry_parallel");
 
     my $cmd
-        = "perl $FindBin::Bin/../init/insert_isw.pl"
+        = "perl $FindBin::RealBin/../init/insert_isw.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -944,7 +946,7 @@ sub on_button_insert_isw_fas_clicked {
     my $outgroup = $self->get_value("checkbutton_fas_outgroup");
 
     my $cmd
-        = "perl $FindBin::Bin/../init/insert_isw.pl"
+        = "perl $FindBin::RealBin/../init/insert_isw.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -972,7 +974,7 @@ sub on_button_insert_gc_clicked {
     my $insert_segment = $self->get_value("checkbutton_insert_segment");
 
     my $cmd
-        = "perl $FindBin::Bin/../init/insert_gc.pl"
+        = "perl $FindBin::RealBin/../init/insert_gc.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -998,7 +1000,7 @@ sub on_button_upd_swcv_clicked {
     my $parallel = $self->get_value("entry_parallel");
 
     my $cmd
-        = "perl $FindBin::Bin/../init/update_sw_cv.pl"
+        = "perl $FindBin::RealBin/../init/update_sw_cv.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -1024,7 +1026,7 @@ sub on_button_upd_feature_clicked {
     my $parallel = $self->get_value("entry_parallel");
 
     my $cmd
-        = "perl $FindBin::Bin/../init/update_feature.pl"
+        = "perl $FindBin::RealBin/../init/update_feature.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -1047,7 +1049,7 @@ sub on_button_upd_slippage_clicked {
     my $db_name  = $self->get_value("entry_db_name");
 
     my $cmd
-        = "perl $FindBin::Bin/../init/update_indel_slippage.pl"
+        = "perl $FindBin::RealBin/../init/update_indel_slippage.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -1070,7 +1072,7 @@ sub on_button_stat_common_clicked {
     my $output = $self->get_value("entry_stat_file_common");
 
     my $cmd
-        = "perl $FindBin::Bin/../stat/common_stat_factory.pl"
+        = "perl $FindBin::RealBin/../stat/common_stat_factory.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -1095,7 +1097,7 @@ sub on_button_stat_multi_clicked {
     my $output = $self->get_value("entry_stat_file_multi");
 
     my $cmd
-        = "perl $FindBin::Bin/../stat/multi_stat_factory.pl"
+        = "perl $FindBin::RealBin/../stat/multi_stat_factory.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -1120,7 +1122,7 @@ sub on_button_stat_gc_clicked {
     my $output = $self->get_value("entry_stat_file_gc");
 
     my $cmd
-        = "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
+        = "perl $FindBin::RealBin/../stat/gc_stat_factory.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
