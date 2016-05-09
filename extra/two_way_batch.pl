@@ -3,10 +3,10 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
@@ -30,7 +30,7 @@ two_way_batch.pl - Batch process two-way alignDB
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'            => \( my $server           = $Config->{database}{server} ),
     'port|P=i'              => \( my $port             = $Config->{database}{port} ),
     'db|d=s'                => \( my $db_name          = $Config->{database}{db} ),
@@ -45,9 +45,9 @@ GetOptions(
     'parallel=i'            => \( my $parallel         = $Config->{generate}{parallel} ),
     'batch=i'               => \( my $batch_number     = $Config->{generate}{batch} ),
     'length_threshold|lt=i' => \( my $length_threshold = $Config->{generate}{length_threshold} ),
-    'run|r=s' => \( my $run        = "common" ),                                     # running tasks
-    'chr=s'   => \( my $init_chr   = "$FindBin::RealBin/../data/chr_length.csv" ),
-) or HelpMessage(1);
+    'run|r=s' => \( my $run      = "common" ),                                     # running tasks
+    'chr=s'   => \( my $init_chr = "$FindBin::RealBin/../data/chr_length.csv" ),
+) or Getopt::Long::HelpMessage(1);
 
 # prepare to run tasks in @tasks
 my @tasks;
@@ -90,14 +90,14 @@ my $rm_gff_file = join ",", @rm_gff_files;
 # dispatch table
 #----------------------------------------------------------#
 my $dispatch = {
-    1 => "perl $FindBin::Bin/../init/init_alignDB.pl"
+    1 => "perl $FindBin::RealBin/../init/init_alignDB.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . ( $init_chr   ? " --chr $init_chr"     : "" ),
-    2 => "perl $FindBin::Bin/../init/gen_alignDB.pl"
+        . ( $init_chr ? " --chr $init_chr" : "" ),
+    2 => "perl $FindBin::RealBin/../init/gen_alignDB.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -109,7 +109,7 @@ my $dispatch = {
         . " -lt $length_threshold"
         . " --parallel $parallel",
     3 => undef,
-    5 => "perl $FindBin::Bin/../init/insert_isw.pl"
+    5 => "perl $FindBin::RealBin/../init/insert_isw.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -117,7 +117,7 @@ my $dispatch = {
         . " -d $db_name"
         . " --parallel $parallel"
         . " --batch $batch_number",
-    10 => "perl $FindBin::Bin/../init/insert_gc.pl"
+    10 => "perl $FindBin::RealBin/../init/insert_gc.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -125,7 +125,7 @@ my $dispatch = {
         . " -d $db_name"
         . " --parallel $parallel"
         . " --batch $batch_number",
-    20 => "perl $FindBin::Bin/../init/insert_gene.pl"
+    20 => "perl $FindBin::RealBin/../init/insert_gene.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -133,7 +133,7 @@ my $dispatch = {
         . " -d $db_name"
         . " -e $ensembl_db"
         . " --parallel $parallel",
-    21 => "perl $FindBin::Bin/../init/update_sw_cv.pl"
+    21 => "perl $FindBin::RealBin/../init/update_sw_cv.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -141,7 +141,7 @@ my $dispatch = {
         . " -d $db_name"
         . " --parallel $parallel"
         . " --batch $batch_number",
-    30 => "perl $FindBin::Bin/../init/update_feature.pl"
+    30 => "perl $FindBin::RealBin/../init/update_feature.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -150,7 +150,7 @@ my $dispatch = {
         . " -e $ensembl_db"
         . " --parallel $parallel"
         . " --batch $batch_number",
-    '30gff' => "perl $FindBin::Bin/../init/update_feature_gff.pl"
+    '30gff' => "perl $FindBin::RealBin/../init/update_feature_gff.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -160,25 +160,25 @@ my $dispatch = {
         . " --batch $batch_number"
         . " --gff_files $gff_file"
         . " --rm_gff_files $rm_gff_file",
-    31 => "perl $FindBin::Bin/../init/update_indel_slippage.pl"
+    31 => "perl $FindBin::RealBin/../init/update_indel_slippage.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
         . " --password $password"
         . " -d $db_name",
-    32 => "perl $FindBin::Bin/../init/update_segment.pl"
+    32 => "perl $FindBin::RealBin/../init/update_segment.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
         . " --password $password"
         . " -d $db_name",
-    33 => "perl $FindBin::Bin/../init/update_snp_dnds.pl"
+    33 => "perl $FindBin::RealBin/../init/update_snp_dnds.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
         . " --password $password"
         . " -d $db_name",
-    40 => "perl $FindBin::Bin/../stat/common_stat_factory.pl"
+    40 => "perl $FindBin::RealBin/../stat/common_stat_factory.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -187,7 +187,7 @@ my $dispatch = {
         . " --index --chart"
         . " -o $db_name.common.xlsx",
     41 => undef,
-    42 => "perl $FindBin::Bin/../stat/gc_stat_factory.pl"
+    42 => "perl $FindBin::RealBin/../stat/gc_stat_factory.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -195,7 +195,7 @@ my $dispatch = {
         . " -d $db_name"
         . " --index --chart"
         . " -o $db_name.gc.xlsx",
-    43 => "perl $FindBin::Bin/../stat/gene_stat_factory.pl"
+    43 => "perl $FindBin::RealBin/../stat/gene_stat_factory.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -203,7 +203,7 @@ my $dispatch = {
         . " -d $db_name"
         . " --index --chart"
         . " -o $db_name.gene.xlsx",
-    44 => "perl $FindBin::Bin/../stat/mvar_stat_factory.pl"
+    44 => "perl $FindBin::RealBin/../stat/mvar_stat_factory.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
