@@ -230,7 +230,7 @@ cd ~/Scripts/alignDB
 ## two-way batch
 
     ```bash
-    perl extra/two_way_batch.pl \
+    perl util/two_way_batch.pl \
         -d S288cvsRM11 \
         -t S288c -q RM11 \
         -da data/S288cvsRM11_1a \

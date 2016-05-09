@@ -166,7 +166,7 @@ And in step 22, `yeast` is an alias to `saccharomyces_cerevisiae_core_29_82_4`.
 cd ~/Scripts/alignDB/data
 
 # S288cvsRM11_1a
-perl ~/Scripts/alignDB/extra/two_way_batch.pl \
+perl ~/Scripts/alignDB/util/two_way_batch.pl \
     -t S288c -q RM11_1a \
     -d S288cvsRM11_1a \
     -da S288cvsRM11_1a \
@@ -175,7 +175,7 @@ perl ~/Scripts/alignDB/extra/two_way_batch.pl \
     -r all
 
 # S288cvsSpar
-perl ~/Scripts/alignDB/extra/two_way_batch.pl \
+perl ~/Scripts/alignDB/util/two_way_batch.pl \
     -t S288c -q Spar \
     -d S288cvsSpar \
     --ensembl yeast \
@@ -183,31 +183,6 @@ perl ~/Scripts/alignDB/extra/two_way_batch.pl \
     -lt 5000 \
     --parallel 8 \
     -r all
-```
-
-## Three-way alignments by `join_dbs.pl`
-
-```bash
-cd ~/Scripts/alignDB/data
-
-# without outgroup
-perl ~/Scripts/alignDB/extra/join_dbs.pl \
-    --no_insert --block --trimmed_fasta --length 1000 \
-    --goal_db S288cvsRM11_1avsSpar \
-    --target 0target \
-    --queries 0query,1query \
-    --dbs S288cvsRM11_1a,S288cvsSpar
-
-# with outgroup
-perl ~/Scripts/alignDB/extra/join_dbs.pl \
-    --no_insert --block --trimmed_fasta --length 1000 \
-    --goal_db S288cvsRM11_1arefSpar \
-    --target 0target \
-    --queries 0query \
-    --outgroup 1query \
-    --dbs S288cvsRM11_1a,S288cvsSpar
-
-find . -type f -name "*.fas" | parallel -j 8 gzip
 ```
 
 ## Three-way alignments by multiz
@@ -265,7 +240,7 @@ rm -fr ScervsRM11_1a_Spar_fasta
 ```bash
 cd ~/Scripts/alignDB/data
 
-perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
+perl ~/Scripts/alignDB/util/multi_way_batch.pl \
     -d ScervsRM11_1a_Spar \
     -da ScervsRM11_1a_Spar_refined \
     --ensembl yeast \
@@ -295,7 +270,7 @@ rm fas/*.fas
 perl ~/Scripts/alignDB/slice/write_align_slice.pl \
     -d ScervsRM11_1a_Spar -f fas/yeast.intergenic.yml --outgroup
 
-perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
+perl ~/Scripts/alignDB/util/multi_way_batch.pl \
     -d S288cvsRM11_1a_intergenic \
     -da fas \
     --block \
@@ -307,7 +282,7 @@ perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
 ## Speed test
 
 ```bash
-perl ~/Scripts/alignDB/extra/two_way_batch.pl \
+perl ~/Scripts/alignDB/util/two_way_batch.pl \
     -d S288cvsRM11_1a \
     -e saccharomyces_cerevisiae_core_29_82_4 \
     -t S288c -q RM11_1a \
@@ -336,7 +311,7 @@ perl ~/Scripts/alignDB/extra/two_way_batch.pl \
     * `--parallel 8`: 2m22s
 
 ```bash
-perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
+perl ~/Scripts/alignDB/util/multi_way_batch.pl \
     -d Scer_n2_Spar \
     -e saccharomyces_cerevisiae_core_29_82_4 \
     --block --outgroup \
