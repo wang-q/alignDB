@@ -976,8 +976,8 @@ sub get_ref_seq {
         q{
         SELECT s.seq_seq
         FROM sequence s
-        INNER JOIN reference r on s.seq_id = r.seq_id
-        WHERE s.align_id = ?
+        WHERE s.seq_role = "O"
+        AND s.align_id = ?
         }
     );
     $sth->execute($align_id);
@@ -1431,10 +1431,10 @@ sub get_queries_info {
     my DBI $dbh = $self->dbh;
     my DBI $sth = $dbh->prepare(
         q{
-        SELECT c.common_name,
-               c.chr_id,
-               c.chr_name,
-               c.chr_length,
+        SELECT s.common_name,
+               s.chr_id,
+               s.chr_name,
+               s.chr_length,
                s.chr_start,
                s.chr_end,
                s.chr_strand,
@@ -1442,13 +1442,11 @@ sub get_queries_info {
                s.seq_gc,
                s.seq_runlist,
                a.align_length,
-               q.query_strand,
-               q.query_position
+               s.seq_position
         FROM sequence s
-        INNER JOIN query q ON s.seq_id = q.seq_id
-        LEFT JOIN chromosome c ON s.chr_id = c.chr_id
         INNER JOIN align a ON s.align_id = a.align_id
-        WHERE s.align_id = ?
+        WHERE s.seq_role = "Q"
+        AND s.align_id = ?
         }
     );
     $sth->execute($align_id);
@@ -1462,7 +1460,7 @@ sub get_queries_info {
     return @array;
 }
 
-sub get_freq {
+sub get_seq_count {
     my $self = shift;
 
     my DBI $dbh = $self->dbh;
@@ -1482,6 +1480,29 @@ sub get_freq {
     }
     if ( scalar @counts > 1 ) {
         warn "Database corrupts, freqs are not consistent\n";
+    }
+
+    return $counts[0];
+}
+
+sub get_max_indel_freq {
+    my $self = shift;
+
+    my DBI $dbh = $self->dbh;
+
+    my DBI $sth = $dbh->prepare(
+        q{
+        SELECT
+            MAX(indel_freq)
+        FROM
+            indel
+        }
+    );
+
+    my @counts;
+    $sth->execute;
+    while ( my ($count) = $sth->fetchrow_array ) {
+        push @counts, $count;
     }
 
     return $counts[0];
