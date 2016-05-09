@@ -5,7 +5,7 @@ use warnings;
 use Getopt::Long;
 use Pod::Usage;
 use Config::Tiny;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 use List::MoreUtils qw(any all);
@@ -14,7 +14,6 @@ use Scalar::Util qw(looks_like_number);
 use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
-use AlignDB::Util qw(:all);
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
@@ -32,42 +31,35 @@ my $stopwatch = AlignDB::Stopwatch->new(
     program_conf => $Config,
 );
 
-# Database init values
-my $server   = $Config->{database}{server};
-my $port     = $Config->{database}{port};
-my $username = $Config->{database}{username};
-my $password = $Config->{database}{password};
-my $db       = $Config->{database}{db};
+=head1 NAME
 
-my $insert_segment = 1;
+    update_snp_ld.pl -  Add snp LD to the nearest indel
 
-# run in parallel mode
-my $parallel = $Config->{generate}{parallel};
+=head1 SYNOPSIS
 
-# number of alignments process in one child process
-my $batch_number = $Config->{generate}{batch};
+    update_snp_ld.pl [options]
+      Options:
+        --help              brief help message
+        --man               full documentation
+        --server            MySQL server IP/Domain name
+        --db                database name
+        --username          username
+        --password          password
 
-my $near_range = 100;
-
-my $man  = 0;
-my $help = 0;
+=cut
 
 GetOptions(
-    'help|?'            => \$help,
-    'man'               => \$man,
-    's|server=s'        => \$server,
-    'P|port=i'          => \$port,
-    'd|db=s'            => \$db,
-    'u|username=s'      => \$username,
-    'p|password=s'      => \$password,
-    'insert_segment=s'  => \$insert_segment,
-    'parallel=i'        => \$parallel,
-    'batch=i'           => \$batch_number,
-    'near|near_range=i' => \$near_range,
-) or pod2usage(2);
-
-pod2usage(1) if $help;
-pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
+    'server|s=s'        => \( my $server         = $Config->{database}{server} ),
+    'port|P=i'          => \( my $port           = $Config->{database}{port} ),
+    'db|d=s'            => \( my $db             = $Config->{database}{db} ),
+    'username|u=s'      => \( my $username       = $Config->{database}{username} ),
+    'password|p=s'      => \( my $password       = $Config->{database}{password} ),
+    'insert_segment=s'  => \( my $insert_segment = 1 ),
+    'near|near_range=i' => \( my $near_range     = 100 ),
+    'parallel=i'        => \( my $parallel       = $Config->{generate}{parallel} ),
+    'batch=i'           => \( my $batch_number   = $Config->{generate}{batch} ),
+) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # init
@@ -140,40 +132,44 @@ my $worker = sub {
     );
 
     # Database handler
-    my $dbh = $obj->dbh;
+    my DBI $dbh = $obj->dbh;
 
     # select all indels in this alignment
-    my $indel_query = q{
+    my DBI $indel_sth = $dbh->prepare(
+        q{
         SELECT i.indel_id, i.indel_freq, i.indel_occured
         FROM indel i
         WHERE 1=1
         AND i.indel_occured != 'unknown'
         AND i.align_id = ?
-    };
-    my $indel_sth = $dbh->prepare($indel_query);
+        }
+    );
 
     # select all isw in this indel
-    my $snp_query = q{
+    my DBI $snp_sth = $dbh->prepare(
+        q{
         SELECT s.snp_id, s.snp_freq, s.snp_occured, s.snp_pos
         FROM isw w, snp s
         WHERE 1 = 1
         AND w.isw_id = s.isw_id
         AND s.snp_occured != 'unknown'
         AND w.isw_indel_id = ?
-    };
-    my $snp_sth = $dbh->prepare($snp_query);
+        }
+    );
 
-    my $update_indel_snp_query = q{
+    my DBI $update_indel_snp_sth = $dbh->prepare(
+        q{
         UPDATE
             snp s
         SET
             s.snp_r         = ?,
             s.snp_dprime    = ?
         WHERE s.snp_id = ?
-    };
-    my $update_indel_snp_sth = $dbh->prepare($update_indel_snp_query);
+        }
+    );
 
-    my $update_snps_query = q{
+    my DBI $update_snps_sth = $dbh->prepare(
+        q{
         UPDATE
             snp s
         SET
@@ -181,10 +177,11 @@ my $worker = sub {
             s.snp_r2_s            = ?,
             s.snp_dprime_abs_s    = ?
         WHERE s.snp_id = ?
-    };
-    my $update_snps_sth = $dbh->prepare($update_snps_query);
+        }
+    );
 
-    my $update_sub_snps_query = q{
+    my DBI $update_sub_snps_sth = $dbh->prepare(
+        q{
         UPDATE
             snp s
         SET
@@ -193,18 +190,19 @@ my $worker = sub {
             s.snp_r2_ni         = ?,
             s.snp_dprime_abs_ni = ?
         WHERE s.snp_id = ?
-    };
-    my $update_sub_snps_sth = $dbh->prepare($update_sub_snps_query);
+        }
+    );
 
-    my $update_segment_snps_query = q{
+    my DBI $update_segment_snps_sth = $dbh->prepare(
+        q{
         UPDATE
             segment s
         SET
             s.segment_r2_s         = ?,
             s.segment_dprime_abs_s = ?
         WHERE s.segment_id = ?
-    };
-    my $update_segment_snps_sth = $dbh->prepare($update_segment_snps_query);
+        }
+    );
 
     # for each align
     for my $align_id (@align_ids) {
@@ -456,21 +454,3 @@ sub combo_ld {
 }
 
 __END__
-
-=head1 NAME
-
-    update_snp_ld.pl -  Add snp LD to the nearest indel
-    
-=head1 SYNOPSIS
-
-    update_snp_ld.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-
-=cut
-

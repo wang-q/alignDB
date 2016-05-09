@@ -3,15 +3,14 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use AlignDB::GC;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
-use AlignDB::Util qw(:all);
 
 use lib "$FindBin::Bin/../lib";
 use AlignDB;
@@ -52,16 +51,15 @@ my $stat_window_size  = $Config->{gc}{stat_window_size};
 my $stat_window_step  = $Config->{gc}{stat_window_step};
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server       = $Config->{database}{server} ),
     'port|P=i'     => \( my $port         = $Config->{database}{port} ),
     'db|d=s'       => \( my $db           = $Config->{database}{db} ),
     'username|u=s' => \( my $username     = $Config->{database}{username} ),
     'password|p=s' => \( my $password     = $Config->{database}{password} ),
-    'outgroup|o'   => \my $outgroup,
     'parallel=i'   => \( my $parallel     = $Config->{generate}{parallel} ),
     'batch=i'      => \( my $batch_number = $Config->{generate}{batch} ),
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # init

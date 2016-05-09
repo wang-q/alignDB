@@ -10,7 +10,6 @@ use YAML qw(Dump Load DumpFile LoadFile);
 use List::MoreUtils qw(firstidx all any uniq );
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
-use AlignDB::Util qw(:all);
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";

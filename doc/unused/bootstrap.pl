@@ -10,7 +10,6 @@ use Spreadsheet::ParseExcel;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use AlignDB::Util qw(:all);
 
 #----------------------------------------------------------#
 # GetOpt section

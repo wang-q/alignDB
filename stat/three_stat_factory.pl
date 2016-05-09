@@ -15,7 +15,6 @@ use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 use AlignDB::SQL;
 use AlignDB::SQL::Library;
-use AlignDB::Util qw(:all);
 
 #----------------------------------------------------------#
 # GetOpt section

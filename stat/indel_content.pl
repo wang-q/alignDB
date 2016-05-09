@@ -3,16 +3,17 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use DBI;
 use Set::Scalar;
 
+use App::Fasops::Common;
+
 use AlignDB::Stopwatch;
-use AlignDB::Util qw(calc_gc_ratio revcom);
 use AlignDB::ToXLSX;
 
 #----------------------------------------------------------#
@@ -43,7 +44,7 @@ indel_content.pl - See what's in indels, using the k-nucleotide algorithm
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server     = $Config->{database}{server} ),
     'port|P=i'     => \( my $port       = $Config->{database}{port} ),
     'db|d=s'       => \( my $db         = $Config->{database}{db} ),
@@ -54,7 +55,7 @@ GetOptions(
     'max_length=i' => \( my $max_length = 50 ),
     'min_k=i'      => \( my $min_k      = 1 ),
     'max_k=i'      => \( my $max_k      = 6 ),
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 $outfile = "$db.indel.length$min_length-$max_length.xlsx" unless $outfile;
 
@@ -64,7 +65,7 @@ $outfile = "$db.indel.length$min_length-$max_length.xlsx" unless $outfile;
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Analysis indel content of $db...");
 
-my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
+my DBI $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
     or die "Cannot connect to MySQL database at $db:$server";
 my $write_obj = AlignDB::ToXLSX->new(
     dbh     => $dbh,
@@ -83,7 +84,7 @@ my $indel_query = q{
     AND indel_seq NOT LIKE "%N%"
     AND indel_length between ? and ?
 };
-my $indel_sth = $dbh->prepare($indel_query);
+my DBI $indel_sth = $dbh->prepare($indel_query);
 
 for my $k ( $min_k .. $max_k ) {
 
@@ -134,7 +135,10 @@ for my $k ( $min_k .. $max_k ) {
 
         # k_nuc worksheet
         for my $k_nuc ( sort keys %table ) {
-            my $row = [ $k_nuc, calc_gc_ratio($k_nuc), $table{$k_nuc}, $table{$k_nuc} / $sum ];
+            my $row = [
+                $k_nuc, App::Fasops::Common::calc_gc_ratio( [$k_nuc] ),
+                $table{$k_nuc}, $table{$k_nuc} / $sum
+            ];
             push @rows, $row;
         }
         @rows = sort { $b->[2] <=> $a->[2] } @rows;
@@ -145,7 +149,7 @@ for my $k ( $min_k .. $max_k ) {
             my $value = $table{$key};
             delete $table{$key};
 
-            my $key_rc   = revcom($key);
+            my $key_rc   = App::Fasops::Common::revcom($key);
             my $value_rc = 0;
             if ( exists $table{$key_rc} ) {
                 $value_rc = $table{$key_rc};
@@ -155,7 +159,10 @@ for my $k ( $min_k .. $max_k ) {
             my $k_nuc       = "$key,$key_rc";
             my $k_nuc_count = $value + $value_rc;
 
-            my $row = [ $k_nuc, calc_gc_ratio($key), $k_nuc_count, $k_nuc_count / $sum ];
+            my $row = [
+                $k_nuc, App::Fasops::Common::calc_gc_ratio( [$key] ),
+                $k_nuc_count, $k_nuc_count / $sum
+            ];
             push @rows2, $row;
         }
         @rows2 = sort { $b->[2] <=> $a->[2] } @rows2;
@@ -181,7 +188,7 @@ sub k_nuc_permu {
     $table{$_} = '' for @alphabets;
     for ( 2 .. $k ) {
         for my $current_key ( keys %table ) {
-            $table{ $current_key . $_ } = '' foreach @alphabets;
+            $table{ $current_key . $_ } = '' for @alphabets;
             delete $table{$current_key};
         }
     }
