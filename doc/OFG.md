@@ -6,7 +6,8 @@
 
 Original paper:
 
-Pan, J. et al. A Hierarchical Combination of Factors Shapes the Genome-wide Topography of Yeast Meiotic Recombination Initiation. Cell 144, 719Ð731 (2011).
+Pan, J. et al. A Hierarchical Combination of Factors Shapes the Genome-wide Topography of Yeast
+Meiotic Recombination Initiation. Cell 144, 719-731 (2011).
 
 ```bash
 mkdir -p ~/data/ofg/spo11
@@ -19,9 +20,14 @@ perl ~/Scripts/fig_table/xlsx2csv.pl -f mmc2.xls --sheet 'Spo11 Hot Spot Annotat
     /^CHROM/ and next;
     /^chr/ or next;
     $F[0] =~ s/^chr//;
-    print qq{$F[0]\t$F[1]\t$F[2]\n};
+    if ($F[1] == $F[2]) {
+        print qq{$F[0]:$F[1]\n};
+    }
+    else {
+        print qq{$F[0]:$F[1]-$F[2]\n};
+    }
     ' \
-    > spo11_hot.bed
+    > spo11_hot.pos.txt
 ```
 
 ### Process
@@ -96,7 +102,8 @@ perl ~/Scripts/fig_table/xlsx2csv.pl -f mmc2.xls --sheet 'Spo11 Hot Spot Annotat
 
 Original paper:
 
-Mancera, E., Bourgon, R., Brozzi, A., Huber, W. & Steinmetz, L. M. High-resolution mapping of meiotic crossovers and non-crossovers in yeast. Nature 454, 479Ð485 (2008).
+Mancera, E., Bourgon, R., Brozzi, A., Huber, W. & Steinmetz, L. M. High-resolution mapping of
+meiotic crossovers and non-crossovers in yeast. Nature 454, 479-485 (2008).
 
 ```bash
 mkdir -p ~/data/ofg/nat08
