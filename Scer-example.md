@@ -192,9 +192,6 @@ cd ~/Scripts/alignDB/data
 
 if [ -d ScervsRM11_1a_Spar_mz ]; then
     rm -fr ScervsRM11_1a_Spar_mz;
-    mkdir -p ScervsRM11_1a_Spar_mz;
-else
-    mkdir -p ScervsRM11_1a_Spar_mz;
 fi;
 
 if [ -d ScervsRM11_1a_Spar_fasta ]; then
@@ -206,6 +203,7 @@ if [ -d ScervsRM11_1a_Spar_refined ]; then
 fi;
 
 # mz
+mkdir -p ScervsRM11_1a_Spar_mz
 perl ~/Scripts/egaz/mz.pl \
     -d S288cvsRM11_1a \
     -d S288cvsSpar \
@@ -219,15 +217,15 @@ find ScervsRM11_1a_Spar_mz -name "*.maf" -or -name "*.maf.gz" \
     | parallel --no-run-if-empty -j 8 fasops maf2fas {} -o ScervsRM11_1a_Spar_fasta/{/}.fas
 
 # refine fasta
-mkdir -p ScervsRM11_1a_Spar_refined2
-find ScervsRM11_1a_Spar_fasta -name "*.fas" \
-    | parallel --no-run-if-empty -j 8 fasops refine --msa mafft {} -o ScervsRM11_1a_Spar_refined2/{/}
+mkdir -p ScervsRM11_1a_Spar_refined
+find ScervsRM11_1a_Spar_fasta -name "*.fas" -or -name "*.fas.gz" \
+    | parallel --no-run-if-empty -j 8 \
+        fasops refine {} \
+        -msa [% msa %] \
+        --quick --expand 100 --join 100 \
+        --outgroup \
+        -o ScervsRM11_1a_Spar_refined/{/}
 
-perl ~/Scripts/egaz/refine_fasta.pl \
-    --msa mafft --block -p 8 \
-    --outgroup \
-    -i ScervsRM11_1a_Spar_fasta \
-    -o ScervsRM11_1a_Spar_refined
 
 find ScervsRM11_1a_Spar_refined -type f -name "*.fas" | parallel -j 8 gzip
 
