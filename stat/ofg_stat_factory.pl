@@ -38,8 +38,6 @@ ofg_stat_factory.pl - OFG (other features of genome) stats for alignDB
         --outfile   -o  STR     outfile filename
         --by            STR     tag, type or tt
         --run       -r  STR     run special analysis
-        --combine       INT     
-        --piece         INT
         --replace       STR=STR replace strings in axis names
         --index                 add an index sheet
         --chart                 add charts
