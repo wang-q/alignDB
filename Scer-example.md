@@ -126,20 +126,6 @@ Stats on pairwise and multiple alignments are minimal.
     bash 7_multi_db_only.sh
     ```
 
-## Copy directories and files to example directory
-
-```bash
-cd ~/Scripts/alignDB
-
-cp -R ~/data/alignment/example/scer/Genomes/S288c data/
-
-cp -R ~/data/alignment/example/scer/Pairwise/S288cvsRM11_1a data/
-cp -R ~/data/alignment/example/scer/Pairwise/S288cvsYJM789 data/
-cp -R ~/data/alignment/example/scer/Pairwise/S288cvsSpar data/
-
-cp ~/data/alignment/example/scer/fake_tree.nwk data/
-```
-
 ## Build local ensembl database
 
 Use `build_ensembl.pl`.
@@ -157,80 +143,22 @@ perl ~/Scripts/withncbi/ensembl/build_ensembl.pl --initdb --db yeast \
 
 ## Two-way alignments
 
-`-chr` is omitted because it already exist in default ones.
+`-chr` is omitted because all chromosomes existed in default one.
 
 `--ensembl yeast` means different in step 20 and 22. In step 20, `yeast` is the mysql database name.
 And in step 22, `yeast` is an alias to `saccharomyces_cerevisiae_core_29_82_4`.
 
 ```bash
-cd ~/Scripts/alignDB/data
-
 # S288cvsRM11_1a
 perl ~/Scripts/alignDB/util/two_way_batch.pl \
     -t S288c -q RM11_1a \
     -d S288cvsRM11_1a \
-    -da S288cvsRM11_1a \
+    -da ~/data/alignment/example/scer/Pairwise/S288cvsRM11_1a \
+    -e yeast \
     -lt 5000 \
     --parallel 8 \
     -r all
 
-# S288cvsSpar
-perl ~/Scripts/alignDB/util/two_way_batch.pl \
-    -t S288c -q Spar \
-    -d S288cvsSpar \
-    --ensembl yeast \
-    -da S288cvsSpar \
-    -lt 5000 \
-    --parallel 8 \
-    -r all
-```
-
-## Three-way alignments by multiz
-
-```bash
-cd ~/Scripts/alignDB/data
-
-if [ -d ScervsRM11_1a_Spar_mz ]; then
-    rm -fr ScervsRM11_1a_Spar_mz;
-fi;
-
-if [ -d ScervsRM11_1a_Spar_fasta ]; then
-    rm -fr ScervsRM11_1a_Spar_fasta;
-fi;
-
-if [ -d ScervsRM11_1a_Spar_refined ]; then
-    rm -fr ScervsRM11_1a_Spar_refined;
-fi;
-
-# mz
-mkdir -p ScervsRM11_1a_Spar_mz
-perl ~/Scripts/egaz/mz.pl \
-    -d S288cvsRM11_1a \
-    -d S288cvsSpar \
-    --tree fake_tree.nwk \
-    --out ScervsRM11_1a_Spar_mz \
-    -p 8
-
-# maf2fas
-mkdir -p ScervsRM11_1a_Spar_fasta
-find ScervsRM11_1a_Spar_mz -name "*.maf" -or -name "*.maf.gz" \
-    | parallel --no-run-if-empty -j 8 fasops maf2fas {} -o ScervsRM11_1a_Spar_fasta/{/}.fas
-
-# refine fasta
-mkdir -p ScervsRM11_1a_Spar_refined
-find ScervsRM11_1a_Spar_fasta -name "*.fas" -or -name "*.fas.gz" \
-    | parallel --no-run-if-empty -j 8 \
-        fasops refine {} \
-        -msa [% msa %] \
-        --quick --expand 100 --join 100 \
-        --outgroup \
-        -o ScervsRM11_1a_Spar_refined/{/}
-
-
-find ScervsRM11_1a_Spar_refined -type f -name "*.fas" | parallel -j 8 gzip
-
-rm -fr ScervsRM11_1a_Spar_mz
-rm -fr ScervsRM11_1a_Spar_fasta
 ```
 
 ## Multi-way batch
@@ -242,7 +170,6 @@ perl ~/Scripts/alignDB/util/multi_way_batch.pl \
     -d ScervsRM11_1a_Spar \
     -da ScervsRM11_1a_Spar_refined \
     --ensembl yeast \
-    --block \
     --outgroup \
     -lt 1000 --parallel 8 --batch 5 \
     --run all
@@ -271,7 +198,6 @@ perl ~/Scripts/alignDB/slice/write_align_slice.pl \
 perl ~/Scripts/alignDB/util/multi_way_batch.pl \
     -d S288cvsRM11_1a_intergenic \
     -da fas \
-    --block \
     -lt 1000 \
     --parallel 8 \
     --run basic
@@ -312,7 +238,7 @@ perl ~/Scripts/alignDB/util/two_way_batch.pl \
 perl ~/Scripts/alignDB/util/multi_way_batch.pl \
     -d Scer_n2_Spar \
     -e saccharomyces_cerevisiae_core_29_82_4 \
-    --block --outgroup \
+    --outgroup \
     -da ~/data/alignment/example/scer/Scer_n2_Spar_refined \
     -chr ~/data/alignment/example/scer/chr_length.csv \
     -lt 1000 \
