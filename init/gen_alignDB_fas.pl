@@ -46,18 +46,11 @@ gen_alignDB_fas.pl - Generate alignDB from fas files
         --password  -p  STR     password
         --dir_align -da STR     .fas files' directory
         --outgroup  -o          alignments have an outgroup
-        --block                 input is blocked fasta
         --length    -l  INT     threshold of alignment length
         --parallel      INT     run in parallel mode
         --batch         INT     number of alignments in one child process
         --gzip                  open .axt.gz files
 
-
-    perl ~/Scripts/alignDB/multi/fasta_malignDB.pl -d S288CvsRM11Spar --block --id ~/data/alignment/yeast_combine/id2name.csv --dir ~/data/alignment/yeast_combine/S288CvsRM11Spar_mafft --length 5000 --paralle 1
-    
-    perl d:/wq/Scripts/alignDB/init/init_alignDB.pl -d Acetobacter_pasteurianus
-    perl d:/wq/Scripts/alignDB/init/gen_alignDB_fas.pl -d Acetobacter_pasteurianus --block --id d:\data\alignment\bac_new\Acetobacter_pasteurianus\round2\id2name.csv --dir d:\data\alignment\bac_new\Acetobacter_pasteurianus\round2\Acetobacter_pasteurianus_mft\ --length 5000 --paralle 1
-    
 =cut
 
 GetOptions(
@@ -69,7 +62,6 @@ GetOptions(
     'password|p=s'       => \( my $password         = $Config->{database}{password} ),
     'dir_align|dir|da=s' => \( my $dir_align        = '' ),
     'outgroup|o'         => \my $outgroup,
-    'block'              => \my $block,
     'length|lt|l=i'      => \( my $length_threshold = 5000 ),
     'parallel=i'         => \( my $parallel         = $Config->{generate}{parallel} ),
     'batch=i'            => \( my $batch_number     = $Config->{generate}{batch} ),
@@ -91,16 +83,7 @@ if ( scalar @files == 0 or $gzip ) {
     $gzip++;
 }
 
-my @jobs;
-if ( !$block ) {
-    while ( scalar @files ) {
-        my @batching = splice @files, 0, $batch_number;
-        push @jobs, [@batching];
-    }
-}
-else {
-    @jobs = map { [$_] } @files;
-}
+my @jobs = map { [$_] } @files;
 
 #----------------------------------------------------------#
 # worker

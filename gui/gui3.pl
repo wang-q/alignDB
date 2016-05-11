@@ -901,7 +901,6 @@ sub on_button_gen_aligndb_fas_clicked {
         . " --dir $dir_align"
         . " --length $length_threshold"
         . " --parallel $parallel"
-        . " --block"
         . ( $outgroup ? " --outgroup" : "" );
 
     $self->exec_cmd($cmd);

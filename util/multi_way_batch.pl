@@ -29,25 +29,24 @@ multi_way_batch.pl - Batch process multi-way alignDB
 
 =head1 SYNOPSIS
 
-    perl multi_way_batch.pl -d AthvsV_mafft --block -da ~/data/alignment/arabidopsis19/AthvsV_mafft -lt 5000 --parallel 4 --run 1-3,21,40
+    perl multi_way_batch.pl -d AthvsV_mafft -da ~/data/alignment/arabidopsis19/AthvsV_mafft -lt 5000 --parallel 4 --run 1-3,21,40
 
 =cut
 
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'     => \( my $server     = $Config->{database}{server} ),
-    'port|P=i'       => \( my $port       = $Config->{database}{port} ),
-    'db|d=s'         => \( my $db_name    = $Config->{database}{db} ),
-    'username|u=s'   => \( my $username   = $Config->{database}{username} ),
-    'password|p=s'   => \( my $password   = $Config->{database}{password} ),
-    'ensembl|e=s'    => \( my $ensembl_db = $Config->{database}{ensembl} ),
-    'dir_align|da=s' => \( my $dir_align  = $Config->{taxon}{dir_align} ),
-    'outgroup|o'     => \my $outgroup,
-    'gff_files=s'    => \my @gff_files,
-    'rm_gff_files=s' => \my @rm_gff_files,
-    'block' => \my $block,    # input is galaxy style blocked fasta
-    'parallel=i' => \( my $parallel = $Config->{generate}{parallel} ),
-    'batch=i' => \( my $batch_number = $Config->{generate}{batch} ),
+    'server|s=s'            => \( my $server           = $Config->{database}{server} ),
+    'port|P=i'              => \( my $port             = $Config->{database}{port} ),
+    'db|d=s'                => \( my $db_name          = $Config->{database}{db} ),
+    'username|u=s'          => \( my $username         = $Config->{database}{username} ),
+    'password|p=s'          => \( my $password         = $Config->{database}{password} ),
+    'ensembl|e=s'           => \( my $ensembl_db       = $Config->{database}{ensembl} ),
+    'dir_align|da=s'        => \( my $dir_align        = $Config->{taxon}{dir_align} ),
+    'outgroup|o'            => \my $outgroup,
+    'gff_files=s'           => \my @gff_files,
+    'rm_gff_files=s'        => \my @rm_gff_files,
+    'parallel=i'            => \( my $parallel         = $Config->{generate}{parallel} ),
+    'batch=i'               => \( my $batch_number     = $Config->{generate}{batch} ),
     'length_threshold|lt=i' => \( my $length_threshold = $Config->{generate}{length_threshold} ),
     'run|r=s' => \( my $run      = "common" ),                                     # running tasks
     'chr=s'   => \( my $init_chr = "$FindBin::RealBin/../data/chr_length.csv" ),
@@ -111,8 +110,7 @@ my $dispatch = {
         . " -lt $length_threshold"
         . " --parallel $parallel"
         . " --batch $batch_number"
-        . ( $outgroup ? " --outgroup" : "" )
-        . ( $block    ? " --block"    : "" ),
+        . ( $outgroup ? " --outgroup" : "" ),
     3 => undef,
     5 => "perl $FindBin::RealBin/../init/insert_isw.pl"
         . " -s $server"
