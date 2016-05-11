@@ -218,6 +218,9 @@ perl ~/Scripts/alignDB/util/two_way_batch.pl \
     * `--parallel 4`: 2m52s
     * `--parallel 8`: 2m50s
 
+* On Hackintosh (6700k SSD)
+    * `--parallel 4`: 2m45s
+
 * On server (E5-2690 256G HDD)
     * `--parallel 4`: 4m32s
 
@@ -230,15 +233,3 @@ perl ~/Scripts/alignDB/util/two_way_batch.pl \
 * On server (E5-2690 v3 128G SSD)
     * `--parallel 4`: 3m13s
     * `--parallel 8`: 2m22s
-
-```bash
-perl ~/Scripts/alignDB/util/multi_way_batch.pl \
-    -d Scer_n2_Spar \
-    -e saccharomyces_cerevisiae_core_29_82_4 \
-    --outgroup \
-    -da ~/data/alignment/example/scer/Scer_n2_Spar_refined \
-    -chr ~/data/alignment/example/scer/chr_length.csv \
-    -lt 1000 \
-    --parallel 4 --batch 10 \
-    --run common
-```
