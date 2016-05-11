@@ -241,7 +241,7 @@ sub locate_set_position {
         }
         else {
             my $intersect = $pos_set->intersect( $slice_hash->{$feature} );
-            my $n         = $intersect->cardinality;
+            my $n         = $intersect->size;
             if ( $n >= 1 ) {
                 $pos_location = "semi_" . $feature;
             }

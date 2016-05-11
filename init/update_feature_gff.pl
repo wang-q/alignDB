@@ -447,10 +447,10 @@ sub feature_portion {
         $set = AlignDB::IntSpan->new($pos_set);
     }
 
-    my $pos_n = $set->cardinality;
+    my $pos_n = $set->size;
     return if $pos_n <= 0;
     my $intersect       = $set->intersect($feature_set);
-    my $n               = $intersect->cardinality;
+    my $n               = $intersect->size;
     my $feature_portion = $n / $pos_n;
 
     return $feature_portion;

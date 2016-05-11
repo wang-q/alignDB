@@ -375,7 +375,7 @@ sub insert_gsw {
         my $ex_set = AlignDB::IntSpan->new($ex_runlist);
 
         # determining $gsw_density here, which is different from isw_density
-        my $half_length = int( $ex_set->cardinality / 2 );
+        my $half_length = int( $ex_set->size / 2 );
         my $gsw_density = int( ( $ex_left_wave_length - $half_length ) / $gsw_size );
 
         # wave length, amplitude, trough_gc and gradient

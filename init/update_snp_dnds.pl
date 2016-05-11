@@ -189,7 +189,7 @@ EXON: while ( my @row = $exon_sth->fetchrow_array ) {
             exon_strand => $exon_strand,
             exon_frame  => $exon_frame,
             exon_tl_set => $exon_tl_set,
-            exon_length => $exon_tl_set->cardinality,
+            exon_length => $exon_tl_set->size,
         };
         push @exons, $exon_info;
     }
@@ -270,7 +270,7 @@ SNP: while ( my @row = $snp_sth->fetchrow_array ) {
             }
             $codon_set = AlignDB::IntSpan->new("$codon_start-$codon_end");
         }
-        if ( $codon_set->cardinality > 3 ) {
+        if ( $codon_set->size > 3 ) {
             print " " x 4, "Indels in this codon\n";
             next SNP;
         }
@@ -403,7 +403,7 @@ $snp_sth->finish;
     while ( my @row = $gene_sth->fetchrow_array ) {
         my ( $gene_id, $runlist, $syn, $nsy, $stop ) = @row;
         my $set    = AlignDB::IntSpan->new($runlist);
-        my $length = $set->cardinality;
+        my $length = $set->size;
         $gene_update_sth->execute( $syn / $length, $nsy / $length, $stop / $length, $gene_id );
     }
 }

@@ -73,7 +73,7 @@ sub update_target_info {
 # 5:  index(5) - index(3) + 1 = 3
 # 21: index(21) - index(3) + 1 = 11 - 3 + 1= 9
 # -7: (min() - (-7)) + (3 - 1 + 1) = 8 + 3 = 11
-# 42: (42 - max()) + (cardinality() - 3 + 1) = 14 + 16 = 30
+# 42: (42 - max()) + (size() - 3 + 1) = 14 + 16 = 30
 sub at_align {
     my $self     = shift;
     my $align_id = shift;

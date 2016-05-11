@@ -31,7 +31,7 @@ my $stopwatch = AlignDB::Stopwatch->new(
 
 =head1 NAME
 
-write_runlist_feature.pl - extract runlists of a certain feature from alignDB
+write_runlist_feature.pl - extract runlists of a certain feature from Ensembl
 
 =head1 SYNOPSIS
 
