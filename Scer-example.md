@@ -164,11 +164,9 @@ perl ~/Scripts/alignDB/util/two_way_batch.pl \
 ## Multi-way batch
 
 ```bash
-cd ~/Scripts/alignDB/data
-
 perl ~/Scripts/alignDB/util/multi_way_batch.pl \
     -d ScervsRM11_1a_Spar \
-    -da ScervsRM11_1a_Spar_refined \
+    -da ~/data/alignment/example/scer/Scer_n2_Spar_refined \
     --ensembl yeast \
     --outgroup \
     -lt 1000 --parallel 8 --batch 5 \
@@ -182,22 +180,21 @@ perl ~/Scripts/alignDB/util/multi_way_batch.pl \
 * multi-way (fas)
 
 ```bash
-mkdir -p ~/Scripts/alignDB/data/feature
-cd ~/Scripts/alignDB/data/feature
+mkdir -p ~/data/alignment/example/feature
+cd ~/data/alignment/example/feature
  
 perl ~/Scripts/alignDB/util/write_runlist_feature.pl \
-    -e yeast --feature intergenic -l 500
+    -e yeast --feature intergenic
 
-mkdir fas
-mv yeast.intergenic.yml fas
-rm fas/*.fas
-
-perl ~/Scripts/alignDB/slice/write_align_slice.pl \
-    -d ScervsRM11_1a_Spar -f fas/yeast.intergenic.yml --outgroup
+find ~/data/alignment/example/scer/Scer_n2_Spar_refined -name "*.fas" -or -name "*.fas.gz" \
+    | parallel --no-run-if-empty -j 8 \
+        fasops slice {} yeast.intergenic.yml \
+        --name S288c \
+        -o ~/data/alignment/example/feature/{/}.fas
 
 perl ~/Scripts/alignDB/util/multi_way_batch.pl \
     -d S288cvsRM11_1a_intergenic \
-    -da fas \
+    -da . \
     -lt 1000 \
     --parallel 8 \
     --run basic
