@@ -227,6 +227,12 @@ fasops subset join1.fas names.list --required -o join2.fas
 fasops refine join2.fas --msa mafft -o join.fas
 rm join1.fas join2.fas
 
+fasops covers -n S288c join.fas -o join.yml
+runlist stat \
+    --size ~/data/alignment/example/scer/Genomes/S288c/chr.sizes \
+    --all -o stdout \
+    join.yml
+
 ```
 
 ## Slicing
