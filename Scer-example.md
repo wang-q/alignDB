@@ -141,7 +141,7 @@ perl ~/Scripts/withncbi/ensembl/build_ensembl.pl --initdb --db yeast \
 
 ```
 
-## Two-way alignments
+## Two-way batch
 
 `-chr` is omitted because all chromosomes existed in default one.
 
@@ -171,6 +171,62 @@ perl ~/Scripts/alignDB/util/multi_way_batch.pl \
     --outgroup \
     -lt 1000 --parallel 8 --batch 5 \
     --run all
+```
+
+## Raw alignments
+
+```bash
+mkdir -p ~/data/alignment/example/raw
+cd ~/data/alignment/example/raw
+
+# maf2fas
+for pair in S288cvsRM11_1a S288cvsYJM789 S288cvsSpar ; do
+    mkdir -p ~/data/alignment/example/raw/${pair};
+    find ~/data/alignment/example/scer/Pairwise/${pair} -name "*.maf" -or -name "*.maf.gz" \
+        | parallel --no-run-if-empty -j 4 \
+            fasops maf2fas {} -o ~/data/alignment/example/raw/${pair}/{/}.fas
+    fasops covers ~/data/alignment/example/raw/${pair}/*.fas -n S288c -l 1000 -t 10 -o ${pair}.yml
+done
+
+runlist compare --op intersect S288cvsRM11_1a.yml S288cvsYJM789.yml -o intersect.1.yml
+runlist compare --op intersect intersect.1.yml S288cvsSpar.yml -o intersect.2.yml
+runlist span --op excise -n 1000 intersect.2.yml -o intersect.filter.yml
+rm intersect.1.yml intersect.2.yml
+
+# slice
+for pair in S288cvsRM11_1a S288cvsYJM789 S288cvsSpar ; do
+    if [ -e ${pair}.slice.fas ];
+    then
+        rm ${pair}.slice.fas
+    fi
+    find ~/data/alignment/example/raw/${pair}/ -name "*.fas" -or -name "*.fas.gz" \
+        | sort \
+        | parallel --no-run-if-empty --keep-order -j 1 " \
+            fasops slice {} intersect.filter.yml -n S288c -l 1000 -o stdout \
+            >> ${pair}.slice.fas
+        "
+done
+
+# join
+fasops join \
+    S288cvsRM11_1a.slice.fas \
+    S288cvsYJM789.slice.fas \
+    S288cvsSpar.slice.fas \
+    -n S288c -o join1.fas
+
+cat <<'EOF' > names.list
+S288c
+RM11_1a
+YJM789
+Spar
+EOF
+
+fasops subset join1.fas names.list --required -o join2.fas
+
+# refine (can't use quick mode)
+fasops refine join2.fas --msa mafft -o join.fas
+rm join1.fas join2.fas
+
 ```
 
 ## Slicing
