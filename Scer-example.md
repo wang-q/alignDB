@@ -188,10 +188,13 @@ for pair in S288cvsRM11_1a S288cvsYJM789 S288cvsSpar ; do
     fasops covers ~/data/alignment/example/raw/${pair}/*.fas -n S288c -l 1000 -t 10 -o ${pair}.yml
 done
 
-runlist compare --op intersect S288cvsRM11_1a.yml S288cvsYJM789.yml -o intersect.1.yml
-runlist compare --op intersect intersect.1.yml S288cvsSpar.yml -o intersect.2.yml
-runlist span --op excise -n 1000 intersect.2.yml -o intersect.filter.yml
-rm intersect.1.yml intersect.2.yml
+runlist compare --op intersect \
+    S288cvsRM11_1a.yml \
+    S288cvsYJM789.yml \
+    S288cvsSpar.yml \
+    -o intersect.raw.yml
+runlist span --op excise -n 1000 intersect.raw.yml -o intersect.filter.yml
+rm intersect.raw.yml
 
 # slice
 for pair in S288cvsRM11_1a S288cvsYJM789 S288cvsSpar ; do
