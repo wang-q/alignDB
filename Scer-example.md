@@ -227,11 +227,19 @@ fasops subset join1.fas names.list --required -o join2.fas
 fasops refine join2.fas --msa mafft -o join.fas
 rm join1.fas join2.fas
 
-fasops covers -n S288c join.fas -o join.yml
+# 12071326,9413812,0.7798
+fasops covers -n S288c join.fas -l 1000 -o join.yml
 runlist stat \
     --size ~/data/alignment/example/scer/Genomes/S288c/chr.sizes \
     --all -o stdout \
     join.yml
+
+# 12071326,10356201,0.8579
+fasops covers -n S288c ~/data/alignment/example/scer/plan_ALL_refined/*.gz -l 1000 -o mz.yml
+runlist stat \
+    --size ~/data/alignment/example/scer/Genomes/S288c/chr.sizes \
+    --all -o stdout \
+    mz.yml
 
 ```
 
