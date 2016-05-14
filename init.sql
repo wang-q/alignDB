@@ -555,43 +555,43 @@ CREATE INDEX seq_position ON sequence
 #----------------------------#
 # indel
 #----------------------------#
-CREATE INDEX indel_type ON indel
-(
-    indel_type
-);
-
-CREATE INDEX indel_align_id ON indel
-(
-    align_id, indel_start, indel_end
-);
-
-CREATE INDEX indel_start ON indel
-(
-    indel_start, indel_end
-);
-
-CREATE INDEX indel_freq ON indel
-(
-    indel_freq
-);
+#CREATE INDEX indel_type ON indel
+#(
+#    indel_type
+#);
+#
+#CREATE INDEX indel_align_id ON indel
+#(
+#    align_id, indel_start, indel_end
+#);
+#
+#CREATE INDEX indel_start ON indel
+#(
+#    indel_start, indel_end
+#);
+#
+#CREATE INDEX indel_freq ON indel
+#(
+#    indel_freq
+#);
 
 #----------------------------#
 # snp
 #----------------------------#
-CREATE INDEX snp_align_id ON snp
-(
-    align_id, snp_pos
-);
-
-CREATE INDEX snp_pos ON snp
-(
-    snp_pos
-);
-
-CREATE INDEX snp_freq ON snp
-(
-    snp_freq
-);
+#CREATE INDEX snp_align_id ON snp
+#(
+#    align_id, snp_pos
+#);
+#
+#CREATE INDEX snp_pos ON snp
+#(
+#    snp_pos
+#);
+#
+#CREATE INDEX snp_freq ON snp
+#(
+#    snp_freq
+#);
 
 #----------------------------#
 # isw
@@ -601,41 +601,41 @@ CREATE INDEX indel_isw_id_FK ON isw
     isw_indel_id
 );
 
-CREATE INDEX isw_align_id ON isw
-(
-    align_id, isw_start, isw_end
-);
-
-CREATE INDEX isw_start ON isw
-(
-    isw_start, isw_end
-);
-
-CREATE INDEX isw_distance ON isw
-(
-    isw_distance
-);
-
-CREATE INDEX isw_density ON isw
-(
-    isw_density
-);
-
-CREATE INDEX isw_type ON isw
-(
-    isw_type
-);
+#CREATE INDEX isw_align_id ON isw
+#(
+#    align_id, isw_start, isw_end
+#);
+#
+#CREATE INDEX isw_start ON isw
+#(
+#    isw_start, isw_end
+#);
+#
+#CREATE INDEX isw_distance ON isw
+#(
+#    isw_distance
+#);
+#
+#CREATE INDEX isw_density ON isw
+#(
+#    isw_density
+#);
+#
+#CREATE INDEX isw_type ON isw
+#(
+#    isw_type
+#);
 
 #----------------------------#
 # window
 #----------------------------#
-CREATE INDEX window_align_id ON window
-(
-    align_id, window_start, window_end
-);
-
-CREATE INDEX window_start ON window
-(
-    window_start, window_end
-);
+#CREATE INDEX window_align_id ON window
+#(
+#    align_id, window_start, window_end
+#);
+#
+#CREATE INDEX window_start ON window
+#(
+#    window_start, window_end
+#);
 
