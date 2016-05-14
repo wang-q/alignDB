@@ -47,7 +47,6 @@ gen_alignDB.pl - Generate alignDB from axt files
         --query         STR     query_name
         --length    -l  INT     threshold of alignment length
         --parallel      INT     run in parallel mode
-        --gzip                  open .axt.gz files
 
 =cut
 

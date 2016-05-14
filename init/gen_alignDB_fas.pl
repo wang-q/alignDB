@@ -3,10 +3,10 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use File::Find::Rule;
 use Path::Tiny;
@@ -32,7 +32,7 @@ my $stopwatch = AlignDB::Stopwatch->new(
 
 =head1 NAME
 
-gen_alignDB_fas.pl - Generate alignDB from fas files
+gen_alignDB_fas.pl - Generate alignDB from .fas files
 
 =head1 SYNOPSIS
 
@@ -48,13 +48,11 @@ gen_alignDB_fas.pl - Generate alignDB from fas files
         --outgroup  -o          alignments have an outgroup
         --length    -l  INT     threshold of alignment length
         --parallel      INT     run in parallel mode
-        --batch         INT     number of alignments in one child process
-        --gzip                  open .axt.gz files
 
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'         => \( my $server           = $Config->{database}{server} ),
     'port|P=i'           => \( my $port             = $Config->{database}{port} ),
     'db|d=s'             => \( my $db               = $Config->{database}{db} ),
@@ -64,23 +62,17 @@ GetOptions(
     'outgroup|o'         => \my $outgroup,
     'length|lt|l=i'      => \( my $length_threshold = 5000 ),
     'parallel=i'         => \( my $parallel         = $Config->{generate}{parallel} ),
-    'batch=i'            => \( my $batch_number     = $Config->{generate}{batch} ),
-    'gzip'               => \my $gzip,
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # Search for all files and push their paths to @files
 #----------------------------------------------------------#
-my @files;
-if ( !$gzip ) {
-    @files = sort File::Find::Rule->file->name( '*.fa', '*.fas', '*.fasta' )->in($dir_align);
-    printf "\n----Total .fas Files: %4s----\n\n", scalar @files;
-}
-if ( scalar @files == 0 or $gzip ) {
+my @files sort File::Find::Rule->file->name( '*.fa', '*.fas', '*.fasta' )->in($dir_align);
+printf "\n----Total .fas Files: %4s----\n\n", scalar @files;
+if ( scalar @files == 0 ) {
     @files
         = sort File::Find::Rule->file->name( '*.fa.gz', '*.fas.gz', '*.fasta.gz' )->in($dir_align);
     printf "\n----Total .fas.gz Files: %4s----\n\n", scalar @files;
-    $gzip++;
 }
 
 my @jobs = map { [$_] } @files;
