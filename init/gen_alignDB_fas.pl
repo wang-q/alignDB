@@ -67,11 +67,10 @@ GetOptions(
 #----------------------------------------------------------#
 # Search for all files and push their paths to @files
 #----------------------------------------------------------#
-my @files sort File::Find::Rule->file->name( '*.fa', '*.fas', '*.fasta' )->in($dir_align);
+my @files = sort File::Find::Rule->file->name('*.fas')->in($dir_align);
 printf "\n----Total .fas Files: %4s----\n\n", scalar @files;
 if ( scalar @files == 0 ) {
-    @files
-        = sort File::Find::Rule->file->name( '*.fa.gz', '*.fas.gz', '*.fasta.gz' )->in($dir_align);
+    @files = sort File::Find::Rule->file->name('*.fas.gz')->in($dir_align);
     printf "\n----Total .fas.gz Files: %4s----\n\n", scalar @files;
 }
 
