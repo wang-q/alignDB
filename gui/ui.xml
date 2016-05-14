@@ -1192,12 +1192,12 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="button_upd_feature">
-                            <property name="label" translatable="yes">Upd. feature</property>
+                          <object class="GtkButton" id="button_upd_annotation">
+                            <property name="label" translatable="yes">Upd. annotation</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <signal name="clicked" handler="on_button_upd_feature_clicked" swapped="no"/>
+                            <signal name="clicked" handler="on_button_upd_annotation_clicked" swapped="no"/>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -1247,7 +1247,7 @@
                           <object class="GtkLabel" id="label5">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">ensembl:</property>
+                            <property name="label" translatable="yes">annotation:</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -1256,7 +1256,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkEntry" id="entry_ensembl">
+                          <object class="GtkEntry" id="entry_annotation">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="margin_left">5</property>

@@ -197,13 +197,13 @@ sub read_config {
 
     # database init values
     $self->set_value( "entry_db_name",          $Config->{database}{db} );
-    $self->set_value( "entry_ensembl",          $Config->{database}{ensembl} );
     $self->set_value( "entry_length_threshold", $Config->{generate}{length_threshold} );
 
     # axt
     $self->set_value( "entry_target_name",   $Config->{taxon}{target_name} );
     $self->set_value( "entry_query_name",    $Config->{taxon}{query_name} );
     $self->set_value( "entry_dir_align_axt", path( $Config->{taxon}{dir_align} )->stringify );
+    $self->set_value( "entry_annotation",    path( $Config->{taxon}{file_anno} )->stringify );
 
     # fas
     $self->set_value( "entry_dir_align_fas", path( $Config->{taxon}{dir_align_fas} )->stringify );
@@ -224,8 +224,8 @@ sub on_toolbutton_about_clicked {
     Gtk3->show_about_dialog(
         Gtk3::Window->new,
         program_name => 'AlignDB GUI3',
-        version      => '0,9',
-        copyright    => "(C) 2005-2015 Qiang Wang",
+        version      => '1.0.0',
+        copyright    => "(C) 2005-2016 Qiang Wang",
         authors      => ['Qiang Wang <wangq@nju.edu.cn>'],
         comments     => "The GUI interface for AlignDB",
         title        => "About AlignDB GUI3",
@@ -1011,7 +1011,7 @@ sub on_button_upd_swcv_clicked {
     return;
 }
 
-sub on_button_upd_feature_clicked {
+sub on_button_upd_annotation_clicked {
     my $self = shift;
 
     my $server   = $self->get_value("entry_server");
@@ -1020,18 +1020,18 @@ sub on_button_upd_feature_clicked {
     my $password = $self->get_value("entry_password");
     my $db_name  = $self->get_value("entry_db_name");
 
-    my $ensembl = $self->get_value("entry_ensembl");
+    my $file_anno = $self->get_value("entry_annotation");
 
     my $parallel = $self->get_value("entry_parallel");
 
     my $cmd
-        = "perl $FindBin::RealBin/../init/update_feature.pl"
+        = "perl $FindBin::RealBin/../init/update_annotation.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . " -e $ensembl"
+        . " -a $file_anno"
         . " --parallel $parallel";
 
     $self->exec_cmd($cmd);

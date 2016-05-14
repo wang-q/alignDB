@@ -35,11 +35,11 @@ my $stopwatch = AlignDB::Stopwatch->new(
 
 =head1 NAME
 
-update_feature.pl - Add annotations to alignDB
+update_annotation.pl - Add annotations to alignDB
 
 =head1 SYNOPSIS
 
-    perl update_feature.pl [options]
+    perl update_annotation.pl [options]
       Options:
         --help          -?          brief help message
         --server        -s  STR     MySQL server IP/Domain name
