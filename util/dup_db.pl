@@ -100,7 +100,7 @@ my $str = " -h$server -P$port -u$username -p$password ";
 
 # dump db
 if ($file_dump) {
-    if ( !-e $file_dump ) {
+    if ( !-e $file_dump or $yes ) {
         my $dump;
         if ($gzip) {
             $dump = "mysqldump $str $db | gzip > $file_dump";
@@ -111,9 +111,6 @@ if ($file_dump) {
 
         print "===> dump\n$dump\n\n";
         system($dump);
-    }
-    elsif ($yes) {
-        print "Overwrites [$file_dump]\n";
     }
     else {
         print "[$file_dump] exists!\n";
