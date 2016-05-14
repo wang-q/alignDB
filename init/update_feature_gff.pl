@@ -3,10 +3,10 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use Bio::Tools::GFF;
 
@@ -15,6 +15,8 @@ use File::Basename;
 use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
+
+use App::RL::Common;
 
 use lib "$FindBin::RealBin/../lib";
 use AlignDB;
@@ -33,11 +35,11 @@ my $stopwatch = AlignDB::Stopwatch->new(
 
 =head1 NAME
 
-update_feature_gff.pl - Add annotation info to alignDB with gff annotations
+update_feature.pl - Add annotations to alignDB
 
 =head1 SYNOPSIS
 
-    perl update_feature_gff.pl [options]
+    perl update_feature.pl [options]
       Options:
         --help      -?          brief help message
         --server    -s  STR     MySQL server IP/Domain name
@@ -45,28 +47,23 @@ update_feature_gff.pl - Add annotation info to alignDB with gff annotations
         --db        -d  STR     database name
         --username  -u  STR     username
         --password  -p  STR     password
-        --gff           STR     gff files, multiply files seperated by ,
-        --rm_gff        STR     RepeatMasker generated gff files
+        --file          STR     YAML file for annotations (coding, repeats)
         --parallel      INT     run in parallel mode
         --batch         INT     number of alignments in one child process
 
 =cut
 
-# gff version
-my $gff_version = 3;
-
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server       = $Config->{database}{server} ),
     'port|P=i'     => \( my $port         = $Config->{database}{port} ),
     'db|d=s'       => \( my $db           = $Config->{database}{db} ),
     'username|u=s' => \( my $username     = $Config->{database}{username} ),
     'password|p=s' => \( my $password     = $Config->{database}{password} ),
-    'gff=s'        => \( my @gff_files ),
-    'rm_gff=s'     => \( my @rm_gff_files ),
+    'file|f=s'     => \( my $file_anno ),
     'parallel=i'   => \( my $parallel     = $Config->{generate}{parallel} ),
     'batch=i'      => \( my $batch_number = $Config->{generate}{batch} ),
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # init
@@ -74,41 +71,13 @@ GetOptions(
 # other objects are initiated in subroutines
 $stopwatch->start_message("Update annotations of $db...");
 
-my $cds_set_of = {};
-for my $file ( grep {defined} split /\,/, join( ",", @gff_files ) ) {
-    next unless -e $file;
-    my $basename = basename( $file, '.gff3', '.gff' );
-    print "Loading annotations for [$basename]\n";
-    my $gff_obj = Bio::Tools::GFF->new(
-        -file        => $file,
-        -gff_version => $gff_version,
-    );
+my $yml = YAML::Syck::LoadFile($file_anno);
 
-    my $cds_set = AlignDB::IntSpan->new;
-    while ( my $feature = $gff_obj->next_feature ) {
-        if ( $feature->primary_tag eq 'CDS' ) {
-            $cds_set->add_range( $feature->start, $feature->end );
-        }
-    }
-    $cds_set_of->{$basename} = $cds_set;
-}
+die "Invalid annotation YAML. Need coding.\n"  unless defined $yml->{coding};
+die "Invalid annotation YAML. Need repeats.\n" unless defined $yml->{repeats};
 
-my $repeat_set_of = {};
-for my $file ( grep {defined} split /\,/, join( ",", @rm_gff_files ) ) {
-    next unless -e $file;
-    my $basename = basename( $file, '.rm.gff3', '.rm.gff', '.gff3', '.gff' );
-    print "Loading RepeatMasker annotations for [$basename]\n";
-    my $gff_obj = Bio::Tools::GFF->new(
-        -file        => $file,
-        -gff_version => $gff_version,
-    );
-
-    my $repeat_set = AlignDB::IntSpan->new;
-    while ( my $feature = $gff_obj->next_feature ) {
-        $repeat_set->add_range( $feature->start, $feature->end );
-    }
-    $repeat_set_of->{$basename} = $repeat_set;
-}
+my $cds_set_of    = App::RL::Common::runlist2set( $yml->{coding} );
+my $repeat_set_of = App::RL::Common::runlist2set( $yml->{repeats} );
 
 #----------------------------#
 # Find all align_ids
@@ -145,88 +114,97 @@ my $worker = sub {
     );
 
     # Database handler
-    my $dbh = $obj->dbh;
+    my DBI $dbh = $obj->dbh;
 
     #----------------------------#
     # SQL query and DBI sths
     #----------------------------#
     # update align table
-    my $align_feature = q{
+    my DBI $align_feature_sth = $dbh->prepare(
+        q{
         UPDATE align
         SET align_coding = ?,
             align_repeats = ?,
             align_coding_runlist = ?,
             align_repeats_runlist = ?
         WHERE align_id = ?
-    };
-    my $align_feature_sth = $dbh->prepare($align_feature);
+        }
+    );
 
     # select all indels in this alignment
-    my $indel_query = q{
+    my DBI $indel_query_sth = $dbh->prepare(
+        q{
         SELECT indel_id, indel_start, indel_end
         FROM indel
         WHERE align_id = ?
-    };
-    my $indel_query_sth = $dbh->prepare($indel_query);
+        }
+    );
 
     # update indel table in the new feature column
-    my $indel_feature = q{
+    my DBI $indel_feature_sth = $dbh->prepare(
+        q{
         UPDATE indel
         SET indel_coding  = ?,
             indel_repeats = ?
         WHERE indel_id    = ?
-    };
-    my $indel_feature_sth = $dbh->prepare($indel_feature);
+        }
+    );
 
     # select all isws for this indel
-    my $isw_query = q{
+    my DBI $isw_query_sth = $dbh->prepare(
+        q{
         SELECT isw_id, isw_start, isw_end
         FROM isw
         WHERE indel_id = ?
-    };
-    my $isw_query_sth = $dbh->prepare($isw_query);
+        }
+    );
 
     # update isw table in the new feature column
-    my $isw_feature = q{
+    my DBI $isw_feature_sth = $dbh->prepare(
+        q{
         UPDATE isw
         SET isw_coding  = ?,
             isw_repeats = ?
         WHERE isw_id    = ?
-    };
-    my $isw_feature_sth = $dbh->prepare($isw_feature);
+        }
+    );
 
     # select all snps for this indel
-    my $snp_query = q{
+    my DBI $snp_query_sth = $dbh->prepare(
+        q{
         SELECT snp_id, snp_pos
         FROM snp
         WHERE align_id = ?
-    };
-    my $snp_query_sth = $dbh->prepare($snp_query);
+        }
+    );
 
     # update snp table in the new feature column
-    my $snp_feature = q{
+    my DBI $snp_feature_sth = $dbh->prepare(
+        q{
         UPDATE snp
         SET snp_coding  = ?,
             snp_repeats = ?
         WHERE snp_id    = ?
-    };
-    my $snp_feature_sth = $dbh->prepare($snp_feature);
+        }
+    );
 
     # select all windows for this alignment
-    my $window_query = q{
+    my DBI $window_query_sth = $dbh->prepare(
+        q{
         SELECT window_id, window_runlist
         FROM window
         WHERE align_id = ?
-    };
-    my $window_query_sth = $dbh->prepare($window_query);
+        }
+    );
 
     # update window table in the new feature column
-    my $window_update_query = q{
+    my DBI $window_update_sth = $dbh->prepare(
+        q{
         UPDATE window
         SET window_coding = ?, window_repeats = ?
         WHERE window_id = ?
-    };
-    my $window_update_sth = $dbh->prepare($window_update_query);
+        }
+    );
 
 UPDATE: for my $align_id (@align_ids) {
 
@@ -238,12 +216,27 @@ UPDATE: for my $align_id (@align_ids) {
         my $chr_start    = $target_info->{chr_start};
         my $chr_end      = $target_info->{chr_end};
         my $align_length = $target_info->{align_length};
-        my ($target_seq) = @{ $obj->get_seqs($align_id) };
-        $obj->process_message($align_id);
 
         next UPDATE if $chr_name =~ /rand|contig|hap|scaf|gi_/i;
 
+        my ($target_seq) = @{ $obj->get_seqs($align_id) };
+        $obj->process_message($align_id);
+
         $chr_name =~ s/chr0?//i;
+
+        # slicing cds_set and repeat_set
+        my $slice_cds_set    = AlignDB::IntSpan->new;
+        my $slice_repeat_set = AlignDB::IntSpan->new;
+        {
+            my $align_chr_set = AlignDB::IntSpan->new;
+            $align_chr_set->add_pair( $chr_start, $chr_end );
+            if ( defined $cds_set_of->{$chr_name} ) {
+                $slice_cds_set = $cds_set_of->{$chr_name}->intersect($align_chr_set);
+            }
+            if ( defined $repeat_set_of->{$chr_name} ) {
+                $slice_repeat_set = $repeat_set_of->{$chr_name}->intersect($align_chr_set);
+            }
+        }
 
         #----------------------------#
         # construct transforming array and hash
@@ -280,17 +273,13 @@ UPDATE: for my $align_id (@align_ids) {
             # feature protions and runlists
             my ( $align_coding, $align_repeats, $align_cds_runlist, $align_repeat_runlist );
 
-            if ( $cds_set_of->{$chr_name} ) {
-                $align_coding = feature_portion( $cds_set_of->{$chr_name}, $align_chr_runlist );
-                $align_cds_runlist
-                    = $cds_set_of->{$chr_name}->map_set( sub { $align_pos{$_} } )->runlist;
-            }
+            $align_coding = feature_portion( $slice_cds_set, $align_chr_runlist );
+            $align_cds_runlist
+                = $slice_cds_set->map_set( sub { $align_pos{$_} } )->runlist;
 
-            if ( $repeat_set_of->{$chr_name} ) {
-                $align_repeats = feature_portion( $repeat_set_of->{$chr_name}, $align_chr_runlist );
-                $align_repeat_runlist
-                    = $repeat_set_of->{$chr_name}->map_set( sub { $align_pos{$_} } )->runlist;
-            }
+            $align_repeats = feature_portion( $slice_repeat_set, $align_chr_runlist );
+            $align_repeat_runlist
+                = $slice_repeat_set->map_set( sub { $align_pos{$_} } )->runlist;
 
             $align_feature_sth->execute( $align_coding, $align_repeats,
                 $align_cds_runlist, $align_repeat_runlist, $align_id, );
@@ -312,13 +301,8 @@ UPDATE: for my $align_id (@align_ids) {
 
                 # feature protions
                 my ( $indel_coding, $indel_repeats );
-                if ( $cds_set_of->{$chr_name} ) {
-                    $indel_coding = feature_portion( $cds_set_of->{$chr_name}, $indel_chr_runlist );
-                }
-                if ( $repeat_set_of->{$chr_name} ) {
-                    $indel_repeats
-                        = feature_portion( $repeat_set_of->{$chr_name}, $indel_chr_runlist );
-                }
+                $indel_coding  = feature_portion( $slice_cds_set,    $indel_chr_runlist );
+                $indel_repeats = feature_portion( $slice_repeat_set, $indel_chr_runlist );
 
                 $indel_feature_sth->execute( $indel_coding, $indel_repeats, $indel_id, );
                 $indel_feature_sth->finish;
@@ -338,13 +322,8 @@ UPDATE: for my $align_id (@align_ids) {
 
                     # feature protions
                     my ( $isw_coding, $isw_repeats );
-                    if ( $cds_set_of->{$chr_name} ) {
-                        $isw_coding = feature_portion( $cds_set_of->{$chr_name}, $isw_chr_runlist );
-                    }
-                    if ( $repeat_set_of->{$chr_name} ) {
-                        $isw_repeats
-                            = feature_portion( $repeat_set_of->{$chr_name}, $isw_chr_runlist );
-                    }
+                    $isw_coding  = feature_portion( $slice_cds_set,    $isw_chr_runlist );
+                    $isw_repeats = feature_portion( $slice_repeat_set, $isw_chr_runlist );
 
                     $isw_feature_sth->execute( $isw_coding, $isw_repeats, $isw_id, );
                 }
@@ -364,14 +343,8 @@ UPDATE: for my $align_id (@align_ids) {
                 my ( $snp_id, $snp_pos ) = @row;
                 my $snp_chr_pos = $chr_pos[$snp_pos];
 
-                # feature protions
-                my ( $snp_coding, $snp_repeats );
-                if ( $cds_set_of->{$chr_name} ) {
-                    $snp_coding = $cds_set_of->{$chr_name}->member($snp_chr_pos);
-                }
-                if ( $repeat_set_of->{$chr_name} ) {
-                    $snp_repeats = feature_portion( $repeat_set_of->{$chr_name}, $snp_chr_pos );
-                }
+                my $snp_coding  = $slice_cds_set->contains($snp_chr_pos);
+                my $snp_repeats = $slice_repeat_set->contains($snp_chr_pos);
 
                 $snp_feature_sth->execute( $snp_coding, $snp_repeats, $snp_id, );
             }
@@ -393,13 +366,8 @@ UPDATE: for my $align_id (@align_ids) {
 
                 # feature protions
                 my ( $window_coding, $window_repeats );
-                if ( $cds_set_of->{$chr_name} ) {
-                    $window_coding = feature_portion( $cds_set_of->{$chr_name}, $window_chr_set );
-                }
-                if ( $repeat_set_of->{$chr_name} ) {
-                    $window_repeats
-                        = feature_portion( $repeat_set_of->{$chr_name}, $window_chr_set );
-                }
+                $window_coding  = feature_portion( $slice_cds_set,    $window_chr_set );
+                $window_repeats = feature_portion( $slice_repeat_set, $window_chr_set );
 
                 $window_update_sth->execute( $window_coding, $window_repeats, $window_id, );
             }
@@ -436,8 +404,8 @@ END {
 exit;
 
 sub feature_portion {
-    my $feature_set = shift;
-    my $pos_set     = shift;
+    my AlignDB::IntSpan $feature_set = shift;
+    my $pos_set = shift;
 
     my $set;
     if ( ref $pos_set eq "AlignDB::IntSpan" ) {
@@ -449,7 +417,7 @@ sub feature_portion {
 
     my $pos_n = $set->size;
     return if $pos_n <= 0;
-    my $intersect       = $set->intersect($feature_set);
+    my $intersect       = $feature_set->intersect($set);
     my $n               = $intersect->size;
     my $feature_portion = $n / $pos_n;
 
