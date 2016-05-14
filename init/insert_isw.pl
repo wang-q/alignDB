@@ -3,23 +3,23 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
 
-use lib "$FindBin::Bin/../lib";
+use lib "$FindBin::RealBin/../lib";
 use AlignDB;
 use AlignDB::Outgroup;
 
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 # record ARGV and Config
 my $stopwatch = AlignDB::Stopwatch->new(
@@ -49,7 +49,7 @@ insert_isw.pl - Update indel-sliding windows
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server       = $Config->{database}{server} ),
     'port|P=i'     => \( my $port         = $Config->{database}{port} ),
     'db|d=s'       => \( my $db           = $Config->{database}{db} ),
@@ -58,7 +58,7 @@ GetOptions(
     'outgroup|o'   => \my $outgroup,
     'parallel=i'   => \( my $parallel     = $Config->{generate}{parallel} ),
     'batch=i'      => \( my $batch_number = $Config->{generate}{batch} ),
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # init
@@ -72,9 +72,6 @@ my @jobs;
         user   => $username,
         passwd => $password,
     );
-
-    # Database handler
-    my $dbh = $obj->dbh;
 
     print "Emptying tables...\n";
 
