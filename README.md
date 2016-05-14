@@ -129,7 +129,7 @@ cd ~/Scripts/alignDB
     Runtime 1 minute and 9 seconds.
     ```
 
-6. `perl init/update_feature.pl -d S288cvsRM11 -e yeast_82 --parallel 2`
+6. `perl init/update_annotation.pl -d S288cvsRM11 -e yeast_82 --parallel 2`
 
     ```
     Update annotations of S288cvsRM11...

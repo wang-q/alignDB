@@ -278,10 +278,11 @@ perl ~/Scripts/alignDB/util/multi_way_batch.pl \
 ```bash
 perl ~/Scripts/alignDB/util/two_way_batch.pl \
     -d S288cvsRM11_1a \
-    -e saccharomyces_cerevisiae_core_29_82_4 \
     -t S288c -q RM11_1a \
+    -a ~/data/alignment/Ensembl/S288c/anno.yml \
     -da ~/data/alignment/example/scer/Pairwise/S288cvsRM11_1a \
     --chr ~/data/alignment/example/scer/chr_length.csv \
+    -e saccharomyces_cerevisiae_core_29_82_4 \
     -lt 10000 \
     --parallel 4 --batch 10 \
     --run common

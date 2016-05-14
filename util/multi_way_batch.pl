@@ -27,10 +27,6 @@ my $stopwatch = AlignDB::Stopwatch->new(
 
 multi_way_batch.pl - Batch process multi-way alignDB
 
-=head1 SYNOPSIS
-
-    perl multi_way_batch.pl -d AthvsV_mafft -da ~/data/alignment/arabidopsis19/AthvsV_mafft -lt 5000 --parallel 4 --run 1-3,21,40
-
 =cut
 
 GetOptions(
@@ -43,8 +39,7 @@ GetOptions(
     'ensembl|e=s'           => \( my $ensembl_db       = $Config->{database}{ensembl} ),
     'dir_align|da=s'        => \( my $dir_align        = $Config->{taxon}{dir_align} ),
     'outgroup|o'            => \my $outgroup,
-    'gff_files=s'           => \my @gff_files,
-    'rm_gff_files=s'        => \my @rm_gff_files,
+    'annotation|a=s'        => \( my $file_anno ),
     'parallel=i'            => \( my $parallel         = $Config->{generate}{parallel} ),
     'batch=i'               => \( my $batch_number     = $Config->{generate}{batch} ),
     'length_threshold|lt=i' => \( my $length_threshold = $Config->{generate}{length_threshold} ),
@@ -85,9 +80,6 @@ else {
         @tasks = grep {/\d/} split /\s/, $run;
     }
 }
-
-my $gff_file    = join ",", @gff_files;
-my $rm_gff_file = join ",", @rm_gff_files;
 
 #----------------------------------------------------------#
 # dispatch table
@@ -145,25 +137,15 @@ my $dispatch = {
         . " -d $db_name"
         . " --parallel $parallel"
         . " --batch $batch_number",
-    30 => "perl $FindBin::RealBin/../init/update_feature.pl"
+    30 => "perl $FindBin::RealBin/../init/update_annotation.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . " -e $ensembl_db"
+        . " -a $file_anno"
         . " --parallel $parallel"
         . " --batch $batch_number",
-    '30gff' => "perl $FindBin::RealBin/../init/update_feature_gff.pl"
-        . " -s $server"
-        . " --port $port"
-        . " -u $username"
-        . " --password $password"
-        . " -d $db_name"
-        . " --parallel $parallel"
-        . " --batch $batch_number"
-        . " --gff_files $gff_file"
-        . " --rm_gff_files $rm_gff_file",
     31 => "perl $FindBin::RealBin/../init/update_indel_slippage.pl"
         . " -s $server"
         . " --port $port"
@@ -229,12 +211,7 @@ my $dispatch = {
 
 # use the dispatch template to generate $cmd
 for my $step (@tasks) {
-    if ( @gff_files and $step == 30 ) {
-        $step = '30gff';
-    }
-
     my $cmd = $dispatch->{$step};
-
     next unless $cmd;
 
     $stopwatch->block_message("Processing Step $step");

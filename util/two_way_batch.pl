@@ -40,8 +40,7 @@ GetOptions(
     'dir_align|da=s'        => \( my $dir_align        = $Config->{taxon}{dir_align} ),
     'target|t=s'            => \( my $target_name      = $Config->{taxon}{target_name} ),
     'query|q=s'             => \( my $query_name       = $Config->{taxon}{query_name} ),
-    'gff_files=s'           => \my @gff_files,
-    'rm_gff_files=s'        => \my @rm_gff_files,
+    'annotation|a=s'        => \( my $file_anno ),
     'parallel=i'            => \( my $parallel         = $Config->{generate}{parallel} ),
     'batch=i'               => \( my $batch_number     = $Config->{generate}{batch} ),
     'length_threshold|lt=i' => \( my $length_threshold = $Config->{generate}{length_threshold} ),
@@ -82,9 +81,6 @@ else {
         @tasks = grep {/\d/} split /\s/, $run;
     }
 }
-
-my $gff_file    = join ",", @gff_files;
-my $rm_gff_file = join ",", @rm_gff_files;
 
 #----------------------------------------------------------#
 # dispatch table
@@ -141,25 +137,15 @@ my $dispatch = {
         . " -d $db_name"
         . " --parallel $parallel"
         . " --batch $batch_number",
-    30 => "perl $FindBin::RealBin/../init/update_feature.pl"
+    30 => "perl $FindBin::RealBin/../init/update_annotation.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
         . " --password $password"
         . " -d $db_name"
-        . " -e $ensembl_db"
+        . " -a $file_anno"
         . " --parallel $parallel"
         . " --batch $batch_number",
-    '30gff' => "perl $FindBin::RealBin/../init/update_feature_gff.pl"
-        . " -s $server"
-        . " --port $port"
-        . " -u $username"
-        . " --password $password"
-        . " -d $db_name"
-        . " --parallel $parallel"
-        . " --batch $batch_number"
-        . " --gff_files $gff_file"
-        . " --rm_gff_files $rm_gff_file",
     31 => "perl $FindBin::RealBin/../init/update_indel_slippage.pl"
         . " -s $server"
         . " --port $port"
@@ -218,12 +204,7 @@ my $dispatch = {
 
 # use the dispatch template to generate $cmd
 for my $step (@tasks) {
-    if ( @gff_files and $step == 30 ) {
-        $step = '30gff';
-    }
-
     my $cmd = $dispatch->{$step};
-
     next unless $cmd;
 
     $stopwatch->block_message("Processing Step $step");
