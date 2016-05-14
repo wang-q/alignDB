@@ -41,6 +41,7 @@ dup_db.pl - Duplicate a database or dump to a gzipped file
         --file                  dump file name
         --goal                  dup db name
         --gzip                  dump file is gzipped
+        --yes                   overwrite dump file
 
     perl dup_db.pl -d S288CvsRM11 -z # S288CvsRM11.dump.sql.gz
     perl dup_db.pl -f S288CvsRM11.dump.sql.gz -g S288CvsRM11_dup
@@ -57,6 +58,7 @@ GetOptions(
     'file|f=s'     => \( my $file_dump ),
     'goal|g=s'     => \( my $goal_db ),
     'gzip|z'       => \( my $gzip ),
+    'yes|y'        => \( my $yes ),
 ) or HelpMessage(1);
 
 #----------------------------------------------------------#
@@ -109,6 +111,9 @@ if ($file_dump) {
 
         print "===> dump\n$dump\n\n";
         system($dump);
+    }
+    elsif ($yes) {
+        print "Overwrites [$file_dump]\n";
     }
     else {
         print "[$file_dump] exists!\n";
