@@ -101,7 +101,6 @@ my $dispatch = {
         . " --da $dir_align"
         . " -lt $length_threshold"
         . " --parallel $parallel"
-        . " --batch $batch_number"
         . ( $outgroup ? " --outgroup" : "" ),
     3 => undef,
     5 => "perl $FindBin::RealBin/../init/insert_isw.pl"
