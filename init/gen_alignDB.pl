@@ -67,8 +67,7 @@ GetOptions(
 #----------------------------------------------------------#
 # Search for all files and push their paths to @files
 #----------------------------------------------------------#
-my @files;
-@files = sort File::Find::Rule->file->name('*.axt')->in($dir_align);
+my @files = sort File::Find::Rule->file->name('*.axt')->in($dir_align);
 printf "\n----Total .axt Files: %4s----\n\n", scalar @files;
 if ( scalar @files == 0 ) {
     @files = sort File::Find::Rule->file->name('*.axt.gz')->in($dir_align);
