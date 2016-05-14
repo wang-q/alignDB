@@ -41,28 +41,28 @@ update_feature.pl - Add annotations to alignDB
 
     perl update_feature.pl [options]
       Options:
-        --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
-        --db        -d  STR     database name
-        --username  -u  STR     username
-        --password  -p  STR     password
-        --file          STR     YAML file for annotations (coding, repeats)
-        --parallel      INT     run in parallel mode
-        --batch         INT     number of alignments in one child process
+        --help          -?          brief help message
+        --server        -s  STR     MySQL server IP/Domain name
+        --port          -P  INT     MySQL server port
+        --db            -d  STR     database name
+        --username      -u  STR     username
+        --password      -p  STR     password
+        --annotation    -a  STR     YAML file for annotations (cds, repeat)
+        --parallel          INT     run in parallel mode
+        --batch             INT     number of alignments in one child process
 
 =cut
 
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server       = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port         = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db           = $Config->{database}{db} ),
-    'username|u=s' => \( my $username     = $Config->{database}{username} ),
-    'password|p=s' => \( my $password     = $Config->{database}{password} ),
-    'file|f=s'     => \( my $file_anno ),
-    'parallel=i'   => \( my $parallel     = $Config->{generate}{parallel} ),
-    'batch=i'      => \( my $batch_number = $Config->{generate}{batch} ),
+    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
+    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
+    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
+    'username|u=s' => \( my $username = $Config->{database}{username} ),
+    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'annotation|a=s' => \( my $file_anno ),
+    'parallel=i'     => \( my $parallel = $Config->{generate}{parallel} ),
+    'batch=i'        => \( my $batch_number = $Config->{generate}{batch} ),
 ) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
@@ -73,11 +73,11 @@ $stopwatch->start_message("Update annotations of $db...");
 
 my $yml = YAML::Syck::LoadFile($file_anno);
 
-die "Invalid annotation YAML. Need coding.\n"  unless defined $yml->{coding};
-die "Invalid annotation YAML. Need repeats.\n" unless defined $yml->{repeats};
+die "Invalid annotation YAML. Need cds.\n"  unless defined $yml->{cds};
+die "Invalid annotation YAML. Need repeat.\n" unless defined $yml->{repeat};
 
-my $cds_set_of    = App::RL::Common::runlist2set( $yml->{coding} );
-my $repeat_set_of = App::RL::Common::runlist2set( $yml->{repeats} );
+my $cds_set_of    = App::RL::Common::runlist2set( $yml->{cds} );
+my $repeat_set_of = App::RL::Common::runlist2set( $yml->{repeat} );
 
 #----------------------------#
 # Find all align_ids
