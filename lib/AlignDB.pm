@@ -523,7 +523,7 @@ sub _insert_snp {
     my DBI $dbh = $self->dbh;
     my DBI $sth = $dbh->prepare(
         q{
-        INSERT INTO snp (
+        INSERT DELAYED INTO snp (
             snp_id, align_id, snp_pos,
             target_base, query_base, all_bases,
             mutant_to, snp_freq, snp_occured
