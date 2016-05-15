@@ -244,6 +244,9 @@ sub add_align {
     my $self      = shift;
     my $info_refs = shift;
 
+    for my $info ( @{$info_refs} ) {
+        $info->{seq} = uc $info->{seq};
+    }
     my $seq_refs = [ map { $_->{seq} } @{$info_refs} ];
 
     my $target_idx = 0;

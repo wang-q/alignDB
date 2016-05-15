@@ -293,7 +293,8 @@ perl ~/Scripts/alignDB/util/two_way_batch.pl \
     * `--parallel 8`: 2m50s
 
 * On Hackintosh (6700k SSD)
-    * `--parallel 4`: 2m3s
+    * `--parallel 4`: 1m44s
+    * `--parallel 8`: 1m39s
 
 * On server (E5-2690 256G HDD)
     * `--parallel 4`: 4m32s
