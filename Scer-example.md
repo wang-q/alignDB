@@ -275,6 +275,8 @@ perl ~/Scripts/alignDB/util/multi_way_batch.pl \
 
 ## Speed test
 
+### Two-way
+
 ```bash
 perl ~/Scripts/alignDB/util/two_way_batch.pl \
     -d S288cvsRM11_1a \
@@ -288,23 +290,69 @@ perl ~/Scripts/alignDB/util/two_way_batch.pl \
     --run common
 ```
 
-* On Hackintosh (4790k SSD)
-    * `--parallel 4`: 2m52s
-    * `--parallel 8`: 2m50s
-
-* On Hackintosh (6700k SSD)
+* On Hackintosh (i7-6700k 32G SSD)
     * `--parallel 4`: 1m44s
     * `--parallel 8`: 1m39s
+
+* On server (E5-2690 v3 128G SSD)
+    * `--parallel 4`: 2m8s
+    * `--parallel 8`: 1m28s
+    * `--parallel 16`: 1m15s
+
+* On Hackintosh (i7-4790k 16G SSD)
+    * `--parallel 4`: 2m52s
+    * `--parallel 8`: 2m50s
 
 * On server (E5-2690 256G HDD)
     * `--parallel 4`: 4m32s
 
-* On desktop pc (E3-1245 v2 Windows)
-    * `--parallel 4`: 6m9s
-
 * On macbook pro (mid 2014)
     * `--parallel 4`: 4m5s
 
+* On desktop pc (E3-1245 v2 Windows)
+    * `--parallel 4`: 6m9s
+
+### Multi-way
+
+```bash
+perl ~/Scripts/alignDB/util/multi_way_batch.pl \
+    -d Scer_n4 \
+    -a ~/data/alignment/Ensembl/S288c/anno.yml \
+    -da ~/data/alignment/example/scer/plan_ALL_refined \
+    --chr ~/data/alignment/example/scer/chr_length.csv \
+    -e saccharomyces_cerevisiae_core_29_82_4 \
+    -lt 5000 \
+    --parallel 4 --batch 10 \
+    --run common
+```
+
+* On Hackintosh (i7-6700k 32G SSD)
+    * `--parallel 4`: 5m57s
+    * `--parallel 8`: 6m20s
+
 * On server (E5-2690 v3 128G SSD)
-    * `--parallel 4`: 2m28s
-    * `--parallel 8`: 1m50s
+    * `--parallel 4`: 6m2s
+    * `--parallel 8`: 5m33s
+
+### Multi-way (outgroup)
+
+```bash
+perl ~/Scripts/alignDB/util/multi_way_batch.pl \
+    -d Scer_n3_Spar \
+    -a ~/data/alignment/Ensembl/S288c/anno.yml \
+    -da ~/data/alignment/example/scer/Scer_n3_Spar_refined \
+    --chr ~/data/alignment/example/scer/chr_length.csv \
+    -e saccharomyces_cerevisiae_core_29_82_4 \
+    -lt 5000 \
+    --outgroup \
+    --parallel 4 --batch 10 \
+    --run common
+```
+
+* On Hackintosh (i7-6700k 32G SSD)
+    * `--parallel 4`: 5m57s
+    * `--parallel 8`: 6m24s
+
+* On server (E5-2690 v3 128G SSD)
+    * `--parallel 4`: 6m2s
+    * `--parallel 8`: 1m56s
