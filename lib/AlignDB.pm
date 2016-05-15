@@ -556,6 +556,16 @@ sub _insert_snp {
     }
 
     # %{$snp_site} keys are snp positions
+    my $bulk_info = {
+        align_id    => [],
+        pos         => [],
+        target_base => [],
+        query_base  => [],
+        all_bases   => [],
+        mutant_to   => [],
+        snp_freq    => [],
+        snp_occured => [],
+    };
     for my $pos ( sort { $a <=> $b } keys %{$snp_site} ) {
 
         my @bases = @{ $snp_site->{$pos} };
@@ -592,8 +602,23 @@ sub _insert_snp {
         # here freq is the minor allele freq
         $snp_freq = List::Util::min( $snp_freq, $seq_count - $snp_freq );
 
-        $sth->execute( $align_id, $pos, $target_base, $query_base,
-            $all_bases, $mutant_to, $snp_freq, $snp_occured, );
+        push @{ $bulk_info->{align_id} },    $align_id;
+        push @{ $bulk_info->{pos} },         $pos;
+        push @{ $bulk_info->{target_base} }, $target_base;
+        push @{ $bulk_info->{query_base} },  $query_base;
+        push @{ $bulk_info->{all_bases} },   $all_bases;
+        push @{ $bulk_info->{mutant_to} },   $mutant_to;
+        push @{ $bulk_info->{snp_freq} },    $snp_freq;
+        push @{ $bulk_info->{snp_occured} }, $snp_occured;
+
+    }
+
+    if ( keys %{$snp_site} ) {
+        $sth->execute_array(
+            {},                        $bulk_info->{align_id},   $bulk_info->{pos},
+            $bulk_info->{target_base}, $bulk_info->{query_base}, $bulk_info->{all_bases},
+            $bulk_info->{mutant_to},   $bulk_info->{snp_freq},   $bulk_info->{snp_occured},
+        );
     }
     $sth->finish;
 
