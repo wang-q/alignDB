@@ -1,17 +1,4 @@
 #----------------------------#
-# fly
-#----------------------------#
-manually create .bed file from http://flypush.imgen.bcm.tmc.edu/pscreen/files/MI-list-2013-04-08.xls (http://flypush.imgen.bcm.tmc.edu/pscreen/)
-~/data/salk/process/fly/MI.bed
-
-cd /home/wangq/data/salk/process/fly
-perl -an -e '$F[0] =~ /het/i and next;$F[0] =~ /chr(2L|2R|3L|3R|X)/i or next;print qq{$F[0]\t$F[1]\t$F[2]\n}' EY_Bellen_2011_UCSC_bed.txt > EY.bed
-perl -an -e '$F[0] =~ /het/i and next;$F[0] =~ /chr(2L|2R|3L|3R|X)/i or next;print qq{$F[0]\t$F[1]\t$F[2]\n}' MB_Bellen_2011_UCSC_bed.txt > MB.bed
-perl -an -e '$F[0] =~ /het/i and next;$F[0] =~ /chr(2L|2R|3L|3R|X)/i or next;print qq{$F[0]\t$F[1]\t$F[2]\n}' PiggyBac_Bellen_2011.bed.txt > PiggyBac.bed
-
-
-
-#----------------------------#
 # mouse
 #----------------------------#
 manually create .bed file from AvailablePBLines.xls (http://idm.fudan.edu.cn/PBmice/UploadPBLines.do?submit=download   register needed)
@@ -25,43 +12,6 @@ Line count: 1928
 Dump time : 2013-09-25 18:59:12
 
 perl -an -e 'length >= 60 or next; $F[1] =~ /UNK/i and next; print qq{$F[1]\t$F[2]\t$F[2]\n}' ~/data/salk/process/mouse/tracer_dump.txt >  ~/data/salk/process/mouse/SB.bed
-
-#----------------------------#
-# fly
-#----------------------------#
-# Dmelvsself_transposon
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/salk/db/Dmelvsself_transposon.dump.sql -g Dmelvsself_transposon_gdp
-
-perl /home/wangq/Scripts/alignDB/ofg/insert_bed.pl -d Dmelvsself_transposon_gdp  --style center --batch 10 --parallel 4 \
-    --tag transposon --type EY -f ~/data/salk/process/fly/EY.bed \
-    --tag transposon --type MB -f ~/data/salk/process/fly/MB.bed \
-    --tag transposon --type MI -f ~/data/salk/process/fly/MI.bed \
-    --tag transposon --type PiggyBac -f ~/data/salk/process/fly/PiggyBac.bed
-
-perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d Dmelvsself_transposon_gdp --batch 10 --parallel 4
-perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d Dmelvsself_transposon_gdp -e fly_65 --batch 10 --parallel 4
-
-# DmelvsXXII_transposon
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/salk/db/DmelvsXXII_transposon.dump.sql -g DmelvsXXII_transposon_gdp
-
-perl /home/wangq/Scripts/alignDB/ofg/insert_bed.pl -d DmelvsXXII_transposon_gdp  --style center --batch 10 --parallel 4 \
-    --tag transposon --type EY -f ~/data/salk/process/fly/EY.bed \
-    --tag transposon --type MB -f ~/data/salk/process/fly/MB.bed \
-    --tag transposon --type MI -f ~/data/salk/process/fly/MI.bed \
-    --tag transposon --type PiggyBac -f ~/data/salk/process/fly/PiggyBac.bed
-
-
-perl /home/wangq/Scripts/alignDB/init/update_sw_cv.pl -d DmelvsXXII_transposon_gdp --batch 10 --parallel 4
-perl /home/wangq/Scripts/alignDB/init/update_feature.pl -d DmelvsXXII_transposon_gdp -e fly_65 --batch 10 --parallel 4
-
-
-# windows
-cd /d d:\wq\Scripts\alignDB
-perl stat/ofg_stat_factory.pl --by tt -d Dmelvsself_transposon_gdp --server 114.212.202.159 -o Dmelvsself_transposon_gdp.ofg.xlsx
-perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg="insert sites" -i Dmelvsself_transposon_gdp.ofg.xlsx
-
-perl stat/ofg_stat_factory.pl --by tt -d DmelvsXXII_transposon_gdp --server 114.212.202.159 -o DmelvsXXII_transposon_gdp.ofg.xlsx
-perl d:/wq/Scripts/alignDB/stat/ofg_chart_factory.pl --replace ofg="insert sites" -i DmelvsXXII_transposon_gdp.ofg.xlsx
 
 
 #----------------------------#
