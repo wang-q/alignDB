@@ -727,6 +727,10 @@ my $snps_ld_freq = sub {
 #----------------------------------------------------------#
 my $segment_gc_indel = sub {
 
+    unless ( $write_obj->check_column( 'segment', 'segment_id' ) ) {
+        return;
+    }
+
     my @segment_levels = (3);
 
     my $write_sheet = sub {
@@ -861,6 +865,10 @@ my $segment_gc_indel = sub {
 };
 
 my $segment_cv_indel = sub {
+
+    unless ( $write_obj->check_column( 'segment', 'segment_id' ) ) {
+        return;
+    }
 
     my @segment_levels = (3);
 
