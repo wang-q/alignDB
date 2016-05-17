@@ -748,13 +748,13 @@ my $ofg_ld_tag_type = sub {
 
         my $sheet_name;
         if ( $by_this eq "tag" ) {
-            $sheet_name = "ofg_tag_$bind";
+            $sheet_name = "ofg_ld_tag_$bind";
         }
         elsif ( $by_this eq "type" ) {
-            $sheet_name = "ofg_type_$bind";
+            $sheet_name = "ofg_ld_type_$bind";
         }
         elsif ( $by_this eq "tt" ) {
-            $sheet_name = "ofg_tt_$bind";
+            $sheet_name = "ofg_ld_tt_$bind";
         }
         $sheet_name = substr $sheet_name, 0, 31;    # excel sheet name limit
         my $sheet;
@@ -828,7 +828,7 @@ for my $n (@tasks) {
     if ( $n == 4 )  { &$ofg_coding_pure; next; }
     if ( $n == 5 )  { &$ofg_dG;          next; }
     if ( $n == 6 )  { &$ofg_tag_type;    next; }
-    if ( $n == 21 ) { &$ofg_ld_tag_type; next; }
+    if ( $n == 11 ) { &$ofg_ld_tag_type; next; }
 }
 
 if ($add_index_sheet) {
