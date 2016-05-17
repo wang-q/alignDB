@@ -1,39 +1,4 @@
 #----------------------------------------------------------#
-# prepare
-#----------------------------------------------------------#
-
-cd /home/wangq/Scripts/alignDB/ 
-
-# Humanvsself
-perl init/init_alignDB.pl  -d Humanvsself
-perl init/gen_alignDB_genome.pl -d Humanvsself -t="9606,human" --dir /home/wangq/data/alignment/primates/human_chr/ --length 100000 --parallel 12
-perl init/insert_gc.pl -d Humanvsself --parallel 12
-perl gene/insert_gene.pl -d Humanvsself --parallel 12 -e human_65
- perl init/update_sw_cv.pl -d Humanvsself --parallel 8
-perl init/update_feature.pl -d Humanvsself --parallel 12 -e human_65
-
-
-# HumanvsCGOR
-perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
-    -d HumanvsCGOR -e human_65 \
-    --outgroup \
-    --block --id /home/wangq/data/alignment/primates/id2name.csv \
-    -da /home/wangq/data/alignment/primates/HumanvsCGOR_mft  \
-    -lt 5000 --parallel 12 --run gene
-
-# HumanvsXI
-perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
-    -d HumanvsXI -e human_65 \
-    --block --outgroup \
-    --id /home/wangq/data/alignment/human_cg/id2name.csv \
-    -da /home/wangq/data/alignment/human_cg/fas_mft  \
-    -lt 5000 --parallel 12 --run common
-
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Humanvsself -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d HumanvsCGOR -f /home/wangq/data/encode/db/HumanvsCGOR_BED.dump.sql
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d HumanvsXI -f /home/wangq/data/encode/db/HumanvsXI_BED.dump.sql
-
-#----------------------------------------------------------#
 # style center_intact | Humanvsself
 #----------------------------------------------------------#
 cd /home/wangq/Scripts/alignDB/
@@ -66,14 +31,6 @@ perl stat/ofg_stat_factory.pl -d HumanvsXI_BED --server 114.212.202.159
 perl ofg/insert_bed.pl -d HumanvsXI_BED -t DnaseSeq --style center_intact --batch 50 --parallel 12 -f ~/Scripts/alignDB/8988T.bed 
 perl init/update_sw_cv.pl -d HumanvsXI_BED --batch 50 --parallel 12
 perl stat/ofg_stat_factory.pl -d HumanvsXI_BED --server 114.212.202.159 -o HumanvsXI_8988T.ofg.xlsx
-
-#----------------------------------------------------------#
-# HumanvsCGOR
-perl /home/wangq/Scripts/alignDB/extra/multi_way_batch.pl \
-    -d HumanvsCGOR_BED -e human_65 \
-    --block --id /home/wangq/data/alignment/primates/id2name.csv \
-    -da /home/wangq/data/alignment/primates/HumanvsCGOR_mft  \
-    -lt 5000 --parallel 12 --run basic
 
 # RepliChip
 # download 
@@ -145,12 +102,6 @@ mkdir /home/wangq/data/encode/stat
 cd /home/wangq/data/encode/stat
 rm encode_raw_stat.csv
 perl /home/wangq/Scripts/alignDB/ofg/stat_encode.pl
-
-# db
-mkdir /home/wangq/data/encode/db
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d Humanvsself_BED -f /home/wangq/data/encode/db/Humanvsself_BED.dump.sql
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d HumanvsCGOR_BED -f /home/wangq/data/encode/db/HumanvsCGOR_BED.dump.sql
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -d HumanvsXI       -f /home/wangq/data/encode/db/HumanvsXI_BED.dump.sql
 
 #----------------------------------------------------------#
 # Humanvsself
@@ -835,27 +786,3 @@ WHERE ofg_tag = 'NH-A'
 UPDATE HumanvsCGOR_BED_FaireSeq.ofg
 SET   ofg_tag = 'NHA'
 WHERE ofg_tag = 'NH-A'
-
-
-
-
-#----------------------------#
-# gsw bed count example
-#----------------------------#
-
-# FaireSeq
-perl /home/wangq/Scripts/alignDB/util/dup_db.pl -f /home/wangq/data/encode/db/HumanvsCGOR_BED.dump.sql -g HumanvsCGOR_BED_gsw_count
-
-# perl /home/wangq/Scripts/alignDB/ofg/count_bed.pl -d HumanvsCGOR_BED_gsw_count --batch 50 --parallel 12 -f ~/data/encode/process/spp.optimal.wgEncodeHaibTfbsGm12878Yy1V0416101AlnRep0_VS_wgEncodeHaibTfbsGm12878ControlV0416101AlnRep1.bb.bed
-
-perl /home/wangq/Scripts/alignDB/ofg/batch_encode.pl \
-    --op count_bed \
-    --dataType FaireSeq \
-    --count 1000 \
-    -d HumanvsCGOR_BED_gsw_count \
-    --batch 50 --parallel 12 --dryrun
-
-perl init/update_sw_cv.pl -d HumanvsCGOR_BED_gsw_count --batch 50 --parallel 12
-perl init/update_feature.pl -d HumanvsCGOR_BED_gsw_count -e human_65 --batch 50 --parallel 12
-
-
