@@ -5,7 +5,7 @@ use autodie;
 
 use Getopt::Long::Descriptive;
 use Config::Tiny;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use Text::CSV_XS;
 use Text::Table;
@@ -20,11 +20,9 @@ use AlignDB;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->new;
-$Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
-my $conf_db = $Config->{database};
+my $conf_db = Config::Tiny->read("$FindBin::Bin/../alignDB.ini")->{database};
 
-my ( $opt, $usage ) = describe_options(
+my ( $opt, $usage ) = Getopt::Long::Descriptive::describe_options(
     "usage: %c %o",
     [ 'help|h', 'display this message' ],
     [],
@@ -37,33 +35,22 @@ my ( $opt, $usage ) = describe_options(
     [],
     [ 'query|q=s',  'SQL statement', { default => "SELECT * FROM meta" } ],
     [ 'file|f=s',   'SQL file', ],
-    [ 'output|o=s', 'output filename' ],
-    [   'type|t=s',
-        'output style (csv, neat, table, box and html)',
-        { default => "csv" }
-    ],
+    [ 'output|o=s', 'output filename. [stdout] for screen' ],
+    [ 'type|t=s', 'output style (csv, neat, table, box and html)', { default => "csv" } ],
 );
 
-$usage->die(
-    {   pre_text =>
-            "Write sql query results to a file, supporting multiple styles\n"
-    }
-) if $opt->{help};
+$usage->die( { pre_text => "Write sql query results to a file, supporting multiple styles\n" } )
+    if $opt->{help};
 
 #----------------------------------------------------------#
 # Init section
 #----------------------------------------------------------#
-my $stopwatch = AlignDB::Stopwatch->new;
-$stopwatch->start_message("Do stat for $opt->{db}...");
-
-my $obj = AlignDB->new(
-    mysql  => "$opt->{db}:$opt->{server}",
-    user   => $opt->{username},
-    passwd => $opt->{password},
-);
 
 # Database handler
-my $dbh = $obj->dbh;
+my $dsn
+    = "dbi:mysql:" . "database=" . $opt->{db} . ";host=" . $opt->{server} . ";port=" . $opt->{port};
+my DBI $dbh = DBI->connect( $dsn, $opt->{username}, $opt->{password} )
+    or die $DBI::errstr;
 
 # Execute sql query
 if ( $opt->{file} ) {
@@ -73,40 +60,39 @@ if ( $opt->{file} ) {
     my @queries = grep {/select/i} split /\;/, $content;
 
     for my $i ( 0 .. $#queries ) {
-        print "SQL:\n";
-        print $queries[$i], "\n";
-        my $outfile
-            = $opt->{output} ? $opt->{output} : "$opt->{db}.$opt->{type}";
+        my $outfile = $opt->{output} ? $opt->{output} : "$opt->{db}.$opt->{type}";
         my $index = $i + 1;
         $outfile =~ s/\.(\w+)$/\.$index.$1/ if @queries > 1;
-        result( $dbh, $queries[$i], $opt->{type}, $outfile );
+        result( $queries[$i], $opt->{type}, $outfile );
     }
 }
 elsif ( $opt->{query} ) {
-    print "SQL:\n";
-    print $opt->{query}, "\n";
     my $outfile = $opt->{output} ? $opt->{output} : "$opt->{db}.$opt->{type}";
-    result( $dbh, $opt->{query}, $opt->{type}, $outfile );
+    result( $opt->{query}, $opt->{type}, $outfile );
 }
 else {
-    warn "Provide a file or a SQL query\n";
+    $usage->die( { pre_text => "Provide a file or a SQL query string\n" } );
 }
 
-$stopwatch->end_message;
 exit;
 
 sub result {
-    my $dbh     = shift;
     my $sql     = shift;
     my $type    = shift;
     my $outfile = shift;
 
-    my $sth = $dbh->prepare($sql)
+    my DBI $sth = $dbh->prepare($sql)
         or die $dbh->errstr;
     $sth->execute
         or die $sth->errstr;
 
-    open my $out_fh, '>', $outfile;
+    my $out_fh;
+    if ( lc( $outfile ) eq "stdout" ) {
+        $out_fh = *STDOUT;
+    }
+    else {
+        open $out_fh, ">", $outfile;
+    }
 
     if ( $type eq 'csv' ) {
         my $csv = Text::CSV_XS->new;
@@ -137,13 +123,11 @@ sub result {
         my $is_box = $type eq 'box';
 
         # header line
-        my @columns = map +{ title => $_, align_title => 'center' },
-            @{ $sth->{NAME} };
+        my @columns = map +{ title => $_, align_title => 'center' }, @{ $sth->{NAME} };
         my $c = 0;
         splice @columns, $_ + $c++, 0, \' | ' for 1 .. $#columns;
         my @header_border = ( $is_box ? \' |' : () );
-        my $table
-            = Text::Table->new( @header_border, @columns, @header_border );
+        my $table = Text::Table->new( @header_border, @columns, @header_border );
 
         # all others
         while ( my @row = $sth->fetchrow_array ) {
@@ -151,9 +135,7 @@ sub result {
         }
         my $rule = $table->rule(qw/- +/);
         my @rows_border = ( $is_box ? $rule : () );
-        print {$out_fh} join '', @rows_border, $table->title, $rule,
-            $table->body,
-            @rows_border;
+        print {$out_fh} join '', @rows_border, $table->title, $rule, $table->body, @rows_border;
     }
     elsif ( $type eq 'html' ) {
         my $columns = $sth->{NAME};
@@ -169,8 +151,7 @@ sub result {
                 }
             }
         );
-        $table->modify(
-            tr => { style => { background => [ '#bacaba', '#cbdbcb' ] } } );
+        $table->modify( tr => { style => { background => [ '#bacaba', '#cbdbcb' ] } } );
 
         print {$out_fh} $table->output;
     }
