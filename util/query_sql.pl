@@ -9,7 +9,6 @@ use YAML::Syck;
 
 use Text::CSV_XS;
 use Text::Table;
-use DBIx::XHTML_Table;
 
 use AlignDB::Stopwatch;
 
@@ -28,7 +27,7 @@ my ( $opt, $usage ) = Getopt::Long::Descriptive::describe_options(
     [],
     ['Database init values'],
     [ 'server|s=s',   'MySQL IP/Domain', { default => $conf_db->{server} } ],
-    [ 'port|P=i',     'MySQL port',      { default => $conf_db->{port} } ],
+    [ 'port=i',       'MySQL port',      { default => $conf_db->{port} } ],
     [ 'username|u=s', 'username',        { default => $conf_db->{username} } ],
     [ 'password|p=s', 'password',        { default => $conf_db->{password} } ],
     [ 'db|d=s',       'database name',   { default => $conf_db->{db} } ],
@@ -36,7 +35,7 @@ my ( $opt, $usage ) = Getopt::Long::Descriptive::describe_options(
     [ 'query|q=s',  'SQL statement', { default => "SELECT * FROM meta" } ],
     [ 'file|f=s',   'SQL file', ],
     [ 'output|o=s', 'output filename. [stdout] for screen' ],
-    [ 'type|t=s', 'output style (csv, neat, table, box and html)', { default => "csv" } ],
+    [ 'type|t=s', 'output style (csv, neat, table and box)', { default => "csv" } ],
 );
 
 $usage->die( { pre_text => "Write sql query results to a file, supporting multiple styles\n" } )
@@ -87,7 +86,7 @@ sub result {
         or die $sth->errstr;
 
     my $out_fh;
-    if ( lc( $outfile ) eq "stdout" ) {
+    if ( lc($outfile) eq "stdout" ) {
         $out_fh = *STDOUT;
     }
     else {
@@ -136,24 +135,6 @@ sub result {
         my $rule = $table->rule(qw/- +/);
         my @rows_border = ( $is_box ? $rule : () );
         print {$out_fh} join '', @rows_border, $table->title, $rule, $table->body, @rows_border;
-    }
-    elsif ( $type eq 'html' ) {
-        my $columns = $sth->{NAME};
-        my $rows    = $sth->fetchall_arrayref;
-
-        my $table = DBIx::XHTML_Table->new( $rows, $columns );
-        $table->modify( table => { border => 1, } );
-        $table->modify(
-            th => {
-                style => {
-                    color      => '#a9b9a9',
-                    background => '#444444',
-                }
-            }
-        );
-        $table->modify( tr => { style => { background => [ '#bacaba', '#cbdbcb' ] } } );
-
-        print {$out_fh} $table->output;
     }
     else {
         die "Unknown output style type!\n";
