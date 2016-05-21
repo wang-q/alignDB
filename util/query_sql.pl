@@ -21,8 +21,12 @@ use AlignDB;
 #----------------------------------------------------------#
 my $conf_db = Config::Tiny->read("$FindBin::Bin/../alignDB.ini")->{database};
 
-my ( $opt, $usage ) = Getopt::Long::Descriptive::describe_options(
-    "usage: %c %o",
+(   my Getopt::Long::Descriptive::Opts $opt,
+    my Getopt::Long::Descriptive::Usage $usage
+    )
+    = Getopt::Long::Descriptive::describe_options(
+    "Write sql query results to a file, supporting multiple styles\n"
+        . "Usage: perl %c [options]",
     [ 'help|h', 'display this message' ],
     [],
     ['Database init values'],
@@ -32,14 +36,17 @@ my ( $opt, $usage ) = Getopt::Long::Descriptive::describe_options(
     [ 'password|p=s', 'password',        { default => $conf_db->{password} } ],
     [ 'db|d=s',       'database name',   { default => $conf_db->{db} } ],
     [],
-    [ 'query|q=s',  'SQL statement', { default => "SELECT * FROM meta" } ],
-    [ 'file|f=s',   'SQL file', ],
+    [ 'query|q=s', 'SQL statement', { default => "SELECT * FROM meta" } ],
+    [ 'file|f=s',  'SQL file', ],
     [ 'output|o=s', 'output filename. [stdout] for screen' ],
-    [ 'type|t=s', 'output style (csv, neat, table and box)', { default => "csv" } ],
-);
+    [   'type|t=s',
+        'output style (csv, neat, table and box)',
+        { default => "csv" }
+    ],
+    { show_defaults => 1, }
+    );
 
-$usage->die( { pre_text => "Write sql query results to a file, supporting multiple styles\n" } )
-    if $opt->{help};
+$usage->die if $opt->{help};
 
 #----------------------------------------------------------#
 # Init section
@@ -47,7 +54,13 @@ $usage->die( { pre_text => "Write sql query results to a file, supporting multip
 
 # Database handler
 my $dsn
-    = "dbi:mysql:" . "database=" . $opt->{db} . ";host=" . $opt->{server} . ";port=" . $opt->{port};
+    = "dbi:mysql:"
+    . "database="
+    . $opt->{db}
+    . ";host="
+    . $opt->{server}
+    . ";port="
+    . $opt->{port};
 my DBI $dbh = DBI->connect( $dsn, $opt->{username}, $opt->{password} )
     or die $DBI::errstr;
 
@@ -59,7 +72,8 @@ if ( $opt->{file} ) {
     my @queries = grep {/select/i} split /\;/, $content;
 
     for my $i ( 0 .. $#queries ) {
-        my $outfile = $opt->{output} ? $opt->{output} : "$opt->{db}.$opt->{type}";
+        my $outfile
+            = $opt->{output} ? $opt->{output} : "$opt->{db}.$opt->{type}";
         my $index = $i + 1;
         $outfile =~ s/\.(\w+)$/\.$index.$1/ if @queries > 1;
         result( $queries[$i], $opt->{type}, $outfile );
@@ -122,11 +136,13 @@ sub result {
         my $is_box = $type eq 'box';
 
         # header line
-        my @columns = map +{ title => $_, align_title => 'center' }, @{ $sth->{NAME} };
+        my @columns = map +{ title => $_, align_title => 'center' },
+            @{ $sth->{NAME} };
         my $c = 0;
         splice @columns, $_ + $c++, 0, \' | ' for 1 .. $#columns;
         my @header_border = ( $is_box ? \' |' : () );
-        my $table = Text::Table->new( @header_border, @columns, @header_border );
+        my $table
+            = Text::Table->new( @header_border, @columns, @header_border );
 
         # all others
         while ( my @row = $sth->fetchrow_array ) {
@@ -134,7 +150,8 @@ sub result {
         }
         my $rule = $table->rule(qw/- +/);
         my @rows_border = ( $is_box ? $rule : () );
-        print {$out_fh} join '', @rows_border, $table->title, $rule, $table->body, @rows_border;
+        print {$out_fh} join '', @rows_border, $table->title, $rule,
+            $table->body, @rows_border;
     }
     else {
         die "Unknown output style type!\n";
