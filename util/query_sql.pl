@@ -7,6 +7,7 @@ use Getopt::Long::Descriptive;
 use Config::Tiny;
 use YAML::Syck;
 
+use DBI;
 use Text::CSV_XS;
 use Text::Table;
 
