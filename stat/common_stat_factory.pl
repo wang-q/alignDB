@@ -99,7 +99,7 @@ my $aligndb_obj = AlignDB->new(
     user   => $username,
     passwd => $password,
 );
-my $dbh = $aligndb_obj->dbh;
+my DBI $dbh = $aligndb_obj->dbh;
 
 my $write_obj = AlignDB::ToXLSX->new(
     dbh     => $dbh,
@@ -346,18 +346,27 @@ my $basic = sub {
     {    # contents
         $write_obj->write_row(
             $sheet,
-            {   query_name => 'No. of strains',
+            {   query_name => 'No. of genomes',
                 row        => [$seq_count],
             }
         );
     }
 
     {    # contents
-        my $query_name = 'Target length (Mb)';
+        my $query_name = 'Genome size on average (Mb)';
         my $sql_query  = q{
-            SELECT  SUM(s.seq_length) / 1000000.00
-            FROM    sequence s
-            WHERE   s.seq_role = "T"
+            SELECT
+                AVG(l.length) / 1000000.00
+            FROM
+                (SELECT
+                    SUM(c.chr_length) length
+                FROM
+                    chromosome c
+                INNER JOIN (SELECT DISTINCT
+                    chr_id
+                FROM
+                    sequence) s ON c.chr_id = s.chr_id
+                GROUP BY common_name) l
         };
         $write_obj->write_sql(
             $sheet,
@@ -396,7 +405,7 @@ my $basic = sub {
     }
 
     {    # contents
-        my $query_name = 'SNVs per 100 bp';
+        my $query_name = 'Substitutions per 100 bp';
         my $sql_query  = q{
             SELECT  SUM(a.align_differences) * 1.0 / SUM(a.align_comparables) * 100.0
             FROM    align a
@@ -442,9 +451,9 @@ my $basic = sub {
     }
 
     {    # contents
-        my $query_name = 'Target length (coding) (Mb)';
+        my $query_name = 'Coding portions';
         my $sql_query  = q{
-            SELECT  SUM(s.seq_length * a.align_coding) / 1000000.00 
+            SELECT  SUM(s.seq_length * a.align_coding) / SUM(s.seq_length)
             FROM    sequence s, align a
             WHERE   s.seq_role = "T"
             AND     s.align_id = a.align_id
@@ -458,9 +467,9 @@ my $basic = sub {
     }
 
     {    # contents
-        my $query_name = 'Target length (repeats) (Mb)';
+        my $query_name = 'Rrepeats portions';
         my $sql_query  = q{
-            SELECT  SUM(s.seq_length * a.align_repeats) / 1000000.00 
+            SELECT  SUM(s.seq_length * a.align_repeats) / SUM(s.seq_length)
             FROM    sequence s, align a
             WHERE   s.seq_role = "T"
             AND     s.align_id = a.align_id
