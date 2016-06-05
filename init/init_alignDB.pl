@@ -3,10 +3,10 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use Text::CSV_XS;
 
@@ -49,15 +49,17 @@ init_alignDB.pl - Initiate alignDB
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server   = $Config->{database}{server} ),
     'port|P=i'     => \( my $port     = $Config->{database}{port} ),
     'db|d=s'       => \( my $db       = $Config->{database}{db} ),
     'username|u=s' => \( my $username = $Config->{database}{username} ),
     'password|p=s' => \( my $password = $Config->{database}{password} ),
     'sql=s'        => \( my $init_sql = "$FindBin::RealBin/../init.sql" ),
-    'chr=s'        => \( my $init_chr = "$FindBin::RealBin/../data/chr_length.csv" ),
-) or HelpMessage(1);
+    'chr=s' => \( my $init_chr = "$FindBin::RealBin/../data/chr_length.csv" ),
+) or Getopt::Long::HelpMessage(1);
+
+die "[$init_chr] doesn't exist\n" unless -f $init_chr;
 
 #----------------------------------------------------------#
 # call mysql
@@ -74,7 +76,7 @@ $stopwatch->start_message("Init $db...");
     $drh->func( 'createdb', $db, $server, $username, $password, 'admin' );
 
     print "# init\n";
-    my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
+    my DBI $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
     open my $infh, '<', $init_sql;
     my $content = do { local $/; <$infh> };
     close $infh;
@@ -85,22 +87,19 @@ $stopwatch->start_message("Init $db...");
 }
 
 #----------------------------------------------------------#
-# init object
-#----------------------------------------------------------#
-my $obj = AlignDB->new(
-    mysql  => "$db:$server",
-    user   => $username,
-    passwd => $password,
-);
-my $dbh = $obj->dbh;
-
-#----------------------------------------------------------#
 # chromosome
 #----------------------------------------------------------#
-if ( -f $init_chr ) {
+{
     $stopwatch->block_message("Use [$init_chr] to Init table chromosome");
 
-    my $insert_sth = $dbh->prepare(
+    my $obj = AlignDB->new(
+        mysql  => "$db:$server",
+        user   => $username,
+        passwd => $password,
+    );
+    my DBI $dbh = $obj->dbh;
+
+    my DBI $insert_sth = $dbh->prepare(
         'INSERT INTO chromosome (
             chr_id, common_name, taxon_id, chr_name, chr_length
         )
@@ -120,7 +119,7 @@ if ( -f $init_chr ) {
     $insert_sth->finish;
 
     # Now retrieve data from the table
-    my $query_sth = $dbh->prepare(
+    my DBI $query_sth = $dbh->prepare(
         q{
         SELECT *
         FROM chromosome
@@ -130,15 +129,13 @@ if ( -f $init_chr ) {
     while ( my $ref = $query_sth->fetchrow_hashref ) {
         my $common_name = $ref->{common_name};
         if ( defined $common_name and ( $common_name eq "Human" ) ) {
-            printf "Found a row: common_name = %s, chr_name = %s, chr_length = %s\n",
+            printf
+                "Found a row: common_name = %s, chr_name = %s, chr_length = %s\n",
                 $ref->{common_name}, $ref->{chr_name}, $ref->{chr_length};
             last;
         }
     }
     $query_sth->finish;
-}
-else {
-    die "[$init_chr] doesn't exist\n";
 }
 
 $stopwatch->end_message;
