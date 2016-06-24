@@ -1,3 +1,9 @@
+* Run this:
+
+```bash
+cloc . --exclude-dir .idea --exclude-lang JSON,RobotFramework,XML,YAML
+```
+
 * Tue Nov 24 13:45:28 2009
 
 ```
