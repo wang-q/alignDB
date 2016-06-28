@@ -22,12 +22,13 @@ has 'db'     => ( is => 'ro', isa => 'Str' );    # e.g. 'alignDB'
 has 'user'   => ( is => 'ro', isa => 'Str' );    # database username
 has 'passwd' => ( is => 'ro', isa => 'Str' );    # database password
 
-has 'dbh'          => ( is => 'ro', isa => 'Object' );    # store database handle here
-has 'window_maker' => ( is => 'ro', isa => 'Object' );    # sliding windows maker
+has 'dbh' => ( is => 'ro', isa => 'Object' );    # store database handle here
+has 'window_maker' => ( is => 'ro', isa => 'Object' );   # sliding windows maker
 has 'threshold' => ( is => 'ro', isa => 'Int', default => sub {5_000} );
 
-has 'caching_id' => ( is => 'ro', isa => 'Int' );                                     # caching seqs
-has 'caching_seqs' => ( is => 'ro', isa => 'ArrayRef[Str]', default => sub { [] } );
+has 'caching_id' => ( is => 'ro', isa => 'Int' );        # caching seqs
+has 'caching_seqs' =>
+    ( is => 'ro', isa => 'ArrayRef[Str]', default => sub { [] } );
 
 # target info
 has 'caching_info' => ( is => 'ro', isa => 'HashRef', default => sub { {} } );
@@ -137,13 +138,15 @@ sub _insert_seq {
     my $seq_info = shift;
 
     Carp::confess "Need align_id\n" if !defined $align_id;
-    Carp::confess "Need seq_info\n" if !defined $seq_info || ref $seq_info ne "HASH";
+    Carp::confess "Need seq_info\n"
+        if !defined $seq_info || ref $seq_info ne "HASH";
 
-    Carp::confess "Need common_name\n"             if !defined $seq_info->{name};
-    Carp::confess "Need chr_name\n"                if !defined $seq_info->{chr_name};
-    Carp::confess "T, Q, or O\n"                   if !defined $seq_info->{seq_role};
-    Carp::confess "Need positions in alignments\n" if !defined $seq_info->{seq_position};
-    Carp::confess "Pass a seq to this method\n"    if !defined $seq_info->{seq};
+    Carp::confess "Need common_name\n" if !defined $seq_info->{name};
+    Carp::confess "Need chr_name\n"    if !defined $seq_info->{chr};
+    Carp::confess "T, Q, or O\n"       if !defined $seq_info->{seq_role};
+    Carp::confess "Need positions in alignments\n"
+        if !defined $seq_info->{seq_position};
+    Carp::confess "Pass a seq to this method\n" if !defined $seq_info->{seq};
 
     for my $key (qw{chr_start chr_end chr_strand length gc runlist}) {
         if ( !defined $seq_info->{$key} ) {
@@ -151,7 +154,7 @@ sub _insert_seq {
         }
     }
 
-    my $chr_id = $self->get_chr_id( $seq_info->{name}, $seq_info->{chr_name} );
+    my $chr_id = $self->get_chr_id( $seq_info->{name}, $seq_info->{chr} );
 
     # Get database handle
     my DBI $dbh = $self->dbh;
@@ -173,10 +176,12 @@ sub _insert_seq {
     );
 
     $sth->execute(
-        $align_id,                 $chr_id,              $seq_info->{seq_role},
-        $seq_info->{seq_position}, $seq_info->{name},    $seq_info->{chr_name},
-        $seq_info->{chr_start},    $seq_info->{chr_end}, $seq_info->{chr_strand},
-        $seq_info->{length},       $seq_info->{gc},      $seq_info->{runlist},
+        $align_id,             $chr_id,
+        $seq_info->{seq_role}, $seq_info->{seq_position},
+        $seq_info->{name},     $seq_info->{chr},
+        $seq_info->{start},    $seq_info->{end},
+        $seq_info->{strand},   $seq_info->{length},
+        $seq_info->{gc},       $seq_info->{runlist},
         $seq_info->{seq},
     );
 }
@@ -197,9 +202,11 @@ sub _insert_set_and_sequence {
         my $indel_set      = AlignDB::IntSpan->new;
         my $comparable_set = AlignDB::IntSpan->new;
         for my $i ( 0 .. $seq_number - 1 ) {
-            $info_refs->[$i]{gc} = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[$i] ] );
-            my $seq_indel_set = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
-            my $seq_set       = $align_set->diff($seq_indel_set);
+            $info_refs->[$i]{gc}
+                = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[$i] ] );
+            my $seq_indel_set
+                = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
+            my $seq_set = $align_set->diff($seq_indel_set);
             $info_refs->[$i]{runlist} = $seq_set->runlist;
             $info_refs->[$i]{length}  = $seq_set->size;
 
@@ -256,6 +263,7 @@ sub add_align {
     for ( @{$seq_refs} ) {
         if ( ( length $_ ) != $align_length ) {
             Carp::confess "Sequences should have the same length!\n";
+            return;
         }
     }
 
@@ -263,6 +271,7 @@ sub add_align {
     my $seq_count = scalar @{$seq_refs};
     if ( $seq_count < 2 ) {
         Carp::confess "Too few sequences [$seq_count]\n";
+        return;
     }
 
     #----------------------------#
@@ -271,10 +280,10 @@ sub add_align {
     my $align_id = $self->_insert_align($seq_refs);
     printf "Prosess align [%s] at %s.%s(%s):%s-%s\n", $align_id,
         $info_refs->[$target_idx]{name},
-        $info_refs->[$target_idx]{chr_name},
-        $info_refs->[$target_idx]{chr_strand},
-        $info_refs->[$target_idx]{chr_start},
-        $info_refs->[$target_idx]{chr_end};
+        $info_refs->[$target_idx]{chr},
+        $info_refs->[$target_idx]{strand},
+        $info_refs->[$target_idx]{start},
+        $info_refs->[$target_idx]{end};
     $self->{caching_id}   = $align_id;
     $self->{caching_seqs} = $seq_refs;
 
@@ -320,13 +329,16 @@ sub parse_axt_file {
             next;
         }
         elsif ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-            my $info_refs = App::Fasops::Common::parse_axt_block( $content, $query_length_of );
+            my $info_refs = App::Fasops::Common::parse_axt_block( $content,
+                $query_length_of );
             $content = '';
 
             next if length( $info_refs->[0]{seq} ) < $threshold;
 
             $info_refs->[0]{name} = $opt->{tname};
             $info_refs->[1]{name} = $opt->{qname};
+
+            #            print YAML::Syck::Dump $info_refs;
 
             $self->add_align($info_refs);
         }
@@ -359,7 +371,7 @@ sub parse_fas_file {
             $line = $in_fh->getline;
         }
         if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-            my $info_of = App::Fasops::Common::parse_block($content);
+            my $info_of = App::Fasops::Common::parse_block( $content, 1 );
             $content = '';
 
             my $info_refs = [ map { $info_of->{$_} } keys %{$info_of} ];
@@ -399,7 +411,8 @@ sub _insert_indel {
         }
     );
 
-    my AlignDB::IntSpan( $align_set, undef, $indel_set ) = @{ $self->get_sets($align_id) };
+    my AlignDB::IntSpan( $align_set, undef, $indel_set )
+        = @{ $self->get_sets($align_id) };
 
     my $seq_refs  = $self->get_seqs($align_id);
     my $seq_count = scalar @{$seq_refs};
@@ -506,9 +519,10 @@ sub _insert_indel {
     my $prev_indel_id = 0;
     for (@indel_sites) {
         $sth->execute(
-            $prev_indel_id,     $align_id, $_->{start},    $_->{end},
-            $_->{length},       $_->{seq}, $_->{all_seqs}, $_->{left_extand},
-            $_->{right_extand}, $_->{gc},  $_->{freq},     $_->{occured},
+            $prev_indel_id, $align_id,         $_->{start},
+            $_->{end},      $_->{length},      $_->{seq},
+            $_->{all_seqs}, $_->{left_extand}, $_->{right_extand},
+            $_->{gc},       $_->{freq},        $_->{occured},
             $_->{type},
         );
         ($prev_indel_id) = $self->last_insert_id;
@@ -618,9 +632,11 @@ sub _insert_snp {
 
     if ( keys %{$snp_site} ) {
         $sth->execute_array(
-            {},                        $bulk_info->{align_id},   $bulk_info->{pos},
-            $bulk_info->{target_base}, $bulk_info->{query_base}, $bulk_info->{all_bases},
-            $bulk_info->{mutant_to},   $bulk_info->{snp_freq},   $bulk_info->{snp_occured},
+            {},                       $bulk_info->{align_id},
+            $bulk_info->{pos},        $bulk_info->{target_base},
+            $bulk_info->{query_base}, $bulk_info->{all_bases},
+            $bulk_info->{mutant_to},  $bulk_info->{snp_freq},
+            $bulk_info->{snp_occured},
         );
     }
     $sth->finish;
@@ -715,7 +731,8 @@ sub insert_isw {
 
         my AlignDB::Window $window_maker = $self->window_maker;
 
-        my @isws = $window_maker->interval_window( $align_set, $interval_start, $interval_end );
+        my @isws = $window_maker->interval_window( $align_set, $interval_start,
+            $interval_end );
 
         for my $isw (@isws) {
             my AlignDB::IntSpan $isw_set = $isw->{set};
@@ -735,9 +752,10 @@ sub insert_isw {
             }
             my $isw_stat = $self->get_slice_stat( $align_id, $isw_set );
             $sth->execute(
-                $indel_id,        $prev_indel_id,  $align_id,      $isw_indel_id,
-                $isw_start,       $isw_end,        $isw_length,    $isw->{type},
-                $isw->{distance}, $isw->{density}, $isw_stat->[3], $isw_stat->[7],
+                $indel_id,       $prev_indel_id, $align_id,
+                $isw_indel_id,   $isw_start,     $isw_end,
+                $isw_length,     $isw->{type},   $isw->{distance},
+                $isw->{density}, $isw_stat->[3], $isw_stat->[7],
                 $isw_stat->[8],
             );
         }
@@ -917,7 +935,8 @@ sub insert_ssw {
                 $d_nosnp   /= $ssw_set_member_number;
                 $d_complex /= $ssw_set_member_number;
 
-                my ($cur_window_id) = $self->insert_window( $align_id, $ssw_set );
+                my ($cur_window_id)
+                    = $self->insert_window( $align_id, $ssw_set );
 
                 $sth->execute( $snp_id, $cur_window_id, $ssw_type,
                     $ssw_distance, $d_snp, $d_nosnp, $d_complex );
@@ -1056,7 +1075,8 @@ sub get_sets {
         }
     );
     $sth->execute($align_id);
-    my ( $align_length, $comparable_runlist, $indel_runlist ) = $sth->fetchrow_array;
+    my ( $align_length, $comparable_runlist, $indel_runlist )
+        = $sth->fetchrow_array;
     $sth->finish;
 
     my $align_set      = AlignDB::IntSpan->new("1-$align_length");
@@ -1109,9 +1129,10 @@ sub get_slice_indel {
     my $set_indel = $set->span_size - 1;
 
     # real indels in this alignment slice
-    my $seqs_ref       = $self->get_seqs($align_id);
-    my @seq_slices     = map { $set->substr_span($_) } @$seqs_ref;
-    my @seq_indel_sets = map { App::Fasops::Common::indel_intspan($_) } @seq_slices;
+    my $seqs_ref = $self->get_seqs($align_id);
+    my @seq_slices = map { $set->substr_span($_) } @$seqs_ref;
+    my @seq_indel_sets
+        = map { App::Fasops::Common::indel_intspan($_) } @seq_slices;
 
     my $indel_set = AlignDB::IntSpan->new;
     for (@seq_indel_sets) {
@@ -1163,7 +1184,8 @@ sub insert_window {
     # $set_indel is equal to $window_span - 1
     my $window_indel;
     if ($internal_indel) {
-        my ( $set_indel, $real_indel ) = $self->get_slice_indel( $align_id, $window_set );
+        my ( $set_indel, $real_indel )
+            = $self->get_slice_indel( $align_id, $window_set );
         $window_indel = $set_indel + $real_indel;
     }
     else {
@@ -1175,9 +1197,10 @@ sub insert_window {
 
     my $window_stat = $self->get_slice_stat( $align_id, $window_set );
     $sth->execute(
-        $align_id,       $window_start,     $window_end,       $window_length,
-        $window_runlist, $window_stat->[1], $window_stat->[2], $window_stat->[3],
-        $window_indel,   $window_stat->[7], $window_stat->[8],
+        $align_id,         $window_start,     $window_end,
+        $window_length,    $window_runlist,   $window_stat->[1],
+        $window_stat->[2], $window_stat->[3], $window_indel,
+        $window_stat->[7], $window_stat->[8],
     );
 
     return $self->last_insert_id;
@@ -1237,7 +1260,7 @@ sub empty_table {
     }
     else {
 
-        # In MySQL 4.1, you must use the alias (if one was given) when referring to a table name
+# In MySQL 4.1, you must use the alias (if one was given) when referring to a table name
         $dbh->do(
             qq{
             DELETE t,
@@ -1276,7 +1299,9 @@ sub create_column {
         # table names are quoted by ` (back-quotes) which is the
         #   quote_identifier
         my $table_name = "`$table`";
-        unless ( List::MoreUtils::PP::any { $_ =~ /$table_name/i } @table_names ) {
+        unless ( List::MoreUtils::PP::any { $_ =~ /$table_name/i }
+            @table_names )
+        {
             print "Table $table does not exist\n";
             return;
         }
@@ -1326,7 +1351,9 @@ sub check_column {
         # table names are quoted by ` (back-quotes) which is the
         #   quote_identifier
         my $table_name = "`$table`";
-        unless ( List::MoreUtils::PP::any { $_ =~ /$table_name/i } @table_names ) {
+        unless ( List::MoreUtils::PP::any { $_ =~ /$table_name/i }
+            @table_names )
+        {
             print " " x 4, "Table $table does not exist\n";
             return;
         }
@@ -1570,7 +1597,8 @@ sub process_message {
 
     my $info = $self->get_target_info($align_id);
 
-    printf "Process align [%s] at %s.%s(%s):%s-%s\n", $align_id, $info->{common_name},
+    printf "Process align [%s] at %s.%s(%s):%s-%s\n", $align_id,
+        $info->{common_name},
         $info->{chr_name},
         $info->{chr_strand}, $info->{chr_start}, $info->{chr_end};
 

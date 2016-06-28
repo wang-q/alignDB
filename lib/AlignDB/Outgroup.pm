@@ -40,10 +40,10 @@ sub add_align {
     my $align_id = $self->_insert_align($ingroup_seqs);
     printf "Prosess align [%s] at %s.%s(%s):%s-%s\n", $align_id,
         $info_refs->[$target_idx]{name},
-        $info_refs->[$target_idx]{chr_name},
-        $info_refs->[$target_idx]{chr_strand},
-        $info_refs->[$target_idx]{chr_start},
-        $info_refs->[$target_idx]{chr_end};
+        $info_refs->[$target_idx]{chr},
+        $info_refs->[$target_idx]{strand},
+        $info_refs->[$target_idx]{start},
+        $info_refs->[$target_idx]{end};
 
     #----------------------------#
     # UPDATE align, INSERT sequence, target, queries
@@ -81,8 +81,10 @@ sub _insert_outgroup {
     my $align_set    = AlignDB::IntSpan->new("1-$align_length");
 
     {
-        $info_refs->[$outgroup_idx]{gc} = App::Fasops::Common::calc_gc_ratio( [$outgroup_seq] );
-        my $seq_indel_set = App::Fasops::Common::indel_intspan( [$outgroup_seq] );
+        $info_refs->[$outgroup_idx]{gc}
+            = App::Fasops::Common::calc_gc_ratio( [$outgroup_seq] );
+        my $seq_indel_set
+            = App::Fasops::Common::indel_intspan( [$outgroup_seq] );
         my $seq_set = $align_set->diff($seq_indel_set);
         $info_refs->[$outgroup_idx]{runlist} = $seq_set->runlist;
         $info_refs->[$outgroup_idx]{length}  = $seq_set->size;
@@ -133,14 +135,16 @@ sub _polarize_indel {
 
         my @indel_seqs     = split /\|/, $indel_all_seqs;
         my $indel_length   = $indel_end - $indel_start + 1;
-        my $outgroup_bases = substr $outgroup_seq, $indel_start - 1, $indel_length;
+        my $outgroup_bases = substr $outgroup_seq, $indel_start - 1,
+            $indel_length;
 
         my ( $indel_type, $indel_occured, $indel_freq );
 
         my $indel_set = AlignDB::IntSpan->new("$indel_start-$indel_end");
 
         # this line is different to AlignDB.pm
-        my @uniq_indel_seqs = List::MoreUtils::PP::uniq( @indel_seqs, $outgroup_bases );
+        my @uniq_indel_seqs
+            = List::MoreUtils::PP::uniq( @indel_seqs, $outgroup_bases );
 
         # seqs with least '-' char wins
         my ($indel_seq) = map { $_->[0] }
@@ -158,7 +162,9 @@ sub _polarize_indel {
         }
         else {
 
-            if ( ( $outgroup_bases !~ /\-/ ) and ( $indel_seq ne $outgroup_bases ) ) {
+            if (    ( $outgroup_bases !~ /\-/ )
+                and ( $indel_seq ne $outgroup_bases ) )
+            {
 
                 # this section should already be judged in previes
                 # uniq_indel_seqs section, but I keep it here for safe
@@ -219,8 +225,10 @@ sub _polarize_indel {
             }
         }
 
-        $update_indel_sth->execute( $outgroup_bases, $indel_type, $indel_occured,
-            $indel_freq, $indel_id );
+        $update_indel_sth->execute(
+            $outgroup_bases, $indel_type, $indel_occured,
+            $indel_freq,     $indel_id
+        );
     }
 
     $update_indel_sth->finish;
@@ -303,7 +311,8 @@ sub _polarize_snp {
             $snp_occured = 'unknown';
         }
 
-        $update_snp_sth->execute( $outgroup_base, $mutant_to, $snp_freq, $snp_occured, $snp_id );
+        $update_snp_sth->execute( $outgroup_base, $mutant_to, $snp_freq,
+            $snp_occured, $snp_id );
     }
 
     return;
@@ -375,7 +384,7 @@ sub update_D_values {
         my $ref_seq2;
         my @sequences2;
 
-        # removes all mutations on the deepest indel branches without recombinations
+    # removes all mutations on the deepest indel branches without recombinations
         my $ref_seq3;
         my @sequences3;
 
@@ -442,22 +451,26 @@ sub update_D_values {
 
         if ( !( $group_i->empty and $group_n->empty ) ) {
             ( $d_indel, $d_noindel, $d_bii, $d_bnn, $d_complex )
-                = _two_group_D( $group_i, $group_n, $ref_seq, \@sequences, $window_length );
+                = _two_group_D( $group_i, $group_n, $ref_seq, \@sequences,
+                $window_length );
 
             if ( @sequences2 > 0 and length $sequences2[0] > 0 ) {
                 ( $d_indel2, $d_noindel2, $d_bii2, $d_bnn2, $d_complex2 )
-                    = _two_group_D( $group_i, $group_n, $ref_seq2, \@sequences2, $window_length );
+                    = _two_group_D( $group_i, $group_n, $ref_seq2,
+                    \@sequences2, $window_length );
             }
 
             if ( @sequences3 > 0 and length $sequences3[0] > 0 ) {
                 ( $d_indel3, $d_noindel3, $d_bii3, $d_bnn3, $d_complex3 )
-                    = _two_group_D( $group_i, $group_n, $ref_seq3, \@sequences3, $window_length );
+                    = _two_group_D( $group_i, $group_n, $ref_seq3,
+                    \@sequences3, $window_length );
             }
         }
         $update_sth->execute(
-            $d_indel,    $d_noindel, $d_bii,      $d_bnn,      $d_complex, $d_indel2,
-            $d_noindel2, $d_bii2,    $d_bnn2,     $d_complex2, $d_indel3,  $d_noindel3,
-            $d_bii3,     $d_bnn3,    $d_complex3, $isw_id
+            $d_indel,   $d_noindel,  $d_bii,      $d_bnn,
+            $d_complex, $d_indel2,   $d_noindel2, $d_bii2,
+            $d_bnn2,    $d_complex2, $d_indel3,   $d_noindel3,
+            $d_bii3,    $d_bnn3,     $d_complex3, $isw_id
         );
     }
 
