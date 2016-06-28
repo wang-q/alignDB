@@ -467,7 +467,7 @@ my $basic = sub {
     }
 
     {    # contents
-        my $query_name = 'Rrepeats portions';
+        my $query_name = 'Repeats portions';
         my $sql_query  = q{
             SELECT  SUM(s.seq_length * a.align_repeats) / SUM(s.seq_length)
             FROM    sequence s, align a

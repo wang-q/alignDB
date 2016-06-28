@@ -31,21 +31,22 @@ two_way_batch.pl - Batch process two-way alignDB
 
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'            => \( my $server           = $Config->{database}{server} ),
-    'port|P=i'              => \( my $port             = $Config->{database}{port} ),
-    'db|d=s'                => \( my $db_name          = $Config->{database}{db} ),
-    'username|u=s'          => \( my $username         = $Config->{database}{username} ),
-    'password|p=s'          => \( my $password         = $Config->{database}{password} ),
-    'ensembl|e=s'           => \( my $ensembl_db       = $Config->{database}{ensembl} ),
-    'dir_align|da=s'        => \( my $dir_align        = $Config->{taxon}{dir_align} ),
-    'target|t=s'            => \( my $target_name      = $Config->{taxon}{target_name} ),
-    'query|q=s'             => \( my $query_name       = $Config->{taxon}{query_name} ),
-    'annotation|a=s'        => \( my $file_anno ),
-    'parallel=i'            => \( my $parallel         = $Config->{generate}{parallel} ),
-    'batch=i'               => \( my $batch_number     = $Config->{generate}{batch} ),
-    'length_threshold|lt=i' => \( my $length_threshold = $Config->{generate}{length_threshold} ),
-    'run|r=s' => \( my $run      = "common" ),                                     # running tasks
-    'chr=s'   => \( my $init_chr = "$FindBin::RealBin/../data/chr_length.csv" ),
+    'server|s=s'     => \( my $server       = $Config->{database}{server} ),
+    'port|P=i'       => \( my $port         = $Config->{database}{port} ),
+    'db|d=s'         => \( my $db_name      = $Config->{database}{db} ),
+    'username|u=s'   => \( my $username     = $Config->{database}{username} ),
+    'password|p=s'   => \( my $password     = $Config->{database}{password} ),
+    'ensembl|e=s'    => \( my $ensembl_db   = $Config->{database}{ensembl} ),
+    'dir_align|da=s' => \( my $dir_align    = $Config->{taxon}{dir_align} ),
+    'target|t=s'     => \( my $target_name  = $Config->{taxon}{target_name} ),
+    'query|q=s'      => \( my $query_name   = $Config->{taxon}{query_name} ),
+    'annotation|a=s' => \( my $file_anno ),
+    'parallel=i'     => \( my $parallel     = $Config->{generate}{parallel} ),
+    'batch=i'        => \( my $batch_number = $Config->{generate}{batch} ),
+    'length_threshold|lt=i' =>
+        \( my $length_threshold = $Config->{generate}{length_threshold} ),
+    'run|r=s' => \( my $run = "common" ),    # running tasks
+    'chr=s' => \( my $init_chr = "$FindBin::RealBin/../data/chr_length.csv" ),
 ) or Getopt::Long::HelpMessage(1);
 
 # prepare to run tasks in @tasks
@@ -206,6 +207,10 @@ my $dispatch = {
 for my $step (@tasks) {
     my $cmd = $dispatch->{$step};
     next unless $cmd;
+
+    if ( $step == 30 and !defined $file_anno ) {
+        next;
+    }
 
     $stopwatch->block_message("Processing Step $step");
     $stopwatch->block_message($cmd);
