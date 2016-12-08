@@ -305,52 +305,6 @@ sub add_align {
     return $align_id;
 }
 
-sub parse_axt_file {
-    my $self   = shift;
-    my $infile = shift;
-    my $opt    = shift;
-
-    # minimal length
-    my $threshold = $opt->{threshold};
-    $threshold ||= $self->threshold;
-
-    my $query_length_of = $self->get_chr_legnth_of( $opt->{qname} );
-
-    my $in_fh = IO::Zlib->new( $infile, "rb" );
-    my $content = '';    # content of one block
-    while (1) {
-        last if $in_fh->eof and $content eq '';
-        my $line = '';
-        if ( !$in_fh->eof ) {
-            $line = $in_fh->getline;
-        }
-
-        if ( substr( $line, 0, 1 ) eq "#" ) {
-            next;
-        }
-        elsif ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-            my $info_refs = App::Fasops::Common::parse_axt_block( $content,
-                $query_length_of );
-            $content = '';
-
-            next if length( $info_refs->[0]{seq} ) < $threshold;
-
-            $info_refs->[0]{name} = $opt->{tname};
-            $info_refs->[1]{name} = $opt->{qname};
-
-            #            print YAML::Syck::Dump $info_refs;
-
-            $self->add_align($info_refs);
-        }
-        else {
-            $content .= $line;
-        }
-    }
-    $in_fh->close;
-
-    return;
-}
-
 # blocked fasta format
 sub parse_fas_file {
     my $self   = shift;
