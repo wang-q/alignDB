@@ -32,7 +32,7 @@ alignDB.pl - Batch process two/multi-way alignDB
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'     => \( my $server       = $Config->{database}{server} ),
-    'port|P=i'       => \( my $port         = $Config->{database}{port} ),
+    'port=i'         => \( my $port         = $Config->{database}{port} ),
     'db|d=s'         => \( my $db_name      = $Config->{database}{db} ),
     'username|u=s'   => \( my $username     = $Config->{database}{username} ),
     'password|p=s'   => \( my $password     = $Config->{database}{password} ),
@@ -41,7 +41,7 @@ GetOptions(
     'annotation|a=s' => \( my $file_anno    = $Config->{generate}{file_anno} ),
     'parallel=i'     => \( my $parallel     = $Config->{generate}{parallel} ),
     'batch=i'        => \( my $batch_number = $Config->{generate}{batch} ),
-    'threshold|lt=i' => \( my $threshold    = $Config->{generate}{threshold} ),
+    'length|lt=i'    => \( my $length       = $Config->{generate}{length} ),
     'outgroup|o'     => \( my $outgroup ),
     'run|r=s'        => \( my $run          = "common" ),
     'chr=s'          => \( my $init_chr     = "$FindBin::RealBin/data/chr_length.csv" ),
@@ -96,14 +96,14 @@ my $dispatch = {
         . " --password $password"
         . " -d $db_name"
         . ( $init_chr ? " --chr $init_chr" : "" ),
-    2 => "perl $FindBin::RealBin/init/gen_alignDB_fas.pl"
+    2 => "perl $FindBin::RealBin/init/gen_alignDB.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
         . " --password $password"
         . " --db $db_name"
         . " --da $dir_align"
-        . " -lt $threshold"
+        . " -lt $length"
         . " --parallel $parallel"
         . ( $outgroup ? " --outgroup" : "" ),
     3 => undef,
