@@ -8,6 +8,7 @@ use Config::Tiny;
 use FindBin;
 use YAML::Syck;
 
+use Path::Tiny;
 use Text::CSV_XS;
 
 use AlignDB::Stopwatch;
@@ -51,15 +52,13 @@ init_alignDB.pl - Initiate alignDB
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server   = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
+    'port=i'       => \( my $port     = $Config->{database}{port} ),
     'db|d=s'       => \( my $db       = $Config->{database}{db} ),
     'username|u=s' => \( my $username = $Config->{database}{username} ),
     'password|p=s' => \( my $password = $Config->{database}{password} ),
     'sql=s'        => \( my $init_sql = "$FindBin::RealBin/../init.sql" ),
-    'chr=s' => \( my $init_chr = "$FindBin::RealBin/../data/chr_length.csv" ),
+    'chr=s'        => \( my $init_chr = $Config->{generate}{file_chr_length} ),
 ) or Getopt::Long::HelpMessage(1);
-
-die "[$init_chr] doesn't exist\n" unless -f $init_chr;
 
 #----------------------------------------------------------#
 # call mysql
@@ -77,9 +76,9 @@ $stopwatch->start_message("Init $db...");
 
     print "# init\n";
     my DBI $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
-    open my $infh, '<', $init_sql;
-    my $content = do { local $/; <$infh> };
-    close $infh;
+    my $in_fh = path($init_sql)->openr;
+    my $content = do { local $/; <$in_fh> };
+    close $in_fh;
     my @statements = grep {/\w/} split /;/, $content;
     for (@statements) {
         $dbh->do($_) or die $dbh->errstr;
@@ -109,7 +108,7 @@ $stopwatch->start_message("Init $db...");
     );
 
     my $csv = Text::CSV_XS->new( { binary => 1, eol => "\n" } );
-    open my $csv_fh, "<", $init_chr;
+    my $csv_fh = path($init_chr)->openr;
     $csv->getline($csv_fh);    # bypass title line
 
     while ( my $row = $csv->getline($csv_fh) ) {
@@ -117,25 +116,6 @@ $stopwatch->start_message("Init $db...");
     }
     close $csv_fh;
     $insert_sth->finish;
-
-    # Now retrieve data from the table
-    my DBI $query_sth = $dbh->prepare(
-        q{
-        SELECT *
-        FROM chromosome
-        }
-    );
-    $query_sth->execute;
-    while ( my $ref = $query_sth->fetchrow_hashref ) {
-        my $common_name = $ref->{common_name};
-        if ( defined $common_name and ( $common_name eq "Human" ) ) {
-            printf
-                "Found a row: common_name = %s, chr_name = %s, chr_length = %s\n",
-                $ref->{common_name}, $ref->{chr_name}, $ref->{chr_length};
-            last;
-        }
-    }
-    $query_sth->finish;
 }
 
 $stopwatch->end_message;

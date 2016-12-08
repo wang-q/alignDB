@@ -38,13 +38,13 @@ GetOptions(
     'password|p=s'   => \( my $password     = $Config->{database}{password} ),
     'ensembl|e=s'    => \( my $ensembl_db   = $Config->{database}{ensembl} ),
     'dir_align|da=s' => \( my $dir_align    = $Config->{generate}{dir_align} ),
+    'chr=s'          => \( my $init_chr     = $Config->{generate}{file_chr_length} ),
     'annotation|a=s' => \( my $file_anno    = $Config->{generate}{file_anno} ),
     'parallel=i'     => \( my $parallel     = $Config->{generate}{parallel} ),
     'batch=i'        => \( my $batch_number = $Config->{generate}{batch} ),
     'length|lt=i'    => \( my $length       = $Config->{generate}{length} ),
     'outgroup|o'     => \( my $outgroup ),
     'run|r=s'        => \( my $run          = "common" ),
-    'chr=s'          => \( my $init_chr     = "$FindBin::RealBin/data/chr_length.csv" ),
 ) or Getopt::Long::HelpMessage(1);
 
 # prepare to run tasks in @tasks
