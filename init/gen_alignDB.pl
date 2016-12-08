@@ -9,12 +9,14 @@ use FindBin;
 use YAML::Syck;
 
 use File::Find::Rule;
+use Path::Tiny;
 
 use AlignDB::Run;
 use AlignDB::Stopwatch;
 
 use lib "$FindBin::RealBin/../lib";
 use AlignDB;
+use AlignDB::Outgroup;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -30,11 +32,11 @@ my $stopwatch = AlignDB::Stopwatch->new(
 
 =head1 NAME
 
-gen_alignDB.pl - Generate alignDB from axt files
+gen_alignDB_fas.pl - Generate alignDB from .fas files
 
 =head1 SYNOPSIS
 
-    perl gen_alignDB.pl [options]
+    perl gen_alignDB_fas.pl [options]
       Options:
         --help      -?          brief help message
         --server    -s  STR     MySQL server IP/Domain name
@@ -42,9 +44,8 @@ gen_alignDB.pl - Generate alignDB from axt files
         --db        -d  STR     database name
         --username  -u  STR     username
         --password  -p  STR     password
-        --dir_align -da STR     .axt files' directory
-        --target        STR     target_name
-        --query         STR     query_name
+        --dir_align -da STR     .fas files' directory
+        --outgroup  -o          alignments have an outgroup
         --length    -l  INT     threshold of alignment length
         --parallel      INT     run in parallel mode
 
@@ -57,9 +58,8 @@ GetOptions(
     'db|d=s'             => \( my $db               = $Config->{database}{db} ),
     'username|u=s'       => \( my $username         = $Config->{database}{username} ),
     'password|p=s'       => \( my $password         = $Config->{database}{password} ),
-    'dir_align|dir|da=s' => \( my $dir_align        = $Config->{taxon}{dir_align} ),
-    'target=s'           => \( my $target_name      = $Config->{taxon}{target_name} ),
-    'query=s'            => \( my $query_name       = $Config->{taxon}{query_name} ),
+    'dir_align|dir|da=s' => \( my $dir_align        = '' ),
+    'outgroup|o'         => \my $outgroup,
     'length|lt|l=i'      => \( my $length_threshold = $Config->{generate}{length_threshold} ),
     'parallel=i'         => \( my $parallel         = $Config->{generate}{parallel} ),
 ) or Getopt::Long::HelpMessage(1);
@@ -67,51 +67,57 @@ GetOptions(
 #----------------------------------------------------------#
 # Search for all files and push their paths to @files
 #----------------------------------------------------------#
-my @files = sort File::Find::Rule->file->name('*.axt')->in($dir_align);
-printf "\n----Total .axt Files: %4s----\n\n", scalar @files;
+my @files = sort File::Find::Rule->file->name('*.fas')->in($dir_align);
+printf "\n----Total .fas Files: %4s----\n\n", scalar @files;
 if ( scalar @files == 0 ) {
-    @files = sort File::Find::Rule->file->name('*.axt.gz')->in($dir_align);
-    printf "\n----Total .axt.gz Files: %4s----\n\n", scalar @files;
+    @files = sort File::Find::Rule->file->name('*.fas.gz')->in($dir_align);
+    printf "\n----Total .fas.gz Files: %4s----\n\n", scalar @files;
 }
+
+my @jobs = map { [$_] } @files;
 
 #----------------------------------------------------------#
 # worker
 #----------------------------------------------------------#
 my $worker = sub {
-    my $infile = shift;
+    my $job = shift;
+    my $opt = shift;
 
-    my $inner_watch = AlignDB::Stopwatch->new;
-    $inner_watch->block_message("Process $infile...");
+    my @infiles = @$job;
 
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    );
+    my $obj;
+    if ( !$outgroup ) {
+        $obj = AlignDB->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+    }
+    else {
+        $obj = AlignDB::Outgroup->new(
+            mysql  => "$db:$server",
+            user   => $username,
+            passwd => $password,
+        );
+    }
 
-    die "target_name not defined\n" unless length $target_name;
-    die "query_name not defined\n"  unless length $query_name;
-
-    $obj->parse_axt_file(
-        $infile,
-        {   tname     => $target_name,
-            qname     => $query_name,
-            threshold => $length_threshold,
-        }
-    );
-
-    $inner_watch->block_message( "$infile has been processed.", "duration" );
+    for my $infile (@infiles) {
+        print "process " . path($infile)->basename . "\n";
+        $obj->parse_fas_file( $infile, $opt );
+        print "Done.\n\n";
+    }
 
     return;
 };
 
 #----------------------------------------------------------#
-# start
+# start insert
 #----------------------------------------------------------#
 my $run = AlignDB::Run->new(
     parallel => $parallel,
-    jobs     => \@files,
+    jobs     => \@jobs,
     code     => $worker,
+    opt      => { threshold => $length_threshold, },
 );
 $run->run;
 
