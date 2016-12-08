@@ -11,6 +11,7 @@ use YAML::Syck;
 use Bio::Tools::GFF;
 
 use File::Basename;
+use Path::Tiny;
 
 use AlignDB::IntSpan;
 use AlignDB::Run;
@@ -43,7 +44,7 @@ update_annotation.pl - Add annotations to alignDB
       Options:
         --help          -?          brief help message
         --server        -s  STR     MySQL server IP/Domain name
-        --port          -P  INT     MySQL server port
+        --port              INT     MySQL server port
         --db            -d  STR     database name
         --username      -u  STR     username
         --password      -p  STR     password
@@ -55,13 +56,13 @@ update_annotation.pl - Add annotations to alignDB
 
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
-    'username|u=s' => \( my $username = $Config->{database}{username} ),
-    'password|p=s' => \( my $password = $Config->{database}{password} ),
-    'annotation|a=s' => \( my $file_anno ),
-    'parallel=i'     => \( my $parallel = $Config->{generate}{parallel} ),
+    'server|s=s'     => \( my $server       = $Config->{database}{server} ),
+    'port=i'         => \( my $port         = $Config->{database}{port} ),
+    'db|d=s'         => \( my $db           = $Config->{database}{db} ),
+    'username|u=s'   => \( my $username     = $Config->{database}{username} ),
+    'password|p=s'   => \( my $password     = $Config->{database}{password} ),
+    'annotation|a=s' => \( my $file_anno    = $Config->{generate}{file_anno} ),
+    'parallel=i'     => \( my $parallel     = $Config->{generate}{parallel} ),
     'batch=i'        => \( my $batch_number = $Config->{generate}{batch} ),
 ) or Getopt::Long::HelpMessage(1);
 
@@ -71,9 +72,10 @@ GetOptions(
 # other objects are initiated in subroutines
 $stopwatch->start_message("Update annotations of $db...");
 
+$file_anno = path($file_anno)->stringify;
 my $yml = YAML::Syck::LoadFile($file_anno);
 
-die "Invalid annotation YAML. Need cds.\n"  unless defined $yml->{cds};
+die "Invalid annotation YAML. Need cds.\n"    unless defined $yml->{cds};
 die "Invalid annotation YAML. Need repeat.\n" unless defined $yml->{repeat};
 
 my $cds_set_of    = App::RL::Common::runlist2set( $yml->{cds} );

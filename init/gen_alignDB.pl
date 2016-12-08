@@ -53,20 +53,21 @@ gen_alignDB.pl - Generate alignDB from .fas files
 
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'         => \( my $server           = $Config->{database}{server} ),
-    'port|P=i'           => \( my $port             = $Config->{database}{port} ),
-    'db|d=s'             => \( my $db               = $Config->{database}{db} ),
-    'username|u=s'       => \( my $username         = $Config->{database}{username} ),
-    'password|p=s'       => \( my $password         = $Config->{database}{password} ),
-    'dir_align|dir|da=s' => \( my $dir_align        = '' ),
-    'outgroup|o'         => \my $outgroup,
-    'length|lt|l=i'      => \( my $length_threshold = $Config->{generate}{length_threshold} ),
-    'parallel=i'         => \( my $parallel         = $Config->{generate}{parallel} ),
+    'server|s=s'     => \( my $server           = $Config->{database}{server} ),
+    'port=i'         => \( my $port             = $Config->{database}{port} ),
+    'db|d=s'         => \( my $db               = $Config->{database}{db} ),
+    'username|u=s'   => \( my $username         = $Config->{database}{username} ),
+    'password|p=s'   => \( my $password         = $Config->{database}{password} ),
+    'dir_align|da=s' => \( my $dir_align        = $Config->{generate}{dir_align} ),
+    'length|lt|l=i'  => \( my $length_threshold = $Config->{generate}{length_threshold} ),
+    'parallel=i'     => \( my $parallel         = $Config->{generate}{parallel} ),
+    'outgroup|o'     => \( my $outgroup ),
 ) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # Search for all files and push their paths to @files
 #----------------------------------------------------------#
+$dir_align = path($dir_align)->stringify;
 my @files = sort File::Find::Rule->file->name('*.fas')->in($dir_align);
 printf "\n----Total .fas Files: %4s----\n\n", scalar @files;
 if ( scalar @files == 0 ) {
