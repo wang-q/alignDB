@@ -32,11 +32,11 @@ my $stopwatch = AlignDB::Stopwatch->new(
 
 =head1 NAME
 
-gen_alignDB_fas.pl - Generate alignDB from .fas files
+gen_alignDB.pl - Generate alignDB from .fas files
 
 =head1 SYNOPSIS
 
-    perl gen_alignDB_fas.pl [options]
+    perl gen_alignDB.pl [options]
       Options:
         --help      -?          brief help message
         --server    -s  STR     MySQL server IP/Domain name

@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use strict;
 use warnings;
 use autodie;
@@ -25,7 +25,7 @@ my $stopwatch = AlignDB::Stopwatch->new(
 
 =head1 NAME
 
-alignDB.pl - Batch process two/multi-way alignDB
+alignDB.pl - Batch process two/multi-way alignDB with/without outgroup
 
 =cut
 
