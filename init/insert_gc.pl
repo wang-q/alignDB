@@ -48,7 +48,7 @@ insert_gc.pl - Add GC ralated tables to alignDB
         --parallel          run in parallel mode
         --batch             number of alignments process in one child process
 
-    perl ~/Scripts/alignDB/util/multi_way_batch.pl -d HumanvsCGOR \
+    perl ~/Scripts/alignDB/alignDB.pl -d HumanvsCGOR \
         -e human_65 --id 9606 -lt 5000 -st 0 --parallel 12 \
         -f ~/data/alignment/primates/HumanvsCGOR_mft --run 1
 
@@ -56,7 +56,7 @@ insert_gc.pl - Add GC ralated tables to alignDB
 
     perl ~/Scripts/alignDB/util/dup_db.pl -d HumanvsCGOR -g HumanvsCGOR_alt_level
     perl ~/Scripts/alignDB/init/insert_gc.pl -d HumanvsCGOR_alt_level --parallel 12 --alt_level
-    perl ~/Scripts/alignDB/util/multi_way_batch.pl -d HumanvsCGOR_alt_level \
+    perl ~/Scripts/alignDB/alignDB.pl -d HumanvsCGOR_alt_level \
         -e human_65 --id 9606 -lt 5000 -st 0 --parallel 12 \
         -f ~/data/alignment/primates/HumanvsCGOR_mft \
         --run 21,30,40

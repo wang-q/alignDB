@@ -12,7 +12,7 @@ perl ~/Scripts/alignDB/slice/write_align_slice.pl \
 mv ~/Scripts/alignDB/slice/HumanvsCGOR_gene_inset-5000_invert ~/Scripts/alignDB/slice/HumanvsCGOR_away_gene
 mv ~/Scripts/alignDB/slice/HumanvsCGOR_away_gene ~/data/alignment/feature
 
-perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
+perl ~/Scripts/alignDB/alignDB.pl \
     -d HumanvsCGOR_away_gene -e human_65 \
     --outgroup --block --id ~/data/alignment/primates/id2name.csv \
     -da ~/data/alignment/feature/HumanvsCGOR_away_gene \
@@ -33,7 +33,7 @@ perl ~/Scripts/alignDB/slice/write_align_slice.pl \
     -d HumanvsCGOR --outgroup -y HumanvsCGOR_away_gene_non_repeat/HumanvsCGOR_away_gene_non_repeat.yml --parallel 8
 mv ~/Scripts/alignDB/slice/HumanvsCGOR_away_gene_non_repeat ~/data/alignment/feature
 
-perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
+perl ~/Scripts/alignDB/alignDB.pl \
     -d HumanvsCGOR_away_gene_non_repeat -e human_65 \
     --outgroup --block --id ~/data/alignment/primates/id2name.csv \
     -da ~/data/alignment/feature/HumanvsCGOR_away_gene_non_repeat \
@@ -51,7 +51,7 @@ mv ~/Scripts/alignDB/slice/HumanvsCGOR_intron ~/data/alignment/feature
 perl ~/Scripts/alignDB/slice/write_align_slice.pl \
     -d HumanvsCGOR --outgroup -y ~/data/alignment/feature/HumanvsCGOR_intron/HumanvsCGOR_intron.yml --parallel 8
 
-perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
+perl ~/Scripts/alignDB/alignDB.pl \
     -d HumanvsCGOR_intron -e human_65 \
     --outgroup --block --id ~/data/alignment/primates/id2name.csv \
     -da ~/data/alignment/feature/HumanvsCGOR_intron  \
@@ -83,7 +83,7 @@ done
 mv ~/Scripts/alignDB/slice/bin[0-9] ~/data/alignment/feature
 
 for i in `seq 0 9`; do
-    perl ~/Scripts/alignDB/extra/multi_way_batch.pl \
+    perl ~/Scripts/alignDB/alignDB.pl \
         -d HumanvsCGOR_bin$i -e humanb_65 \
         --outgroup --block --id ~/data/alignment/primates/id2name.csv \
         -da ~/data/alignment/feature/bin$i \
