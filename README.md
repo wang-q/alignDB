@@ -146,6 +146,10 @@ Both of them can be converted to blocked fasta format (.fas) used by `alignDB` v
     Runtime 5 seconds.
     ```
 
+## A gtk3 based GUI
+
+`perl alignDB.pl -r gui` or `perl gui/gui3.pl`.
+
 ## Two-way batch
 
 Use `build_ensembl.pl` to build a local ensembl database.
