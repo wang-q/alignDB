@@ -24,6 +24,10 @@ Both of them can be converted to blocked fasta format (.fas) used by `alignDB` v
 [fasops](https://metacpan.org/pod/App::Fasops). Here's
 [an example](https://github.com/wang-q/egaz/blob/master/doc/Scer-batch-example.md#fas-from-axt-files).
 
+## Structure of source files
+
+![](doc/alignDB.png)
+
 ## Detailed steps starting from .fas files (two-way)
 
 0. `cd ~/Scripts/alignDB`
