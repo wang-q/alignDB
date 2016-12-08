@@ -195,18 +195,11 @@ sub read_config {
     $self->set_value( "entry_username", $Config->{database}{username} );
     $self->set_value( "entry_password", $Config->{database}{password} );
 
-    # database init values
+    # database and files
     $self->set_value( "entry_db_name",          $Config->{database}{db} );
-    $self->set_value( "entry_length_threshold", $Config->{generate}{length_threshold} );
-
-    # axt
-    $self->set_value( "entry_target_name",   $Config->{taxon}{target_name} );
-    $self->set_value( "entry_query_name",    $Config->{taxon}{query_name} );
-    $self->set_value( "entry_dir_align_axt", path( $Config->{taxon}{dir_align} )->stringify );
-    $self->set_value( "entry_annotation",    path( $Config->{taxon}{file_anno} )->stringify );
-
-    # fas
-    $self->set_value( "entry_dir_align_fas", path( $Config->{taxon}{dir_align_fas} )->stringify );
+    $self->set_value( "entry_length_threshold", $Config->{generate}{length} );
+    $self->set_value( "entry_dir_align",        path( $Config->{generate}{dir_align} )->stringify );
+    $self->set_value( "entry_annotation",       path( $Config->{generate}{file_anno} )->stringify );
 
     # insert GC
     $self->set_value( "checkbutton_insert_gc",      $Config->{gc}{insert_gc} );
@@ -224,9 +217,9 @@ sub on_toolbutton_about_clicked {
     Gtk3->show_about_dialog(
         Gtk3::Window->new,
         program_name => 'AlignDB GUI3',
-        version      => '1.0.0',
+        version      => '1.1.0',
         copyright    => "(C) 2005-2016 Qiang Wang",
-        authors      => ['Qiang Wang <wangq@nju.edu.cn>'],
+        authors      => ['Qiang Wang <wangq@outlook.com>'],
         comments     => "The GUI interface for AlignDB",
         title        => "About AlignDB GUI3",
         wrap_license => TRUE,
@@ -289,76 +282,6 @@ sub on_toolbutton_process_clicked {
 #----------------------------#
 # dialogs
 #----------------------------#
-sub dialog_taxon {
-    my $self = shift;
-
-    # Create the dialog and init two buttons
-    my $dialog = Gtk3::Dialog->new(
-        "Load taxon...",
-        $self->win, [qw{modal destroy-with-parent}],
-        'gtk-ok'    => 'ok',
-        'gtk-close' => 'close',
-    );
-
-    my $label = Gtk3::Label->new("Choose a taxon:");
-    $label->set_alignment( 0, 0.5 );
-    $label->set_justify('left');
-
-    # put common names to listmodel
-    my $model = Gtk3::ListStore->new('Glib::String');
-    my @common_names;
-    for my $line ( path( $FindBin::RealBin, "..", "data", "chr_length.csv" )->lines ) {
-        my ($name) = split( /,/, $line );
-        push @common_names, $name;
-
-    }
-    @common_names = uniq(@common_names);
-    for (@common_names) {
-
-        # The iter is a pointer in the treestore. We use to add data.
-        my $iter = $model->append;
-        $model->set( $iter, 0 => $_, );
-    }
-
-    my $treeview = Gtk3::TreeView->new_with_model($model);
-
-    # Add columns
-    $treeview->insert_column_with_attributes( 0, "name", Gtk3::CellRendererText->new, text => 0 );
-    $treeview->get_column(0)->set_sort_column_id(0);
-
-    # get the Gtk3::TreeSelection of $treeview
-    my $treeselection = $treeview->get_selection;
-    $treeselection->set_mode('single');
-
-    # add TreeView to a scrolledwindow
-    my $sw = Gtk3::ScrolledWindow->new;
-    $sw->set_size_request( 360, 240 );
-    $sw->set_policy( 'automatic', 'automatic' );
-    $sw->add($treeview);
-
-    # Create a vbox
-    my $vbox = Gtk3::Box->new( 'vertical', 5 );
-    $vbox->pack_start( $label, FALSE, FALSE, 5 );
-    $vbox->pack_start( $sw,    TRUE,  TRUE,  0 );
-    $dialog->get_content_area()->add($vbox);
-    $dialog->show_all;
-
-    # get response
-    my $response = $dialog->run;
-    my $name;
-    if ( $response eq 'ok' ) {
-        my $iter = $treeselection->get_selected;
-        if ( defined $iter ) {
-
-            # we want data at the model's columns where the iter is pointing
-            $name = $model->get( $iter, 0 );
-        }
-    }
-    $dialog->destroy;
-
-    return $name;
-}
-
 sub dialog_choose_db {
     my $self = shift;
 
@@ -567,98 +490,19 @@ sub on_button_db_meta_clicked {
     return;
 }
 
-sub on_button_load_target_clicked {
-    my $self = shift;
-
-    my $name = $self->dialog_taxon;
-
-    if ( defined $name ) {
-        $self->set_value( "entry_target_name", $name );
-    }
-
-    return;
-}
-
-sub on_button_load_query_clicked {
-    my $self = shift;
-
-    my $name = $self->dialog_taxon;
-
-    if ( defined $name ) {
-        $self->set_value( "entry_query_name", $name );
-    }
-
-    return;
-}
-
 sub on_button_auto_db_name_clicked {
     my $self = shift;
 
-    my $active = $self->get_value("notebook_generate");
-    my @pages = ( "Gen. axt", "Gen. fas", "Join dbs", "GC", "Feature" );
+    #    my $active = $self->get_value("notebook_generate");
+    #    my @pages = ( "Generate", "GC", "Feature" );
+    #    $self->append_text("Active page is [$pages[$active]]\n");
 
-    $self->append_text("Active page is [$pages[$active]]\n");
+    my $dir_align = $self->get_value("entry_dir_align");
+    my $db_name   = path($dir_align)->basename;
 
-    if ( $active == 0 ) {
-        my $target_name = $self->get_value("entry_target_name");
-        my $query_name  = $self->get_value("entry_query_name");
-        my $db_name     = "$target_name" . "vs" . "$query_name";
-
-        $self->set_value( "entry_db_name", $db_name );
-        $self->append_text("db_name set to ");
-        $self->append_text( "$db_name\n", "bold", "blue" );
-    }
-    elsif ( $active == 1 ) {
-        my $dir_align_fas = $self->get_value("entry_dir_align_fas");
-        my $db_name       = path($dir_align_fas)->basename;
-
-        $self->set_value( "entry_db_name", $db_name );
-        $self->append_text("db_name set to ");
-        $self->append_text( "$db_name\n", "bold", "blue" );
-    }
-    elsif ( $active == 2 ) {
-        my $first_db  = $self->get_value("entry_first_db");
-        my $second_db = $self->get_value("entry_second_db");
-        my $goal_db;
-
-        my $first    = $self->get_value("combobox_first");
-        my $second   = $self->get_value("combobox_second");
-        my $outgroup = $self->get_value("combobox_outgroup");
-
-        my $server   = $self->get_value("entry_server");
-        my $port     = $self->get_value("entry_port");
-        my $username = $self->get_value("entry_username");
-        my $password = $self->get_value("entry_password");
-
-        my $first_obj = AlignDB->new(
-            mysql  => "$first_db:$server",
-            user   => $username,
-            passwd => $password,
-        );
-        my ( $first_target_name, $first_query_name ) = $first_obj->get_names;
-
-        my $second_obj = AlignDB->new(
-            mysql  => "$second_db:$server",
-            user   => $username,
-            passwd => $password,
-        );
-        my ( $second_target_name, $second_query_name ) = $second_obj->get_names;
-
-        my %name_of = (
-            '0target' => $first_target_name,
-            '0query'  => $first_query_name,
-            '1target' => $second_target_name,
-            '1query'  => $second_query_name,
-        );
-        $goal_db = $name_of{$first} . 'vs' . $name_of{$second} . 'ref' . $name_of{$outgroup};
-
-        $self->set_value( "entry_db_name", $goal_db );
-        $self->append_text("db_name set to ");
-        $self->append_text( "$goal_db\n", "bold", "blue" );
-    }
-    else {
-        $self->append_text("Can't set db_name on page [$pages[$active]] of Generate.\n");
-    }
+    $self->set_value( "entry_db_name", $db_name );
+    $self->append_text("db_name set to ");
+    $self->append_text( "$db_name\n", "bold", "blue" );
 
     return;
 }
@@ -674,7 +518,7 @@ sub on_button_choose_db_clicked {
     return;
 }
 
-sub on_button_open_dir_align_axt_clicked {
+sub on_button_open_dir_align_clicked {
     my $self = shift;
 
     my $dia = Gtk3::FileChooserDialog->new(
@@ -690,34 +534,7 @@ sub on_button_open_dir_align_axt_clicked {
             if ( $response_id eq 'ok' ) {
                 my $dir = $dia->get_filename;
                 if ( defined $dir ) {
-                    $self->set_value( "entry_dir_align_axt", $dir );
-                }
-            }
-            $dia->destroy;
-            return FALSE;
-        }
-    );
-
-    return;
-}
-
-sub on_button_open_dir_align_fas_clicked {
-    my $self = shift;
-
-    my $dia = Gtk3::FileChooserDialog->new(
-        'Choose a dir', $self->win, 'select-folder',
-        'gtk-cancel' => 'cancel',
-        'gtk-ok'     => 'ok'
-    );
-
-    $dia->show;
-    $dia->signal_connect(
-        'response' => sub {
-            my ( $dia, $response_id ) = @_;
-            if ( $response_id eq 'ok' ) {
-                my $dir = $dia->get_filename;
-                if ( defined $dir ) {
-                    $self->set_value( "entry_dir_align_fas", $dir );
+                    $self->set_value( "entry_dir_align", $dir );
                 }
             }
             $dia->destroy;
@@ -757,26 +574,6 @@ sub on_button_auto_stat_file_multi_clicked {
         = path( $FindBin::RealBin, '..', 'stat', "$db_name.multi.xlsx" )->absolute->stringify;
     $self->set_value( "entry_stat_file_multi", $outfile );
 
-    return;
-}
-
-sub on_button_choose_first_db_clicked {
-    my $self = shift;
-
-    my $result = $self->dialog_choose_db;
-    return unless $result;
-
-    $self->set_value( "entry_first_db", $result->{db_name} );
-    return;
-}
-
-sub on_button_choose_second_db_clicked {
-    my $self = shift;
-
-    my $result = $self->dialog_choose_db;
-    return unless $result;
-
-    $self->set_value( "entry_second_db", $result->{db_name} );
     return;
 }
 
@@ -850,49 +647,15 @@ sub on_button_gen_aligndb_clicked {
     my $password = $self->get_value("entry_password");
     my $db_name  = $self->get_value("entry_db_name");
 
-    my $parallel = $self->get_value("entry_parallel");
-
-    my $length_threshold = $self->get_value("entry_length_threshold");
-
-    my $target_name = $self->get_value("entry_target_name");
-    my $query_name  = $self->get_value("entry_query_name");
-    my $dir_align   = $self->get_value("entry_dir_align_axt");
-
-    my $cmd
-        = "perl $FindBin::RealBin/../init/gen_alignDB.pl"
-        . " -s $server"
-        . " --port $port"
-        . " -u $username"
-        . " --password $password"
-        . " -d $db_name"
-        . " -t $target_name"
-        . " -q $query_name"
-        . " -dir $dir_align"
-        . " -lt $length_threshold"
-        . " --parallel $parallel";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
-sub on_button_gen_aligndb_fas_clicked {
-    my $self = shift;
-
-    my $server   = $self->get_value("entry_server");
-    my $port     = $self->get_value("entry_port");
-    my $username = $self->get_value("entry_username");
-    my $password = $self->get_value("entry_password");
-    my $db_name  = $self->get_value("entry_db_name");
-
     my $length_threshold = $self->get_value("entry_length_threshold");
     my $parallel         = $self->get_value("entry_parallel");
 
-    my $dir_align = $self->get_value("entry_dir_align_fas");
+    my $dir_align = $self->get_value("entry_dir_align");
 
-    my $outgroup = $self->get_value("checkbutton_fas_outgroup");
+    my $outgroup = $self->get_value("checkbutton_outgroup");
 
     my $cmd
-        = "perl $FindBin::RealBin/../init/gen_alignDB_fas.pl"
+        = "perl $FindBin::RealBin/../init/gen_alignDB.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
@@ -907,7 +670,7 @@ sub on_button_gen_aligndb_fas_clicked {
     return;
 }
 
-sub on_button_insert_isw_axt_clicked {
+sub on_button_insert_isw_clicked {
     my $self = shift;
 
     my $server   = $self->get_value("entry_server");
@@ -918,31 +681,7 @@ sub on_button_insert_isw_axt_clicked {
 
     my $parallel = $self->get_value("entry_parallel");
 
-    my $cmd
-        = "perl $FindBin::RealBin/../init/insert_isw.pl"
-        . " -s $server"
-        . " --port $port"
-        . " -u $username"
-        . " --password $password"
-        . " -d $db_name"
-        . " --parallel $parallel";
-
-    $self->exec_cmd($cmd);
-    return;
-}
-
-sub on_button_insert_isw_fas_clicked {
-    my $self = shift;
-
-    my $server   = $self->get_value("entry_server");
-    my $port     = $self->get_value("entry_port");
-    my $username = $self->get_value("entry_username");
-    my $password = $self->get_value("entry_password");
-    my $db_name  = $self->get_value("entry_db_name");
-
-    my $parallel = $self->get_value("entry_parallel");
-
-    my $outgroup = $self->get_value("checkbutton_fas_outgroup");
+    my $outgroup = $self->get_value("checkbutton_outgroup");
 
     my $cmd
         = "perl $FindBin::RealBin/../init/insert_isw.pl"
