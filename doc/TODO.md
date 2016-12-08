@@ -1,3 +1,9 @@
+* Switch from AlignDB::Run to MCE
+
+* Rewirte count_bed.pl
+
+* Remove SSW
+
 * Merge three_stat and multi_stat
 
 * update_isw_cpg.pl calc wrong isw_cpg_pi
