@@ -5,7 +5,6 @@ use autodie;
 
 package AlignDB::GUI;
 use Moose;
-use MooseX::AttributeHelpers;
 
 use Config::Tiny;
 use FindBin;
@@ -21,21 +20,10 @@ use List::MoreUtils qw(uniq);
 use lib "$FindBin::RealBin/../lib";
 use AlignDB;
 
-has 'app'  => ( is => 'ro', isa => 'Object', );
-has 'win'  => ( is => 'ro', isa => 'Object', );
-has 'text' => ( is => 'ro', isa => 'Object', );
-
-has 'processes' => (
-    metaclass => 'Collection::Array',
-    is        => 'ro',
-    isa       => 'ArrayRef',
-    default   => sub { [] },
-    provides  => {
-        push     => 'add_processes',
-        elements => 'all_processes',
-        count    => 'count_processes',
-    }
-);
+has 'app'       => ( is => 'ro', isa => 'Object', );
+has 'win'       => ( is => 'ro', isa => 'Object', );
+has 'text'      => ( is => 'ro', isa => 'Object', );
+has 'processes' => ( is => 'ro', isa => 'ArrayRef', default => sub { [] }, );
 
 sub BUILD {
     my $self = shift;
@@ -172,7 +160,7 @@ sub exec_cmd {
 
     my $proc = Proc::Background->new($cmd);
     $proc->{cmd} = $cmd;
-    $self->add_processes($proc);
+    push @{ $self->{processes} }, $proc;
 
     return;
 }
@@ -247,9 +235,9 @@ sub on_toolbutton_default_clicked {
 sub on_toolbutton_process_clicked {
     my $self = shift;
 
-    my $count = $self->count_processes;
+    my $count = scalar @{ $self->{processes} };
 
-    for my $proc ( $self->all_processes ) {
+    for my $proc ( @{ $self->{processes} } ) {
         $proc->alive;
         if ( $proc->alive ) {
             $self->append_text(
