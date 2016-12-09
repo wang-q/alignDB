@@ -1,6 +1,8 @@
 # TODOs
 
+* Switch from `Getopt::Long` to `Getopt::Long::Descriptive`
 * Switch from AlignDB::Run to MCE
+* Remove attribute mysql from AlignDB.pm
 * Rewirte count_bed.pl
 * update_isw_cpg.pl calc wrong isw_cpg_pi
 * Separate indel_content.pl
