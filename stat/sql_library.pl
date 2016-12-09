@@ -3,54 +3,48 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long::Descriptive;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use DBI;
 use AlignDB::SQL;
 use AlignDB::SQL::Library;
 
-#----------------------------------------------------------#
-# SQL
-#----------------------------------------------------------#
+my $description = <<'EOF';
+Object headers in sql_library are named under the following rules:
+    TYEP-NAME-BINDINGs
+e.g.: common-distance-0, multi-distance-0
 
-# Object headers in sql_library are named under the following rules:
-#   TYEP-NAME-BINDINGs
-# e.g.: common-distance-0
-#       multi-distance-0
+Usage: perl %c [options]
+EOF
 
-#----------------------------------------------------------#
-# GetOpt section
-#----------------------------------------------------------#
+(
+    #@type Getopt::Long::Descriptive::Opts
+    my $opt,
 
-=head1 NAME
+    #@type Getopt::Long::Descriptive::Usage
+    my $usage,
+    )
+    = Getopt::Long::Descriptive::describe_options(
+    $description,
+    [ 'help|h', 'display this message' ],
+    [],
+    [ 'lib|l=s',   'Path to sql.lib', { default => "$FindBin::RealBin/sql.lib" }, ],
+    [ 'verbose|v', 'verbose mode', ],
+    { show_defaults => 1, }
+    );
 
-ld_stat_factory.pl - LD stats for alignDB
-
-=head1 SYNOPSIS
-
-    perl ld_stat_factory.pl [options]
-      Options:
-        --help      -?          brief help message
-        --lib           STR     Path to sql.lib
-        --verbose               verbose mode
-        
-=cut
-
-GetOptions(
-    'help|?' => sub { HelpMessage(0) },
-    'lib=s' => \( my $lib_file = "$FindBin::RealBin/sql.lib" ),
-    'verbose' => \my $verbose,
-) or HelpMessage(1);
+$usage->die if $opt->{help};
 
 #----------------------------------------------------------#
 # Init section
 #----------------------------------------------------------#
-unlink $lib_file if -e $lib_file;
-my $sql_file = AlignDB::SQL::Library->new( lib => $lib_file );
+unlink $opt->{lib} if -e $opt->{lib};
+my $sql_file = AlignDB::SQL::Library->new( lib => $opt->{lib} );
 
+#@returns AlignDB::SQL
 sub ns { return AlignDB::SQL->new; }
 
 #----------------------------------------------------------#
@@ -86,7 +80,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT
@@ -111,7 +105,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 {
@@ -129,7 +123,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT
@@ -160,7 +154,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT
@@ -181,7 +175,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT
@@ -205,7 +199,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT
@@ -239,7 +233,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT
@@ -272,7 +266,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT
@@ -314,7 +308,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT CONCAT(isw_type, isw_distance) isw_type_distance,
@@ -345,7 +339,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 {
@@ -366,7 +360,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT CONCAT(isw.isw_type, isw.isw_distance) isw_type_distance,
@@ -403,7 +397,7 @@ sub ns { return AlignDB::SQL->new; }
     $sql->group( { column => 'isw_distance', } );
 
     $sql_file->set( $name, $sql );
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT  indel_length,
@@ -424,7 +418,7 @@ sub ns { return AlignDB::SQL->new; }
     $sql->group( { column => 'indel_length' } );
 
     $sql_file->set( $name, $sql );
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT isw_distance, COUNT(snp_id) snp_number
@@ -457,7 +451,7 @@ sub ns { return AlignDB::SQL->new; }
     $sql->group( { column => 'isw_distance', } );
 
     $sql_file->set( $name, $sql );
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT
@@ -496,7 +490,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #----------------------------------------------------------#
@@ -543,7 +537,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 {
@@ -573,7 +567,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 {
@@ -603,7 +597,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT  indel_length,
@@ -627,7 +621,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #----------------------------------------------------------#
@@ -652,7 +646,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT  AVG(gsw_distance),
@@ -688,7 +682,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 {
@@ -716,7 +710,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #----------------------------------------------------------#
@@ -748,7 +742,7 @@ sub ns { return AlignDB::SQL->new; }
 
     $sql_file->set( $name, $sql );
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 {
@@ -768,7 +762,7 @@ sub ns { return AlignDB::SQL->new; }
     $sql_file->set( $name, $sql );
 
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #----------------------------------------------------------#
@@ -821,7 +815,7 @@ sub ns { return AlignDB::SQL->new; }
     $sql_file->set( $name, $sql );
 
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 #SELECT
@@ -878,7 +872,7 @@ sub ns { return AlignDB::SQL->new; }
     $sql_file->set( $name, $sql );
 
     print "\n[$name]\n";
-    print $sql->as_sql if $verbose;
+    print $sql->as_sql if $opt->{verbose};
 }
 
 END {
