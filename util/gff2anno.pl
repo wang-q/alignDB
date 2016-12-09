@@ -58,7 +58,7 @@ for my $infile (@ARGV) {
         my $chr_end   = $array[4];
 
         if ($remove) {
-            $chr_name =~ s/chr0?//;
+            $chr_name =~ s/chr0?//i;
             $chr_name =~ s/\.\d+$//;
         }
 
