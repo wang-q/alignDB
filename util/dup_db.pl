@@ -3,10 +3,10 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long::Descriptive;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 use IPC::Cmd qw(can_run);
 
@@ -15,77 +15,68 @@ use AlignDB::Stopwatch;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# record ARGV and Config
-my $stopwatch = AlignDB::Stopwatch->new(
-    program_name => $0,
-    program_argv => [@ARGV],
-    program_conf => $Config,
-);
+my $conf_db   = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini")->{database};
+my $stopwatch = AlignDB::Stopwatch->new;
 
-=head1 NAME
+my $description = <<'EOF';
+Duplicate a database or dump to a gzipped file.
 
-dup_db.pl - Duplicate a database or dump to a gzipped file
+    perl util/dup_db.pl -d S288CvsRM11_1a -z # S288CvsRM11.dump.sql.gz
+    perl util/dup_db.pl -f S288CvsRM11_1a.dump.sql.gz -g S288CvsRM11_1a_dup
 
-=head1 SYNOPSIS
+Usage: perl %c [options]
+EOF
 
-    perl dup_db.pl [options]
-      Options:
-        --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
-        --db        -d  STR     database name
-        --username  -u  STR     username
-        --password  -p  STR     password
-        --file                  dump file name
-        --goal                  dup db name
-        --gzip                  dump file is gzipped
-        --yes                   overwrite dump file
+(
+    #@type Getopt::Long::Descriptive::Opts
+    my $opt,
 
-    perl dup_db.pl -d S288CvsRM11 -z # S288CvsRM11.dump.sql.gz
-    perl dup_db.pl -f S288CvsRM11.dump.sql.gz -g S288CvsRM11_dup
-    
-=cut
+    #@type Getopt::Long::Descriptive::Usage
+    my $usage,
+    )
+    = Getopt::Long::Descriptive::describe_options(
+    $description,
+    [ 'help|h', 'display this message' ],
+    [],
+    ['Database init values'],
+    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf_db->{server} } ],
+    [ 'port=i',       'MySQL port',      { default => $conf_db->{port} } ],
+    [ 'username|u=s', 'username',        { default => $conf_db->{username} } ],
+    [ 'password|p=s', 'password',        { default => $conf_db->{password} } ],
+    [ 'db|d=s',       'database name',   { default => $conf_db->{db} } ],
+    [],
+    [ 'file|f=s', 'dump file name', ],
+    [ 'goal|g=s', 'dup db name', ],
+    [ 'gzip|z',   'dump file is gzipped', ],
+    [ 'yes|y',    'overwrite dump file', ],
+    { show_defaults => 1, }
+    );
 
-GetOptions(
-    'help|?' => sub { HelpMessage(0) },
-    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
-    'username|u=s' => \( my $username = $Config->{database}{username} ),
-    'password|p=s' => \( my $password = $Config->{database}{password} ),
-    'file|f=s'     => \( my $file_dump ),
-    'goal|g=s'     => \( my $goal_db ),
-    'gzip|z'       => \( my $gzip ),
-    'yes|y'        => \( my $yes ),
-) or HelpMessage(1);
+$usage->die if $opt->{help};
 
-#----------------------------------------------------------#
-# Check external commands
-#----------------------------------------------------------#
 if ( !can_run('mysql') ) {
     die "[mysql] not found in your system.\n";
 }
 
-if ($file_dump) {
-    if ( $file_dump =~ /\.gz$/ ) {
-        if ( !$gzip ) {
-            print "The file [$file_dump] seems like a gzipped file, set --gzip ON.\n";
-            $gzip++;
+if ( $opt->{file} ) {
+    if ( $opt->{file} =~ /\.gz$/ ) {
+        if ( !$opt->{gzip} ) {
+            print "The file [$opt->{file}] seems like a gzipped file, set --gzip ON.\n";
+            $opt->{gzip}++;
         }
     }
     else {
-        if ($gzip) {
-            print "The name of file [$file_dump] doesn't end with '.gz'.\n";
+        if ( $opt->{gzip} ) {
+            print "The name of file [$opt->{file}] doesn't end with '.gz'.\n";
             print "Append '.gz' to it.\n";
-            $file_dump .= '.gz';
-            print "It's [$file_dump] now.\n";
+            $opt->{file} .= '.gz';
+            print "It's [$opt->{file}] now.\n";
         }
     }
 }
 
-if ($gzip) {
+if ( $opt->{gzip} ) {
     unless ( can_run('gzip') ) {
         die "[gzip] not found in your system.\n";
     }
@@ -96,36 +87,36 @@ if ($gzip) {
 #----------------------------------------------------------#
 $stopwatch->start_message("Operation start...");
 
-my $str = " -h$server -P$port -u$username -p$password ";
+my $str = " -h$opt->{server} -P$opt->{port} -u$opt->{username} -p$opt->{password} ";
 
 # dump db
-if ($file_dump) {
-    if ( !-e $file_dump or $yes ) {
+if ( $opt->{file} ) {
+    if ( !-e $opt->{file} or $opt->{yes} ) {
         my $dump;
-        if ($gzip) {
-            $dump = "mysqldump $str $db | gzip > $file_dump";
+        if ( $opt->{gzip} ) {
+            $dump = "mysqldump $str $opt->{db} | gzip > $opt->{file}";
         }
         else {
-            $dump = "mysqldump $str $db  > $file_dump";
+            $dump = "mysqldump $str $opt->{db}  > $opt->{file}";
         }
 
         print "===> dump\n$dump\n\n";
         system($dump);
     }
     else {
-        print "[$file_dump] exists!\n";
+        print "[$opt->{file}] exists!\n";
     }
 }
 else {
-    $file_dump = $db . ".dump.sql";
-    $file_dump .= '.gz' if $gzip;
+    $opt->{file} = $opt->{db} . ".dump.sql";
+    $opt->{file} .= '.gz' if $opt->{gzip};
 
     my $dump;
-    if ($gzip) {
-        $dump = "mysqldump $str $db | gzip > $file_dump";
+    if ( $opt->{gzip} ) {
+        $dump = "mysqldump $str $opt->{db} | gzip > $opt->{file}";
     }
     else {
-        $dump = "mysqldump $str $db  > $file_dump";
+        $dump = "mysqldump $str $opt->{db}  > $opt->{file}";
     }
 
     print "===> dump\n$dump\n\n";
@@ -133,16 +124,16 @@ else {
 }
 
 # load dump
-if ($goal_db) {
-    my $drop   = "mysql $str -e \"DROP DATABASE IF EXISTS $goal_db;\"";
-    my $create = "mysql $str -e \"CREATE DATABASE $goal_db;\"";
+if ( $opt->{goal} ) {
+    my $drop   = "mysql $str -e \"DROP DATABASE IF EXISTS $opt->{goal};\"";
+    my $create = "mysql $str -e \"CREATE DATABASE $opt->{goal};\"";
     my $duplicate;
 
-    if ($gzip) {
-        $duplicate = "gzip --stdout --decompress --force $file_dump | mysql $str $goal_db";
+    if ( $opt->{gzip} ) {
+        $duplicate = "gzip --stdout --decompress --force $opt->{file} | mysql $str $opt->{goal}";
     }
     else {
-        $duplicate = "mysql $str $goal_db < $file_dump";
+        $duplicate = "mysql $str $opt->{goal} < $opt->{file}";
     }
 
     print "#drop\n$drop\n\n";

@@ -5,6 +5,7 @@ use autodie;
 
 use Getopt::Long::Descriptive;
 use Config::Tiny;
+use FindBin;
 use YAML::Syck;
 
 use DBI;
@@ -13,21 +14,27 @@ use Text::Table;
 
 use AlignDB::Stopwatch;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-use AlignDB;
-
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $conf_db = Config::Tiny->read("$FindBin::Bin/../alignDB.ini")->{database};
 
-(   my Getopt::Long::Descriptive::Opts $opt,
-    my Getopt::Long::Descriptive::Usage $usage
+my $conf_db = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini")->{database};
+
+my $description = <<'EOF';
+Write results of sql query to file, supporting multiple styles.
+
+Usage: perl %c [options]
+EOF
+
+(
+    #@type Getopt::Long::Descriptive::Opts
+    my $opt,
+
+    #@type Getopt::Long::Descriptive::Usage
+    my $usage,
     )
     = Getopt::Long::Descriptive::describe_options(
-    "Write sql query results to a file, supporting multiple styles\n"
-        . "Usage: perl %c [options]",
+    $description,
     [ 'help|h', 'display this message' ],
     [],
     ['Database init values'],
@@ -37,32 +44,25 @@ my $conf_db = Config::Tiny->read("$FindBin::Bin/../alignDB.ini")->{database};
     [ 'password|p=s', 'password',        { default => $conf_db->{password} } ],
     [ 'db|d=s',       'database name',   { default => $conf_db->{db} } ],
     [],
-    [ 'query|q=s', 'SQL statement', { default => "SELECT * FROM meta" } ],
-    [ 'file|f=s',  'SQL file', ],
+    [ 'query|q=s',  'SQL statement', { default => "SELECT * FROM meta" } ],
+    [ 'file|f=s',   'SQL file', ],
     [ 'output|o=s', 'output filename. [stdout] for screen' ],
-    [   'type|t=s',
-        'output style (csv, neat, table and box)',
-        { default => "csv" }
-    ],
+    [ 'type|t=s', 'output style (csv, neat, table and box)', { default => "csv" } ],
     { show_defaults => 1, }
     );
 
 $usage->die if $opt->{help};
 
 #----------------------------------------------------------#
-# Init section
+# Start
 #----------------------------------------------------------#
 
 # Database handler
 my $dsn
-    = "dbi:mysql:"
-    . "database="
-    . $opt->{db}
-    . ";host="
-    . $opt->{server}
-    . ";port="
-    . $opt->{port};
-my DBI $dbh = DBI->connect( $dsn, $opt->{username}, $opt->{password} )
+    = "dbi:mysql:" . "database=" . $opt->{db} . ";host=" . $opt->{server} . ";port=" . $opt->{port};
+
+#@type DBI
+my $dbh = DBI->connect( $dsn, $opt->{username}, $opt->{password} )
     or die $DBI::errstr;
 
 # Execute sql query
@@ -73,8 +73,7 @@ if ( $opt->{file} ) {
     my @queries = grep {/select/i} split /\;/, $content;
 
     for my $i ( 0 .. $#queries ) {
-        my $outfile
-            = $opt->{output} ? $opt->{output} : "$opt->{db}.$opt->{type}";
+        my $outfile = $opt->{output} ? $opt->{output} : "$opt->{db}.$opt->{type}";
         my $index = $i + 1;
         $outfile =~ s/\.(\w+)$/\.$index.$1/ if @queries > 1;
         result( $queries[$i], $opt->{type}, $outfile );
@@ -95,14 +94,15 @@ sub result {
     my $type    = shift;
     my $outfile = shift;
 
-    my DBI $sth = $dbh->prepare($sql)
+    #@type DBI
+    my $sth = $dbh->prepare($sql)
         or die $dbh->errstr;
     $sth->execute
         or die $sth->errstr;
 
     my $out_fh;
     if ( lc($outfile) eq "stdout" ) {
-        $out_fh = *STDOUT;
+        $out_fh = *STDOUT{IO};
     }
     else {
         open $out_fh, ">", $outfile;
@@ -137,13 +137,11 @@ sub result {
         my $is_box = $type eq 'box';
 
         # header line
-        my @columns = map +{ title => $_, align_title => 'center' },
-            @{ $sth->{NAME} };
+        my @columns = map +{ title => $_, align_title => 'center' }, @{ $sth->{NAME} };
         my $c = 0;
         splice @columns, $_ + $c++, 0, \' | ' for 1 .. $#columns;
         my @header_border = ( $is_box ? \' |' : () );
-        my $table
-            = Text::Table->new( @header_border, @columns, @header_border );
+        my $table = Text::Table->new( @header_border, @columns, @header_border );
 
         # all others
         while ( my @row = $sth->fetchrow_array ) {
@@ -151,8 +149,7 @@ sub result {
         }
         my $rule = $table->rule(qw/- +/);
         my @rows_border = ( $is_box ? $rule : () );
-        print {$out_fh} join '', @rows_border, $table->title, $rule,
-            $table->body, @rows_border;
+        print {$out_fh} join '', @rows_border, $table->title, $rule, $table->body, @rows_border;
     }
     else {
         die "Unknown output style type!\n";
@@ -164,4 +161,3 @@ sub result {
 }
 
 __END__
-
