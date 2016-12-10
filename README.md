@@ -35,32 +35,38 @@ Both of them can be converted to blocked fasta format (.fas) used by `alignDB` v
 1. `perl init/init_alignDB.pl -d S288cvsRM11_1a`
 
     ```
-    Init S288cvsRM11_1a...
-    Start at: Fri Dec  9 01:55:25 2016
+    Init [S288cvsRM11_1a]...
+    Start at: Sat Dec 10 21:13:33 2016
 
 
     ==> Create DB skeleton
 
-    # dropdb
-    # createdb
-    # init
+    * dropdb
+    * createdb
+    * init
 
     ==> Use [~/data/alignment/example/scer/chr_length.csv] to Init table chromosome
 
 
-    End at: Fri Dec  9 01:55:25 2016
+    End at: Sat Dec 10 21:13:33 2016
     Runtime 0 seconds.
     ```
 
-2. `perl init/gen_alignDB.pl -d S288cvsRM11_1a -lt 5000 --parallel 2`
+2. `perl init/gen_alignDB.pl -d S288cvsRM11_1a --lt 5000 --parallel 2`
 
     ```
+    Generate [S288cvsRM11_1a] from directory [~/data/alignment/example/S288cvsRM11_1a]...
+    Start at: Sat Dec 10 21:42:40 2016
+
+
     ----Total .fas Files:   16----
 
-    ===Do task 1 out of 16===
-    ===Do task 2 out of 16===
-    process I.net.axt.gz.fas
-    process II.net.axt.gz.fas
+
+    ==> Process task [2] by worker #2. [II.net.axt.gz.fas]
+
+
+    ==> Process task [1] by worker #1. [I.net.axt.gz.fas]
+
     Prosess align [1] at S288c.I(+):17221-24930
     Prosess align [2] at S288c.II(+):9425-29638
     Prosess align [3] at S288c.I(+):27070-160233
@@ -69,17 +75,39 @@ Both of them can be converted to blocked fasta format (.fas) used by `alignDB` v
     
     Prosess align [205] at S288c.XVI(+):856555-927349
     Prosess align [206] at S288c.XVI(+):927529-936894
-    Done.
+
+    ==> [XVI.net.axt.gz.fas] has been processed.
+    ==> Runtime 8 seconds.
 
 
     All files have been processed.
-    End at: Fri Dec  9 02:02:19 2016
-    Runtime 51 seconds.
+    End at: Sat Dec 10 21:17:32 2016
+    Runtime 54 seconds.
     ```
 
 3. `perl init/insert_isw.pl -d S288cvsRM11_1a --parallel 2`
 
     ```
+    Update isw-indel relationship of [S288cvsRM11_1a]...
+    Start at: Sat Dec 10 21:58:12 2016
+
+    Emptying tables...
+
+    ==> Process task [2] by worker #2
+
+
+    ==> Process task [1] by worker #1
+
+    Process align [1] at S288c.I(+):17221-24930
+    Process align [51] at S288c.IV(+):758865-871820
+    Process align [2] at S288c.II(+):9425-29638
+
+    ...
+
+    Process align [205] at S288c.XVI(+):856555-927349
+    Process align [206] at S288c.XVI(+):927529-936894
+
+    End at: Sat Dec 10 21:59:04 2016
     Runtime 52 seconds.
     ```
 
@@ -175,11 +203,10 @@ And in step 22, `yeast` is an alias to `saccharomyces_cerevisiae_core_29_82_4`.
 ```bash
 # S288cvsRM11_1a
 perl ~/Scripts/alignDB/alignDB.pl \
-    -t S288c -q RM11_1a \
     -d S288cvsRM11_1a \
-    -da ~/data/alignment/example/scer/S288cvsRM11_1a \
+    --da ~/data/alignment/example/S288cvsRM11_1a \
     --ensembl yeast \
-    -lt 5000 \
+    --lt 5000 \
     --parallel 2 \
     -r all
 
@@ -190,10 +217,10 @@ perl ~/Scripts/alignDB/alignDB.pl \
 ```bash
 perl ~/Scripts/alignDB/alignDB.pl \
     -d ScervsRM11_1a_Spar \
-    -da ~/data/alignment/example/scer/Scer_n2_Spar_refined \
+    --da ~/data/alignment/example/scer/Scer_n2_Spar_refined \
     --ensembl yeast \
     --outgroup \
-    -lt 1000 --parallel 8 --batch 5 \
+    --lt 1000 --parallel 4 --batch 10 \
     --run all
 ```
 
@@ -218,8 +245,8 @@ find ~/data/alignment/example/scer/Scer_n2_Spar_refined -name "*.fas" -or -name 
 
 perl ~/Scripts/alignDB/alignDB.pl \
     -d S288cvsRM11_1a_intergenic \
-    -da . \
-    -lt 1000 \
+    --da . \
+    --lt 1000 \
     --parallel 8 \
     --run basic
 ```
@@ -232,10 +259,10 @@ perl ~/Scripts/alignDB/alignDB.pl \
 perl ~/Scripts/alignDB/alignDB.pl \
     -d S288cvsRM11_1a \
     -a ~/data/alignment/example/anno.yml \
-    -da ~/data/alignment/example/S288cvsRM11_1a \
+    --da ~/data/alignment/example/S288cvsRM11_1a \
     --chr ~/data/alignment/example/scer/chr_length.csv \
     -e saccharomyces_cerevisiae_core_29_82_4 \
-    -lt 10000 \
+    --lt 10000 \
     --parallel 4 --batch 10 \
     --run common
 
@@ -269,10 +296,10 @@ perl ~/Scripts/alignDB/alignDB.pl \
 perl ~/Scripts/alignDB/alignDB.pl \
     -d Scer_n4 \
     -a ~/data/alignment/example/anno.yml \
-    -da ~/data/alignment/example/scer/plan_ALL_refined \
+    --da ~/data/alignment/example/scer/plan_ALL_refined \
     --chr ~/data/alignment/example/scer/chr_length.csv \
     -e saccharomyces_cerevisiae_core_29_82_4 \
-    -lt 5000 \
+    --lt 5000 \
     --parallel 4 --batch 10 \
     --run common
 ```
@@ -291,10 +318,10 @@ perl ~/Scripts/alignDB/alignDB.pl \
 perl ~/Scripts/alignDB/alignDB.pl \
     -d Scer_n3_Spar \
     -a ~/data/alignment/example/anno.yml \
-    -da ~/data/alignment/example/scer/Scer_n3_Spar_refined \
+    --da ~/data/alignment/example/scer/Scer_n3_Spar_refined \
     --chr ~/data/alignment/example/scer/chr_length.csv \
     -e saccharomyces_cerevisiae_core_29_82_4 \
-    -lt 5000 \
+    --lt 5000 \
     --outgroup \
     --parallel 4 --batch 10 \
     --run common
