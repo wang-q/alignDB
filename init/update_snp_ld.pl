@@ -1,21 +1,22 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
+use autodie;
 
-use Getopt::Long;
-use Pod::Usage;
+use Getopt::Long::Descriptive;
 use Config::Tiny;
+use FindBin;
 use YAML::Syck;
 
 use List::Util;
 use List::MoreUtils::PP;
 use Math::Combinatorics;
-
-use App::Fasops::Common;
+use MCE;
 
 use AlignDB::IntSpan;
 use AlignDB::Run;
 use AlignDB::Stopwatch;
+use App::Fasops::Common;
 
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
@@ -24,93 +25,103 @@ use AlignDB;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# record ARGV and Config
-my $stopwatch = AlignDB::Stopwatch->new(
-    program_name => $0,
-    program_argv => [@ARGV],
-    program_conf => $Config,
-);
+# record command line
+my $stopwatch = AlignDB::Stopwatch->new->record;
 
-=head1 NAME
+my $description = <<'EOF';
+LD values of SNPs to the nearest indel and to nearby SNPs
 
-update_snp_ld.pl -  LD values of SNPs to the nearest indel and to nearby SNPs
+    perl init/update_snp_ld.pl -d S288cvsRM11_1a --parallel 2
 
-=head1 SYNOPSIS
+Usage: perl %c [options]
+EOF
 
-    update_snp_ld.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
+(
+    #@type Getopt::Long::Descriptive::Opts
+    my $opt,
 
-=cut
+    #@type Getopt::Long::Descriptive::Usage
+    my $usage,
+    )
+    = Getopt::Long::Descriptive::describe_options(
+    $description,
+    [ 'help|h', 'display this message' ],
+    [],
+    ['Database init values'],
+    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf->{database}{server} }, ],
+    [ 'port=i',       'MySQL port',      { default => $conf->{database}{port} }, ],
+    [ 'username|u=s', 'username',        { default => $conf->{database}{username} }, ],
+    [ 'password|p=s', 'password',        { default => $conf->{database}{password} }, ],
+    [ 'db|d=s',       'database name',   { default => $conf->{database}{db} }, ],
+    [],
+    [ 'parallel=i', 'run in parallel mode',       { default => $conf->{generate}{parallel} }, ],
+    [ 'batch=i',    '#alignments in one process', { default => $conf->{generate}{batch} }, ],
+    [ 'outgroup|o', 'alignments have an outgroup', ],
+    { show_defaults => 1, }
+    );
+
+$usage->die if $opt->{help};
+
+# record config
+$stopwatch->record_conf($opt);
+
+# DBI Data Source Name
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $opt->{db}, $opt->{server}, $opt->{port};
 
 GetOptions(
-    'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'        => \( my $server         = $Config->{database}{server} ),
-    'port=i'            => \( my $port           = $Config->{database}{port} ),
-    'db|d=s'            => \( my $db             = $Config->{database}{db} ),
-    'username|u=s'      => \( my $username       = $Config->{database}{username} ),
-    'password|p=s'      => \( my $password       = $Config->{database}{password} ),
     'insert_segment=s'  => \( my $insert_segment = 1 ),
     'insert_ofg=s'      => \( my $insert_ofg     = 1 ),
     'near|near_range=i' => \( my $near_range     = 100 ),
-    'parallel=i'        => \( my $parallel       = $Config->{generate}{parallel} ),
-    'batch=i'           => \( my $batch_number   = $Config->{generate}{batch} ),
+    'parallel=i'        => \( my $parallel       = $conf->{generate}{parallel} ),
+    'batch=i'           => \( my $batch_number   = $conf->{generate}{batch} ),
 ) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # init
 #----------------------------------------------------------#
-$stopwatch->start_message("Update LD of $db...");
+$stopwatch->start_message("Update LD of [$opt->{db}]...");
 
-#----------------------------#
-# Add columns
-#----------------------------#
 my $seq_count;
 my @jobs;
 {
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
+    my $alignDB = AlignDB->new(
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
     );
 
-    $seq_count = $obj->get_seq_count;
+    $seq_count = $alignDB->get_seq_count;
 
     print "Add columns to tables\n";
 
     # r and D' with nearest indel
-    $obj->create_column( "snp", "snp_r",      "DOUBLE" );
-    $obj->create_column( "snp", "snp_dprime", "DOUBLE" );
+    $alignDB->create_column( "snp", "snp_r",      "DOUBLE" );
+    $alignDB->create_column( "snp", "snp_dprime", "DOUBLE" );
 
     # r2 and |D'| with near snps
     # include self
-    $obj->create_column( "snp", "snp_near_snp_number", "int" );
-    $obj->create_column( "snp", "snp_r2_s",            "DOUBLE" );
-    $obj->create_column( "snp", "snp_dprime_abs_s",    "DOUBLE" );
+    $alignDB->create_column( "snp", "snp_near_snp_number", "int" );
+    $alignDB->create_column( "snp", "snp_r2_s",            "DOUBLE" );
+    $alignDB->create_column( "snp", "snp_dprime_abs_s",    "DOUBLE" );
 
     # indel group
-    $obj->create_column( "snp", "snp_r2_i",         "DOUBLE" );
-    $obj->create_column( "snp", "snp_dprime_abs_i", "DOUBLE" );
+    $alignDB->create_column( "snp", "snp_r2_i",         "DOUBLE" );
+    $alignDB->create_column( "snp", "snp_dprime_abs_i", "DOUBLE" );
 
     # nonindel group
-    $obj->create_column( "snp", "snp_r2_ni",         "DOUBLE" );
-    $obj->create_column( "snp", "snp_dprime_abs_ni", "DOUBLE" );
+    $alignDB->create_column( "snp", "snp_r2_ni",         "DOUBLE" );
+    $alignDB->create_column( "snp", "snp_dprime_abs_ni", "DOUBLE" );
 
     if ($insert_segment) {
-        $obj->create_column( "segment", "segment_r2_s",         "DOUBLE" );
-        $obj->create_column( "segment", "segment_dprime_abs_s", "DOUBLE" );
+        $alignDB->create_column( "segment", "segment_r2_s",         "DOUBLE" );
+        $alignDB->create_column( "segment", "segment_dprime_abs_s", "DOUBLE" );
     }
 
     if ($insert_ofg) {
-        $obj->create_column( "ofgsw", "ofgsw_r2_s",         "DOUBLE" );
-        $obj->create_column( "ofgsw", "ofgsw_dprime_abs_s", "DOUBLE" );
+        $alignDB->create_column( "ofgsw", "ofgsw_r2_s",         "DOUBLE" );
+        $alignDB->create_column( "ofgsw", "ofgsw_dprime_abs_s", "DOUBLE" );
     }
 
     #  r and D' with nearest snp
@@ -120,29 +131,27 @@ my @jobs;
 
     print "Table snp altered\n";
 
-    my @align_ids = @{ $obj->get_align_ids };
-
-    while ( scalar @align_ids ) {
-        my @batching = splice @align_ids, 0, $batch_number;
-        push @jobs, [@batching];
-    }
+    @jobs = @{ $alignDB->get_align_ids };
 }
 
 #----------------------------------------------------------#
-# start update
+# worker
 #----------------------------------------------------------#
 my $worker = sub {
-    my $job       = shift;
-    my @align_ids = @$job;
+    my ( $self, $chunk_ref, $chunk_id ) = @_;
+    my @align_ids = @{$chunk_ref};
+    my $wid       = MCE->wid;
 
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
+    $stopwatch->block_message("Process task [$chunk_id] by worker #$wid");
+
+    my $alignDB = AlignDB->new(
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
     );
 
     # Database handler
-    my DBI $dbh = $obj->dbh;
+    my DBI $dbh = $alignDB->dbh;
 
     # select all indels in this alignment
     my DBI $indel_sth = $dbh->prepare(
@@ -227,7 +236,7 @@ my $worker = sub {
 
     # for each align
     for my $align_id (@align_ids) {
-        $obj->process_message($align_id);
+        $alignDB->process_message($align_id);
 
         # all SNPs in this alignment
         my $all_snps = $dbh->selectall_arrayref(
@@ -361,24 +370,17 @@ my $worker = sub {
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
-my $run = AlignDB::Run->new(
-    parallel => $parallel,
-    jobs     => \@jobs,
-    code     => $worker,
-);
-$run->run;
+my $mce = MCE->new( max_workers => $opt->{parallel}, chunk_size => $opt->{batch}, );
+$mce->forchunk( \@jobs, $worker, );
 
 $stopwatch->end_message;
 
-# store program running meta info to database
-# this AlignDB object is just for storing meta info
-END {
-    AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    )->add_meta_stopwatch($stopwatch);
-}
+# store program's meta info to database
+AlignDB->new(
+    dsn    => $dsn,
+    user   => $opt->{username},
+    passwd => $opt->{password},
+)->add_meta_stopwatch($stopwatch);
 
 exit;
 
