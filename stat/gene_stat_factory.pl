@@ -18,7 +18,7 @@ use AlignDB::ToXLSX;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 =head1 NAME
 
@@ -29,8 +29,8 @@ gene_stat_factory.pl - Gene stats for alignDB
     perl gene_stat_factory.pl [options]
       Options:
         --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
+        --server    -s  STR     MySQL IP/Domain
+        --port          INT     MySQL port
         --db        -d  STR     database name
         --username  -u  STR     username
         --password  -p  STR     password
@@ -45,18 +45,20 @@ gene_stat_factory.pl - Gene stats for alignDB
 
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
-    'username|u=s' => \( my $username = $Config->{database}{username} ),
-    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'server|s=s'   => \( my $server   = $conf->{database}{server} ),
+    'port=i'     => \( my $port     = $conf->{database}{port} ),
+    'db|d=s'       => \( my $db       = $conf->{database}{db} ),
+    'username|u=s' => \( my $username = $conf->{database}{username} ),
+    'password|p=s' => \( my $password = $conf->{database}{password} ),
     'output|o=s'   => \( my $outfile ),
-    'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
+    'run|r=s'      => \( my $run      = $conf->{stat}{run} ),
     'combine=i'    => \( my $combine  = 0 ),
     'replace=s'    => \my %replace,
     'index'        => \my $add_index_sheet,
     'chart'        => \my $add_chart,
 ) or Getopt::Long::HelpMessage(1);
+
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $db, $server, $port;
 
 $outfile = "$db.gene.xlsx" unless $outfile;
 
@@ -88,9 +90,9 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do gene stat for $db...");
 
-my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
-    or die "Cannot connect to MySQL database at $db:$server";
-my $write_obj = AlignDB::ToXLSX->new(
+my $dbh = DBI->connect( $dsn, $username, $password )
+    or die $DBI::errstr;
+my $toxlsx = AlignDB::ToXLSX->new(
     dbh     => $dbh,
     outfile => $outfile,
     replace => \%replace,
@@ -100,7 +102,7 @@ my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::Bin/sql.lib" );
 
 # auto detect combine threshold
 if ( $combine == 0 ) {
-    ($combine) = $write_obj->calc_threshold;
+    ($combine) = $toxlsx->calc_threshold;
 }
 
 #----------------------------------------------------------#
@@ -124,14 +126,14 @@ my $chart_distance = sub {
         top           => 1,
         left          => 10,
     );
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column}      = 6;
     $opt{y_last_column} = 6;
     $opt{y_title}       = "dn/ds";
     $opt{y_data}        = $data->[6];
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -140,12 +142,12 @@ my $chart_distance = sub {
 my $summary_gene = sub {
     my $sheet_name = 'summary';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @names = qw{ COUNT AVG_length SUM_length AVG_pi indel INDEL/100bp };
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     {    # contents
@@ -154,7 +156,7 @@ my $summary_gene = sub {
             SELECT COUNT(DISTINCT g.gene_stable_id) COUNT
             FROM gene g
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -174,7 +176,7 @@ my $summary_gene = sub {
             FROM gene g, window w
             WHERE w.window_id = g.window_id
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -195,14 +197,14 @@ my $summary_gene = sub {
             WHERE w.window_id = g.window_id
             AND g.gene_is_full = 1
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
             }
         );
     }
-    $write_obj->increase_row;
+    $toxlsx->increase_row;
 
     {    # contents
         my $query_name = 'distinct exon';
@@ -210,7 +212,7 @@ my $summary_gene = sub {
             SELECT COUNT(DISTINCT e.exon_stable_id) COUNT
             FROM exon e
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -230,7 +232,7 @@ my $summary_gene = sub {
             FROM exon e, window w
             WHERE w.window_id = e.window_id
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -251,7 +253,7 @@ my $summary_gene = sub {
             WHERE w.window_id = e.window_id
             AND e.exon_is_full = 1
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -268,11 +270,11 @@ my $summary_gene = sub {
 my $combined_dnds = sub {
     my $sheet_name = 'combined_dnds';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     # make combine
-    my $combined = $write_obj->make_combine(
+    my $combined = $toxlsx->make_combine(
         {   sql_query  => $sql_file->retrieve('common-d1_combine-0')->as_sql,
             threshold  => $combine,
             standalone => [ -1, 0 ],
@@ -283,7 +285,7 @@ my $combined_dnds = sub {
 
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
@@ -291,7 +293,7 @@ my $combined_dnds = sub {
         my $thaw_sql = $sql_file->retrieve('dnds-d1_comb_dn_ds-0');
         $thaw_sql->add_where( 'isw.isw_distance' => $comb );
 
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 query_name => $_->[0],
@@ -312,7 +314,7 @@ my $combined_dnds = sub {
 # worksheet -- distance(frequecy)
 #----------------------------------------------------------#
 my $frequency_dnds = sub {
-    unless ( $write_obj->check_column( 'indel', 'indel_freq' ) ) {
+    unless ( $toxlsx->check_column( 'indel', 'indel_freq' ) ) {
         return;
     }
 
@@ -322,14 +324,14 @@ my $frequency_dnds = sub {
         my ($level) = @_;
         my $sheet_name = 'dnds_freq_' . $level->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('dnds-d1_dn_ds-0');
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
@@ -346,7 +348,7 @@ my $frequency_dnds = sub {
             $thaw_sql->add_where( 'indel.indel_freq' => { op => '>=', value => '1' } );
             $thaw_sql->add_where( 'indel.indel_freq' => { op => '<=', value => '1' } );
 
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $level->[1], $level->[2] ],
@@ -371,6 +373,11 @@ for my $n (@tasks) {
     if ( $n == 1 )  { &$summary_gene;   next; }
     if ( $n == 10 ) { &$combined_dnds;  next; }
     if ( $n == 11 ) { &$frequency_dnds; next; }
+}
+
+if ($add_index_sheet) {
+    $toxlsx->add_index_sheet;
+    print "Sheet [INDEX] has been generated.\n";
 }
 
 $stopwatch->end_message;

@@ -23,7 +23,7 @@ use AlignDB;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 =head1 NAME
 
@@ -34,8 +34,8 @@ ld_stat_factory.pl - LD stats for alignDB
     perl ld_stat_factory.pl [options]
       Options:
         --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
+        --server    -s  STR     MySQL IP/Domain
+        --port          INT     MySQL port
         --db        -d  STR     database name
         --username  -u  STR     username
         --password  -p  STR     password
@@ -52,19 +52,21 @@ ld_stat_factory.pl - LD stats for alignDB
 
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
-    'username|u=s' => \( my $username = $Config->{database}{username} ),
-    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'server|s=s'   => \( my $server   = $conf->{database}{server} ),
+    'port=i'       => \( my $port     = $conf->{database}{port} ),
+    'db|d=s'       => \( my $db       = $conf->{database}{db} ),
+    'username|u=s' => \( my $username = $conf->{database}{username} ),
+    'password|p=s' => \( my $password = $conf->{database}{password} ),
     'output|o=s'   => \( my $outfile ),
     'freq=i'       => \( my $max_freq ),
-    'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
+    'run|r=s'      => \( my $run      = $conf->{stat}{run} ),
     'combine=i'    => \( my $combine  = 0 ),
     'replace=s'    => \my %replace,
     'index'        => \( my $add_index_sheet, ),
     'chart'        => \( my $add_chart, ),
 ) or Getopt::Long::HelpMessage(1);
+
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $db, $server, $port;
 
 # prepare to run tasks in @tasks
 my @tasks;
@@ -98,13 +100,15 @@ my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
 my $aligndb_obj = AlignDB->new(
-    mysql  => "$db:$server",
+    dsn    => $dsn,
     user   => $username,
     passwd => $password,
 );
+
+#@type DBI
 my $dbh = $aligndb_obj->dbh;
 
-my $write_obj = AlignDB::ToXLSX->new(
+my $toxlsx = AlignDB::ToXLSX->new(
     dbh     => $dbh,
     outfile => $outfile,
     replace => \%replace,
@@ -114,14 +118,14 @@ my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::Bin/sql.lib" );
 
 # auto detect combine threshold
 if ( $combine == 0 ) {
-    ($combine) = $write_obj->calc_threshold;
+    ($combine) = $toxlsx->calc_threshold;
 }
 
 #----------------------------#
 # count freq
 #----------------------------#
 # for alignments without outgroup, $max_indel_freq is folded
-my $seq_count = $aligndb_obj->get_seq_count;
+my $seq_count      = $aligndb_obj->get_seq_count;
 my $max_indel_freq = $aligndb_obj->get_max_indel_freq;
 
 my @freqs;
@@ -187,19 +191,19 @@ my $chart_distance = sub {
         top           => 1,
         left          => 10,
     );
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column}      = 4;
     $opt{y_last_column} = 5;
     $opt{y_data}        = [ map { $data->[$_] } 4 .. 5 ], $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column}      = 7;
     $opt{y_last_column} = 7;
     $opt{y_title}       = "Di/Dn";
     $opt{y_data}        = $data->[7];
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -221,19 +225,19 @@ my $chart_pigccv = sub {
         top         => 1,
         left        => 10,
     );
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 3;
     $opt{y_data}   = $data->[3];
     $opt{y_title}  = "GC proportion";
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 5;
     $opt{y_data}   = $data->[5];
     $opt{y_title}  = "Window CV";
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column}  = 3;
     $opt{y_data}    = $data->[3];
@@ -242,7 +246,7 @@ my $chart_pigccv = sub {
     $opt{y2_data}   = $data->[5];
     $opt{y2_title}  = "Window CV";
     $opt{top} += 18;
-    $write_obj->draw_2y( $sheet, \%opt );
+    $toxlsx->draw_2y( $sheet, \%opt );
     delete $opt{y2_column};
     delete $opt{y2_data};
     delete $opt{y2_title};
@@ -254,14 +258,14 @@ my $chart_indel_type_gc = sub {
 
     # write charting data
     my @keys = keys %{$data_of};
-    $write_obj->row(2);
-    $write_obj->column(7);
+    $toxlsx->row(2);
+    $toxlsx->column(7);
 
     #$write_obj->write_row($sheet, { row => [ 'X', @keys] } );
 
-    $write_obj->write_column( $sheet, { column => $data_of->{ $keys[0] }[0], } );
+    $toxlsx->write_column( $sheet, { column => $data_of->{ $keys[0] }[0], } );
     for my $key (@keys) {
-        $write_obj->write_column(
+        $toxlsx->write_column(
             $sheet,
             {   query_name => $key,
                 column     => $data_of->{$key}[1],
@@ -285,7 +289,7 @@ my $chart_indel_type_gc = sub {
         height        => 480,
         width         => 480,
     );
-    $write_obj->draw_dd( $sheet, \%opt );
+    $toxlsx->draw_dd( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -294,12 +298,12 @@ my $chart_indel_type_gc = sub {
 my $summary_indel = sub {
     my $sheet_name = 'summary_indel';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @names = qw{AVG MIN MAX STD COUNT SUM};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $column_stat = sub {
@@ -323,7 +327,7 @@ my $summary_indel = sub {
         $sql_query =~ s/_COLUMN_/$column/g;
         $sql_query .= $where if $where;
 
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -347,7 +351,7 @@ my $summary_indel = sub {
                     AND i.indel_freq <= $upper}
             );
         }
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
         # insertions
         $column_stat->( 'ins', 'indel i', 'i.indel_length', q{WHERE i.indel_type = 'I'} );
@@ -363,7 +367,7 @@ my $summary_indel = sub {
                     AND i.indel_type = 'I'}
             );
         }
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
         # deletions
         $column_stat->( 'del', 'indel i', 'i.indel_length', q{WHERE i.indel_type = 'D'} );
@@ -390,19 +394,19 @@ my $summary_indel = sub {
 my $distance = sub {
     my $sheet_name = 'distance';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my $thaw_sql = $sql_file->retrieve('multi-distance-0');
 
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
     {    # content
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query => $thaw_sql->as_sql,
                 data      => 1,
@@ -423,19 +427,19 @@ my $distance = sub {
 my $distance2 = sub {
     my $sheet_name = 'distance2';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my $thaw_sql = $sql_file->retrieve('multi-distance2-0');
 
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
     {    # content
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query => $thaw_sql->as_sql,
                 data      => 1,
@@ -456,19 +460,19 @@ my $distance2 = sub {
 my $distance3 = sub {
     my $sheet_name = 'distance3';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my $thaw_sql = $sql_file->retrieve('multi-distance3-0');
 
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
     {    # content
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query => $thaw_sql->as_sql,
                 data      => 1,
@@ -494,8 +498,8 @@ my $distance_length = sub {
         my ($level) = @_;
         my $sheet_name = 'distance_' . $level->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('multi-distance-0');
         $thaw_sql->add_where( 'indel.indel_length' => { op => '>=', value => '1' } );
@@ -503,12 +507,12 @@ my $distance_length = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $level->[1], $level->[2] ],
@@ -539,8 +543,8 @@ my $frequency_distance = sub {
         my ($level) = @_;
         my $sheet_name = 'distance_freq_' . $level->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('multi-distance-0');
         $thaw_sql->add_where( 'indel.indel_freq' => { op => '>=', value => '1' } );
@@ -548,12 +552,12 @@ my $frequency_distance = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $level->[1], $level->[2] ],
@@ -584,20 +588,20 @@ my $distance_insdel = sub {
         my ($level) = @_;
         my $sheet_name = 'distance_' . $level->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('multi-distance-0');
         $thaw_sql->add_where( 'indel.indel_type' => { op => '=', value => '1' } );
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $level->[1] ],
@@ -629,8 +633,8 @@ my $distance_insdel_freq = sub {
         my ( $type, $freq ) = @_;
         my $sheet_name = 'distance_' . $type->[0] . '_' . $freq->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('multi-distance-0');
         $thaw_sql->add_where( 'indel.indel_type' => { op => '=',  value => '1' } );
@@ -639,12 +643,12 @@ my $distance_insdel_freq = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $type->[1], $freq->[1], $freq->[2] ],
@@ -673,14 +677,14 @@ my $distance_insdel_freq = sub {
 my $indel_length = sub {
     my $sheet_name = 'indel_length';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my $thaw_sql = $sql_file->retrieve('multi-indel_length-0');
 
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     {    # content
@@ -700,12 +704,10 @@ my $indel_length = sub {
             $last_number = $row[1];
 
             for ( my $i = 0; $i < scalar @row; $i++ ) {
-                $sheet->write(
-                    $write_obj->row, $i + $write_obj->column,
-                    $row[$i],        $write_obj->format->{$style}
-                );
+                $sheet->write( $toxlsx->row, $i + $toxlsx->column,
+                    $row[$i], $toxlsx->format->{$style} );
             }
-            $write_obj->increase_row;
+            $toxlsx->increase_row;
         }
     }
 
@@ -723,8 +725,8 @@ my $indel_length_freq = sub {
         my ($level) = @_;
         my $sheet_name = 'indel_length_freq_' . $level->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('multi-indel_length-0');
         $thaw_sql->add_where( 'indel.indel_freq' => { op => '>=', value => '1' } );
@@ -732,7 +734,7 @@ my $indel_length_freq = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         {    # content
@@ -752,12 +754,10 @@ my $indel_length_freq = sub {
                 $last_number = $row[1];
 
                 for ( my $i = 0; $i < scalar @row; $i++ ) {
-                    $sheet->write(
-                        $write_obj->row, $i + $write_obj->column,
-                        $row[$i],        $write_obj->format->{$style}
-                    );
+                    $sheet->write( $toxlsx->row, $i + $toxlsx->column,
+                        $row[$i], $toxlsx->format->{$style} );
                 }
-                $write_obj->increase_row;
+                $toxlsx->increase_row;
             }
         }
 
@@ -780,15 +780,15 @@ my $indel_length_insdel = sub {
         my ($level) = @_;
         my $sheet_name = 'indel_length_' . $level->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('multi-indel_length-0');
         $thaw_sql->add_where( 'indel.indel_type' => { op => '=', value => 'I' } );
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         {    # content
@@ -808,12 +808,10 @@ my $indel_length_insdel = sub {
                 $last_number = $row[1];
 
                 for ( my $i = 0; $i < scalar @row; $i++ ) {
-                    $sheet->write(
-                        $write_obj->row, $i + $write_obj->column,
-                        $row[$i],        $write_obj->format->{$style}
-                    );
+                    $sheet->write( $toxlsx->row, $i + $toxlsx->column,
+                        $row[$i], $toxlsx->format->{$style} );
                 }
-                $write_obj->increase_row;
+                $toxlsx->increase_row;
             }
         }
 
@@ -831,8 +829,8 @@ my $indel_length_insdel = sub {
 my $indel_type_gc_10 = sub {
     my $sheet_name = 'indel_type_gc_10';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     # indel_type groups
     my @indel_types = ( [ 'Insertion', 'I' ], [ 'Deletion', 'D' ], );
@@ -850,17 +848,17 @@ my $indel_type_gc_10 = sub {
         GROUP BY indel_length
     };
 
-    my @names = $write_obj->sql2names( $sql_query, { bind_value => [ $indel_types[0]->[1] ] } );
+    my @names = $toxlsx->sql2names( $sql_query, { bind_value => [ $indel_types[0]->[1] ] } );
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
     tie my %data_of, 'Tie::IxHash';
     for (@indel_types) {
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $sql_query,
                 query_name => $_->[0],
@@ -884,8 +882,8 @@ my $indel_type_gc_10 = sub {
 my $indel_type_gc_100 = sub {
     my $sheet_name = 'indel_type_gc_100';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     # indel_type groups
     my @indel_types = ( [ 'Insertion', 'I' ], [ 'Deletion', 'D' ], );
@@ -903,17 +901,17 @@ my $indel_type_gc_100 = sub {
         GROUP BY CEIL(indel_length / 10)
     };
 
-    my @names = $write_obj->sql2names( $sql_query, { bind_value => [ $indel_types[0]->[1] ] } );
+    my @names = $toxlsx->sql2names( $sql_query, { bind_value => [ $indel_types[0]->[1] ] } );
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
     tie my %data_of, 'Tie::IxHash';
     for (@indel_types) {
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $sql_query,
                 query_name => $_->[0],
@@ -937,11 +935,11 @@ my $indel_type_gc_100 = sub {
 my $combined_pigccv = sub {
     my $sheet_name = 'pigccv_combined';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     # make combine
-    my $combined = $write_obj->make_combine(
+    my $combined = $toxlsx->make_combine(
         {   sql_query  => $sql_file->retrieve('common-d1_combine-0')->as_sql,
             threshold  => $combine,
             standalone => [ -1, 0 ],
@@ -952,7 +950,7 @@ my $combined_pigccv = sub {
 
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
@@ -960,7 +958,7 @@ my $combined_pigccv = sub {
         my $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
         $thaw_sql->add_where( 'isw.isw_distance' => $comb );
 
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 bind_value => $comb,
@@ -987,8 +985,8 @@ my $frequency_pigccv = sub {
         my ($level) = @_;
         my $sheet_name = 'pigccv_freq_' . $level->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('common-d1_pi_gc_cv-0');
         $thaw_sql->from( [] );
@@ -1005,12 +1003,12 @@ my $frequency_pigccv = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $level->[1], $level->[2] ],
@@ -1037,14 +1035,14 @@ my $frequency_pigccv = sub {
 my $di_dn_ttest = sub {
     my $sheet_name = 'di_dn_ttest';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @group_distance = ( [0], [1], [2], [3], [4], [ 5 .. 10 ], [ 2 .. 5 ] );
 
     my @names = qw{AVG_distance AVG_D AVG_Di AVG_Dn Di/Dn COUNT P_value};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     {    # content
@@ -1073,7 +1071,7 @@ my $di_dn_ttest = sub {
             else {
                 $group_name = $range[0];
             }
-            $write_obj->write_sql(
+            $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $sql_query,
                     query_name => $group_name,
@@ -1115,7 +1113,7 @@ my $di_dn_ttest = sub {
             push @p_values, [$p_value];
         }
 
-        $sheet->write( 1, scalar @names, [ [@p_values] ], $write_obj->format->{NORMAL} );
+        $sheet->write( 1, scalar @names, [ [@p_values] ], $toxlsx->format->{NORMAL} );
     }
 
     print "Sheet [$sheet_name] has been generated.\n";
@@ -1127,14 +1125,14 @@ my $di_dn_ttest = sub {
 my $di_dn_ttest_ns = sub {
     my $sheet_name = 'di_dn_ttest_ns';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @group_distance = ( [0], [1], [2], [3], [4], [ 5 .. 10 ], [ 2 .. 5 ] );
 
     my @names = qw{AVG_distance AVG_D AVG_Di AVG_Dn Di/Dn COUNT P_value};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     {    # content
@@ -1165,7 +1163,7 @@ my $di_dn_ttest_ns = sub {
             else {
                 $group_name = $range[0];
             }
-            $write_obj->write_sql(
+            $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $sql_query,
                     query_name => $group_name,
@@ -1192,6 +1190,7 @@ my $di_dn_ttest_ns = sub {
             my $in_list   = '(' . join( ',', @range ) . ')';
             my $sql_query = $base_query . $in_list;
 
+            #@type DBI
             my $sth = $dbh->prepare($sql_query);
             $sth->execute;
 
@@ -1208,7 +1207,7 @@ my $di_dn_ttest_ns = sub {
             push @p_values, [$p_value];
         }
 
-        $sheet->write( 1, scalar @names, [ [@p_values] ], $write_obj->format->{NORMAL} );
+        $sheet->write( 1, scalar @names, [ [@p_values] ], $toxlsx->format->{NORMAL} );
     }
 
     print "Sheet [$sheet_name] has been generated.\n";
@@ -1232,7 +1231,7 @@ for my $n (@tasks) {
 }
 
 if ($add_index_sheet) {
-    $write_obj->add_index_sheet;
+    $toxlsx->add_index_sheet;
     print "Sheet [INDEX] has been generated.\n";
 }
 

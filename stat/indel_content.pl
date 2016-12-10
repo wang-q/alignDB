@@ -19,7 +19,7 @@ use AlignDB::ToXLSX;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 =head1 NAME
 
@@ -30,8 +30,8 @@ indel_content.pl - See what's in indels, using the k-nucleotide algorithm
     perl indel_content.pl [options]
       Options:
         --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
+        --server    -s  STR     MySQL IP/Domain
+        --port          INT     MySQL port
         --db        -d  STR     database name
         --username  -u  STR     username
         --password  -p  STR     password
@@ -45,11 +45,11 @@ indel_content.pl - See what's in indels, using the k-nucleotide algorithm
 
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server     = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port       = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db         = $Config->{database}{db} ),
-    'username|u=s' => \( my $username   = $Config->{database}{username} ),
-    'password|p=s' => \( my $password   = $Config->{database}{password} ),
+    'server|s=s'   => \( my $server     = $conf->{database}{server} ),
+    'port=i'     => \( my $port       = $conf->{database}{port} ),
+    'db|d=s'       => \( my $db         = $conf->{database}{db} ),
+    'username|u=s' => \( my $username   = $conf->{database}{username} ),
+    'password|p=s' => \( my $password   = $conf->{database}{password} ),
     'output=s'     => \( my $outfile ),
     'min_length=i' => \( my $min_length = 1 ),
     'max_length=i' => \( my $max_length = 50 ),

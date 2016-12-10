@@ -19,7 +19,7 @@ use AlignDB::ToXLSX;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 =head1 NAME
 
@@ -30,8 +30,8 @@ ofg_stat_factory.pl - OFG (other features of genome) stats for alignDB
     perl ofg_stat_factory.pl [options]
       Options:
         --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
+        --server    -s  STR     MySQL IP/Domain
+        --port          INT     MySQL port
         --db        -d  STR     database name
         --username  -u  STR     username
         --password  -p  STR     password
@@ -46,18 +46,20 @@ ofg_stat_factory.pl - OFG (other features of genome) stats for alignDB
 
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
-    'username|u=s' => \( my $username = $Config->{database}{username} ),
-    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'server|s=s'   => \( my $server   = $conf->{database}{server} ),
+    'port=i'       => \( my $port     = $conf->{database}{port} ),
+    'db|d=s'       => \( my $db       = $conf->{database}{db} ),
+    'username|u=s' => \( my $username = $conf->{database}{username} ),
+    'password|p=s' => \( my $password = $conf->{database}{password} ),
     'output|o=s'   => \( my $outfile ),
     'by=s'         => \( my $by       = "tag" ),
-    'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
+    'run|r=s'      => \( my $run      = $conf->{stat}{run} ),
     'replace=s'    => \my %replace,
     'index'        => \my $add_index_sheet,
     'chart'        => \my $add_chart,
 ) or Getopt::Long::HelpMessage(1);
+
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $db, $server, $port;
 
 $outfile = "$db.ofg.xlsx" unless $outfile;
 
@@ -89,9 +91,9 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
-    or die "Cannot connect to MySQL database at $db:$server";
-my $write_obj = AlignDB::ToXLSX->new(
+my DBI $dbh = DBI->connect( $dsn, $username, $password )
+    or die $DBI::errstr;
+my $toxlsx = AlignDB::ToXLSX->new(
     dbh     => $dbh,
     outfile => $outfile,
     replace => \%replace,
@@ -147,14 +149,14 @@ my $chart_ofg = sub {
     $opt{y_column} = 1;
     $opt{y_data}   = $data->[1];
     $opt{y_title}  = "Nucleotide diversity";
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     # chart 2
     $opt{y_column} = 3;
     $opt{y_data}   = $data->[3];
     $opt{y_title}  = "Indel per 100 bp";
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     # chart 3
     $opt{y_column}  = 5;
@@ -164,7 +166,7 @@ my $chart_ofg = sub {
     $opt{y2_data}   = $data->[7];
     $opt{y2_title}  = "Window CV";
     $opt{top} += 18;
-    $write_obj->draw_2y( $sheet, \%opt );
+    $toxlsx->draw_2y( $sheet, \%opt );
     delete $opt{y2_column};
     delete $opt{y2_data};
     delete $opt{y2_title};
@@ -174,7 +176,7 @@ my $chart_ofg = sub {
     $opt{y_data}   = $data->[9];
     $opt{y_title}  = $is_ld ? "r^2" : "Repeats proportion";
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     if ( $x_set->has(-90) ) {
         my $idx = first_index { $_ == -90 } @{ $data->[0] };
@@ -191,35 +193,35 @@ my $chart_ofg = sub {
         $opt{y_title}  = "Nucleotide diversity";
         $opt{top}      = 1;
         $opt{left}     = 19;
-        $write_obj->draw_y( $sheet, \%opt );
+        $toxlsx->draw_y( $sheet, \%opt );
 
         # chart 6
         $opt{y_column} = 3;
         $opt{y_data}   = $data->[3];
         $opt{y_title}  = "Indel per 100 bp";
         $opt{top} += 18;
-        $write_obj->draw_y( $sheet, \%opt );
+        $toxlsx->draw_y( $sheet, \%opt );
 
         # chart 7
         $opt{y_column} = 5;
         $opt{y_data}   = $data->[5];
         $opt{y_title}  = "GC proportion";
         $opt{top} += 18;
-        $write_obj->draw_y( $sheet, \%opt );
+        $toxlsx->draw_y( $sheet, \%opt );
 
         # chart 8
         $opt{y_column} = 7;
         $opt{y_data}   = $data->[7];
         $opt{y_title}  = "Window CV";
         $opt{top} += 18;
-        $write_obj->draw_y( $sheet, \%opt );
+        $toxlsx->draw_y( $sheet, \%opt );
 
         # chart 9
         $opt{y_column} = 9;
         $opt{y_data}   = $data->[9];
         $opt{y_title}  = $is_ld ? "r^2" : "Repeats proportion";
         $opt{top} += 18;
-        $write_obj->draw_y( $sheet, \%opt );
+        $toxlsx->draw_y( $sheet, \%opt );
     }
 };
 
@@ -229,12 +231,12 @@ my $chart_ofg = sub {
 my $summary_ofg = sub {
     my $sheet_name = 'summary';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @names = qw{Type COUNT AVG_length SUM_length};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     {    # contents
@@ -248,14 +250,14 @@ my $summary_ofg = sub {
             ORDER BY Type
         };
 
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
             }
         );
     }
-    $write_obj->increase_row;
+    $toxlsx->increase_row;
 
     {    # contents
         my $query_name = 'ofg tag count';
@@ -268,14 +270,14 @@ my $summary_ofg = sub {
             ORDER BY o.ofg_tag
         };
 
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
             }
         );
     }
-    $write_obj->increase_row;
+    $toxlsx->increase_row;
 
     {    # contents
         my $query_name = 'ofg type count';
@@ -287,14 +289,14 @@ my $summary_ofg = sub {
             ORDER BY o.ofg_type
         };
 
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
             }
         );
     }
-    $write_obj->increase_row;
+    $toxlsx->increase_row;
 
     {    # contents
         my $query_name = 'ofg';
@@ -312,14 +314,14 @@ my $summary_ofg = sub {
             GROUP BY o.ofg_tag , o.ofg_type
         };
 
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
             }
         );
     }
-    $write_obj->increase_row;
+    $toxlsx->increase_row;
 
     {    # contents
         my $query_name = 'ofgsw_outside';
@@ -339,14 +341,14 @@ my $summary_ofg = sub {
             GROUP BY o.ofg_tag , o.ofg_type
         };
 
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
             }
         );
     }
-    $write_obj->increase_row;
+    $toxlsx->increase_row;
 
     print "Sheet [$sheet_name] has been generated.\n";
 };
@@ -356,14 +358,14 @@ my $summary_ofg = sub {
 #----------------------------------------------------------#
 my $ofg_all = sub {
 
-    unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
+    unless ( $toxlsx->check_column( 'ofgsw', 'ofgsw_id' ) ) {
         return;
     }
 
     my $sheet_name = "ofg_all";
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my $sql_query = q{
         SELECT 
@@ -389,14 +391,14 @@ my $ofg_all = sub {
         GROUP BY s.ofgsw_distance
     };
 
-    my @names = $write_obj->sql2names($sql_query);
+    my @names = $toxlsx->sql2names($sql_query);
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
     {    # content
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query => $sql_query,
                 data      => 1,
@@ -416,10 +418,10 @@ my $ofg_all = sub {
 #----------------------------------------------------------#
 my $ofg_coding = sub {
 
-    unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
+    unless ( $toxlsx->check_column( 'ofgsw', 'ofgsw_id' ) ) {
         return;
     }
-    unless ( $write_obj->check_column( 'window', 'window_coding' ) ) {
+    unless ( $toxlsx->check_column( 'window', 'window_coding' ) ) {
         return;
     }
 
@@ -429,8 +431,8 @@ my $ofg_coding = sub {
         my ( $order, $value ) = @_;
         my $sheet_name = "ofg_$order";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $sql_query = q{
             SELECT
@@ -462,15 +464,15 @@ my $ofg_coding = sub {
             GROUP BY s.ofgsw_distance
         };
 
-        my @names = $write_obj->sql2names($sql_query);
+        my @names = $toxlsx->sql2names($sql_query);
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
 
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $sql_query,
                     bind_value => [ $value, ],
@@ -496,10 +498,10 @@ my $ofg_coding = sub {
 #----------------------------------------------------------#
 my $ofg_coding_pure = sub {
 
-    unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
+    unless ( $toxlsx->check_column( 'ofgsw', 'ofgsw_id' ) ) {
         return;
     }
-    unless ( $write_obj->check_column( 'window', 'window_coding' ) ) {
+    unless ( $toxlsx->check_column( 'window', 'window_coding' ) ) {
         return;
     }
 
@@ -509,8 +511,8 @@ my $ofg_coding_pure = sub {
         my ( $order, $value ) = @_;
         my $sheet_name = "ofg_$order" . "_pure";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $sql_query = q{
             SELECT
@@ -543,14 +545,14 @@ my $ofg_coding_pure = sub {
             GROUP BY s.ofgsw_distance
         };
 
-        my @names = $write_obj->sql2names($sql_query);
+        my @names = $toxlsx->sql2names($sql_query);
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $sql_query,
                     bind_value => [ $value, $value ],
@@ -576,14 +578,14 @@ my $ofg_coding_pure = sub {
 #----------------------------------------------------------#
 my $ofg_dG = sub {
 
-    unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_dG' ) ) {
+    unless ( $toxlsx->check_column( 'ofgsw', 'ofgsw_dG' ) ) {
         return;
     }
 
     my $sheet_name = "ofg_dG";
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my $sql_query = q{
         SELECT
@@ -609,14 +611,14 @@ my $ofg_dG = sub {
         GROUP BY s.ofgsw_distance
     };
 
-    my @names = $write_obj->sql2names($sql_query);
+    my @names = $toxlsx->sql2names($sql_query);
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
     {    # content
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query => $sql_query,
                 data      => 1,
@@ -633,7 +635,7 @@ my $ofg_dG = sub {
 
 my $ofg_tag_type = sub {
 
-    unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_id' ) ) {
+    unless ( $toxlsx->check_column( 'ofgsw', 'ofgsw_id' ) ) {
         return;
     }
 
@@ -663,8 +665,8 @@ my $ofg_tag_type = sub {
         }
         $sheet_name = substr $sheet_name, 0, 31;    # excel sheet name limit
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $sql_query = q{
             SELECT 
@@ -698,14 +700,14 @@ my $ofg_tag_type = sub {
             $sql_query .= q{AND CONCAT(o.ofg_tag, "_", o.ofg_type) = ? GROUP BY s.ofgsw_distance};
         }
 
-        my @names = $write_obj->sql2names($sql_query);
+        my @names = $toxlsx->sql2names($sql_query);
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $sql_query,
                     bind_value => [ $bind, ],
@@ -728,7 +730,7 @@ my $ofg_tag_type = sub {
 
 my $ofg_ld_tag_type = sub {
 
-    unless ( $write_obj->check_column( 'ofgsw', 'ofgsw_r2_s' ) ) {
+    unless ( $toxlsx->check_column( 'ofgsw', 'ofgsw_r2_s' ) ) {
         return;
     }
 
@@ -758,8 +760,8 @@ my $ofg_ld_tag_type = sub {
         }
         $sheet_name = substr $sheet_name, 0, 31;    # excel sheet name limit
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $sql_query = q{
             SELECT
@@ -793,14 +795,14 @@ my $ofg_ld_tag_type = sub {
             $sql_query .= q{AND CONCAT(o.ofg_tag, "_", o.ofg_type) = ? GROUP BY s.ofgsw_distance};
         }
 
-        my @names = $write_obj->sql2names($sql_query);
+        my @names = $toxlsx->sql2names($sql_query);
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $sql_query,
                     bind_value => [ $bind, ],
@@ -832,7 +834,7 @@ for my $n (@tasks) {
 }
 
 if ($add_index_sheet) {
-    $write_obj->add_index_sheet;
+    $toxlsx->add_index_sheet;
     print "Sheet [INDEX] has been generated.\n";
 }
 

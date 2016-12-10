@@ -21,7 +21,7 @@ use AlignDB;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 =head1 NAME
 
@@ -32,8 +32,8 @@ ld_stat_factory.pl - LD stats for alignDB
     perl ld_stat_factory.pl [options]
       Options:
         --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
+        --server    -s  STR     MySQL IP/Domain
+        --port          INT     MySQL port
         --db        -d  STR     database name
         --username  -u  STR     username
         --password  -p  STR     password
@@ -50,20 +50,22 @@ ld_stat_factory.pl - LD stats for alignDB
 
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
-    'username|u=s' => \( my $username = $Config->{database}{username} ),
-    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'server|s=s'   => \( my $server   = $conf->{database}{server} ),
+    'port=i'       => \( my $port     = $conf->{database}{port} ),
+    'db|d=s'       => \( my $db       = $conf->{database}{db} ),
+    'username|u=s' => \( my $username = $conf->{database}{username} ),
+    'password|p=s' => \( my $password = $conf->{database}{password} ),
     'output|o=s'   => \( my $outfile ),
     'freq=i'       => \( my $max_freq ),
-    'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
+    'run|r=s'      => \( my $run      = $conf->{stat}{run} ),
     'combine=i'    => \( my $combine  = 0 ),
     'piece=i'      => \( my $piece    = 0 ),
     'replace=s'    => \my %replace,
     'index'        => \my $add_index_sheet,
     'chart'        => \my $add_chart,
 ) or Getopt::Long::HelpMessage(1);
+
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $db, $server, $port;
 
 # prepare to run tasks in @tasks
 my @tasks;
@@ -97,13 +99,15 @@ my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
 my $aligndb_obj = AlignDB->new(
-    mysql  => "$db:$server",
+    dsn    => $dsn,
     user   => $username,
     passwd => $password,
 );
+
+#@type DBI
 my $dbh = $aligndb_obj->dbh;
 
-my $write_obj = AlignDB::ToXLSX->new(
+my $toxlsx = AlignDB::ToXLSX->new(
     dbh     => $dbh,
     outfile => $outfile,
     replace => \%replace,
@@ -113,12 +117,12 @@ my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::RealBin/sql.lib" );
 
 # auto detect combine threshold
 if ( $combine == 0 ) {
-    ($combine) = $write_obj->calc_threshold;
+    ($combine) = $toxlsx->calc_threshold;
 }
 
 # auto detect combine threshold
 if ( $piece == 0 ) {
-    ( undef, $piece ) = $write_obj->calc_threshold;
+    ( undef, $piece ) = $toxlsx->calc_threshold;
 }
 
 #----------------------------#
@@ -191,13 +195,13 @@ my $chart_d1_indel_ld = sub {
         top         => 1,
         left        => 6,
     );
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 4;
     $opt{y_title}  = "|Dprime|";
     $opt{y_data}   = $data->[4];
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column}  = 1;
     $opt{y_title}   = "r";
@@ -207,7 +211,7 @@ my $chart_d1_indel_ld = sub {
     $opt{y2_title}  = "Dprime";
     $opt{top}       = 1;
     $opt{left}      = 12;
-    $write_obj->draw_2y( $sheet, \%opt );
+    $toxlsx->draw_2y( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -229,13 +233,13 @@ my $chart_d2_indel_ld = sub {
         top         => 1,
         left        => 6,
     );
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 4;
     $opt{y_title}  = "|Dprime|";
     $opt{y_data}   = $data->[4];
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column}  = 1;
     $opt{y_title}   = "r";
@@ -245,7 +249,7 @@ my $chart_d2_indel_ld = sub {
     $opt{y2_title}  = "Dprime";
     $opt{top}       = 1;
     $opt{left}      = 12;
-    $write_obj->draw_2y( $sheet, \%opt );
+    $toxlsx->draw_2y( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -267,32 +271,32 @@ my $chart_d1_snps_ld = sub {
         top         => 1,
         left        => 11,
     );
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 3;
     $opt{y_title}  = "|Dprime| to nearest indel ";
     $opt{y_data}   = $data->[3];
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 2;
     $opt{y_title}  = "r^2 to near snps";
     $opt{y_data}   = $data->[2];
     $opt{top}      = 1;
     $opt{left}     = 17;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 5;
     $opt{y_title}  = "indel group snps r^2";
     $opt{y_data}   = $data->[5];
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 6;
     $opt{y_title}  = "nonindel group snps r^2";
     $opt{y_data}   = $data->[6];
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -314,32 +318,32 @@ my $chart_d2_snps_ld = sub {
         top         => 1,
         left        => 11,
     );
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 3;
     $opt{y_title}  = "|Dprime| to nearest indel ";
     $opt{y_data}   = $data->[3];
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 2;
     $opt{y_title}  = "r^2 to near snps";
     $opt{y_data}   = $data->[2];
     $opt{top}      = 1;
     $opt{left}     = 17;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 5;
     $opt{y_title}  = "indel group snps r^2";
     $opt{y_data}   = $data->[5];
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 6;
     $opt{y_title}  = "nonindel group snps r^2";
     $opt{y_data}   = $data->[6];
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -350,20 +354,20 @@ my $indel_ld = sub {
     {
         my $sheet_name = 'd1_indel_ld';
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-indel_ld-0');
         $thaw_sql->limit(20);
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query => $thaw_sql->as_sql,
                     data      => 1,
@@ -381,8 +385,8 @@ my $indel_ld = sub {
     {
         my $sheet_name = 'd2_indel_ld';
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-indel_ld-0');
         $thaw_sql->limit(35);
@@ -390,12 +394,12 @@ my $indel_ld = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query => $thaw_sql->as_sql,
                     data      => 1,
@@ -418,8 +422,8 @@ my $indel_ld_insdel = sub {
         my ($level) = @_;
         my $sheet_name = 'd1_indel_ld_' . $level->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-indel_ld-0');
         $thaw_sql->limit(20);
@@ -427,12 +431,12 @@ my $indel_ld_insdel = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $level->[1] ],
@@ -452,8 +456,8 @@ my $indel_ld_insdel = sub {
         my ($level) = @_;
         my $sheet_name = 'd2_indel_ld_' . $level->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-indel_ld-0');
         $thaw_sql->replace( { distance => 'density' } );
@@ -462,12 +466,12 @@ my $indel_ld_insdel = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $level->[1] ],
@@ -497,20 +501,20 @@ my $snps_ld = sub {
     {
         my $sheet_name = 'd1_snps_ld';
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
         $thaw_sql->limit(20);
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query => $thaw_sql->as_sql,
                     data      => 1,
@@ -528,8 +532,8 @@ my $snps_ld = sub {
     {
         my $sheet_name = 'd2_snps_ld';
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
         $thaw_sql->replace( { distance => 'density' } );
@@ -537,12 +541,12 @@ my $snps_ld = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query => $thaw_sql->as_sql,
                     data      => 1,
@@ -565,8 +569,8 @@ my $snps_ld_insdel = sub {
         my ($level) = @_;
         my $sheet_name = 'd1_snps_ld_' . $level->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
         $thaw_sql->limit(20);
@@ -574,12 +578,12 @@ my $snps_ld_insdel = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $level->[1] ],
@@ -599,8 +603,8 @@ my $snps_ld_insdel = sub {
         my ($level) = @_;
         my $sheet_name = 'd2_snps_ld_' . $level->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
         $thaw_sql->replace( { distance => 'density' } );
@@ -609,12 +613,12 @@ my $snps_ld_insdel = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $level->[1] ],
@@ -646,8 +650,8 @@ my $snps_ld_freq = sub {
         my ($level) = @_;
         my $sheet_name = 'd1_snps_ld_freq_' . $level->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
         $thaw_sql->limit(20);
@@ -656,12 +660,12 @@ my $snps_ld_freq = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $level->[1], $level->[2] ],
@@ -681,8 +685,8 @@ my $snps_ld_freq = sub {
         my ($level) = @_;
         my $sheet_name = 'd2_snps_ld_freq_' . $level->[0];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my $thaw_sql = $sql_file->retrieve('ld-snps_ld-0');
         $thaw_sql->replace( { distance => 'density' } );
@@ -692,12 +696,12 @@ my $snps_ld_freq = sub {
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $level->[1], $level->[2] ],
@@ -727,7 +731,7 @@ my $snps_ld_freq = sub {
 #----------------------------------------------------------#
 my $segment_gc_indel = sub {
 
-    unless ( $write_obj->check_column( 'segment', 'segment_id' ) ) {
+    unless ( $toxlsx->check_column( 'segment', 'segment_id' ) ) {
         return;
     }
 
@@ -737,13 +741,13 @@ my $segment_gc_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_gc_indel' . "_$segment_type";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(1);
+        $toxlsx->row(0);
+        $toxlsx->column(1);
 
         {    # create temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
             my %opt = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         {
@@ -767,7 +771,7 @@ my $segment_gc_indel = sub {
                 sql_query  => $sql_query,
                 bind_value => [$segment_type],
             );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         # make group
@@ -781,13 +785,13 @@ my $segment_gc_indel = sub {
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
+            @combined_segment = @{ $toxlsx->make_combine_piece( \%opt ) };
         }
 
         my @names
             = qw{AVG_gc AVG_pi AVG_Indel/100bp AVG_CV AVG_coding AVG_r2 AVG_length COUNT SUM_length};
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data = [];
@@ -830,14 +834,14 @@ my $segment_gc_indel = sub {
                 }
             }
 
-            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
-            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
+            $sheet->write( $toxlsx->row, 0, [ [@group_names] ], $toxlsx->format->{NAME} );
+            $sheet->write( $toxlsx->row, 1, $data, $toxlsx->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
             my %opt = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         if ($add_chart) {    # chart
@@ -853,7 +857,7 @@ my $segment_gc_indel = sub {
                 top       => 1,
                 left      => 11,
             );
-            $write_obj->draw_xy( $sheet, \%opt );
+            $toxlsx->draw_xy( $sheet, \%opt );
         }
 
         print "Sheet [$sheet_name] has been generated.\n";
@@ -866,7 +870,7 @@ my $segment_gc_indel = sub {
 
 my $segment_cv_indel = sub {
 
-    unless ( $write_obj->check_column( 'segment', 'segment_id' ) ) {
+    unless ( $toxlsx->check_column( 'segment', 'segment_id' ) ) {
         return;
     }
 
@@ -876,13 +880,13 @@ my $segment_cv_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_cv_indel' . "_$segment_type";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(1);
+        $toxlsx->row(0);
+        $toxlsx->column(1);
 
         {    # create temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
             my %opt = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         {
@@ -907,7 +911,7 @@ my $segment_cv_indel = sub {
                 bind_value => [$segment_type],
 
             );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         # make group
@@ -921,7 +925,7 @@ my $segment_cv_indel = sub {
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
+            @combined_segment = @{ $toxlsx->make_combine_piece( \%opt ) };
         }
 
         my @names
@@ -930,7 +934,7 @@ my $segment_cv_indel = sub {
         push @{$data}, [] for @names;
 
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         {    # query
@@ -971,14 +975,14 @@ my $segment_cv_indel = sub {
                     }
                 }
             }
-            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
-            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
+            $sheet->write( $toxlsx->row, 0, [ [@group_names] ], $toxlsx->format->{NAME} );
+            $sheet->write( $toxlsx->row, 1, $data, $toxlsx->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
             my %opt = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         if ($add_chart) {    # chart
@@ -994,7 +998,7 @@ my $segment_cv_indel = sub {
                 top       => 1,
                 left      => 12,
             );
-            $write_obj->draw_xy( $sheet, \%opt );
+            $toxlsx->draw_xy( $sheet, \%opt );
         }
 
         print "Sheet [$sheet_name] has been generated.\n";
@@ -1018,7 +1022,7 @@ for my $n (@tasks) {
 }
 
 if ($add_index_sheet) {
-    $write_obj->add_index_sheet;
+    $toxlsx->add_index_sheet;
     print "Sheet [INDEX] has been generated.\n";
 }
 

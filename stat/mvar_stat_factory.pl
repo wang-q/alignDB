@@ -22,7 +22,7 @@ use AlignDB::Position;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 =head1 NAME
 
@@ -33,8 +33,8 @@ mvar_stat_factory.pl - Variable lists for alignDB
     perl mvar_stat_factory.pl [options]
       Options:
         --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
+        --server    -s  STR     MySQL IP/Domain
+        --port          INT     MySQL port
         --db        -d  STR     database name
         --username  -u  STR     username
         --password  -p  STR     password
@@ -46,15 +46,17 @@ mvar_stat_factory.pl - Variable lists for alignDB
 
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
-    'username|u=s' => \( my $username = $Config->{database}{username} ),
-    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'server|s=s'   => \( my $server   = $conf->{database}{server} ),
+    'port=i'     => \( my $port     = $conf->{database}{port} ),
+    'db|d=s'       => \( my $db       = $conf->{database}{db} ),
+    'username|u=s' => \( my $username = $conf->{database}{username} ),
+    'password|p=s' => \( my $password = $conf->{database}{password} ),
     'output|o=s'   => \( my $outfile ),
-    'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
+    'run|r=s'      => \( my $run      = $conf->{stat}{run} ),
     'index'        => \( my $add_index_sheet, ),
 ) or Getopt::Long::HelpMessage(1);
+
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $db, $server, $port;
 
 $outfile = "$db.mvar.xlsx" unless $outfile;
 
@@ -86,9 +88,9 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my DBI $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
-    or die "Cannot connect to MySQL database at $db:$server";
-my $write_obj = AlignDB::ToXLSX->new(
+my DBI $dbh = DBI->connect( $dsn, $username, $password )
+    or die $DBI::errstr;
+my $toxlsx = AlignDB::ToXLSX->new(
     dbh     => $dbh,
     outfile => $outfile,
 );
@@ -127,16 +129,16 @@ my $all_freq;
 my $indel_basic = sub {
     my $sheet_name = 'indel_basic';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @names = qw{Type_name AVG_length STD_length COUNT};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
-    if ( $write_obj->check_column( 'indel', 'indel_coding' ) ) {
+    if ( $toxlsx->check_column( 'indel', 'indel_coding' ) ) {
         my $query_name = 'Coding_type';
         my $sql_query  = q{
             SELECT CASE i.indel_coding
@@ -151,7 +153,7 @@ my $indel_basic = sub {
             FROM indel i
             GROUP BY coding
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -160,7 +162,7 @@ my $indel_basic = sub {
     }
 
     # contents
-    if ( $write_obj->check_column( 'indel', 'indel_repeats' ) ) {
+    if ( $toxlsx->check_column( 'indel', 'indel_repeats' ) ) {
         my $query_name = 'Repeat_type';
         my $sql_query  = q{
             SELECT CASE i.indel_repeats
@@ -175,7 +177,7 @@ my $indel_basic = sub {
             FROM indel i
             GROUP BY `repeat`
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -184,7 +186,7 @@ my $indel_basic = sub {
     }
 
     # contents
-    if ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
+    if ( $toxlsx->check_column( 'indel', 'indel_slippage' ) ) {
         my $query_name = 'Slippage_type';
         my $sql_query  = q{
             SELECT CASE i.indel_slippage
@@ -199,7 +201,7 @@ my $indel_basic = sub {
             FROM indel i
             GROUP BY slippage
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -208,7 +210,7 @@ my $indel_basic = sub {
     }
 
     # contents
-    if ( $write_obj->check_column( 'indel', 'indel_type' ) ) {
+    if ( $toxlsx->check_column( 'indel', 'indel_type' ) ) {
         my $query_name = 'Indel_type';
         my $sql_query  = q{
             SELECT CASE i.indel_type
@@ -223,7 +225,7 @@ my $indel_basic = sub {
             FROM indel i
             GROUP BY type
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -232,7 +234,7 @@ my $indel_basic = sub {
     }
 
     # contents
-    if ( $write_obj->check_column( 'indel', 'indel_freq' ) ) {
+    if ( $toxlsx->check_column( 'indel', 'indel_freq' ) ) {
         my $query_name = 'Indel_freq';
         my $sql_query  = q{
             SELECT indel_freq,
@@ -242,7 +244,7 @@ my $indel_basic = sub {
             FROM indel i
             GROUP BY indel_freq
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -267,7 +269,7 @@ my $indel_basic = sub {
             FROM indel i
             GROUP BY length
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -284,16 +286,16 @@ my $indel_basic = sub {
 my $snp_basic = sub {
     my $sheet_name = 'snp_basic';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @names = qw{Type_name COUNT};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
-    if ( $write_obj->check_column( 'snp', 'snp_coding' ) ) {
+    if ( $toxlsx->check_column( 'snp', 'snp_coding' ) ) {
         my $query_name = 'Coding_type';
         my $sql_query  = q{
             SELECT CASE s.snp_coding
@@ -306,7 +308,7 @@ my $snp_basic = sub {
             FROM snp s
             GROUP BY coding
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -315,7 +317,7 @@ my $snp_basic = sub {
     }
 
     # contents
-    if ( $write_obj->check_column( 'snp', 'snp_repeats' ) ) {
+    if ( $toxlsx->check_column( 'snp', 'snp_repeats' ) ) {
         my $query_name = 'Repeat_type';
         my $sql_query  = q{
             SELECT CASE s.snp_repeats
@@ -328,7 +330,7 @@ my $snp_basic = sub {
             FROM snp s
             GROUP BY `repeat`
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -337,7 +339,7 @@ my $snp_basic = sub {
     }
 
     # contents
-    if ( $write_obj->check_column( 'snp', 'snp_cpg' ) ) {
+    if ( $toxlsx->check_column( 'snp', 'snp_cpg' ) ) {
         my $query_name = 'CpG_type';
         my $sql_query  = q{
             SELECT CASE s.snp_cpg
@@ -350,7 +352,7 @@ my $snp_basic = sub {
             FROM snp s
             GROUP BY cpg
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -359,7 +361,7 @@ my $snp_basic = sub {
     }
 
     # contents
-    if ( $write_obj->check_column( 'snp', 'snp_freq' ) ) {
+    if ( $toxlsx->check_column( 'snp', 'snp_freq' ) ) {
         my $query_name = 'SNP_freq';
         my $sql_query  = q{
             SELECT snp_freq,
@@ -367,7 +369,7 @@ my $snp_basic = sub {
             FROM snp s
             GROUP BY snp_freq
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -384,14 +386,14 @@ my $snp_basic = sub {
 my $indel_list = sub {
     my $sheet_name = 'indel_list';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my @names = qw{indel_id common_name chr_name indel_start indel_end
         indel_length indel_seq indel_gc indel_freq indel_occured indel_type
         indel_slippage indel_coding indel_repeats};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     {    # contents
@@ -418,7 +420,7 @@ my $indel_list = sub {
                 splice @row, $i, 1, $chr_pos;
             }
 
-            $write_obj->write_row( $sheet, { row => \@row, } );
+            $toxlsx->write_row( $sheet, { row => \@row, } );
         }
     }
 
@@ -431,14 +433,14 @@ my $indel_list = sub {
 my $snp_list = sub {
     my $sheet_name = 'snp_list';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my @names = qw{snp_id common_name chr_name snp_pos isw_distance
         mutant_to snp_freq snp_occured
         snp_coding snp_repeats snp_cpg};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     {    # contents
@@ -466,7 +468,7 @@ my $snp_list = sub {
                 splice @row, $i, 1, $chr_pos;
             }
 
-            $write_obj->write_row( $sheet, { row => \@row, } );
+            $toxlsx->write_row( $sheet, { row => \@row, } );
         }
     }
 
@@ -478,18 +480,18 @@ my $snp_list = sub {
 #----------------------------------------------------------#
 my $snp_codon_list = sub {
 
-    unless ( $write_obj->check_column( 'snp', 'snp_codon_pos' ) ) {
+    unless ( $toxlsx->check_column( 'snp', 'snp_codon_pos' ) ) {
         return;
     }
 
     my $sheet_name = 'snp_codon_list';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my @names = qw{snp_id name mutant_to freq occured target codon_pos syn nsy };
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     {    # contents
@@ -517,7 +519,7 @@ my $snp_codon_list = sub {
             my $name = "$row[1]:$row[2]";
             my $target = substr $row[5], 0, 1;
 
-            $write_obj->write_row(
+            $toxlsx->write_row(
                 $sheet,
                 {   row => [
                         $row[0], $name,   $row[3], $row[4], $row[5],
@@ -536,21 +538,21 @@ my $snp_codon_list = sub {
 #----------------------------------------------------------#
 my $gene_list = sub {
 
-    unless ( $write_obj->check_column( 'gene', 'gene_syn' ) ) {
+    unless ( $toxlsx->check_column( 'gene', 'gene_syn' ) ) {
         return;
     }
 
     my $sheet_name = 'gene_list';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my @names = qw{ gene_id chr_name gene_start gene_end
         gene_stable_id gene_external_name gene_biotype gene_strand
         gene_is_full gene_multitrans gene_multiexons gene_subs gene_indel
         gene_pi gene_syn gene_nsy };
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     {    # contents
@@ -586,7 +588,7 @@ my $gene_list = sub {
                 push @data, \@row;
             }
             else {
-                $write_obj->write_row( $sheet, { row => \@row, } );
+                $toxlsx->write_row( $sheet, { row => \@row, } );
             }
         }
 
@@ -626,7 +628,7 @@ my $gene_list = sub {
                 }
             }
 
-            $write_obj->write_row(
+            $toxlsx->write_row(
                 $sheet,
                 {   row => [
                         $gene_id,         $chr_name,        $gene_start,       $gene_end,
@@ -648,12 +650,12 @@ my $gene_list = sub {
 my $strain_list = sub {
     my $sheet_name = 'strain_list';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my @names = qw{strain ins del snp };
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $count_of = {
@@ -727,7 +729,7 @@ my $strain_list = sub {
 
     {    # contents
         for my $i ( 1 .. $all_freq ) {
-            $write_obj->write_row(
+            $toxlsx->write_row(
                 $sheet,
                 {   row => [
                         $i,
@@ -751,6 +753,11 @@ for my $n (@tasks) {
     if ( $n == 51 ) { &$indel_list;     next; }
     if ( $n == 52 ) { &$snp_list;       next; }
     if ( $n == 53 ) { &$snp_codon_list; next; }
+}
+
+if ($add_index_sheet) {
+    $toxlsx->add_index_sheet;
+    print "Sheet [INDEX] has been generated.\n";
 }
 
 $stopwatch->end_message;

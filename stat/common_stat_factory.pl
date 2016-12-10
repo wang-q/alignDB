@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use strict;
 use warnings;
 use autodie;
@@ -21,7 +21,7 @@ use AlignDB;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 =head1 NAME
 
@@ -32,8 +32,8 @@ common_stat_factory.pl - Common stats for alignDB
     perl common_stat_factory.pl [options]
       Options:
         --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
+        --server    -s  STR     MySQL IP/Domain
+        --port          INT     MySQL port
         --db        -d  STR     database name
         --username  -u  STR     username
         --password  -p  STR     password
@@ -49,19 +49,21 @@ common_stat_factory.pl - Common stats for alignDB
 
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
-    'username|u=s' => \( my $username = $Config->{database}{username} ),
-    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'server|s=s'   => \( my $server   = $conf->{database}{server} ),
+    'port=i'       => \( my $port     = $conf->{database}{port} ),
+    'db|d=s'       => \( my $db       = $conf->{database}{db} ),
+    'username|u=s' => \( my $username = $conf->{database}{username} ),
+    'password|p=s' => \( my $password = $conf->{database}{password} ),
     'output|o=s'   => \( my $outfile ),
-    'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
+    'run|r=s'      => \( my $run      = $conf->{stat}{run} ),
     'combine=i'    => \( my $combine  = 0 ),
     'piece=i'      => \( my $piece    = 0 ),
     'replace=s'    => \my %replace,
     'index'        => \( my $add_index_sheet, ),
     'chart'        => \( my $add_chart, ),
 ) or Getopt::Long::HelpMessage(1);
+
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $db, $server, $port;
 
 # prepare to run tasks in @tasks
 my @tasks;
@@ -94,14 +96,14 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my $aligndb_obj = AlignDB->new(
-    mysql  => "$db:$server",
+my $alignDB = AlignDB->new(
+    dsn    => $dsn,
     user   => $username,
     passwd => $password,
 );
-my DBI $dbh = $aligndb_obj->dbh;
+my DBI $dbh = $alignDB->dbh;
 
-my $write_obj = AlignDB::ToXLSX->new(
+my $toxlsx = AlignDB::ToXLSX->new(
     dbh     => $dbh,
     outfile => $outfile,
     replace => \%replace,
@@ -109,16 +111,16 @@ my $write_obj = AlignDB::ToXLSX->new(
 
 # auto detect combine threshold
 if ( $combine == 0 ) {
-    ($combine) = $write_obj->calc_threshold;
+    ($combine) = $toxlsx->calc_threshold;
 }
 
 # auto detect combine threshold
 if ( $piece == 0 ) {
-    ( undef, $piece ) = $write_obj->calc_threshold;
+    ( undef, $piece ) = $toxlsx->calc_threshold;
 }
 
 # count freq
-my $seq_count = $aligndb_obj->get_seq_count;
+my $seq_count = $alignDB->get_seq_count;
 
 # sql library
 my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::RealBin/sql.lib" );
@@ -150,19 +152,19 @@ my $chart_pigccv = sub {
         $opt{last_row}    = 33;
         $opt{x_max_scale} = 30;
     }
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 3;
     $opt{y_data}   = $data->[3];
     $opt{y_title}  = "GC proportion";
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 5;
     $opt{y_data}   = $data->[5];
     $opt{y_title}  = "Window CV";
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column}  = 3;
     $opt{y_data}    = $data->[3];
@@ -171,7 +173,7 @@ my $chart_pigccv = sub {
     $opt{y2_data}   = $data->[5];
     $opt{y2_title}  = "Window CV";
     $opt{top} += 18;
-    $write_obj->draw_2y( $sheet, \%opt );
+    $toxlsx->draw_2y( $sheet, \%opt );
     delete $opt{y2_column};
     delete $opt{y2_data};
     delete $opt{y2_title};
@@ -184,12 +186,12 @@ my $chart_dd = sub {
 
     # write charting data
     my @keys = keys %{$data_of};
-    $write_obj->row(2);
-    $write_obj->column(7);
+    $toxlsx->row(2);
+    $toxlsx->column(7);
 
-    $write_obj->write_column( $sheet, { column => $data_of->{ $keys[-1] }[0], } );
+    $toxlsx->write_column( $sheet, { column => $data_of->{ $keys[-1] }[0], } );
     for my $key (@keys) {
-        $write_obj->write_column(
+        $toxlsx->write_column(
             $sheet,
             {   query_name => $key,
                 column     => $data_of->{$key}[1],
@@ -216,7 +218,7 @@ my $chart_dd = sub {
     if ( $sheet_name =~ /_gc$/ ) {
         $opt{y_title} = "GC proportion";
     }
-    $write_obj->draw_dd( $sheet, \%opt );
+    $toxlsx->draw_dd( $sheet, \%opt );
 };
 
 my $chart_series = sub {
@@ -226,12 +228,12 @@ my $chart_series = sub {
 
     # write charting data
     my @keys = keys %{$data_of};
-    $write_obj->row(2);
-    $write_obj->column(7);
+    $toxlsx->row(2);
+    $toxlsx->column(7);
 
-    $write_obj->write_column( $sheet, { column => $data_of->{ $keys[-1] }[0], } );
+    $toxlsx->write_column( $sheet, { column => $data_of->{ $keys[-1] }[0], } );
     for my $key (@keys) {
-        $write_obj->write_column(
+        $toxlsx->write_column(
             $sheet,
             {   query_name => $key,
                 column     => $data_of->{$key}[1],
@@ -258,7 +260,7 @@ my $chart_series = sub {
     if ( $sheet_name =~ /_gc$/ ) {
         $opt{y_title} = "GC proportion";
     }
-    $write_obj->draw_dd( $sheet, \%opt );
+    $toxlsx->draw_dd( $sheet, \%opt );
 };
 
 my $chart_snp_indel_ratio = sub {
@@ -277,7 +279,7 @@ my $chart_snp_indel_ratio = sub {
         top       => 1,
         left      => 10,
     );
-    $write_obj->draw_xy( $sheet, \%opt );
+    $toxlsx->draw_xy( $sheet, \%opt );
 };
 
 my $chart_snp = sub {
@@ -287,12 +289,12 @@ my $chart_snp = sub {
 
     # write charting data
     my @keys = keys %{$data_of};
-    $write_obj->row(2);
-    $write_obj->column(7);
+    $toxlsx->row(2);
+    $toxlsx->column(7);
 
-    $write_obj->write_column( $sheet, { column => $data_of->{ $keys[-1] }[0], } );
+    $toxlsx->write_column( $sheet, { column => $data_of->{ $keys[-1] }[0], } );
     for my $key (@keys) {
-        $write_obj->write_column(
+        $toxlsx->write_column(
             $sheet,
             {   query_name => $key,
                 column     => $data_of->{$key}[1],
@@ -321,7 +323,7 @@ my $chart_snp = sub {
         $opt{last_row}    = 33;
         $opt{x_max_scale} = 30;
     }
-    $write_obj->draw_dd( $sheet, \%opt );
+    $toxlsx->draw_dd( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -330,12 +332,12 @@ my $chart_snp = sub {
 my $basic = sub {
     my $sheet_name = 'basic';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @names = qw{VALUE};
     {    # header
-        $sheet = $write_obj->write_header(
+        $sheet = $toxlsx->write_header(
             $sheet_name,
             {   query_name => 'Item',
                 header     => \@names,
@@ -344,7 +346,7 @@ my $basic = sub {
     }
 
     {    # contents
-        $write_obj->write_row(
+        $toxlsx->write_row(
             $sheet,
             {   query_name => 'No. of genomes',
                 row        => [$seq_count],
@@ -368,7 +370,7 @@ my $basic = sub {
                     sequence) s ON c.chr_id = s.chr_id
                 GROUP BY common_name) l
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -382,7 +384,7 @@ my $basic = sub {
             SELECT  SUM(a.align_length) / 1000000.00
             FROM    align a
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -396,7 +398,7 @@ my $basic = sub {
             SELECT  SUM(a.align_indels) / SUM(a.align_comparables) * 100.0
             FROM    align a
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -410,7 +412,7 @@ my $basic = sub {
             SELECT  SUM(a.align_differences) * 1.0 / SUM(a.align_comparables) * 100.0
             FROM    align a
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -427,7 +429,7 @@ my $basic = sub {
                 FROM align a
                 ) original
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -442,7 +444,7 @@ my $basic = sub {
                    / sum(a.align_length)
             FROM align a
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -458,7 +460,7 @@ my $basic = sub {
             WHERE   s.seq_role = "T"
             AND     s.align_id = a.align_id
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -474,7 +476,7 @@ my $basic = sub {
             WHERE   s.seq_role = "T"
             AND     s.align_id = a.align_id
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -491,12 +493,12 @@ my $basic = sub {
 my $process = sub {
     my $sheet_name = 'process';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my @names = qw{Order Operation Duration Cmd_line};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names, } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names, } );
     }
 
     {    # contents
@@ -511,7 +513,7 @@ my $process = sub {
         my $order = 1;
         while ( scalar @{$array_ref} ) {
             my @row = splice @{$array_ref}, 0, 3;
-            $write_obj->write_row( $sheet, { row => [ $order, @row ], } );
+            $toxlsx->write_row( $sheet, { row => [ $order, @row ], } );
             $order++;
         }
     }
@@ -525,12 +527,12 @@ my $process = sub {
 my $summary = sub {
     my $sheet_name = 'summary';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @names = qw{AVG MIN MAX STD COUNT SUM};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names, } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names, } );
     }
 
     my $column_stat = sub {
@@ -554,7 +556,7 @@ my $summary = sub {
         $sql_query =~ s/_COLUMN_/$column/g;
         $sql_query .= $where if $where;
 
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -578,26 +580,26 @@ my $summary = sub {
 # worksheet -- pi_gc_cv
 #----------------------------------------------------------#
 my $pi_gc_cv = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+    unless ( $toxlsx->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
 
     {
         my $sheet_name = 'd1_pi_gc_cv';
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_pi_gc_cv-0');
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query => $thaw_sql->as_sql,
                     data      => 1,
@@ -615,20 +617,20 @@ my $pi_gc_cv = sub {
     {
         my $sheet_name = 'd2_pi_gc_cv';
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_pi_gc_cv-0');
         $thaw_sql->replace( { distance => 'density' } );
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
         {    # content
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query => $thaw_sql->as_sql,
                     data      => 1,
@@ -648,18 +650,18 @@ my $pi_gc_cv = sub {
 # worksheet -- comb_pi_gc_cv
 #----------------------------------------------------------#
 my $comb_pi_gc_cv = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+    unless ( $toxlsx->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
 
     {
         my $sheet_name = 'd1_comb_pi_gc_cv';
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         # make combine
-        my $combined = $write_obj->make_combine(
+        my $combined = $toxlsx->make_combine(
             {   sql_query  => $sql_file->retrieve('common-d1_combine-0')->as_sql,
                 threshold  => $combine,
                 standalone => [ -1, 0 ],
@@ -669,7 +671,7 @@ my $comb_pi_gc_cv = sub {
         {    # header
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
             my @names = $thaw_sql->as_header;
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
@@ -677,7 +679,7 @@ my $comb_pi_gc_cv = sub {
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
             $thaw_sql->add_where( 'isw.isw_distance' => $comb );
 
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => $comb,
@@ -696,11 +698,11 @@ my $comb_pi_gc_cv = sub {
     {
         my $sheet_name = 'd2_comb_pi_gc_cv';
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         # make combine
-        my $combined = $write_obj->make_combine(
+        my $combined = $toxlsx->make_combine(
             {   sql_query  => $sql_file->retrieve('common-d2_combine-0')->as_sql,
                 threshold  => $combine,
                 standalone => [ -1, 0 ],
@@ -711,7 +713,7 @@ my $comb_pi_gc_cv = sub {
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_pi_gc_cv-0');
             $thaw_sql->replace( { distance => 'density' } );
             my @names = $thaw_sql->as_header;
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
@@ -720,7 +722,7 @@ my $comb_pi_gc_cv = sub {
             $thaw_sql->add_where( 'isw.isw_distance' => $comb );
             $thaw_sql->replace( { distance => 'density' } );
 
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => $comb,
@@ -741,18 +743,18 @@ my $comb_pi_gc_cv = sub {
 # worksheet -- group_distance
 #----------------------------------------------------------#
 my $group_distance = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+    unless ( $toxlsx->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
 
     my $sheet_name = 'group_distance';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @names = qw{AVG_distance AVG_pi COUNT STD_pi SUM_length length_proportion};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # make last portion
@@ -764,7 +766,7 @@ my $group_distance = sub {
             sql_query => $thaw_sql->as_sql,
             portion   => $portion,
         );
-        ( $all_length, $last_portion ) = $write_obj->make_last_portion( \%option );
+        ( $all_length, $last_portion ) = $toxlsx->make_last_portion( \%option );
     }
 
     my @group_distance = (
@@ -803,7 +805,7 @@ my $group_distance = sub {
             $group_name = $group->[0];
         }
 
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
@@ -819,18 +821,18 @@ my $group_distance = sub {
 # worksheet -- group_density
 #----------------------------------------------------------#
 my $group_density = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+    unless ( $toxlsx->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
 
     my $sheet_name = 'group_density';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @names = qw{AVG_density AVG_pi COUNT STD_pi SUM_length length_proportion};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # make last portion
@@ -843,7 +845,7 @@ my $group_density = sub {
             sql_query => $thaw_sql->as_sql,
             portion   => $portion,
         );
-        ( $all_length, $last_portion ) = $write_obj->make_last_portion( \%option );
+        ( $all_length, $last_portion ) = $toxlsx->make_last_portion( \%option );
     }
 
     my @group_density = (
@@ -877,7 +879,7 @@ my $group_density = sub {
             $group_name = $group->[0];
         }
 
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
@@ -894,7 +896,7 @@ my $group_density = sub {
 #----------------------------------------------------------#
 my $comb_coding = sub {
 
-    unless ( $write_obj->check_column( 'isw', 'isw_coding' ) ) {
+    unless ( $toxlsx->check_column( 'isw', 'isw_coding' ) ) {
         return;
     }
 
@@ -905,14 +907,14 @@ my $comb_coding = sub {
 
         my $sheet_name = "d1_comb_$name";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         # make combine
         my $combined;
         {
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_make_combine_coding-0');
-            $combined = $write_obj->make_combine(
+            $combined = $toxlsx->make_combine(
                 {   sql_query  => $thaw_sql->as_sql,
                     threshold  => $combine,
                     standalone => [ -1, 0 ],
@@ -925,7 +927,7 @@ my $comb_coding = sub {
         {    # header
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
             my @names = $thaw_sql->as_header;
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
@@ -933,7 +935,7 @@ my $comb_coding = sub {
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
             $thaw_sql->add_where( 'isw.isw_distance' => $comb );
 
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $feature_1, $feature_2, @{$comb} ],
@@ -954,15 +956,15 @@ my $comb_coding = sub {
 
         my $sheet_name = "d2_comb_$name";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         # make combine
         my $combined;
         {
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_make_combine_coding-0');
             $thaw_sql->replace( { distance => 'density' } );
-            $combined = $write_obj->make_combine(
+            $combined = $toxlsx->make_combine(
                 {   sql_query  => $thaw_sql->as_sql,
                     threshold  => $combine,
                     standalone => [ -1, 0 ],
@@ -976,7 +978,7 @@ my $comb_coding = sub {
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_coding-0');
             $thaw_sql->replace( { distance => 'density' } );
             my @names = $thaw_sql->as_header;
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
@@ -985,7 +987,7 @@ my $comb_coding = sub {
             $thaw_sql->add_where( 'isw.isw_distance' => $comb );
             $thaw_sql->replace( { distance => 'density' } );
 
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $feature_1, $feature_2, @{$comb} ],
@@ -1015,7 +1017,7 @@ my $comb_coding = sub {
 #----------------------------------------------------------#
 my $comb_slippage = sub {
 
-    unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
+    unless ( $toxlsx->check_column( 'indel', 'indel_slippage' ) ) {
         return;
     }
 
@@ -1026,14 +1028,14 @@ my $comb_slippage = sub {
 
         my $sheet_name = "d1_comb_$name";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         # make combine
         my $combined;
         {
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_make_combine_slippage-0');
-            $combined = $write_obj->make_combine(
+            $combined = $toxlsx->make_combine(
                 {   sql_query  => $thaw_sql->as_sql,
                     threshold  => $combine,
                     standalone => [ -1, 0 ],
@@ -1046,7 +1048,7 @@ my $comb_slippage = sub {
         {    # header
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
             my @names = $thaw_sql->as_header;
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
@@ -1054,7 +1056,7 @@ my $comb_slippage = sub {
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
             $thaw_sql->add_where( 'isw.isw_distance' => $comb );
 
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $feature_1, $feature_2, @{$comb} ],
@@ -1075,15 +1077,15 @@ my $comb_slippage = sub {
 
         my $sheet_name = "d2_comb_$name";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         # make combine
         my $combined;
         {
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_make_combine_slippage-0');
             $thaw_sql->replace( { distance => 'density' } );
-            $combined = $write_obj->make_combine(
+            $combined = $toxlsx->make_combine(
                 {   sql_query  => $thaw_sql->as_sql,
                     threshold  => $combine,
                     standalone => [ -1, 0 ],
@@ -1097,7 +1099,7 @@ my $comb_slippage = sub {
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-d1_comb_slippage-0');
             $thaw_sql->replace( { distance => 'density' } );
             my @names = $thaw_sql->as_header;
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data;
@@ -1106,7 +1108,7 @@ my $comb_slippage = sub {
             $thaw_sql->add_where( 'isw.isw_distance' => $comb );
             $thaw_sql->replace( { distance => 'density' } );
 
-            $data = $write_obj->write_sql(
+            $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $feature_1, $feature_2, @{$comb} ],
@@ -1132,7 +1134,7 @@ my $comb_slippage = sub {
 };
 
 my $dd_group = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+    unless ( $toxlsx->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
 
@@ -1142,8 +1144,8 @@ my $dd_group = sub {
     {
         my $sheet_name = 'dd_group';
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(1);
+        $toxlsx->row(0);
+        $toxlsx->column(1);
 
         my @dd_density_group
             = ( [ 1, 2 ], [ 3, 6 ], [ 7, 10 ], [ 11, 18 ], [ 19, 999 ], );
@@ -1151,7 +1153,7 @@ my $dd_group = sub {
         {    # header
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-dd_group');
             my @names = $thaw_sql->as_header;
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         tie my %data_of, 'Tie::IxHash';
@@ -1159,9 +1161,9 @@ my $dd_group = sub {
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-dd_group');
 
             my $group_name = $item->[0] . "--" . $item->[1];
-            $write_obj->increase_row;
+            $toxlsx->increase_row;
 
-            my $data = $write_obj->write_sql(
+            my $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     query_name => $group_name,
@@ -1185,8 +1187,8 @@ my $dd_group = sub {
     {
         my $sheet_name = 'dd_group_gc';
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(1);
+        $toxlsx->row(0);
+        $toxlsx->column(1);
 
         my @dd_density_group
             = ( [ 1, 2 ], [ 3, 6 ], [ 7, 10 ], [ 11, 18 ], [ 19, 999 ], );
@@ -1194,7 +1196,7 @@ my $dd_group = sub {
         {    # header
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-dd_group_gc');
             my @names = $thaw_sql->as_header;
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         tie my %data_of, 'Tie::IxHash';
@@ -1202,9 +1204,9 @@ my $dd_group = sub {
             my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-dd_group_gc');
 
             my $group_name = $item->[0] . "--" . $item->[1];
-            $write_obj->increase_row;
+            $toxlsx->increase_row;
 
-            my $data = $write_obj->write_sql(
+            my $data = $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     query_name => $group_name,
@@ -1227,21 +1229,21 @@ my $dd_group = sub {
 # worksheet -- indel_length_group
 #----------------------------------------------------------#
 my $indel_length_group = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+    unless ( $toxlsx->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
 
     my $sheet_name = 'indel_length_group';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @groups = ( [ 1, 5 ], [ 6, 10 ], [ 11, 50 ], [ 51, 300 ], );
 
     {    # header
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         my @names = $thaw_sql->as_header;
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
@@ -1251,9 +1253,9 @@ my $indel_length_group = sub {
         $thaw_sql->add_where( 'indel_length' => { op => '<=', value => '1' } );
 
         my $group_name = $item->[0] . "--" . $item->[1];
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
@@ -1275,14 +1277,14 @@ my $indel_length_group = sub {
 # worksheet -- indel_extand_group
 #----------------------------------------------------------#
 my $indel_extand_group = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+    unless ( $toxlsx->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
 
     my $sheet_name = 'indel_extand_group';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @groups
         = ( [ 0, 0 ], [ 1, 2 ], [ 3, 4 ], [ 5, 9 ], [ 10, 19 ], [ 20, 999 ], );
@@ -1290,7 +1292,7 @@ my $indel_extand_group = sub {
     {    # header
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         my @names = $thaw_sql->as_header;
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
@@ -1300,9 +1302,9 @@ my $indel_extand_group = sub {
         $thaw_sql->add_where( 'FLOOR(indel.right_extand / 100)' => { op => '<=', value => '0' } );
 
         my $group_name = $item->[0] . "--" . $item->[1];
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
@@ -1324,17 +1326,17 @@ my $indel_extand_group = sub {
 # worksheet -- indel_position_group
 #----------------------------------------------------------#
 my $indel_position_group = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+    unless ( $toxlsx->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
-    unless ( $write_obj->check_column( 'indel', 'indel_coding' ) ) {
+    unless ( $toxlsx->check_column( 'indel', 'indel_coding' ) ) {
         return;
     }
 
     my $sheet_name = 'indel_position_group';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @groups
         = ( [ 1, 1, 0, 0 ], [ 1, 1, 1, 1 ], [ 0, 0, 0, 0 ], [ 0, 0, 1, 1 ], );
@@ -1342,7 +1344,7 @@ my $indel_position_group = sub {
     {    # header
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         my @names = $thaw_sql->as_header;
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
@@ -1354,9 +1356,9 @@ my $indel_position_group = sub {
         $thaw_sql->add_where( 'indel_repeats' => { op => '<=', value => '0' } );
 
         my $group_name = $item->[0] . "--" . $item->[2];
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
@@ -1379,21 +1381,21 @@ my $indel_position_group = sub {
 #----------------------------------------------------------#
 my $indel_coding_group = sub {
 
-    unless ( $write_obj->check_column( 'indel', 'indel_coding' ) ) {
+    unless ( $toxlsx->check_column( 'indel', 'indel_coding' ) ) {
         return;
     }
 
     my $sheet_name = 'indel_coding_group';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @groups = ( [ 0, 0 ], [ 1, 1 ], );
 
     {    # header
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         my @names = $thaw_sql->as_header;
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
@@ -1403,9 +1405,9 @@ my $indel_coding_group = sub {
         $thaw_sql->add_where( 'indel_coding' => { op => '<=', value => '0' } );
 
         my $group_name = $item->[0] . "--" . $item->[1];
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
@@ -1428,14 +1430,14 @@ my $indel_coding_group = sub {
 #----------------------------------------------------------#
 my $indel_repeat_group = sub {
 
-    unless ( $write_obj->check_column( 'indel', 'indel_repeats' ) ) {
+    unless ( $toxlsx->check_column( 'indel', 'indel_repeats' ) ) {
         return;
     }
 
     my $sheet_name = 'indel_repeat_group';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @groups
         = ( [ 0, 0 ], [ 1, 1 ], );
@@ -1443,7 +1445,7 @@ my $indel_repeat_group = sub {
     {    # header
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         my @names = $thaw_sql->as_header;
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
@@ -1453,9 +1455,9 @@ my $indel_repeat_group = sub {
         $thaw_sql->add_where( 'indel_repeats' => { op => '<=', value => '0' } );
 
         my $group_name = $item->[0] . "--" . $item->[1];
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
@@ -1478,21 +1480,21 @@ my $indel_repeat_group = sub {
 #----------------------------------------------------------#
 my $indel_slip_group = sub {
 
-    unless ( $write_obj->check_column( 'indel', 'indel_slippage' ) ) {
+    unless ( $toxlsx->check_column( 'indel', 'indel_slippage' ) ) {
         return;
     }
 
     my $sheet_name = 'indel_slip_group';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @groups = ( [ 0, 0 ], [ 1, 1 ], );
 
     {    # header
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         my @names = $thaw_sql->as_header;
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
@@ -1502,9 +1504,9 @@ my $indel_slip_group = sub {
         $thaw_sql->add_where( 'indel_slippage' => { op => '<=', value => '0' } );
 
         my $group_name = $item->[0] . "--" . $item->[1];
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
@@ -1526,21 +1528,21 @@ my $indel_slip_group = sub {
 # worksheet -- indel_gc_group
 #----------------------------------------------------------#
 my $indel_gc_group = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+    unless ( $toxlsx->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
 
     my $sheet_name = 'indel_gc_group';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @groups = ( [ 0, 0.2999 ], [ 0.3, 0.4999 ], [ 0.5, 1 ], );
 
     {    # header
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_isw');
         my @names = $thaw_sql->as_header;
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     tie my %data_of, 'Tie::IxHash';
@@ -1551,9 +1553,9 @@ my $indel_gc_group = sub {
         $thaw_sql->add_where( 'indel_length' => \' >= 5' );
 
         my $group_name = $item->[0] . "--" . $item->[1];
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
@@ -1577,8 +1579,8 @@ my $indel_gc_group = sub {
 my $snp_indel_ratio = sub {
     my $sheet_name = 'snp_indel_ratio';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     # create temporary table
     {
@@ -1586,7 +1588,7 @@ my $snp_indel_ratio = sub {
             DROP TABLE IF EXISTS pi_group
         };
         my %option = ( sql_query => $sql_query, );
-        $write_obj->excute_sql( \%option );
+        $toxlsx->excute_sql( \%option );
     }
 
     {
@@ -1607,7 +1609,7 @@ my $snp_indel_ratio = sub {
                 ORDER BY pi DESC
         };
         my %option = ( sql_query => $sql_query, );
-        $write_obj->excute_sql( \%option );
+        $toxlsx->excute_sql( \%option );
     }
 
     # make group
@@ -1621,13 +1623,13 @@ my $snp_indel_ratio = sub {
             sql_query => $sql_query,
             piece     => $piece,
         );
-        @group_align = @{ $write_obj->make_combine_piece( \%option ) };
+        @group_align = @{ $toxlsx->make_combine_piece( \%option ) };
     }
 
     my @names
         = qw{AVG_pi AVG_SNP/Indel COUNT AVG_align_length SUM_align_length AVG_SNP/kb AVG_Indel/kb};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data = [];
@@ -1668,8 +1670,8 @@ my $snp_indel_ratio = sub {
             }
         }
 
-        $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
-        $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
+        $sheet->write( $toxlsx->row, 0, [ [@group_names] ], $toxlsx->format->{NAME} );
+        $sheet->write( $toxlsx->row, 1, $data, $toxlsx->format->{NORMAL} );
     }
 
     {    # drop temporary table
@@ -1677,7 +1679,7 @@ my $snp_indel_ratio = sub {
             DROP TABLE IF EXISTS pi_group
         };
         my %option = ( sql_query => $sql_query, );
-        $write_obj->excute_sql( \%option );
+        $toxlsx->excute_sql( \%option );
     }
 
     if ($add_chart) {    # chart
@@ -1693,14 +1695,14 @@ my $snp_indel_ratio = sub {
 my $indel_length = sub {
     my $sheet_name = 'indel_length';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_length-0');
 
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     {    # content
@@ -1720,12 +1722,10 @@ my $indel_length = sub {
             $last_number = $row[1];
 
             for ( my $i = 0; $i < scalar @row; $i++ ) {
-                $sheet->write(
-                    $write_obj->row, $i + $write_obj->column,
-                    $row[$i],        $write_obj->format->{$style}
-                );
+                $sheet->write( $toxlsx->row, $i + $toxlsx->column,
+                    $row[$i], $toxlsx->format->{$style} );
             }
-            $write_obj->increase_row;
+            $toxlsx->increase_row;
         }
     }
 
@@ -1738,8 +1738,8 @@ my $indel_length = sub {
 my $indel_length_100 = sub {
     my $sheet_name = 'indel_length_100';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-indel_length-0');
     $thaw_sql->add_where( 'left_extand'  => \'>= 100' );
@@ -1747,7 +1747,7 @@ my $indel_length_100 = sub {
 
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     {    # content
@@ -1767,12 +1767,10 @@ my $indel_length_100 = sub {
             $last_number = $row[1];
 
             for ( my $i = 0; $i < scalar @row; $i++ ) {
-                $sheet->write(
-                    $write_obj->row, $i + $write_obj->column,
-                    $row[$i],        $write_obj->format->{$style}
-                );
+                $sheet->write( $toxlsx->row, $i + $toxlsx->column,
+                    $row[$i], $toxlsx->format->{$style} );
             }
-            $write_obj->increase_row;
+            $toxlsx->increase_row;
         }
     }
 
@@ -1783,14 +1781,14 @@ my $indel_length_100 = sub {
 # worksheet -- distance_snp
 #----------------------------------------------------------#
 my $distance_snp = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+    unless ( $toxlsx->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
 
     my $sheet_name = 'distance_snp';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     # Six base groups
     my @pairs = qw{A<->C A<->G A<->T C<->G C<->T G<->T};
@@ -1798,7 +1796,7 @@ my $distance_snp = sub {
     {    # header
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-distance_snp');
         my @names = $thaw_sql->as_header;
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
@@ -1806,7 +1804,7 @@ my $distance_snp = sub {
     my %sum_of;
     for (@pairs) {
         my $group_name = $_;
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
         my $pair_1 = $_;
         $pair_1 =~ s/\W//g;
@@ -1819,7 +1817,7 @@ my $distance_snp = sub {
         $thaw_sql->add_where( 'isw_distance'                    => \'<= 15' );
         $thaw_sql->add_where( 'CONCAT(target_base, query_base)' => $bases );
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
@@ -1856,14 +1854,14 @@ my $distance_snp = sub {
 # worksheet -- density_snp
 #----------------------------------------------------------#
 my $density_snp = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+    unless ( $toxlsx->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
 
     my $sheet_name = 'density_snp';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     # Six base groups
     my @pairs = qw{A<->C A<->G A<->T C<->G C<->T G<->T};
@@ -1871,7 +1869,7 @@ my $density_snp = sub {
     {    # header
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-distance_snp');
         my @names = $thaw_sql->as_header;
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
@@ -1879,7 +1877,7 @@ my $density_snp = sub {
     my %sum_of;
     for (@pairs) {
         my $group_name = $_;
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
         my $pair_1 = $_;
         $pair_1 =~ s/\W//g;
@@ -1892,7 +1890,7 @@ my $density_snp = sub {
         $thaw_sql->add_where( 'isw_density'                     => \'<= 30' );
         $thaw_sql->add_where( 'CONCAT(target_base, query_base)' => $bases );
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
@@ -1929,14 +1927,14 @@ my $density_snp = sub {
 # worksheet -- distance_tri_trv
 #----------------------------------------------------------#
 my $distance_tri_trv = sub {
-    unless ( $write_obj->check_column( 'isw', 'isw_id' ) ) {
+    unless ( $toxlsx->check_column( 'isw', 'isw_id' ) ) {
         return;
     }
 
     my $sheet_name = 'distance_tri_trv';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     # base groups
     my @pairs = ( [ 'Tri', qw{AG CT GA TC} ], [ 'Trv', qw{AC AT CA CG GC GT TA TG} ], );
@@ -1944,7 +1942,7 @@ my $distance_tri_trv = sub {
     {    # header
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-distance_snp');
         my @names = $thaw_sql->as_header;
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
@@ -1952,7 +1950,7 @@ my $distance_tri_trv = sub {
     my %sum_of;
     for (@pairs) {
         my $group_name = shift @{$_};
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-distance_snp');
 
@@ -1960,7 +1958,7 @@ my $distance_tri_trv = sub {
         $thaw_sql->add_where( 'isw_distance'                    => \'<= 15' );
         $thaw_sql->add_where( 'CONCAT(target_base, query_base)' => $_ );
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 query_name => $group_name,
@@ -1998,7 +1996,7 @@ my $distance_tri_trv = sub {
 #----------------------------------------------------------#
 my $align_coding = sub {
 
-    unless ( $write_obj->check_column( 'align', 'align_coding' ) ) {
+    unless ( $toxlsx->check_column( 'align', 'align_coding' ) ) {
         return;
     }
 
@@ -2011,7 +2009,7 @@ my $align_coding = sub {
             WHERE align_coding IS NOT NULL
         };
         my %option = ( sql_query => $sql_query, );
-        $quartiles = $write_obj->quantile_sql( \%option, 4 );
+        $quartiles = $toxlsx->quantile_sql( \%option, 4 );
     }
 
     my @coding_levels = (
@@ -2027,20 +2025,20 @@ my $align_coding = sub {
 
         my $sheet_name = "align_coding_$order";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-align-0');
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         {    # contents
             $thaw_sql->add_where( 'align.align_coding' => { op => '>=', value => '1' } );
             $thaw_sql->add_where( 'align.align_coding' => { op => '<=', value => '1' } );
-            $write_obj->write_sql(
+            $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $low_border, $high_border ],
@@ -2061,7 +2059,7 @@ my $align_coding = sub {
 #----------------------------------------------------------#
 my $align_repeat = sub {
 
-    unless ( $write_obj->check_column( 'align', 'align_repeats' ) ) {
+    unless ( $toxlsx->check_column( 'align', 'align_repeats' ) ) {
         return;
     }
 
@@ -2074,7 +2072,7 @@ my $align_repeat = sub {
             WHERE align_repeats IS NOT NULL
         };
         my %option = ( sql_query => $sql_query, );
-        $quartiles = $write_obj->quantile_sql( \%option, 4 );
+        $quartiles = $toxlsx->quantile_sql( \%option, 4 );
     }
 
     my @repeat_levels = (
@@ -2090,20 +2088,20 @@ my $align_repeat = sub {
 
         my $sheet_name = "align_repeat_$order";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(0);
+        $toxlsx->row(0);
+        $toxlsx->column(0);
 
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-align-0');
 
         my @names = $thaw_sql->as_header;
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         {    # contents
             $thaw_sql->add_where( 'align.align_repeats' => { op => '>=', value => '1' } );
             $thaw_sql->add_where( 'align.align_repeats' => { op => '<=', value => '1' } );
-            $write_obj->write_sql(
+            $toxlsx->write_sql(
                 $sheet,
                 {   sql_query  => $thaw_sql->as_sql,
                     bind_value => [ $low_border, $high_border ],
@@ -2142,7 +2140,7 @@ for my $n (@tasks) {
 }
 
 if ($add_index_sheet) {
-    $write_obj->add_index_sheet;
+    $toxlsx->add_index_sheet;
     print "Sheet [INDEX] has been generated.\n";
 }
 

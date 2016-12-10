@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
@@ -22,7 +22,7 @@ use AlignDB::ToXLSX;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 =head1 NAME
 
@@ -33,8 +33,8 @@ gc_stat_factory.pl - GC stats for alignDB
     perl gc_stat_factory.pl [options]
       Options:
         --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
+        --server    -s  STR     MySQL IP/Domain
+        --port          INT     MySQL port
         --db        -d  STR     database name
         --username  -u  STR     username
         --password  -p  STR     password
@@ -51,14 +51,14 @@ gc_stat_factory.pl - GC stats for alignDB
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
-    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
-    'username|u=s' => \( my $username = $Config->{database}{username} ),
-    'password|p=s' => \( my $password = $Config->{database}{password} ),
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
+    'server|s=s'   => \( my $server   = $conf->{database}{server} ),
+    'port=i'       => \( my $port     = $conf->{database}{port} ),
+    'db|d=s'       => \( my $db       = $conf->{database}{db} ),
+    'username|u=s' => \( my $username = $conf->{database}{username} ),
+    'password|p=s' => \( my $password = $conf->{database}{password} ),
     'output|o=s'   => \( my $outfile ),
-    'run|r=s'      => \( my $run      = $Config->{stat}{run} ),
+    'run|r=s'      => \( my $run      = $conf->{stat}{run} ),
     'combine=i'    => \( my $combine  = 0 ),
     'piece=i'      => \( my $piece    = 0 ),
     'alt_level'    => \my $alt_level,
@@ -66,7 +66,9 @@ GetOptions(
     'index'        => \( my $add_index_sheet, ),
     'chart'        => \( my $add_chart, ),
     'trend'        => \( my $add_trend ),
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
+
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $db, $server, $port;
 
 $outfile = "$db.gc.xlsx" unless $outfile;
 
@@ -98,9 +100,10 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password )
-    or die "Cannot connect to MySQL database at $db:$server";
-my $write_obj = AlignDB::ToXLSX->new(
+#@type DBI
+my $dbh = DBI->connect( $dsn, $username, $password )
+    or die $DBI::errstr;
+my $toxlsx = AlignDB::ToXLSX->new(
     dbh     => $dbh,
     outfile => $outfile,
     replace => \%replace,
@@ -110,12 +113,12 @@ my $sql_file = AlignDB::SQL::Library->new( lib => "$FindBin::Bin/sql.lib" );
 
 # auto detect combine threshold
 if ( $combine == 0 ) {
-    ($combine) = $write_obj->calc_threshold;
+    ($combine) = $toxlsx->calc_threshold;
 }
 
 # auto detect combine threshold
 if ( $piece == 0 ) {
-    ( undef, $piece ) = $write_obj->calc_threshold;
+    ( undef, $piece ) = $toxlsx->calc_threshold;
 }
 
 #----------------------------------------------------------#
@@ -138,19 +141,19 @@ my $chart_wave_distance = sub {
         top         => 1,
         left        => 10,
     );
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 3;
     $opt{y_data}   = $data->[3];
     $opt{y_title}  = "Indel per 100 bp";
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 5;
     $opt{y_data}   = $data->[5];
     $opt{y_title}  = "Window CV";
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 };
 
 my $chart_wave_bed = sub {
@@ -170,25 +173,25 @@ my $chart_wave_bed = sub {
         top         => 1,
         left        => 10,
     );
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 3;
     $opt{y_data}   = $data->[3];
     $opt{y_title}  = "Indel per 100 bp";
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 5;
     $opt{y_data}   = $data->[5];
     $opt{y_title}  = "Window CV";
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 
     $opt{y_column} = 7;
     $opt{y_data}   = $data->[7];
     $opt{y_title}  = "BED count";
     $opt{top} += 18;
-    $write_obj->draw_y( $sheet, \%opt );
+    $toxlsx->draw_y( $sheet, \%opt );
 };
 
 my $chart_series = sub {
@@ -197,12 +200,12 @@ my $chart_series = sub {
 
     # write charting data
     my @keys = keys %{$data_of};
-    $write_obj->row(2);
-    $write_obj->column(7);
+    $toxlsx->row(2);
+    $toxlsx->column(7);
 
-    $write_obj->write_column( $sheet, { column => $data_of->{ $keys[0] }[0], } );
+    $toxlsx->write_column( $sheet, { column => $data_of->{ $keys[0] }[0], } );
     for my $key (@keys) {
-        $write_obj->write_column(
+        $toxlsx->write_column(
             $sheet,
             {   query_name => $key,
                 column     => $data_of->{$key}[1],
@@ -226,7 +229,7 @@ my $chart_series = sub {
         height        => 480,
         width         => 480,
     );
-    $write_obj->draw_dd( $sheet, \%opt );
+    $toxlsx->draw_dd( $sheet, \%opt );
 };
 
 my $linear_fit = sub {
@@ -235,14 +238,14 @@ my $linear_fit = sub {
 
     my ( $r_squared, $p_value, $intercept, $slope ) = _r_lm( $opt->{x_data}, $opt->{y_data} );
 
-    $sheet->write( $opt->{top},     16, ['r_squared'], $write_obj->format->{NORMAL} );
-    $sheet->write( $opt->{top},     17, [$r_squared],  $write_obj->format->{NORMAL} );
-    $sheet->write( $opt->{top} + 1, 16, ['p_value'],   $write_obj->format->{NORMAL} );
-    $sheet->write( $opt->{top} + 1, 17, [$p_value],    $write_obj->format->{NORMAL} );
-    $sheet->write( $opt->{top} + 2, 16, ['intercept'], $write_obj->format->{NORMAL} );
-    $sheet->write( $opt->{top} + 2, 17, [$intercept],  $write_obj->format->{NORMAL} );
-    $sheet->write( $opt->{top} + 3, 16, ['slope'],     $write_obj->format->{NORMAL} );
-    $sheet->write( $opt->{top} + 3, 17, [$slope],      $write_obj->format->{NORMAL} );
+    $sheet->write( $opt->{top},     16, ['r_squared'], $toxlsx->format->{NORMAL} );
+    $sheet->write( $opt->{top},     17, [$r_squared],  $toxlsx->format->{NORMAL} );
+    $sheet->write( $opt->{top} + 1, 16, ['p_value'],   $toxlsx->format->{NORMAL} );
+    $sheet->write( $opt->{top} + 1, 17, [$p_value],    $toxlsx->format->{NORMAL} );
+    $sheet->write( $opt->{top} + 2, 16, ['intercept'], $toxlsx->format->{NORMAL} );
+    $sheet->write( $opt->{top} + 2, 17, [$intercept],  $toxlsx->format->{NORMAL} );
+    $sheet->write( $opt->{top} + 3, 16, ['slope'],     $toxlsx->format->{NORMAL} );
+    $sheet->write( $opt->{top} + 3, 17, [$slope],      $toxlsx->format->{NORMAL} );
 };
 
 my $chart_segment_gc = sub {
@@ -262,28 +265,28 @@ my $chart_segment_gc = sub {
         left      => 10,
         add_trend => $add_trend,
     );
-    $write_obj->draw_xy( $sheet, \%opt );
+    $toxlsx->draw_xy( $sheet, \%opt );
     $linear_fit->( $sheet, \%opt );
 
     $opt{y_column} = 3;
     $opt{y_data}   = $data->[2];
     $opt{y_title}  = "Indel per 100 bp";
     $opt{top} += 18;
-    $write_obj->draw_xy( $sheet, \%opt );
+    $toxlsx->draw_xy( $sheet, \%opt );
     $linear_fit->( $sheet, \%opt );
 
     $opt{y_column} = 4;
     $opt{y_data}   = $data->[3];
     $opt{y_title}  = "Segment CV";
     $opt{top} += 18;
-    $write_obj->draw_xy( $sheet, \%opt );
+    $toxlsx->draw_xy( $sheet, \%opt );
     $linear_fit->( $sheet, \%opt );
 
     $opt{y_column} = 5;
     $opt{y_data}   = $data->[4];
     $opt{y_title}  = "Coding proportion";
     $opt{top} += 18;
-    $write_obj->draw_xy( $sheet, \%opt );
+    $toxlsx->draw_xy( $sheet, \%opt );
 };
 
 my $chart_segment_std = sub {
@@ -303,28 +306,28 @@ my $chart_segment_std = sub {
         left      => 10,
         add_trend => $add_trend,
     );
-    $write_obj->draw_xy( $sheet, \%opt );
+    $toxlsx->draw_xy( $sheet, \%opt );
     $linear_fit->( $sheet, \%opt );
 
     $opt{y_column} = 3;
     $opt{y_data}   = $data->[2];
     $opt{y_title}  = "Indel per 100 bp";
     $opt{top} += 18;
-    $write_obj->draw_xy( $sheet, \%opt );
+    $toxlsx->draw_xy( $sheet, \%opt );
     $linear_fit->( $sheet, \%opt );
 
     $opt{y_column} = 4;
     $opt{y_data}   = $data->[3];
     $opt{y_title}  = "GC proportion";
     $opt{top} += 18;
-    $write_obj->draw_xy( $sheet, \%opt );
+    $toxlsx->draw_xy( $sheet, \%opt );
     $linear_fit->( $sheet, \%opt );
 
     $opt{y_column} = 5;
     $opt{y_data}   = $data->[4];
     $opt{y_title}  = "Coding proportion";
     $opt{top} += 18;
-    $write_obj->draw_xy( $sheet, \%opt );
+    $toxlsx->draw_xy( $sheet, \%opt );
 };
 
 my $chart_segment_cv = sub {
@@ -344,28 +347,28 @@ my $chart_segment_cv = sub {
         left      => 10,
         add_trend => $add_trend,
     );
-    $write_obj->draw_xy( $sheet, \%opt );
+    $toxlsx->draw_xy( $sheet, \%opt );
     $linear_fit->( $sheet, \%opt );
 
     $opt{y_column} = 3;
     $opt{y_data}   = $data->[2];
     $opt{y_title}  = "Indel per 100 bp";
     $opt{top} += 18;
-    $write_obj->draw_xy( $sheet, \%opt );
+    $toxlsx->draw_xy( $sheet, \%opt );
     $linear_fit->( $sheet, \%opt );
 
     $opt{y_column} = 4;
     $opt{y_data}   = $data->[3];
     $opt{y_title}  = "GC proportion";
     $opt{top} += 18;
-    $write_obj->draw_xy( $sheet, \%opt );
+    $toxlsx->draw_xy( $sheet, \%opt );
     $linear_fit->( $sheet, \%opt );
 
     $opt{y_column} = 5;
     $opt{y_data}   = $data->[4];
     $opt{y_title}  = "Coding proportion";
     $opt{top} += 18;
-    $write_obj->draw_xy( $sheet, \%opt );
+    $toxlsx->draw_xy( $sheet, \%opt );
 };
 
 #----------------------------------------------------------#
@@ -374,12 +377,12 @@ my $chart_segment_cv = sub {
 my $summary = sub {
     my $sheet_name = 'summary';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @names = qw{TYPE COUNT AVG_length SUM_length indel INDEL/100bp };
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     {    # contents
@@ -398,7 +401,7 @@ my $summary = sub {
             WHERE w.window_id = e.window_id
             GROUP BY e.extreme_type
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -422,7 +425,7 @@ my $summary = sub {
             WHERE w.window_id = g.window_id
             GROUP BY g.gsw_type
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -447,7 +450,7 @@ my $summary = sub {
                     GROUP BY a.align_id) i
             WHERE a.align_id = i.align_id
         };
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -461,12 +464,12 @@ my $summary = sub {
 my $segment_summary = sub {
     my $sheet_name = 'segment_summary';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @names = qw{TYPE AVG MIN MAX STD COUNT SUM};
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $column_stat = sub {
@@ -488,7 +491,7 @@ my $segment_summary = sub {
 
         $sql_query =~ s/_COLUMN_/$column/g;
 
-        $write_obj->write_sql(
+        $toxlsx->write_sql(
             $sheet,
             {   query_name => $query_name,
                 sql_query  => $sql_query,
@@ -512,11 +515,11 @@ my $segment_summary = sub {
 my $distance_to_trough = sub {
     my $sheet_name = 'distance_to_trough';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     # make combine
-    my $combined = $write_obj->make_combine(
+    my $combined = $toxlsx->make_combine(
         {   sql_query  => $sql_file->retrieve('gc-wave_combine-0')->as_sql,
             threshold  => $combine,
             standalone => [0],
@@ -528,7 +531,7 @@ my $distance_to_trough = sub {
 
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
@@ -536,7 +539,7 @@ my $distance_to_trough = sub {
         my $thaw_sql = $sql_file->retrieve('gc-wave_comb_pi_indel_cv-0');
         $thaw_sql->add_where( 'gsw_distance' => $comb );
 
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 bind_value => $comb,
@@ -558,13 +561,13 @@ my $distance_to_trough = sub {
 my $distance_to_crest = sub {
     my $sheet_name = 'distance_to_crest';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     # make combine
     my $combine_sql = $sql_file->retrieve('gc-wave_combine-0');
     $combine_sql->replace( { gsw_distance => 'gsw_distance_crest' } );
-    my $combined = $write_obj->make_combine(
+    my $combined = $toxlsx->make_combine(
         {   sql_query  => $combine_sql->as_sql,
             threshold  => $combine,
             standalone => [0],
@@ -576,7 +579,7 @@ my $distance_to_crest = sub {
     $thaw_sql->replace( { gsw_distance => 'gsw_distance_crest' } );
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
@@ -585,7 +588,7 @@ my $distance_to_crest = sub {
         $thaw_sql->add_where( 'gsw_distance' => $comb );
         $thaw_sql->replace( { gsw_distance => 'gsw_distance_crest' } );
 
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 bind_value => $comb,
@@ -607,13 +610,13 @@ my $distance_to_crest = sub {
 my $wave_length = sub {
     my $sheet_name = 'wave_length';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     # make combine
     my $combine_sql = $sql_file->retrieve('gc-wave_combine-0');
     $combine_sql->replace( { gsw_distance => 'FLOOR(gsw_wave_length / 100)' } );
-    my $combined = $write_obj->make_combine(
+    my $combined = $toxlsx->make_combine(
         {   sql_query  => $combine_sql->as_sql,
             threshold  => $combine,
             standalone => [],
@@ -625,7 +628,7 @@ my $wave_length = sub {
     $thaw_sql->replace( { gsw_distance => 'FLOOR(gsw_wave_length / 100)' } );
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
@@ -634,7 +637,7 @@ my $wave_length = sub {
         $thaw_sql->add_where( 'gsw_distance' => $comb );
         $thaw_sql->replace( { gsw_distance => 'FLOOR(gsw_wave_length / 100)' } );
 
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 bind_value => $comb,
@@ -656,14 +659,14 @@ my $wave_length = sub {
 my $amplitude = sub {
     my $sheet_name = 'amplitude';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     # make combine
     my $combine_sql = $sql_file->retrieve('gc-wave_combine-0');
     $combine_sql->add_where( 'gsw_distance' => \'>= 10' );
     $combine_sql->replace( { gsw_distance => 'FLOOR(gsw_amplitude / 0.01)' } );
-    my $combined = $write_obj->make_combine(
+    my $combined = $toxlsx->make_combine(
         {   sql_query  => $combine_sql->as_sql,
             threshold  => $combine,
             standalone => [],
@@ -675,7 +678,7 @@ my $amplitude = sub {
     $thaw_sql->replace( { gsw_distance => 'FLOOR(gsw_wave_length / 100)' } );
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
@@ -684,7 +687,7 @@ my $amplitude = sub {
         $thaw_sql->add_where( 'gsw_distance' => $comb );
         $thaw_sql->replace( { gsw_distance => 'FLOOR(gsw_wave_length / 100)' } );
 
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 bind_value => $comb,
@@ -702,13 +705,13 @@ my $amplitude = sub {
 my $gradient = sub {
     my $sheet_name = 'gradient';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     # make combine
     my $combine_sql = $sql_file->retrieve('gc-wave_combine-0');
     $combine_sql->replace( { gsw_distance => 'gsw_gradient' } );
-    my $combined = $write_obj->make_combine(
+    my $combined = $toxlsx->make_combine(
         {   sql_query  => $combine_sql->as_sql,
             threshold  => $combine,
             standalone => [],
@@ -720,7 +723,7 @@ my $gradient = sub {
     $thaw_sql->replace( { gsw_distance => 'gsw_gradient' } );
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
@@ -729,7 +732,7 @@ my $gradient = sub {
         $thaw_sql->add_where( 'gsw_distance' => $comb );
         $thaw_sql->replace( { gsw_distance => 'gsw_gradient' } );
 
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 bind_value => $comb,
@@ -747,13 +750,13 @@ my $gradient = sub {
 my $trough_gc = sub {
     my $sheet_name = 'trough_gc';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     # make combine
     my $combine_sql = $sql_file->retrieve('gc-wave_combine-0');
     $combine_sql->replace( { gsw_distance => 'FLOOR(gsw_trough_gc / 0.01)' } );
-    my $combined = $write_obj->make_combine(
+    my $combined = $toxlsx->make_combine(
         {   sql_query  => $combine_sql->as_sql,
             threshold  => $combine,
             standalone => [],
@@ -765,7 +768,7 @@ my $trough_gc = sub {
     $thaw_sql->replace( { gsw_distance => 'FLOOR(gsw_trough_gc / 0.01)' } );
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
@@ -774,7 +777,7 @@ my $trough_gc = sub {
         $thaw_sql->add_where( 'gsw_distance' => $comb );
         $thaw_sql->replace( { gsw_distance => 'FLOOR(gsw_trough_gc / 0.01)' } );
 
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 bind_value => $comb,
@@ -793,13 +796,13 @@ my $trough_gc = sub {
 my $crest_gc = sub {
     my $sheet_name = 'crest_gc';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     # make combine
     my $combine_sql = $sql_file->retrieve('gc-wave_combine-0');
     $combine_sql->replace( { gsw_distance => 'FLOOR(gsw_crest_gc / 0.01)' } );
-    my $combined = $write_obj->make_combine(
+    my $combined = $toxlsx->make_combine(
         {   sql_query  => $combine_sql->as_sql,
             threshold  => $combine,
             standalone => [],
@@ -811,7 +814,7 @@ my $crest_gc = sub {
     $thaw_sql->replace( { gsw_distance => 'FLOOR(gsw_crest_gc / 0.01)' } );
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
@@ -820,7 +823,7 @@ my $crest_gc = sub {
         $thaw_sql->add_where( 'gsw_distance' => $comb );
         $thaw_sql->replace( { gsw_distance => 'FLOOR(gsw_crest_gc / 0.01)' } );
 
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 bind_value => $comb,
@@ -838,8 +841,8 @@ my $crest_gc = sub {
 my $window_gc = sub {
     my $sheet_name = 'window_gc';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     # make combine
     my $combine_sql = q{
@@ -853,7 +856,7 @@ my $window_gc = sub {
         GROUP BY
           FLOOR(window_gc / 0.01)
     };
-    my $combined = $write_obj->make_combine(
+    my $combined = $toxlsx->make_combine(
         {   sql_query  => $combine_sql,
             threshold  => $combine,
             standalone => [],
@@ -865,7 +868,7 @@ my $window_gc = sub {
     $thaw_sql->replace( { gsw_distance => 'FLOOR(window_gc / 0.01)' } );
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
@@ -874,7 +877,7 @@ my $window_gc = sub {
         $thaw_sql->add_where( 'gsw_distance' => $comb );
         $thaw_sql->replace( { gsw_distance => 'FLOOR(window_gc / 0.01)' } );
 
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 bind_value => $comb,
@@ -892,8 +895,8 @@ my $window_gc = sub {
 my $d_wave_length_series = sub {
     my $sheet_name = 'd_wave_length_series';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @levels = ( [ 5, 10 ], [ 11, 20 ], [ 21, 30 ], [ 31, 999 ], );
 
@@ -910,18 +913,18 @@ my $d_wave_length_series = sub {
         ORDER BY g.gsw_distance ASC
     };
 
-    my @names = $write_obj->sql2names( $sql_query, { bind_value => $levels[0] } );
+    my @names = $toxlsx->sql2names( $sql_query, { bind_value => $levels[0] } );
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
     tie my %data_of, 'Tie::IxHash';
     for (@levels) {
         my $group_name = $_->[0] . "--" . $_->[1];
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $sql_query,
                 query_name => $group_name,
@@ -945,8 +948,8 @@ my $d_wave_length_series = sub {
 my $d_amplitude_series = sub {
     my $sheet_name = 'd_amplitude_series';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     my @levels = ( [ 10, 20 ], [ 21, 30 ], [ 31, 100 ] );
 
@@ -964,18 +967,18 @@ my $d_amplitude_series = sub {
         ORDER BY g.gsw_distance ASC
     };
 
-    my @names = $write_obj->sql2names( $sql_query, { bind_value => $levels[0] } );
+    my @names = $toxlsx->sql2names( $sql_query, { bind_value => $levels[0] } );
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
     tie my %data_of, 'Tie::IxHash';
     for (@levels) {
         my $group_name = $_->[0] . "--" . $_->[1];
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $sql_query,
                 query_name => $group_name,
@@ -1067,8 +1070,8 @@ my $d_amplitude_series = sub {
 my $d_gc_series = sub {
     my $sheet_name = 'd_gc_series';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     # find quartiles
     my @levels;
@@ -1083,7 +1086,7 @@ my $d_gc_series = sub {
             AND w.window_gc IS NOT NULL
         };
         my %opt = ( sql_query => $sql_query, );
-        my $quartiles = $write_obj->quantile_sql( \%opt, 4 );
+        my $quartiles = $toxlsx->quantile_sql( \%opt, 4 );
         $_ = round( $_, 3 ) for @{$quartiles};
         @levels = (
             [ $quartiles->[0], $quartiles->[1] ],    # 1/4
@@ -1108,18 +1111,18 @@ my $d_gc_series = sub {
         ORDER BY g.gsw_distance ASC
     };
 
-    my @names = $write_obj->sql2names( $sql_query, { bind_value => $levels[0] } );
+    my @names = $toxlsx->sql2names( $sql_query, { bind_value => $levels[0] } );
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
     tie my %data_of, 'Tie::IxHash';
     for (@levels) {
         my $group_name = $_->[0] . "--" . $_->[1];
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $sql_query,
                 query_name => $group_name,
@@ -1143,8 +1146,8 @@ my $d_gc_series = sub {
 my $d_trough_gc_series = sub {
     my $sheet_name = 'd_trough_gc_series';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     # find quartiles
     my @levels;
@@ -1156,7 +1159,7 @@ my $d_trough_gc_series = sub {
             AND gsw_trough_gc IS NOT NULL
         };
         my %opt = ( sql_query => $sql_query, );
-        my $quartiles = $write_obj->quantile_sql( \%opt, 4 );
+        my $quartiles = $toxlsx->quantile_sql( \%opt, 4 );
         $_ = round( $_, 4 ) for @{$quartiles};
         @levels = (
             [ $quartiles->[0], $quartiles->[1] ],    # 1/4
@@ -1180,18 +1183,18 @@ my $d_trough_gc_series = sub {
         ORDER BY g.gsw_distance ASC
     };
 
-    my @names = $write_obj->sql2names( $sql_query, { bind_value => $levels[0] } );
+    my @names = $toxlsx->sql2names( $sql_query, { bind_value => $levels[0] } );
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
     tie my %data_of, 'Tie::IxHash';
     for (@levels) {
         my $group_name = $_->[0] . "--" . $_->[1];
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $sql_query,
                 query_name => $group_name,
@@ -1215,8 +1218,8 @@ my $d_trough_gc_series = sub {
 my $d_crest_gc_series = sub {
     my $sheet_name = 'd_crest_gc_series';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(1);
+    $toxlsx->row(0);
+    $toxlsx->column(1);
 
     # find quartiles
     my @levels;
@@ -1228,7 +1231,7 @@ my $d_crest_gc_series = sub {
             AND gsw_crest_gc IS NOT NULL
         };
         my %opt = ( sql_query => $sql_query, );
-        my $quartiles = $write_obj->quantile_sql( \%opt, 4 );
+        my $quartiles = $toxlsx->quantile_sql( \%opt, 4 );
         $_ = round( $_, 4 ) for @{$quartiles};
         @levels = (
             [ $quartiles->[0], $quartiles->[1] ],    # 1/4
@@ -1252,18 +1255,18 @@ my $d_crest_gc_series = sub {
         ORDER BY g.gsw_distance ASC
     };
 
-    my @names = $write_obj->sql2names( $sql_query, { bind_value => $levels[0] } );
+    my @names = $toxlsx->sql2names( $sql_query, { bind_value => $levels[0] } );
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     # contents
     tie my %data_of, 'Tie::IxHash';
     for (@levels) {
         my $group_name = $_->[0] . "--" . $_->[1];
-        $write_obj->increase_row;
+        $toxlsx->increase_row;
 
-        my $data = $write_obj->write_sql(
+        my $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $sql_query,
                 query_name => $group_name,
@@ -1286,17 +1289,17 @@ my $d_crest_gc_series = sub {
 #----------------------------------------------------------#
 my $bed_count_trough = sub {
 
-    unless ( $write_obj->check_column( 'gsw', 'gsw_bed_count' ) ) {
+    unless ( $toxlsx->check_column( 'gsw', 'gsw_bed_count' ) ) {
         return;
     }
 
     my $sheet_name = 'bed_count_trough';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     # make combine
-    my $combined = $write_obj->make_combine(
+    my $combined = $toxlsx->make_combine(
         {   sql_query  => $sql_file->retrieve('gc-wave_combine-0')->as_sql,
             threshold  => $combine,
             standalone => [0],
@@ -1308,7 +1311,7 @@ my $bed_count_trough = sub {
 
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
@@ -1316,7 +1319,7 @@ my $bed_count_trough = sub {
         my $thaw_sql = $sql_file->retrieve('gc-wave_comb_bed-0');
         $thaw_sql->add_where( 'gsw_distance' => $comb );
 
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 bind_value => $comb,
@@ -1337,19 +1340,19 @@ my $bed_count_trough = sub {
 #----------------------------------------------------------#
 my $bed_count_crest = sub {
 
-    unless ( $write_obj->check_column( 'gsw', 'gsw_bed_count' ) ) {
+    unless ( $toxlsx->check_column( 'gsw', 'gsw_bed_count' ) ) {
         return;
     }
 
     my $sheet_name = 'bed_count_crest';
     my $sheet;
-    $write_obj->row(0);
-    $write_obj->column(0);
+    $toxlsx->row(0);
+    $toxlsx->column(0);
 
     # make combine
     my $combine_sql = $sql_file->retrieve('gc-wave_combine-0');
     $combine_sql->replace( { gsw_distance => 'gsw_distance_crest' } );
-    my $combined = $write_obj->make_combine(
+    my $combined = $toxlsx->make_combine(
         {   sql_query  => $combine_sql->as_sql,
             threshold  => $combine,
             standalone => [0],
@@ -1361,7 +1364,7 @@ my $bed_count_crest = sub {
     $thaw_sql->replace( { gsw_distance => 'gsw_distance_crest' } );
     my @names = $thaw_sql->as_header;
     {    # header
-        $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+        $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
 
     my $data;
@@ -1370,7 +1373,7 @@ my $bed_count_crest = sub {
         $thaw_sql->add_where( 'gsw_distance' => $comb );
         $thaw_sql->replace( { gsw_distance => 'gsw_distance_crest' } );
 
-        $data = $write_obj->write_sql(
+        $data = $toxlsx->write_sql(
             $sheet,
             {   sql_query  => $thaw_sql->as_sql,
                 bind_value => $comb,
@@ -1400,11 +1403,11 @@ my $segment_gc_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_gc_indel' . "_$segment_type";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(1);
+        $toxlsx->row(0);
+        $toxlsx->column(1);
 
         {    # create temporary table
-            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
+            $toxlsx->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -1427,7 +1430,7 @@ my $segment_gc_indel = sub {
                 sql_query  => $sql_query,
                 bind_value => [$segment_type],
             );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         # make group
@@ -1441,12 +1444,12 @@ my $segment_gc_indel = sub {
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
+            @combined_segment = @{ $toxlsx->make_combine_piece( \%opt ) };
         }
 
         my @names = qw{AVG_gc AVG_pi AVG_Indel/100bp AVG_CV AVG_coding AVG_length COUNT SUM_length};
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data = [];
@@ -1479,6 +1482,7 @@ my $segment_gc_indel = sub {
                 }
                 push @group_names, $group_name;
 
+                #@type DBI
                 my $sth = $dbh->prepare($sql_query_in);
                 $sth->execute;
                 while ( my @row = $sth->fetchrow_array ) {
@@ -1488,14 +1492,14 @@ my $segment_gc_indel = sub {
                 }
             }
 
-            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
-            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
+            $sheet->write( $toxlsx->row, 0, [ [@group_names] ], $toxlsx->format->{NAME} );
+            $sheet->write( $toxlsx->row, 1, $data, $toxlsx->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
             my %opt = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         if ($add_chart) {    # chart
@@ -1525,11 +1529,11 @@ my $segment_std_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_std_indel' . "_$segment_type";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(1);
+        $toxlsx->row(0);
+        $toxlsx->column(1);
 
         {    # create temporary table
-            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
+            $toxlsx->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -1552,7 +1556,7 @@ my $segment_std_indel = sub {
                 sql_query  => $sql_query,
                 bind_value => [$segment_type],
             );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         # make group
@@ -1566,13 +1570,13 @@ my $segment_std_indel = sub {
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
+            @combined_segment = @{ $toxlsx->make_combine_piece( \%opt ) };
         }
 
         my @names
             = qw{AVG_std AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data = [];
@@ -1605,6 +1609,7 @@ my $segment_std_indel = sub {
                 }
                 push @group_names, $group_name;
 
+                #@type DBI
                 my $sth = $dbh->prepare($sql_query_in);
                 $sth->execute;
                 while ( my @row = $sth->fetchrow_array ) {
@@ -1614,14 +1619,14 @@ my $segment_std_indel = sub {
                 }
             }
 
-            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
-            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
+            $sheet->write( $toxlsx->row, 0, [ [@group_names] ], $toxlsx->format->{NAME} );
+            $sheet->write( $toxlsx->row, 1, $data, $toxlsx->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
             my %opt = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         if ($add_chart) {    # chart
@@ -1651,11 +1656,11 @@ my $segment_cv_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_cv_indel' . "_$segment_type";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(1);
+        $toxlsx->row(0);
+        $toxlsx->column(1);
 
         {    # create temporary table
-            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
+            $toxlsx->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -1679,7 +1684,7 @@ my $segment_cv_indel = sub {
                 bind_value => [$segment_type],
 
             );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         # make group
@@ -1693,13 +1698,13 @@ my $segment_cv_indel = sub {
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
+            @combined_segment = @{ $toxlsx->make_combine_piece( \%opt ) };
         }
 
         my @names
             = qw{AVG_CV AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length Range_gc};
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data = [];
@@ -1733,6 +1738,7 @@ my $segment_cv_indel = sub {
                 }
                 push @group_names, $group_name;
 
+                #@type DBI
                 my $sth = $dbh->prepare($sql_query_in);
                 $sth->execute;
                 while ( my @row = $sth->fetchrow_array ) {
@@ -1742,14 +1748,14 @@ my $segment_cv_indel = sub {
                 }
             }
 
-            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
-            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
+            $sheet->write( $toxlsx->row, 0, [ [@group_names] ], $toxlsx->format->{NAME} );
+            $sheet->write( $toxlsx->row, 1, $data, $toxlsx->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
             my %opt = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         if ($add_chart) {    # chart
@@ -1779,11 +1785,11 @@ my $segment_mdcw_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_mdcw_indel' . "_$segment_type";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(1);
+        $toxlsx->row(0);
+        $toxlsx->column(1);
 
         {    # create temporary table
-            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
+            $toxlsx->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -1807,7 +1813,7 @@ my $segment_mdcw_indel = sub {
                 bind_value => [$segment_type],
 
             );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         # make group
@@ -1821,13 +1827,13 @@ my $segment_mdcw_indel = sub {
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
+            @combined_segment = @{ $toxlsx->make_combine_piece( \%opt ) };
         }
 
         my @names
             = qw{AVG_mdcw AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data = [];
@@ -1860,6 +1866,7 @@ my $segment_mdcw_indel = sub {
                 }
                 push @group_names, $group_name;
 
+                #@type DBI
                 my $sth = $dbh->prepare($sql_query_in);
                 $sth->execute;
                 while ( my @row = $sth->fetchrow_array ) {
@@ -1869,14 +1876,14 @@ my $segment_mdcw_indel = sub {
                 }
             }
 
-            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
-            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
+            $sheet->write( $toxlsx->row, 0, [ [@group_names] ], $toxlsx->format->{NAME} );
+            $sheet->write( $toxlsx->row, 1, $data, $toxlsx->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
             my %opt = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         print "Sheet [$sheet_name] has been generated.\n";
@@ -1892,7 +1899,7 @@ my $segment_mdcw_indel = sub {
 # worksheet -- segment_coding_indel
 #----------------------------------------------------------#
 my $segment_coding_indel = sub {
-    unless ( $write_obj->check_column( 'window', 'window_coding' ) ) {
+    unless ( $toxlsx->check_column( 'window', 'window_coding' ) ) {
         return;
     }
 
@@ -1905,11 +1912,11 @@ my $segment_coding_indel = sub {
         my ($segment_type) = @_;
         my $sheet_name = 'segment_coding_indel' . "_$segment_type";
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(1);
+        $toxlsx->row(0);
+        $toxlsx->column(1);
 
         {    # create temporary table
-            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
+            $toxlsx->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -1933,7 +1940,7 @@ my $segment_coding_indel = sub {
                 bind_value => [$segment_type],
 
             );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         # make group
@@ -1947,12 +1954,12 @@ my $segment_coding_indel = sub {
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
+            @combined_segment = @{ $toxlsx->make_combine_piece( \%opt ) };
         }
 
         my @names = qw{AVG_coding AVG_pi AVG_Indel/100bp AVG_gc AVG_CV AVG_length COUNT SUM_length};
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data = [];
@@ -1985,6 +1992,7 @@ my $segment_coding_indel = sub {
                 }
                 push @group_names, $group_name;
 
+                #@type DBI
                 my $sth = $dbh->prepare($sql_query_in);
                 $sth->execute;
                 while ( my @row = $sth->fetchrow_array ) {
@@ -1994,14 +2002,14 @@ my $segment_coding_indel = sub {
                 }
             }
 
-            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
-            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
+            $sheet->write( $toxlsx->row, 0, [ [@group_names] ], $toxlsx->format->{NAME} );
+            $sheet->write( $toxlsx->row, 1, $data, $toxlsx->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
             my %opt = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         print "Sheet [$sheet_name] has been generated.\n";
@@ -2027,11 +2035,11 @@ my $segment_gc_indel_cr = sub {
             . $feature_types->[0]
             . $feature_types->[1];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(1);
+        $toxlsx->row(0);
+        $toxlsx->column(1);
 
         {    # create temporary table
-            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
+            $toxlsx->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -2057,7 +2065,7 @@ my $segment_gc_indel_cr = sub {
                 bind_value => [ $segment_type, $feature_types->[0], $feature_types->[1] ],
 
             );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         # make group
@@ -2071,12 +2079,12 @@ my $segment_gc_indel_cr = sub {
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
+            @combined_segment = @{ $toxlsx->make_combine_piece( \%opt ) };
         }
 
         my @names = qw{AVG_gc AVG_pi AVG_Indel/100bp AVG_CV AVG_coding AVG_length COUNT SUM_length};
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data = [];
@@ -2109,6 +2117,7 @@ my $segment_gc_indel_cr = sub {
                 }
                 push @group_names, $group_name;
 
+                #@type DBI
                 my $sth = $dbh->prepare($sql_query_in);
                 $sth->execute;
                 while ( my @row = $sth->fetchrow_array ) {
@@ -2118,14 +2127,14 @@ my $segment_gc_indel_cr = sub {
                 }
             }
 
-            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
-            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
+            $sheet->write( $toxlsx->row, 0, [ [@group_names] ], $toxlsx->format->{NAME} );
+            $sheet->write( $toxlsx->row, 1, $data, $toxlsx->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
             my %opt = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         if ($add_chart) {    # chart
@@ -2157,11 +2166,11 @@ my $segment_cv_indel_cr = sub {
             . $feature_types->[0]
             . $feature_types->[1];
         my $sheet;
-        $write_obj->row(0);
-        $write_obj->column(1);
+        $toxlsx->row(0);
+        $toxlsx->column(1);
 
         {    # create temporary table
-            $write_obj->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
+            $toxlsx->excute_sql( { sql_query => q{DROP TABLE IF EXISTS tmp_group}, } );
         }
 
         {
@@ -2187,7 +2196,7 @@ my $segment_cv_indel_cr = sub {
                 bind_value => [ $segment_type, $feature_types->[0], $feature_types->[1] ],
 
             );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         # make group
@@ -2201,12 +2210,12 @@ my $segment_cv_indel_cr = sub {
                 sql_query => $sql_query,
                 piece     => $piece,
             );
-            @combined_segment = @{ $write_obj->make_combine_piece( \%opt ) };
+            @combined_segment = @{ $toxlsx->make_combine_piece( \%opt ) };
         }
 
         my @names = qw{AVG_CV AVG_pi AVG_Indel/100bp AVG_gc AVG_coding AVG_length COUNT SUM_length};
         {    # header
-            $sheet = $write_obj->write_header( $sheet_name, { header => \@names } );
+            $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
         }
 
         my $data = [];
@@ -2239,6 +2248,7 @@ my $segment_cv_indel_cr = sub {
                 }
                 push @group_names, $group_name;
 
+                #@type DBI
                 my $sth = $dbh->prepare($sql_query_in);
                 $sth->execute;
                 while ( my @row = $sth->fetchrow_array ) {
@@ -2248,14 +2258,14 @@ my $segment_cv_indel_cr = sub {
                 }
             }
 
-            $sheet->write( $write_obj->row, 0, [ [@group_names] ], $write_obj->format->{NAME} );
-            $sheet->write( $write_obj->row, 1, $data, $write_obj->format->{NORMAL} );
+            $sheet->write( $toxlsx->row, 0, [ [@group_names] ], $toxlsx->format->{NAME} );
+            $sheet->write( $toxlsx->row, 1, $data, $toxlsx->format->{NORMAL} );
         }
 
         {    # drop temporary table
             my $sql_query = q{DROP TABLE IF EXISTS tmp_group};
             my %opt = ( sql_query => $sql_query, );
-            $write_obj->excute_sql( \%opt );
+            $toxlsx->excute_sql( \%opt );
         }
 
         if ($add_chart) {    # chart
@@ -2294,7 +2304,7 @@ for my $n (@tasks) {
 }
 
 if ($add_index_sheet) {
-    $write_obj->add_index_sheet;
+    $toxlsx->add_index_sheet;
     print "Sheet [INDEX] has been generated.\n";
 }
 
