@@ -9,8 +9,8 @@ use FindBin;
 use YAML::Syck;
 
 use File::Find::Rule;
-use Path::Tiny;
 use MCE;
+use Path::Tiny;
 
 use AlignDB::Stopwatch;
 
