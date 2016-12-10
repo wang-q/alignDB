@@ -118,8 +118,8 @@ my $worker = sub {
 #----------------------------------------------------------#
 # start insert
 #----------------------------------------------------------#
-my $mce = MCE->new( chunk_size => 1, max_workers => $opt->{parallel}, );
-$mce->foreach( [ sort @files ], $worker );    # foreach implies chunk_size => 1
+my $mce = MCE->new( max_workers => $opt->{parallel}, chunk_size => 1, );
+$mce->foreach( [ sort @files ], $worker );    # foreach also implies chunk_size => 1
 
 $stopwatch->end_message( "All files have been processed.", "duration" );
 
