@@ -3,13 +3,14 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
+use Getopt::Long::Descriptive;
 use Config::Tiny;
 use FindBin;
 use YAML::Syck;
 
+use MCE;
+
 use AlignDB::GC;
-use AlignDB::Run;
 use AlignDB::Stopwatch;
 
 use lib "$FindBin::Bin/../lib";
@@ -18,96 +19,95 @@ use AlignDB;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# record ARGV and Config
-my $stopwatch = AlignDB::Stopwatch->new(
-    program_name => $0,
-    program_argv => [@ARGV],
-    program_conf => $Config,
-);
+# record command line
+my $stopwatch = AlignDB::Stopwatch->new->record;
 
-=head1 NAME
+my $description = <<'EOF';
+Update CV for isw, gsw and ofgsw
 
-update_sw_cv.pl - CV for isw, gsw and ofgsw
+    perl init/update_sw_cv.pl -d S288cvsRM11_1a --parallel 2
 
-=head1 SYNOPSIS
+Usage: perl %c [options]
+EOF
 
-    perl update_sw_cv.pl [options]
-      Options:
-        --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
-        --db        -d  STR     database name
-        --username  -u  STR     username
-        --password  -p  STR     password
-        --parallel      INT     run in parallel mode
-        --batch         INT     number of alignments in one child process
+(
+    #@type Getopt::Long::Descriptive::Opts
+    my $opt,
 
-=cut
+    #@type Getopt::Long::Descriptive::Usage
+    my $usage,
+    )
+    = Getopt::Long::Descriptive::describe_options(
+    $description,
+    [ 'help|h', 'display this message' ],
+    [],
+    ['Database init values'],
+    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf->{database}{server} }, ],
+    [ 'port=i',       'MySQL port',      { default => $conf->{database}{port} }, ],
+    [ 'username|u=s', 'username',        { default => $conf->{database}{username} }, ],
+    [ 'password|p=s', 'password',        { default => $conf->{database}{password} }, ],
+    [ 'db|d=s',       'database name',   { default => $conf->{database}{db} }, ],
+    [],
+    [ 'parallel=i', 'run in parallel mode',       { default => $conf->{generate}{parallel} }, ],
+    [ 'batch=i',    '#alignments in one process', { default => $conf->{generate}{batch} }, ],
+    { show_defaults => 1, }
+    );
 
-my $stat_segment_size = 500;
-my $stat_window_size  = $Config->{gc}{stat_window_size};
-my $stat_window_step  = $Config->{gc}{stat_window_step};
+$usage->die if $opt->{help};
 
-GetOptions(
-    'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server       = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port         = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db           = $Config->{database}{db} ),
-    'username|u=s' => \( my $username     = $Config->{database}{username} ),
-    'password|p=s' => \( my $password     = $Config->{database}{password} ),
-    'parallel=i'   => \( my $parallel     = $Config->{generate}{parallel} ),
-    'batch=i'      => \( my $batch_number = $Config->{generate}{batch} ),
-) or Getopt::Long::HelpMessage(1);
+# record config
+$stopwatch->record_conf( { opt => $opt, gc => $conf->{gc}, } );
+
+# DBI Data Source Name
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $opt->{db}, $opt->{server}, $opt->{port};
 
 #----------------------------------------------------------#
 # init
 #----------------------------------------------------------#
-$stopwatch->start_message("Update $db...");
+$stopwatch->start_message("Update [$opt->{db}]...");
 
 #----------------------------#
 # Create columnas and find all align_ids
 #----------------------------#
 my @jobs;
 {
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
+    my $alignDB = AlignDB->new(
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
     );
 
     # add column
-    $obj->create_column( "gsw", "gsw_intra_cv", "DOUBLE" );
+    $alignDB->create_column( "gsw", "gsw_intra_cv", "DOUBLE" );
     print "Table gsw altered\n";
 
-    my @align_ids = @{ $obj->get_align_ids };
-
-    while ( scalar @align_ids ) {
-        my @batching = splice @align_ids, 0, $batch_number;
-        push @jobs, [@batching];
-    }
+    @jobs = @{ $alignDB->get_align_ids };
 }
 
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
 my $worker = sub {
-    my $job       = shift;
-    my @align_ids = @{$job};
+    my ( $self, $chunk_ref, $chunk_id ) = @_;
+    my @align_ids = @{$chunk_ref};
+    my $wid       = MCE->wid;
 
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
+    $stopwatch->block_message("Process task [$chunk_id] by worker #$wid");
+
+    my $alignDB = AlignDB->new(
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
     );
     my $obj_gc = AlignDB::GC->new(
-        stat_window_size => $stat_window_size,
-        stat_window_step => $stat_window_step,
+        stat_window_size => $conf->{gc}{stat_window_size},
+        stat_window_step => $conf->{gc}{stat_window_step},
     );
 
     # Database handler
-    my DBI $dbh = $obj->dbh;
+    my DBI $dbh = $alignDB->dbh;
 
     my DBI $ofgsw_sth = $dbh->prepare(
         q{
@@ -162,10 +162,10 @@ my $worker = sub {
     );
 
     for my $align_id (@align_ids) {
-        my $target_info    = $obj->get_target_info($align_id);
+        my $target_info    = $alignDB->get_target_info($align_id);
         my $target_runlist = $target_info->{seq_runlist};
 
-        $obj->process_message($align_id);
+        $alignDB->process_message($align_id);
 
         # sliding in target_set
         my $target_set = AlignDB::IntSpan->new($target_runlist);
@@ -174,13 +174,13 @@ my $worker = sub {
         while ( my @row = $ofgsw_sth->fetchrow_array ) {
             my ( $ofgsw_id, $window_runlist ) = @row;
             my $window_set = AlignDB::IntSpan->new($window_runlist);
-            my $resize_set = center_resize( $window_set, $target_set, $stat_segment_size );
+            my $resize_set
+                = center_resize( $window_set, $target_set, $conf->{gc}{stat_segment_size} );
 
             next unless $resize_set;
 
-            my $seqs_ref = $obj->get_seqs($align_id);
-            my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-                = $obj_gc->segment_gc_stat( $seqs_ref, $resize_set );
+            my $seqs_ref = $alignDB->get_seqs($align_id);
+            my ( undef, undef, $gc_cv, undef ) = $obj_gc->segment_gc_stat( $seqs_ref, $resize_set );
             $ofgsw_update_sth->execute( $gc_cv, $ofgsw_id );
         }
 
@@ -188,13 +188,13 @@ my $worker = sub {
         while ( my @row = $isw_sth->fetchrow_array ) {
             my ( $isw_id, $start, $end ) = @row;
             my $window_set = AlignDB::IntSpan->new("$start-$end");
-            my $resize_set = center_resize( $window_set, $target_set, $stat_segment_size );
+            my $resize_set
+                = center_resize( $window_set, $target_set, $conf->{gc}{stat_segment_size} );
 
             next unless $resize_set;
 
-            my $seqs_ref = $obj->get_seqs($align_id);
-            my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-                = $obj_gc->segment_gc_stat( $seqs_ref, $resize_set );
+            my $seqs_ref = $alignDB->get_seqs($align_id);
+            my ( undef, undef, $gc_cv, undef ) = $obj_gc->segment_gc_stat( $seqs_ref, $resize_set );
             $isw_update_sth->execute( $gc_cv, $isw_id );
         }
 
@@ -202,13 +202,13 @@ my $worker = sub {
         while ( my @row = $gsw_sth->fetchrow_array ) {
             my ( $gsw_id, $window_runlist ) = @row;
             my $window_set = AlignDB::IntSpan->new($window_runlist);
-            my $resize_set = center_resize( $window_set, $target_set, $stat_segment_size );
+            my $resize_set
+                = center_resize( $window_set, $target_set, $conf->{gc}{stat_segment_size} );
 
             next unless $resize_set;
 
-            my $seqs_ref = $obj->get_seqs($align_id);
-            my ( $gc_mean, $gc_std, $gc_cv, $gc_mdcw )
-                = $obj_gc->segment_gc_stat( $seqs_ref, $resize_set );
+            my $seqs_ref = $alignDB->get_seqs($align_id);
+            my ( undef, undef, $gc_cv, undef ) = $obj_gc->segment_gc_stat( $seqs_ref, $resize_set );
             my ( undef, undef, $gc_intra_cv, undef )
                 = $obj_gc->segment_gc_stat( $seqs_ref, $window_set, 20, 20 );
             $gsw_update_sth->execute( $gc_cv, $gc_intra_cv, $gsw_id );
@@ -219,24 +219,18 @@ my $worker = sub {
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
-my $run = AlignDB::Run->new(
-    parallel => $parallel,
-    jobs     => \@jobs,
-    code     => $worker,
-);
-$run->run;
+my $mce = MCE->new( max_workers => $opt->{parallel}, chunk_size => $opt->{batch}, );
+$mce->forchunk( \@jobs, $worker, );
 
 $stopwatch->end_message;
 
-# store program running meta info to database
-# this AlignDB object is just for storing meta info
-END {
-    AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    )->add_meta_stopwatch($stopwatch);
-}
+# store program's meta info to database
+AlignDB->new(
+    dsn    => $dsn,
+    user   => $opt->{username},
+    passwd => $opt->{password},
+)->add_meta_stopwatch($stopwatch);
+
 exit;
 
 sub center_resize {

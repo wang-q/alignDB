@@ -3,14 +3,15 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
+use Getopt::Long::Descriptive;
 use Config::Tiny;
 use FindBin;
 use YAML::Syck;
 
+use MCE;
+
 use AlignDB::GC;
 use AlignDB::IntSpan;
-use AlignDB::Run;
 use AlignDB::Stopwatch;
 
 use FindBin;
@@ -20,126 +21,105 @@ use AlignDB;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# record ARGV and Config
-my $stopwatch = AlignDB::Stopwatch->new(
-    program_name => $0,
-    program_argv => [@ARGV],
-    program_conf => $Config,
-);
+# record command line
+my $stopwatch = AlignDB::Stopwatch->new->record;
 
-=head1 NAME
+my $description = <<'EOF';
+Add GC ralated tables to alignDB
 
-insert_gc.pl - Add GC ralated tables to alignDB
+    perl init/insert_gc.pl -d S288cvsRM11_1a --parallel 2
 
-=head1 SYNOPSIS
+Usage: perl %c [options]
+EOF
 
-    insert_gc.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-        --insert_gc         insert gc or not
-        --insert_segment    insert segment or not
-        --parallel          run in parallel mode
-        --batch             number of alignments process in one child process
+(
+    #@type Getopt::Long::Descriptive::Opts
+    my $opt,
 
-    perl ~/Scripts/alignDB/alignDB.pl -d HumanvsCGOR \
-        -e human_65 --id 9606 -lt 5000 -st 0 --parallel 12 \
-        -f ~/data/alignment/primates/HumanvsCGOR_mft --run 1
+    #@type Getopt::Long::Descriptive::Usage
+    my $usage,
+    )
+    = Getopt::Long::Descriptive::describe_options(
+    $description,
+    [ 'help|h', 'display this message' ],
+    [],
+    ['Database init values'],
+    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf->{database}{server} }, ],
+    [ 'port=i',       'MySQL port',      { default => $conf->{database}{port} }, ],
+    [ 'username|u=s', 'username',        { default => $conf->{database}{username} }, ],
+    [ 'password|p=s', 'password',        { default => $conf->{database}{password} }, ],
+    [ 'db|d=s',       'database name',   { default => $conf->{database}{db} }, ],
+    [],
+    ['AlignDB::GC init values'],
+    [ 'insert_gc=s',      'insert gc or not',      { default => $conf->{gc}{insert_gc} }, ],
+    [ 'insert_segment=s', 'insert segment or not', { default => $conf->{gc}{insert_segment} }, ],
+    [ 'alt_levelalt_level', 'use alternative segment levels 200..900, 1000..5000', ],
+    [ 'one_level',          'use segment level of 100', ],
+    [],
+    [ 'parallel=i', 'run in parallel mode',       { default => $conf->{generate}{parallel} }, ],
+    [ 'batch=i',    '#alignments in one process', { default => $conf->{generate}{batch} }, ],
+    { show_defaults => 1, }
+    );
 
-    perl ~/Scripts/alignDB/init/insert_gc.pl -d=HumanvsCGOR --parallel 12
+$usage->die if $opt->{help};
 
-    perl ~/Scripts/alignDB/util/dup_db.pl -d HumanvsCGOR -g HumanvsCGOR_alt_level
-    perl ~/Scripts/alignDB/init/insert_gc.pl -d HumanvsCGOR_alt_level --parallel 12 --alt_level
-    perl ~/Scripts/alignDB/alignDB.pl -d HumanvsCGOR_alt_level \
-        -e human_65 --id 9606 -lt 5000 -st 0 --parallel 12 \
-        -f ~/data/alignment/primates/HumanvsCGOR_mft \
-        --run 21,30,40
-    perl ~/Scripts/alignDB/stat/gc_stat_factory.pl -d HumanvsCGOR_alt_level --alt_level -t 0
+# record config
+$stopwatch->record_conf( { opt => $opt, gc => $conf->{gc}, } );
 
-=cut
-
-# AlignDB::GC options
-my $wave_window_size = $Config->{gc}{wave_window_size};
-my $wave_window_step = $Config->{gc}{wave_window_step};
-my $vicinal_size     = $Config->{gc}{vicinal_size};
-my $fall_range       = $Config->{gc}{fall_range};
-my $gsw_size         = $Config->{gc}{gsw_size};
-my $stat_window_size = $Config->{gc}{stat_window_size};
-my $stat_window_step = $Config->{gc}{stat_window_step};
-
-GetOptions(
-    'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'       => \( my $server         = $Config->{database}{server} ),
-    'port|P=i'         => \( my $port           = $Config->{database}{port} ),
-    'db|d=s'           => \( my $db             = $Config->{database}{db} ),
-    'username|u=s'     => \( my $username       = $Config->{database}{username} ),
-    'password|p=s'     => \( my $password       = $Config->{database}{password} ),
-    'insert_gc=s'      => \( my $insert_gc      = $Config->{gc}{insert_gc} ),
-    'insert_segment=s' => \( my $insert_segment = $Config->{gc}{insert_segment} ),
-    'alt_level'        => \( my $alt_level      = 0 )
-    ,    # use alternative segment levels 200 .. 1000, 2000 .. 5000
-    'one_level'  => \( my $one_level    = 0 ),                               # use 100 level
-    'parallel=i' => \( my $parallel     = $Config->{generate}{parallel} ),
-    'batch=i'    => \( my $batch_number = $Config->{generate}{batch} ),
-) or Getopt::Long::HelpMessage(1);
+# DBI Data Source Name
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $opt->{db}, $opt->{server}, $opt->{port};
 
 #----------------------------------------------------------#
 # init
 #----------------------------------------------------------#
-$stopwatch->start_message("Update GC tables of $db...");
+$stopwatch->start_message("Update GC tables of [$opt->{db}]...");
 
 my @jobs;
 {
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
+    my $alignDB = AlignDB->new(
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
     );
 
-    print "Emptying tables...\n";
-
     # empty tables: segment, gsw, extreme
-    $obj->empty_table( 'segment', 'with_window' );
-    $obj->empty_table( 'gsw',     'with_window' );
-    $obj->empty_table( 'extreme', 'with_window' );
+    print "Emptying tables...\n";
+    $alignDB->empty_table( 'segment', 'with_window' );
+    $alignDB->empty_table( 'gsw',     'with_window' );
+    $alignDB->empty_table( 'extreme', 'with_window' );
 
-    my @align_ids = @{ $obj->get_align_ids };
-    while ( scalar @align_ids ) {
-        my @batching = splice @align_ids, 0, $batch_number;
-        push @jobs, [@batching];
-    }
+    @jobs = @{ $alignDB->get_align_ids };
 }
 
 #----------------------------------------------------------#
 # worker
 #----------------------------------------------------------#
 my $worker = sub {
-    my $job       = shift;
-    my @align_ids = @$job;
+    my ( $self, $chunk_ref, $chunk_id ) = @_;
+    my @align_ids = @{$chunk_ref};
+    my $wid       = MCE->wid;
 
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
+    $stopwatch->block_message("Process task [$chunk_id] by worker #$wid");
+
+    my $alignDB = AlignDB->new(
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
     );
     my $obj_gc = AlignDB::GC->new(
-        wave_window_size => $wave_window_size,
-        wave_window_step => $wave_window_step,
-        vicinal_size     => $vicinal_size,
-        fall_range       => $fall_range,
-        gsw_size         => $gsw_size,
-        stat_window_size => $stat_window_size,
-        stat_window_step => $stat_window_step,
+        wave_window_size => $conf->{gc}{wave_window_size},
+        wave_window_step => $conf->{gc}{wave_window_step},
+        vicinal_size     => $conf->{gc}{vicinal_size},
+        fall_range       => $conf->{gc}{fall_range},
+        gsw_size         => $conf->{gc}{gsw_size},
+        stat_window_size => $conf->{gc}{stat_window_size},
+        stat_window_step => $conf->{gc}{stat_window_step},
     );
 
     # Database handler
-    my DBI $dbh = $obj->dbh;
+    my DBI $dbh = $alignDB->dbh;
 
     # alignments' chromosomal location, target_seq and query_seq
     my DBI $sth = $dbh->prepare(
@@ -152,28 +132,28 @@ my $worker = sub {
 
     # for each alignment
     for my $align_id (@align_ids) {
-        $obj->process_message($align_id);
+        $alignDB->process_message($align_id);
         $sth->execute($align_id);
         my ($comparable_runlist) = $sth->fetchrow_array;
 
         # comparable runlist
         my $comparable_set = AlignDB::IntSpan->new($comparable_runlist);
 
-        if ($insert_gc) {
-            insert_extreme( $obj_gc, $obj, $align_id, $comparable_set );
+        if ( $opt->{insert_gc} ) {
+            insert_extreme( $obj_gc, $alignDB, $align_id, $comparable_set );
 
-            insert_gsw( $obj_gc, $obj, $align_id, $comparable_set );
+            insert_gsw( $obj_gc, $alignDB, $align_id, $comparable_set );
         }
 
-        if ($insert_segment) {
+        if ( $opt->{insert_segment} ) {
             my $style = 'normal';
-            if ($alt_level) {
+            if ( $opt->{alt_level} ) {
                 $style = 'alt_level';
             }
-            elsif ($one_level) {
+            elsif ( $opt->{one_level} ) {
                 $style = 'one_level';
             }
-            insert_segment( $obj_gc, $obj, $align_id, $comparable_set, $style );
+            insert_segment( $obj_gc, $alignDB, $align_id, $comparable_set, $style );
         }
     }
 
@@ -183,24 +163,18 @@ my $worker = sub {
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
-my $run = AlignDB::Run->new(
-    parallel => $parallel,
-    jobs     => \@jobs,
-    code     => $worker,
-);
-$run->run;
+my $mce = MCE->new( max_workers => $opt->{parallel}, chunk_size => $opt->{batch}, );
+$mce->forchunk( \@jobs, $worker, );
 
 $stopwatch->end_message;
 
-# store program running meta info to database
-# this AlignDB object is just for storing meta info
-END {
-    AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    )->add_meta_stopwatch($stopwatch);
-}
+# store program's meta info to database
+AlignDB->new(
+    dsn    => $dsn,
+    user   => $opt->{username},
+    passwd => $opt->{password},
+)->add_meta_stopwatch($stopwatch);
+
 exit;
 
 sub insert_extreme {
