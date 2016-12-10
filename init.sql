@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     12/9/16 03:08:28                             */
+/* Created on:     12/10/16 23:59:34                            */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -127,8 +127,6 @@ create table gene
    gene_tc_runlist                text,
    gene_tl_runlist                text,
    gene_description               text,
-   gene_feature4                  double,
-   gene_feature5                  double,
    primary key (gene_id),
    key AK_gene_stable_id (gene_stable_id)
 )
