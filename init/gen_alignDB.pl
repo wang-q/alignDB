@@ -70,6 +70,8 @@ my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $opt->{db}, $opt->{se
 #----------------------------------------------------------#
 # Search for all files and push their paths to @files
 #----------------------------------------------------------#
+$stopwatch->start_message("Generate [$opt->{db}] from directory [$opt->{dir_align}]...");
+
 $opt->{dir_align} = path( $opt->{dir_align} )->stringify;
 my @files = sort File::Find::Rule->file->name('*.fas')->in( $opt->{dir_align} );
 printf "\n----Total .fas Files: %4s----\n\n", scalar @files;
@@ -84,11 +86,11 @@ if ( scalar @files == 0 ) {
 my $worker = sub {
     my ( $self, $chunk_ref, $chunk_id ) = @_;
     my $infile = $chunk_ref->[0];
+    my $wid    = MCE->wid;
 
-    my $wid = MCE->wid;
-
-    my $inner = AlignDB::Stopwatch->new;
-    $inner->block_message("Process task [$chunk_id] by worker #$wid\n    File [$infile]...");
+    my $inner    = AlignDB::Stopwatch->new;
+    my $basename = path($infile)->basename;
+    $inner->block_message("Process task [$chunk_id] by worker #$wid. [$basename]");
 
     my $alignDB;
     if ( !$opt->{outgroup} ) {
@@ -108,7 +110,7 @@ my $worker = sub {
 
     $alignDB->parse_fas_file( $infile, { threshold => $opt->{length}, } );
 
-    $inner->block_message( "[$infile] has been processed.", "duration" );
+    $inner->block_message( "[$basename] has been processed.", "duration" );
 
     return;
 };
