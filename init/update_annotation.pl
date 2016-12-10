@@ -105,10 +105,6 @@ my $worker = sub {
 
     $stopwatch->block_message("Process task [$chunk_id] by worker #$wid");
 
-    #----------------------------#
-    # Init objects
-    #----------------------------#
-
     my $alignDB = AlignDB->new(
         dsn    => $dsn,
         user   => $opt->{username},
