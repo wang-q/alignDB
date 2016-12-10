@@ -1,20 +1,19 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
+use Getopt::Long::Descriptive;
 use Config::Tiny;
 use FindBin;
 use YAML::Syck;
 
 use Bio::Tools::GFF;
-
 use File::Basename;
+use MCE;
 use Path::Tiny;
 
 use AlignDB::IntSpan;
-use AlignDB::Run;
 use AlignDB::Stopwatch;
 
 use App::RL::Common;
@@ -25,55 +24,59 @@ use AlignDB;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# record ARGV and Config
-my $stopwatch = AlignDB::Stopwatch->new(
-    program_name => $0,
-    program_argv => [@ARGV],
-    program_conf => $Config,
-);
+# record command line
+my $stopwatch = AlignDB::Stopwatch->new->record;
 
-=head1 NAME
+my $description = <<'EOF';
+Add annotations to alignDB
 
-update_annotation.pl - Add annotations to alignDB
+    perl init/update_annotation.pl -d S288cvsRM11_1a --parallel 2
 
-=head1 SYNOPSIS
+Usage: perl %c [options]
+EOF
 
-    perl update_annotation.pl [options]
-      Options:
-        --help          -?          brief help message
-        --server        -s  STR     MySQL server IP/Domain name
-        --port              INT     MySQL server port
-        --db            -d  STR     database name
-        --username      -u  STR     username
-        --password      -p  STR     password
-        --annotation    -a  STR     YAML file for annotations (cds, repeat)
-        --parallel          INT     run in parallel mode
-        --batch             INT     number of alignments in one child process
+(
+    #@type Getopt::Long::Descriptive::Opts
+    my $opt,
 
-=cut
+    #@type Getopt::Long::Descriptive::Usage
+    my $usage,
+    )
+    = Getopt::Long::Descriptive::describe_options(
+    $description,
+    [ 'help|h', 'display this message' ],
+    [],
+    ['Database init values'],
+    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf->{database}{server} }, ],
+    [ 'port=i',       'MySQL port',      { default => $conf->{database}{port} }, ],
+    [ 'username|u=s', 'username',        { default => $conf->{database}{username} }, ],
+    [ 'password|p=s', 'password',        { default => $conf->{database}{password} }, ],
+    [ 'db|d=s',       'database name',   { default => $conf->{database}{db} }, ],
+    [],
+    [ 'annotation|a=s', 'YAML file for cds/repeat', { default => $conf->{generate}{file_anno} }, ],
+    [ 'parallel=i',     'run in parallel mode',     { default => $conf->{generate}{parallel} }, ],
+    [ 'batch=i', '#alignments in one process', { default => $conf->{generate}{batch} }, ],
+    { show_defaults => 1, }
+    );
 
-GetOptions(
-    'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'     => \( my $server       = $Config->{database}{server} ),
-    'port=i'         => \( my $port         = $Config->{database}{port} ),
-    'db|d=s'         => \( my $db           = $Config->{database}{db} ),
-    'username|u=s'   => \( my $username     = $Config->{database}{username} ),
-    'password|p=s'   => \( my $password     = $Config->{database}{password} ),
-    'annotation|a=s' => \( my $file_anno    = $Config->{generate}{file_anno} ),
-    'parallel=i'     => \( my $parallel     = $Config->{generate}{parallel} ),
-    'batch=i'        => \( my $batch_number = $Config->{generate}{batch} ),
-) or Getopt::Long::HelpMessage(1);
+$usage->die if $opt->{help};
+
+# record config
+$stopwatch->record_conf($opt);
+
+# DBI Data Source Name
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $opt->{db}, $opt->{server}, $opt->{port};
 
 #----------------------------------------------------------#
 # init
 #----------------------------------------------------------#
 # other objects are initiated in subroutines
-$stopwatch->start_message("Update annotations of $db...");
+$stopwatch->start_message("Update annotations of $opt->{db}...");
 
-$file_anno = path($file_anno)->stringify;
-my $yml = YAML::Syck::LoadFile($file_anno);
+my $file_anno = path( $opt->{annotation} )->stringify;
+my $yml       = YAML::Syck::LoadFile($file_anno);
 
 die "Invalid annotation YAML. Need cds.\n"    unless defined $yml->{cds};
 die "Invalid annotation YAML. Need repeat.\n" unless defined $yml->{repeat};
@@ -81,42 +84,39 @@ die "Invalid annotation YAML. Need repeat.\n" unless defined $yml->{repeat};
 my $cds_set_of    = App::RL::Common::runlist2set( $yml->{cds} );
 my $repeat_set_of = App::RL::Common::runlist2set( $yml->{repeat} );
 
-#----------------------------#
-# Find all align_ids
-#----------------------------#
 my @jobs;
-{    # create alignDB object for this scope
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
+{
+    my $alignDB = AlignDB->new(
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
     );
-    my @align_ids = @{ $obj->get_align_ids };
-    while ( scalar @align_ids ) {
-        my @batching = splice @align_ids, 0, $batch_number;
-        push @jobs, [@batching];
-    }
+
+    @jobs = @{ $alignDB->get_align_ids };
 }
 
 #----------------------------------------------------------#
 # worker
 #----------------------------------------------------------#
 my $worker = sub {
-    my $job       = shift;
-    my @align_ids = @$job;
+    my ( $self, $chunk_ref, $chunk_id ) = @_;
+    my @align_ids = @{$chunk_ref};
+    my $wid       = MCE->wid;
+
+    $stopwatch->block_message("Process task [$chunk_id] by worker #$wid");
 
     #----------------------------#
     # Init objects
     #----------------------------#
 
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
+    my $alignDB = AlignDB->new(
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
     );
 
     # Database handler
-    my DBI $dbh = $obj->dbh;
+    my DBI $dbh = $alignDB->dbh;
 
     #----------------------------#
     # SQL query and DBI sths
@@ -213,7 +213,7 @@ UPDATE: for my $align_id (@align_ids) {
         #----------------------------#
         # for each alignment
         #----------------------------#
-        my $target_info  = $obj->get_target_info($align_id);
+        my $target_info  = $alignDB->get_target_info($align_id);
         my $chr_name     = $target_info->{chr_name};
         my $chr_start    = $target_info->{chr_start};
         my $chr_end      = $target_info->{chr_end};
@@ -221,8 +221,8 @@ UPDATE: for my $align_id (@align_ids) {
 
         next UPDATE if $chr_name =~ /rand|contig|hap|scaf|gi_/i;
 
-        my ($target_seq) = @{ $obj->get_seqs($align_id) };
-        $obj->process_message($align_id);
+        my ($target_seq) = @{ $alignDB->get_seqs($align_id) };
+        $alignDB->process_message($align_id);
 
         $chr_name =~ s/chr0?//i;
 
@@ -385,24 +385,18 @@ UPDATE: for my $align_id (@align_ids) {
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
-my $run = AlignDB::Run->new(
-    parallel => $parallel,
-    jobs     => \@jobs,
-    code     => $worker,
-);
-$run->run;
+my $mce = MCE->new( max_workers => $opt->{parallel}, chunk_size => $opt->{batch}, );
+$mce->forchunk( \@jobs, $worker, );
 
 $stopwatch->end_message;
 
-# store program running meta info to database
-# this AlignDB object is just for storing meta info
-END {
-    AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    )->add_meta_stopwatch($stopwatch);
-}
+# store program's meta info to database
+AlignDB->new(
+    dsn    => $dsn,
+    user   => $opt->{username},
+    passwd => $opt->{password},
+)->add_meta_stopwatch($stopwatch);
+
 exit;
 
 sub feature_portion {

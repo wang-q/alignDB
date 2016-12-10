@@ -1,12 +1,14 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
+use Getopt::Long::Descriptive;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
+
+use MCE;
 
 use AlignDB::Stopwatch;
 
@@ -16,66 +18,89 @@ use AlignDB;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::Bin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# record ARGV and Config
-my $stopwatch = AlignDB::Stopwatch->new(
-    program_name => $0,
-    program_argv => [@ARGV],
-    program_conf => $Config,
-);
+# record command line
+my $stopwatch = AlignDB::Stopwatch->new->record;
 
-=head1 NAME
+my $description = <<'EOF';
+Add additional slippage-like info to alignDB. 1 for slippage-like and 0 for non.
 
-update_indel_slippage.pl - Add additional slippage-like info to alignDB
-                            1 for slippage-like and 0 for non
+    perl init/update_indel_slippage.pl -d S288cvsRM11_1a
 
-=head1 SYNOPSIS
+Usage: perl %c [options]
+EOF
 
-    perl update_indel_slippage.pl [options]
-      Options:
-        --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
-        --db        -d  STR     database name
-        --username  -u  STR     username
-        --password  -p  STR     password
+(
+    #@type Getopt::Long::Descriptive::Opts
+    my $opt,
 
-=cut
+    #@type Getopt::Long::Descriptive::Usage
+    my $usage,
+    )
+    = Getopt::Long::Descriptive::describe_options(
+    $description,
+    [ 'help|h', 'display this message' ],
+    [],
+    ['Database init values'],
+    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf->{database}{server} }, ],
+    [ 'port=i',       'MySQL port',      { default => $conf->{database}{port} }, ],
+    [ 'username|u=s', 'username',        { default => $conf->{database}{username} }, ],
+    [ 'password|p=s', 'password',        { default => $conf->{database}{password} }, ],
+    [ 'db|d=s',       'database name',   { default => $conf->{database}{db} }, ],
+    [],
+    [ 'parallel=i', 'run in parallel mode',       { default => $conf->{generate}{parallel} }, ],
+    [ 'batch=i',    '#alignments in one process', { default => $conf->{generate}{batch} }, ],
+    { show_defaults => 1, }
+    );
+
+$usage->die if $opt->{help};
 
 # motif-repeat parameters
 my $min_reps = {
     1 => 4,    # mononucl. with >= 4 repeats
 };
 
-GetOptions(
-    'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server       = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port         = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db           = $Config->{database}{db} ),
-    'username|u=s' => \( my $username     = $Config->{database}{username} ),
-    'password|p=s' => \( my $password     = $Config->{database}{password} ),
-) or Getopt::Long::HelpMessage(1);
+# record config
+$stopwatch->record_conf( { opt => $opt, min_reps => $min_reps, } );
+
+# DBI Data Source Name
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $opt->{db}, $opt->{server}, $opt->{port};
 
 #----------------------------------------------------------#
-# init
+# Init
 #----------------------------------------------------------#
-$stopwatch->start_message("Update indel-slippage of $db...");
+$stopwatch->start_message("Update indel-slippage of [$opt->{db}]...");
 
-my $obj = AlignDB->new(
-    mysql  => "$db:$server",
-    user   => $username,
-    passwd => $password,
-);
-
-# Database handler
-my DBI $dbh = $obj->dbh;
-
-#----------------------------------------------------------#
-# start update
-#----------------------------------------------------------#
+my @jobs;
 {
-    my @align_ids = @{ $obj->get_align_ids };
+    my $alignDB = AlignDB->new(
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
+    );
+
+    @jobs = @{ $alignDB->get_align_ids };
+}
+
+#----------------------------------------------------------#
+# worker
+#----------------------------------------------------------#
+my $worker = sub {
+    my ( $self, $chunk_ref, $chunk_id ) = @_;
+    my @align_ids = @{$chunk_ref};
+    my $wid       = MCE->wid;
+
+    $stopwatch->block_message("Process task [$chunk_id] by worker #$wid");
+
+    my $alignDB = AlignDB->new(
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
+    );
+
+    # Database handler
+    my DBI $dbh = $alignDB->dbh;
 
     # select all indels in this alignment
     my $indel_query = q{
@@ -94,11 +119,11 @@ my DBI $dbh = $obj->dbh;
     };
     my DBI $indel_update_sth = $dbh->prepare($indel_update);
 
-    # for indel
+    # for every align_id
     for my $align_id (@align_ids) {
-        print "Processing align_id $align_id\n";
+        $alignDB->process_message($align_id);
 
-        my ( $target_seq, ) = @{ $obj->get_seqs($align_id) };
+        my ( $target_seq, ) = @{ $alignDB->get_seqs($align_id) };
 
         $indel_sth->execute($align_id);
         while ( my @row = $indel_sth->fetchrow_array ) {
@@ -116,14 +141,12 @@ my DBI $dbh = $obj->dbh;
                 my $left_flank = " ";    # avoid warning from $flank
                 if ( $fland_length <= $left_extand ) {
                     $left_flank
-                        = substr( $target_seq, $indel_start - $fland_length - 1,
-                        $fland_length );
+                        = substr( $target_seq, $indel_start - $fland_length - 1, $fland_length );
                 }
 
                 my $right_flank = " ";
                 if ( $fland_length <= $right_extand ) {
-                    $right_flank
-                        = substr( $target_seq, $indel_end, $fland_length );
+                    $right_flank = substr( $target_seq, $indel_end, $fland_length );
                 }
 
                 my $flank = $left_flank . $indel_seq . $right_flank;
@@ -141,16 +164,14 @@ my DBI $dbh = $obj->dbh;
                 my $left_flank;
                 if ( $indel_length <= $left_extand ) {
                     $left_flank
-                        = substr( $target_seq, $indel_start - $indel_length - 1,
-                        $indel_length );
+                        = substr( $target_seq, $indel_start - $indel_length - 1, $indel_length );
                 }
 
                 # indel 23-28, length 6: substr 29-34
                 # substr(..., 28, 6)
                 my $right_flank;
                 if ( $indel_length <= $right_extand ) {
-                    $right_flank
-                        = substr( $target_seq, $indel_end, $indel_length );
+                    $right_flank = substr( $target_seq, $indel_end, $indel_length );
                 }
 
                 if ( $left_flank and $indel_seq eq $left_flank ) {
@@ -167,19 +188,25 @@ my DBI $dbh = $obj->dbh;
 
     $indel_update_sth->finish;
     $indel_sth->finish;
-}
+
+    return;
+};
+
+#----------------------------------------------------------#
+# start update
+#----------------------------------------------------------#
+my $mce = MCE->new( max_workers => $opt->{parallel}, chunk_size => $opt->{batch}, );
+$mce->forchunk( \@jobs, $worker, );
 
 $stopwatch->end_message;
 
-# store program running meta info to database
-# this AlignDB object is just for storing meta info
-END {
-    AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    )->add_meta_stopwatch($stopwatch);
-}
+# store program's meta info to database
+AlignDB->new(
+    dsn    => $dsn,
+    user   => $opt->{username},
+    passwd => $opt->{password},
+)->add_meta_stopwatch($stopwatch);
+
 exit;
 
 __END__
