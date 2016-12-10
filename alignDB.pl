@@ -101,9 +101,9 @@ my $dispatch = {
         . " --port $port"
         . " -u $username"
         . " --password $password"
-        . " --db $db_name"
+        . " -d $db_name"
         . " --da $dir_align"
-        . " -lt $length"
+        . " --lt $length"
         . " --parallel $parallel"
         . ( $outgroup ? " --outgroup" : "" ),
     3 => undef,
