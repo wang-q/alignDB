@@ -3,13 +3,13 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
-use YAML qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
-use Spreadsheet::WriteExcel;
-use List::Util qw(first max maxstr min minstr reduce shuffle sum);
+use Excel::Writer::XLSX;
+use List::Util;
 
 use AlignDB::Stopwatch;
 
@@ -43,9 +43,8 @@ align_xls.pl - Generate a colorful excel file for one alignment in a three-way a
 =cut
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server   = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port     = $Config->{database}{port} ),
     'db|d=s'       => \( my $db       = $Config->{database}{db} ),
     'username|u=s' => \( my $username = $Config->{database}{username} ),
     'password|p=s' => \( my $password = $Config->{database}{password} ),
@@ -53,9 +52,9 @@ GetOptions(
     'spacing=i'    => \( my $spacing  = 0 ),
     'align_id=s'   => \( my $align_id = 1 ),
     'output=s'     => \my $outfile,
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
-$outfile ||= "$db-align-$align_id.xls";
+$outfile ||= "$db-align-$align_id.xlsx";
 
 #----------------------------------------------------------#
 # Init objects and SQL queries
@@ -69,11 +68,12 @@ my $obj = AlignDB->new(
     passwd => $password,
 );
 
+#@type DBI
 my $dbh = $obj->dbh;
 
 # get target, query and reference names via AlignDB methods
 my ( $target_name, $query_name, $ref_name ) = $obj->get_names($align_id);
-my $max_name_length = max( length $target_name, length $query_name, length $ref_name );
+my $max_name_length = List::Util::max( length $target_name, length $query_name, length $ref_name );
 
 if ( !$ref_name or $ref_name eq 'NULL' ) {
     die "$db is not a three-way alignDB\n";
@@ -109,9 +109,11 @@ my $indel_query_sth = $dbh->prepare($indel_query);
 
 # Create workbook and worksheet objects
 my $workbook;
-unless ( $workbook = Spreadsheet::WriteExcel->new($outfile) ) {
+unless ( $workbook = Excel::Writer::XLSX->new($outfile) ) {
     die "Cannot create Excel file $outfile\n";
 }
+
+#@type Excel::Writer::XLSX::Worksheet
 my $sheet = $workbook->add_worksheet;
 
 #----------------------------------------------------------#
@@ -266,7 +268,7 @@ for my $pos ( sort { $a <=> $b } keys %variations ) {
         my $indel_type    = $var->{indel_type};
 
         # how many column does this indel take up
-        my $col_takeup = min( $indel_length, 3 );
+        my $col_takeup = List::Util::min( $indel_length, 3 );
 
         # if exceed the wrap limit, start a new section
         if ( $col_cursor + $col_takeup > $wrap ) {
