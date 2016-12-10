@@ -12,6 +12,9 @@ use DBI;
 use AlignDB::SQL;
 use AlignDB::SQL::Library;
 
+#----------------------------------------------------------#
+# GetOpt section
+#----------------------------------------------------------#
 my $description = <<'EOF';
 Object headers in sql_library are named under the following rules:
     TYEP-NAME-BINDINGs
@@ -875,6 +878,7 @@ sub ns { return AlignDB::SQL->new; }
     print $sql->as_sql if $opt->{verbose};
 }
 
-END {
-    $sql_file->write;
-}
+# Write to disk
+$sql_file->write;
+
+__END__
