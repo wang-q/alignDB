@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
+use Getopt::Long::Descriptive;
 use Config::Tiny;
 use FindBin;
 use YAML::Syck;
@@ -19,66 +19,72 @@ use AlignDB;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# record ARGV and Config
-my $stopwatch = AlignDB::Stopwatch->new(
-    program_name => $0,
-    program_argv => [@ARGV],
-    program_conf => $Config,
-);
+# record command line
+my $stopwatch = AlignDB::Stopwatch->new->record;
 
-=head1 NAME
+my $description = <<'EOF';
+Initiate alignDB
 
-init_alignDB.pl - Initiate alignDB
+    perl init/init_alignDB.pl -d S288CvsRM11_1a
 
-=head1 SYNOPSIS
+Usage: perl %c [options]
+EOF
 
-    perl init_alignDB.pl [options]
-      Options:
-        --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
-        --db        -d  STR     database name
-        --username  -u  STR     username
-        --password  -p  STR     password
-        --sql           STR     init sql filename
-        --chr           STR     init chr_length filename
+(
+    #@type Getopt::Long::Descriptive::Opts
+    my $opt,
 
-    perl init_alignDB.pl -d S288cvsYJM789
+    #@type Getopt::Long::Descriptive::Usage
+    my $usage,
+    )
+    = Getopt::Long::Descriptive::describe_options(
+    $description,
+    [ 'help|h', 'display this message' ],
+    [],
+    ['Database init values'],
+    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf->{database}{server} }, ],
+    [ 'port=i',       'MySQL port',      { default => $conf->{database}{port} }, ],
+    [ 'username|u=s', 'username',        { default => $conf->{database}{username} }, ],
+    [ 'password|p=s', 'password',        { default => $conf->{database}{password} }, ],
+    [ 'db|d=s',       'database name',   { default => $conf->{database}{db} }, ],
+    [],
+    [ 'sql=s', 'init sql filename',        { default => "$FindBin::RealBin/../init.sql" }, ],
+    [ 'chr=s', 'init chr_length filename', { default => $conf->{generate}{file_chr_length} }, ],
+    { show_defaults => 1, }
+    );
 
-=cut
+$usage->die if $opt->{help};
 
-GetOptions(
-    'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server   = $Config->{database}{server} ),
-    'port=i'       => \( my $port     = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db       = $Config->{database}{db} ),
-    'username|u=s' => \( my $username = $Config->{database}{username} ),
-    'password|p=s' => \( my $password = $Config->{database}{password} ),
-    'sql=s'        => \( my $init_sql = "$FindBin::RealBin/../init.sql" ),
-    'chr=s'        => \( my $init_chr = $Config->{generate}{file_chr_length} ),
-) or Getopt::Long::HelpMessage(1);
+# record config
+$stopwatch->record_conf($opt);
+
+# DBI Data Source Name
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $opt->{db}, $opt->{server}, $opt->{port};
 
 #----------------------------------------------------------#
 # call mysql
 #----------------------------------------------------------#
-$stopwatch->start_message("Init $db...");
+$stopwatch->start_message("Init [$opt->{db}]...");
 
 {
     $stopwatch->block_message("Create DB skeleton");
 
+    #@type DBD::mysql
     my $drh = DBI->install_driver("mysql");    # Driver handle object
-    print "# dropdb\n";
-    $drh->func( 'dropdb', $db, $server, $username, $password, 'admin' );
-    print "# createdb\n";
-    $drh->func( 'createdb', $db, $server, $username, $password, 'admin' );
+    print "* dropdb\n";
+    $drh->func( 'dropdb', $opt->{db}, $opt->{server}, $opt->{username}, $opt->{password}, 'admin' );
+    print "* createdb\n";
+    $drh->func( 'createdb', $opt->{db}, $opt->{server}, $opt->{username}, $opt->{password},
+        'admin' );
 
-    print "# init\n";
-    my DBI $dbh = DBI->connect( "dbi:mysql:$db:$server", $username, $password );
-    my $in_fh = path($init_sql)->openr;
-    my $content = do { local $/; <$in_fh> };
-    close $in_fh;
+    #@type DBI
+    my $dbh = DBI->connect( $dsn, $opt->{username}, $opt->{password} )
+        or die $DBI::errstr;
+
+    print "* init\n";
+    my $content = path( $opt->{sql} )->slurp;
     my @statements = grep {/\w/} split /;/, $content;
     for (@statements) {
         $dbh->do($_) or die $dbh->errstr;
@@ -89,16 +95,16 @@ $stopwatch->start_message("Init $db...");
 # chromosome
 #----------------------------------------------------------#
 {
-    $stopwatch->block_message("Use [$init_chr] to Init table chromosome");
+    $stopwatch->block_message("Use [$opt->{chr}] to Init table chromosome");
 
     my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
     );
-    my DBI $dbh = $obj->dbh;
 
-    my DBI $insert_sth = $dbh->prepare(
+    #@type DBI
+    my $sth = $obj->dbh->prepare(
         'INSERT INTO chromosome (
             chr_id, common_name, taxon_id, chr_name, chr_length
         )
@@ -108,25 +114,24 @@ $stopwatch->start_message("Init $db...");
     );
 
     my $csv = Text::CSV_XS->new( { binary => 1, eol => "\n" } );
-    my $csv_fh = path($init_chr)->openr;
+    my $csv_fh = path( $opt->{chr} )->openr;
     $csv->getline($csv_fh);    # bypass title line
 
     while ( my $row = $csv->getline($csv_fh) ) {
-        $insert_sth->execute( $row->[0], $row->[1], $row->[2], $row->[3], );
+        $sth->execute( $row->[0], $row->[1], $row->[2], $row->[3], );
     }
     close $csv_fh;
-    $insert_sth->finish;
+    $sth->finish;
 }
 
 $stopwatch->end_message;
 
-# store program running meta info to database
-# this AlignDB object is just for storing meta info
+# store program's meta info to database
 END {
     AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
     )->add_meta_stopwatch($stopwatch);
 }
 
