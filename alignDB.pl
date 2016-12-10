@@ -14,14 +14,10 @@ use AlignDB::Stopwatch;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/alignDB.ini");
 
 # record ARGV and Config
-my $stopwatch = AlignDB::Stopwatch->new(
-    program_name => $0,
-    program_argv => [@ARGV],
-    program_conf => $Config,
-);
+my $stopwatch = AlignDB::Stopwatch->new;
 
 =head1 NAME
 
@@ -31,18 +27,18 @@ alignDB.pl - Batch process two/multi-way alignDB with/without outgroup
 
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'     => \( my $server       = $Config->{database}{server} ),
-    'port=i'         => \( my $port         = $Config->{database}{port} ),
-    'db|d=s'         => \( my $db_name      = $Config->{database}{db} ),
-    'username|u=s'   => \( my $username     = $Config->{database}{username} ),
-    'password|p=s'   => \( my $password     = $Config->{database}{password} ),
-    'ensembl|e=s'    => \( my $ensembl_db   = $Config->{database}{ensembl} ),
-    'dir_align|da=s' => \( my $dir_align    = $Config->{generate}{dir_align} ),
-    'chr=s'          => \( my $init_chr     = $Config->{generate}{file_chr_length} ),
-    'annotation|a=s' => \( my $file_anno    = $Config->{generate}{file_anno} ),
-    'parallel=i'     => \( my $parallel     = $Config->{generate}{parallel} ),
-    'batch=i'        => \( my $batch_number = $Config->{generate}{batch} ),
-    'length|lt=i'    => \( my $length       = $Config->{generate}{length} ),
+    'server|s=s'     => \( my $server       = $conf->{database}{server} ),
+    'port=i'         => \( my $port         = $conf->{database}{port} ),
+    'db|d=s'         => \( my $db_name      = $conf->{database}{db} ),
+    'username|u=s'   => \( my $username     = $conf->{database}{username} ),
+    'password|p=s'   => \( my $password     = $conf->{database}{password} ),
+    'ensembl|e=s'    => \( my $ensembl_db   = $conf->{database}{ensembl} ),
+    'dir_align|da=s' => \( my $dir_align    = $conf->{generate}{dir_align} ),
+    'chr=s'          => \( my $init_chr     = $conf->{generate}{file_chr_length} ),
+    'annotation|a=s' => \( my $file_anno    = $conf->{generate}{file_anno} ),
+    'parallel=i'     => \( my $parallel     = $conf->{generate}{parallel} ),
+    'batch=i'        => \( my $batch_number = $conf->{generate}{batch} ),
+    'length|lt=i'    => \( my $length       = $conf->{generate}{length} ),
     'outgroup|o'     => \( my $outgroup ),
     'run|r=s'        => \( my $run          = "common" ),
 ) or Getopt::Long::HelpMessage(1);
@@ -65,7 +61,7 @@ elsif ( $run eq 'common' ) {
     @tasks = ( 1 .. 5, 21, 30, 31, 40, 41, 44 );
 }
 elsif ( $run eq 'gc' ) {
-    @tasks = ( 1 .. 5, 10, 21, 30 .. 32, 40 .. 42 );
+    @tasks = ( 1 .. 5, 10, 21, 30, 31, 40 .. 42 );
 }
 elsif ( $run eq 'gene' ) {
     @tasks = ( 1 .. 5, 10, 20, 21, 30 .. 33, 40 .. 44 );
@@ -150,12 +146,6 @@ my $dispatch = {
         . " --parallel $parallel"
         . " --batch $batch_number",
     31 => "perl $FindBin::RealBin/init/update_indel_slippage.pl"
-        . " -s $server"
-        . " --port $port"
-        . " -u $username"
-        . " --password $password"
-        . " -d $db_name",
-    32 => "perl $FindBin::RealBin/init/update_segment.pl"
         . " -s $server"
         . " --port $port"
         . " -u $username"
