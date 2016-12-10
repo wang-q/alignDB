@@ -127,12 +127,10 @@ $stopwatch->start_message("Init [$opt->{db}]...");
 $stopwatch->end_message;
 
 # store program's meta info to database
-END {
-    AlignDB->new(
-        dsn    => $dsn,
-        user   => $opt->{username},
-        passwd => $opt->{password},
-    )->add_meta_stopwatch($stopwatch);
-}
+AlignDB->new(
+    dsn    => $dsn,
+    user   => $opt->{username},
+    passwd => $opt->{password},
+)->add_meta_stopwatch($stopwatch);
 
 __END__
