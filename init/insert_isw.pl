@@ -3,13 +3,13 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
+use Getopt::Long::Descriptive;
 use Config::Tiny;
 use FindBin;
 use YAML::Syck;
 
-use AlignDB::IntSpan;
-use AlignDB::Run;
+use MCE;
+
 use AlignDB::Stopwatch;
 
 use lib "$FindBin::RealBin/../lib";
@@ -19,102 +19,103 @@ use AlignDB::Outgroup;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# record ARGV and Config
-my $stopwatch = AlignDB::Stopwatch->new(
-    program_name => $0,
-    program_argv => [@ARGV],
-    program_conf => $Config,
-);
+# record command line
+my $stopwatch = AlignDB::Stopwatch->new->record;
 
-=head1 NAME
+my $description = <<'EOF';
+Update indel-sliding windows
 
-insert_isw.pl - Update indel-sliding windows
+    perl init/insert_isw.pl -d S288cvsRM11_1a --parallel 2
 
-=head1 SYNOPSIS
+Usage: perl %c [options]
+EOF
 
-    perl insert_isw.pl [options]
-      Options:
-        --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
-        --db        -d  STR     database name
-        --username  -u  STR     username
-        --password  -p  STR     password
-        --outgroup  -o          alignments have an outgroup
-        --parallel      INT     run in parallel mode
-        --batch         INT     number of alignments in one child process
+(
+    #@type Getopt::Long::Descriptive::Opts
+    my $opt,
 
-=cut
+    #@type Getopt::Long::Descriptive::Usage
+    my $usage,
+    )
+    = Getopt::Long::Descriptive::describe_options(
+    $description,
+    [ 'help|h', 'display this message' ],
+    [],
+    ['Database init values'],
+    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf->{database}{server} }, ],
+    [ 'port=i',       'MySQL port',      { default => $conf->{database}{port} }, ],
+    [ 'username|u=s', 'username',        { default => $conf->{database}{username} }, ],
+    [ 'password|p=s', 'password',        { default => $conf->{database}{password} }, ],
+    [ 'db|d=s',       'database name',   { default => $conf->{database}{db} }, ],
+    [],
+    [ 'parallel=i', 'run in parallel mode',       { default => $conf->{generate}{parallel} }, ],
+    [ 'batch=i',    '#alignments in one process', { default => $conf->{generate}{batch} }, ],
+    [ 'outgroup|o', 'alignments have an outgroup', ],
+    { show_defaults => 1, }
+    );
 
-GetOptions(
-    'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server       = $Config->{database}{server} ),
-    'port|P=i'     => \( my $port         = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db           = $Config->{database}{db} ),
-    'username|u=s' => \( my $username     = $Config->{database}{username} ),
-    'password|p=s' => \( my $password     = $Config->{database}{password} ),
-    'outgroup|o'   => \my $outgroup,
-    'parallel=i'   => \( my $parallel     = $Config->{generate}{parallel} ),
-    'batch=i'      => \( my $batch_number = $Config->{generate}{batch} ),
-) or Getopt::Long::HelpMessage(1);
+$usage->die if $opt->{help};
+
+# record config
+$stopwatch->record_conf($opt);
+
+# DBI Data Source Name
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $opt->{db}, $opt->{server}, $opt->{port};
 
 #----------------------------------------------------------#
 # init
 #----------------------------------------------------------#
-$stopwatch->start_message("Update isw-indel relationship of $db...");
+$stopwatch->start_message("Update isw-indel relationship of [$opt->{db}]...");
 
 my @jobs;
 {
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
+    my $alignDB = AlignDB->new(
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
     );
 
-    print "Emptying tables...\n";
-
     # empty tables
-    $obj->empty_table( 'isw', );
+    print "Emptying tables...\n";
+    $alignDB->empty_table( 'isw', );
 
-    my @align_ids = @{ $obj->get_align_ids };
-
-    while ( scalar @align_ids ) {
-        my @batching = splice @align_ids, 0, $batch_number;
-        push @jobs, [@batching];
-    }
+    @jobs = @{ $alignDB->get_align_ids };
 }
 
 #----------------------------------------------------------#
 # worker
 #----------------------------------------------------------#
 my $worker = sub {
-    my $job       = shift;
-    my @align_ids = @$job;
+    my ( $self, $chunk_ref, $chunk_id ) = @_;
+    my @align_ids = @{$chunk_ref};
+    my $wid       = MCE->wid;
 
-    my $obj;
-    if ( !$outgroup ) {
-        $obj = AlignDB->new(
-            mysql  => "$db:$server",
-            user   => $username,
-            passwd => $password,
+    $stopwatch->block_message("Process task [$chunk_id] by worker #$wid");
+
+    my $alignDB;
+    if ( !$opt->{outgroup} ) {
+        $alignDB = AlignDB->new(
+            dsn    => $dsn,
+            user   => $opt->{username},
+            passwd => $opt->{password},
         );
     }
     else {
-        $obj = AlignDB::Outgroup->new(
-            mysql  => "$db:$server",
-            user   => $username,
-            passwd => $password,
+        $alignDB = AlignDB::Outgroup->new(
+            dsn    => $dsn,
+            user   => $opt->{username},
+            passwd => $opt->{password},
         );
     }
 
     # for each alignment
     for my $align_id (@align_ids) {
-        $obj->process_message($align_id);
-        $obj->insert_isw($align_id);
-        $obj->isw_snp_fk($align_id);
-        $obj->update_D_values($align_id) if $outgroup;
+        $alignDB->process_message($align_id);
+        $alignDB->insert_isw($align_id);
+        $alignDB->isw_snp_fk($align_id);
+        $alignDB->update_D_values($align_id) if $opt->{outgroup};
     }
 
     return;
@@ -123,24 +124,18 @@ my $worker = sub {
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
-my $run = AlignDB::Run->new(
-    parallel => $parallel,
-    jobs     => \@jobs,
-    code     => $worker,
-);
-$run->run;
+my $mce = MCE->new( max_workers => $opt->{parallel}, chunk_size => $opt->{batch}, );
+$mce->forchunk( \@jobs, $worker, );
 
 $stopwatch->end_message;
 
-# store program running meta info to database
-# this AlignDB object is just for storing meta info
-END {
-    AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    )->add_meta_stopwatch($stopwatch);
-}
+# store program's meta info to database
+AlignDB->new(
+    dsn    => $dsn,
+    user   => $opt->{username},
+    passwd => $opt->{password},
+)->add_meta_stopwatch($stopwatch);
+
 exit;
 
 __END__
