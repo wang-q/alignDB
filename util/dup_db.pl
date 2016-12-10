@@ -15,7 +15,6 @@ use AlignDB::Stopwatch;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-
 my $conf_db   = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini")->{database};
 my $stopwatch = AlignDB::Stopwatch->new;
 
@@ -40,11 +39,11 @@ EOF
     [ 'help|h', 'display this message' ],
     [],
     ['Database init values'],
-    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf_db->{server} } ],
-    [ 'port=i',       'MySQL port',      { default => $conf_db->{port} } ],
-    [ 'username|u=s', 'username',        { default => $conf_db->{username} } ],
-    [ 'password|p=s', 'password',        { default => $conf_db->{password} } ],
-    [ 'db|d=s',       'database name',   { default => $conf_db->{db} } ],
+    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf_db->{server} }, ],
+    [ 'port=i',       'MySQL port',      { default => $conf_db->{port} }, ],
+    [ 'username|u=s', 'username',        { default => $conf_db->{username} }, ],
+    [ 'password|p=s', 'password',        { default => $conf_db->{password} }, ],
+    [ 'db|d=s',       'database name',   { default => $conf_db->{db} }, ],
     [],
     [ 'file|f=s', 'dump file name', ],
     [ 'goal|g=s', 'dup db name', ],

@@ -17,7 +17,6 @@ use AlignDB::Stopwatch;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-
 my $conf_db = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini")->{database};
 
 my $description = <<'EOF';
@@ -38,16 +37,16 @@ EOF
     [ 'help|h', 'display this message' ],
     [],
     ['Database init values'],
-    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf_db->{server} } ],
-    [ 'port=i',       'MySQL port',      { default => $conf_db->{port} } ],
-    [ 'username|u=s', 'username',        { default => $conf_db->{username} } ],
-    [ 'password|p=s', 'password',        { default => $conf_db->{password} } ],
-    [ 'db|d=s',       'database name',   { default => $conf_db->{db} } ],
+    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf_db->{server} }, ],
+    [ 'port=i',       'MySQL port',      { default => $conf_db->{port} }, ],
+    [ 'username|u=s', 'username',        { default => $conf_db->{username} }, ],
+    [ 'password|p=s', 'password',        { default => $conf_db->{password} }, ],
+    [ 'db|d=s',       'database name',   { default => $conf_db->{db} }, ],
     [],
-    [ 'query|q=s',  'SQL statement', { default => "SELECT * FROM meta" } ],
-    [ 'file|f=s',   'SQL file', ],
-    [ 'output|o=s', 'output filename. [stdout] for screen' ],
-    [ 'type|t=s', 'output style (csv, neat, table and box)', { default => "csv" } ],
+    [ 'query|q=s', 'SQL statement', { default => "SELECT * FROM meta" }, ],
+    [ 'file|f=s',  'SQL file', ],
+    [ 'output|o=s', 'output filename. [stdout] for screen', ],
+    [ 'type|t=s', 'output style (csv, neat, table and box)', { default => "csv" }, ],
     { show_defaults => 1, }
     );
 
@@ -58,8 +57,7 @@ $usage->die if $opt->{help};
 #----------------------------------------------------------#
 
 # Database handler
-my $dsn
-    = "dbi:mysql:" . "database=" . $opt->{db} . ";host=" . $opt->{server} . ";port=" . $opt->{port};
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $opt->{db}, $opt->{server}, $opt->{port};
 
 #@type DBI
 my $dbh = DBI->connect( $dsn, $opt->{username}, $opt->{password} )
