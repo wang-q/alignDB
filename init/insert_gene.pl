@@ -1,19 +1,17 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
+use Getopt::Long::Descriptive;
 use Config::Tiny;
 use FindBin;
 use YAML::Syck;
 
-use List::Util qw(first max maxstr min minstr reduce shuffle sum);
-
 use Bio::EnsEMBL::Registry;
+use MCE;
 
 use AlignDB::IntSpan;
-use AlignDB::Run;
 use AlignDB::Stopwatch;
 
 use FindBin;
@@ -24,95 +22,96 @@ use AlignDB::Position;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# record ARGV and Config
-my $stopwatch = AlignDB::Stopwatch->new(
-    program_name => $0,
-    program_argv => [@ARGV],
-    program_conf => $Config,
-);
+# record command line
+my $stopwatch = AlignDB::Stopwatch->new->record;
 
-=head1 NAME
+my $description = <<'EOF';
+Update Gene-related tables to alignDB
 
-insert_gene.pl - Add annotation info to alignDB
+    perl init/insert_gene.pl -d S288cvsRM11_1a --parallel 2
 
-=head1 SYNOPSIS
+Usage: perl %c [options]
+EOF
 
-    insert_gene.pl [options]
-      Options:
-        --help              brief help message
-        --man               full documentation
-        --server            MySQL server IP/Domain name
-        --db                database name
-        --username          username
-        --password          password
-        --ensembl           ensembl database name
-        --parallel          run in parallel mode
-        --batch             number of alignments process in one child process
+(
+    #@type Getopt::Long::Descriptive::Opts
+    my $opt,
 
-=cut
+    #@type Getopt::Long::Descriptive::Usage
+    my $usage,
+    )
+    = Getopt::Long::Descriptive::describe_options(
+    $description,
+    [ 'help|h', 'display this message' ],
+    [],
+    ['Database init values'],
+    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf->{database}{server} }, ],
+    [ 'port=i',       'MySQL port',      { default => $conf->{database}{port} }, ],
+    [ 'username|u=s', 'username',        { default => $conf->{database}{username} }, ],
+    [ 'password|p=s', 'password',        { default => $conf->{database}{password} }, ],
+    [ 'db|d=s',       'database name',   { default => $conf->{database}{db} }, ],
+    [],
+    [ 'ensembl|e=s', 'ensembl database name', { default => $conf->{database}{ensembl} }, ],
+    [ 'reg_conf=s', 'ensembl.initrc.pm', { default => "$FindBin::RealBin/../ensembl.initrc.pm" }, ],
+    [ 'parallel=i', 'run in parallel mode',       { default => $conf->{generate}{parallel} }, ],
+    [ 'batch=i',    '#alignments in one process', { default => $conf->{generate}{batch} }, ],
+    { show_defaults => 1, }
+    );
 
-GetOptions(
-    'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'   => \( my $server       = $Config->{database}{server} ),
-    'port=i'       => \( my $port         = $Config->{database}{port} ),
-    'db|d=s'       => \( my $db           = $Config->{database}{db} ),
-    'username|u=s' => \( my $username     = $Config->{database}{username} ),
-    'password|p=s' => \( my $password     = $Config->{database}{password} ),
-    'ensembl|e=s'  => \( my $ensembl_db   = $Config->{database}{ensembl} ),
-    'reg_conf=s'   => \( my $reg_conf     = "$FindBin::RealBin/../ensembl.initrc.pm" ),
-    'parallel=i'   => \( my $parallel     = $Config->{generate}{parallel} ),
-    'batch=i'      => \( my $batch_number = $Config->{generate}{batch} ),
-) or Getopt::Long::HelpMessage(1);
+$usage->die if $opt->{help};
+
+# record config
+$stopwatch->record_conf($opt);
+
+# DBI Data Source Name
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $opt->{db}, $opt->{server}, $opt->{port};
 
 #----------------------------------------------------------#
 # init
 #----------------------------------------------------------#
-$stopwatch->start_message("Update Gene-related tables of $db...");
+$stopwatch->start_message("Update Gene-related tables of [$opt->{db}]...");
 
 # Configure the Bio::EnsEMBL::Registry
-Bio::EnsEMBL::Registry->load_all($reg_conf);
+Bio::EnsEMBL::Registry->load_all( $opt->{reg_conf} );
 
 my @jobs;
 {
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
+    my $alignDB = AlignDB->new(
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
     );
 
+    # empty tables: gene, exon
     print "Emptying tables...\n";
+    $alignDB->empty_table( 'gene', 'with_window' );
+    $alignDB->empty_table( 'exon', 'with_window' );
 
-    # empty tables: gene, exon, codingsw
-    $obj->empty_table( 'gene', 'with_window' );
-    $obj->empty_table( 'exon', 'with_window' );
-
-    my @align_ids = @{ $obj->get_align_ids };
-
-    while ( scalar @align_ids ) {
-        my @batching = splice @align_ids, 0, $batch_number;
-        push @jobs, [@batching];
-    }
+    @jobs = @{ $alignDB->get_align_ids };
 }
 
 #----------------------------------------------------------#
 # worker
 #----------------------------------------------------------#
 my $worker = sub {
-    my $job       = shift;
-    my @align_ids = @$job;
+    my ( $self, $chunk_ref, $chunk_id ) = @_;
+    my @align_ids = @{$chunk_ref};
+    my $wid       = MCE->wid;
 
-    my $obj = AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
+    $stopwatch->block_message("Process task [$chunk_id] by worker #$wid");
+
+    my $alignDB = AlignDB->new(
+        dsn    => $dsn,
+        user   => $opt->{username},
+        passwd => $opt->{password},
     );
-    my DBI $dbh          = $obj->dbh;
-    my $pos_obj      = AlignDB::Position->new( dbh => $dbh );
-    my $window_maker = $obj->window_maker;
 
-    my $slice_adaptor = Bio::EnsEMBL::Registry->get_adaptor( $ensembl_db, 'core', 'Slice' );
+    my DBI $dbh = $alignDB->dbh;
+    my $pos_obj = AlignDB::Position->new( dbh => $dbh );
+
+    my $slice_adaptor = Bio::EnsEMBL::Registry->get_adaptor( $opt->{ensembl}, 'core', 'Slice' );
 
     # insert into gene
     my DBI $gene_sth = $dbh->prepare(
@@ -153,7 +152,7 @@ my $worker = sub {
 
     # for each alignment
     for my $align_id (@align_ids) {
-        my $target_info    = $obj->get_target_info($align_id);
+        my $target_info    = $alignDB->get_target_info($align_id);
         my $chr_name       = $target_info->{chr_name};
         my $chr_start      = $target_info->{chr_start};
         my $chr_end        = $target_info->{chr_end};
@@ -161,7 +160,7 @@ my $worker = sub {
 
         next if $chr_name =~ /rand|un|contig|hap|scaf/i;
 
-        $obj->process_message($align_id);
+        $alignDB->process_message($align_id);
 
         $chr_name =~ s/chr0?//i;
 
@@ -222,7 +221,7 @@ my $worker = sub {
 
             # window
             my $cur_gene_window_id
-                = $obj->insert_window( $align_id, $gene_set, $internal_indel_flag );
+                = $alignDB->insert_window( $align_id, $gene_set, $internal_indel_flag );
 
             # Has many transcripts?
             # we use the longest one
@@ -351,7 +350,7 @@ my $worker = sub {
                 $gene_info{is_known},  $gene_multitrans,      $gene_multiexons,
                 $gene_tc_set->runlist, $gene_tl_set->runlist, $gene_info{description}
             );
-            my $gene_id = $obj->last_insert_id;
+            my $gene_id = $alignDB->last_insert_id;
 
             #----------------------------#
             # INSERT INTO exon
@@ -362,7 +361,7 @@ my $worker = sub {
 
                 # window
                 my ($cur_exon_window_id)
-                    = $obj->insert_window( $align_id, $exon_site->{set}, $internal_indel_flag );
+                    = $alignDB->insert_window( $align_id, $exon_site->{set}, $internal_indel_flag );
 
                 $exon_sth->execute(
                     $prev_exon_id,            $cur_exon_window_id,  $gene_id,
@@ -371,7 +370,7 @@ my $worker = sub {
                     $exon_site->{tl_runlist}, $exon_site->{seq},    $exon_site->{peptide}
                 );
 
-                ($prev_exon_id) = $obj->last_insert_id;
+                ($prev_exon_id) = $alignDB->last_insert_id;
             }
         }
     }
@@ -382,24 +381,18 @@ my $worker = sub {
 #----------------------------------------------------------#
 # start update
 #----------------------------------------------------------#
-my $run = AlignDB::Run->new(
-    parallel => $parallel,
-    jobs     => \@jobs,
-    code     => $worker,
-);
-$run->run;
+my $mce = MCE->new( max_workers => $opt->{parallel}, chunk_size => $opt->{batch}, );
+$mce->forchunk( \@jobs, $worker, );
 
 $stopwatch->end_message;
 
-# store program running meta info to database
-# this AlignDB object is just for storing meta info
-END {
-    AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    )->add_meta_stopwatch($stopwatch);
-}
+# store program's meta info to database
+AlignDB->new(
+    dsn    => $dsn,
+    user   => $opt->{username},
+    passwd => $opt->{password},
+)->add_meta_stopwatch($stopwatch);
+
 exit;
 
 __END__
