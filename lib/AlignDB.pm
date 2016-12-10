@@ -16,59 +16,57 @@ use AlignDB::Window;
 use App::RL::Common;
 use App::Fasops::Common;
 
-has 'mysql'  => ( is => 'ro', isa => 'Str' );    # e.g. 'alignDB:202.119.43.5'
-has 'server' => ( is => 'ro', isa => 'Str' );    # e.g. '202.119.43.5'
-has 'db'     => ( is => 'ro', isa => 'Str' );    # e.g. 'alignDB'
-has 'user'   => ( is => 'ro', isa => 'Str' );    # database username
-has 'passwd' => ( is => 'ro', isa => 'Str' );    # database password
+# dbi:mysql:database=alignDB;host=localhost;port=3306
+has 'dsn' => ( is => 'ro', isa => 'Str', );
 
-has 'dbh' => ( is => 'ro', isa => 'Object' );    # store database handle here
-has 'window_maker' => ( is => 'ro', isa => 'Object' );   # sliding windows maker
-has 'threshold' => ( is => 'ro', isa => 'Int', default => sub {5_000} );
+has 'server' => ( is => 'ro', isa => 'Str', );                          # 202.119.43.5 or localhost
+has 'db'     => ( is => 'ro', isa => 'Str', );                          # alignDB
+has 'port'   => ( is => 'ro', isa => 'Int', default => sub {3306}, );
 
-has 'caching_id' => ( is => 'ro', isa => 'Int' );        # caching seqs
-has 'caching_seqs' =>
-    ( is => 'ro', isa => 'ArrayRef[Str]', default => sub { [] } );
+has 'user'   => ( is => 'ro', isa => 'Str', );                          # username
+has 'passwd' => ( is => 'ro', isa => 'Str', );                          # password
+
+has 'dbh'          => ( is => 'ro', isa => 'Object', );                 # store database handle here
+has 'window_maker' => ( is => 'ro', isa => 'Object', );                 # sliding windows maker
+
+# threshold of lengthes of alignments
+has 'threshold' => ( is => 'ro', isa => 'Int', default => sub {5_000}, );
+
+# caching seqs
+has 'caching_id' => ( is => 'ro', isa => 'Int' );
+has 'caching_seqs' => ( is => 'ro', isa => 'ArrayRef[Str]', default => sub { [] }, );
 
 # target info
-has 'caching_info' => ( is => 'ro', isa => 'HashRef', default => sub { {} } );
+has 'caching_info' => ( is => 'ro', isa => 'HashRef', default => sub { {} }, );
 
 # don't connect mysql
-has 'mocking' => ( is => 'ro', isa => 'Bool', default => 0 );
+has 'mocking' => ( is => 'ro', isa => 'Bool', default => sub {0}, );
 
 sub BUILD {
     my $self = shift;
 
     # Connect to the alignDB database
-    if ( $self->mysql ) {
-        my ( $server, $db ) = split ':', $self->mysql;
-        $self->{server} ||= $server;
-        $self->{db}     ||= $db;
+    if ( $self->dsn ) {    # ok
     }
-    elsif ( $self->server and $self->db ) {
-        $self->{mysql} = $self->db . ':' . $self->server;
+    elsif ( $self->server and $self->db and $self->port ) {
+        $self->{dsn} = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $self->db, $self->server,
+            $self->port;
     }
-    elsif ( $self->mocking ) {
-
-        # do nothing
+    elsif ( $self->mocking ) {    # do nothing
     }
     else {
-        Carp::confess "You should provide either mysql or db:server\n";
+        Carp::confess "You should provide either 'dsn' or 'db:server[:port]'\n";
     }
 
-    my $mysql  = $self->mysql;
-    my $user   = $self->user;
-    my $passwd = $self->passwd;
-
-    my DBI $dbh = {};
+    #@type DBI
+    my $dbh = {};
     if ( !$self->mocking ) {
-        $dbh = DBI->connect( "dbi:mysql:$mysql", $user, $passwd )
-            or confess "Cannot connect to MySQL database at $mysql";
+        $dbh = DBI->connect( $self->dsn, $self->user, $self->passwd )
+            or Carp::confess $DBI::errstr;
     }
     $self->{dbh} = $dbh;
 
-    my $window_maker = AlignDB::Window->new;
-    $self->{window_maker} = $window_maker;
+    $self->{window_maker} = AlignDB::Window->new;
 
     return;
 }
@@ -77,8 +75,8 @@ sub _insert_align {
     my $self     = shift;
     my $seq_refs = shift;
 
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
+    #@type DBI
+    my $sth = $self->dbh->prepare(
         q{
         INSERT INTO align (
             align_id, align_length,
@@ -115,8 +113,8 @@ sub get_chr_id {
     my $common_name = shift;
     my $chr_name    = shift;
 
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
+    #@type DBI
+    my $sth = $self->dbh->prepare(
         q{
         SELECT c.chr_id
         FROM chromosome c
@@ -156,9 +154,8 @@ sub _insert_seq {
 
     my $chr_id = $self->get_chr_id( $seq_info->{name}, $seq_info->{chr} );
 
-    # Get database handle
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
+    #@type DBI
+    my $sth = $self->dbh->prepare(
         q{
         INSERT INTO sequence (
             seq_id, align_id, chr_id,
@@ -176,12 +173,10 @@ sub _insert_seq {
     );
 
     $sth->execute(
-        $align_id,             $chr_id,
-        $seq_info->{seq_role}, $seq_info->{seq_position},
-        $seq_info->{name},     $seq_info->{chr},
-        $seq_info->{start},    $seq_info->{end},
-        $seq_info->{strand},   $seq_info->{length},
-        $seq_info->{gc},       $seq_info->{runlist},
+        $align_id,                 $chr_id,           $seq_info->{seq_role},
+        $seq_info->{seq_position}, $seq_info->{name}, $seq_info->{chr},
+        $seq_info->{start},        $seq_info->{end},  $seq_info->{strand},
+        $seq_info->{length},       $seq_info->{gc},   $seq_info->{runlist},
         $seq_info->{seq},
     );
 }
@@ -204,9 +199,8 @@ sub _insert_set_and_sequence {
         for my $i ( 0 .. $seq_number - 1 ) {
             $info_refs->[$i]{gc}
                 = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[$i] ] );
-            my $seq_indel_set
-                = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
-            my $seq_set = $align_set->diff($seq_indel_set);
+            my $seq_indel_set = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
+            my $seq_set       = $align_set->diff($seq_indel_set);
             $info_refs->[$i]{runlist} = $seq_set->runlist;
             $info_refs->[$i]{length}  = $seq_set->size;
 
@@ -365,7 +359,8 @@ sub _insert_indel {
         }
     );
 
-    my AlignDB::IntSpan( $align_set, undef, $indel_set )
+    #@type AlignDB::IntSpan
+    my ( $align_set, undef, $indel_set )
         = @{ $self->get_sets($align_id) };
 
     my $seq_refs  = $self->get_seqs($align_id);
@@ -473,10 +468,9 @@ sub _insert_indel {
     my $prev_indel_id = 0;
     for (@indel_sites) {
         $sth->execute(
-            $prev_indel_id, $align_id,         $_->{start},
-            $_->{end},      $_->{length},      $_->{seq},
-            $_->{all_seqs}, $_->{left_extand}, $_->{right_extand},
-            $_->{gc},       $_->{freq},        $_->{occured},
+            $prev_indel_id,     $align_id, $_->{start},    $_->{end},
+            $_->{length},       $_->{seq}, $_->{all_seqs}, $_->{left_extand},
+            $_->{right_extand}, $_->{gc},  $_->{freq},     $_->{occured},
             $_->{type},
         );
         ($prev_indel_id) = $self->last_insert_id;
@@ -586,11 +580,9 @@ sub _insert_snp {
 
     if ( keys %{$snp_site} ) {
         $sth->execute_array(
-            {},                       $bulk_info->{align_id},
-            $bulk_info->{pos},        $bulk_info->{target_base},
-            $bulk_info->{query_base}, $bulk_info->{all_bases},
-            $bulk_info->{mutant_to},  $bulk_info->{snp_freq},
-            $bulk_info->{snp_occured},
+            {},                        $bulk_info->{align_id},   $bulk_info->{pos},
+            $bulk_info->{target_base}, $bulk_info->{query_base}, $bulk_info->{all_bases},
+            $bulk_info->{mutant_to},   $bulk_info->{snp_freq},   $bulk_info->{snp_occured},
         );
     }
     $sth->finish;
@@ -685,8 +677,7 @@ sub insert_isw {
 
         my AlignDB::Window $window_maker = $self->window_maker;
 
-        my @isws = $window_maker->interval_window( $align_set, $interval_start,
-            $interval_end );
+        my @isws = $window_maker->interval_window( $align_set, $interval_start, $interval_end );
 
         for my $isw (@isws) {
             my AlignDB::IntSpan $isw_set = $isw->{set};
@@ -706,10 +697,9 @@ sub insert_isw {
             }
             my $isw_stat = $self->get_slice_stat( $align_id, $isw_set );
             $sth->execute(
-                $indel_id,       $prev_indel_id, $align_id,
-                $isw_indel_id,   $isw_start,     $isw_end,
-                $isw_length,     $isw->{type},   $isw->{distance},
-                $isw->{density}, $isw_stat->[3], $isw_stat->[7],
+                $indel_id,        $prev_indel_id,  $align_id,      $isw_indel_id,
+                $isw_start,       $isw_end,        $isw_length,    $isw->{type},
+                $isw->{distance}, $isw->{density}, $isw_stat->[3], $isw_stat->[7],
                 $isw_stat->[8],
             );
         }
@@ -773,7 +763,6 @@ sub isw_snp_fk {
     return;
 }
 
-
 sub get_seqs {
     my $self     = shift;
     my $align_id = shift;
@@ -792,8 +781,7 @@ sub get_seqs {
     }
 
     if ($flag) {
-        my DBI $dbh        = $self->dbh;
-        my DBI $target_sth = $dbh->prepare(
+        my DBI $target_sth = $self->dbh->prepare(
             q{
             SELECT s.seq_seq
             FROM sequence s
@@ -803,7 +791,7 @@ sub get_seqs {
             }
         );
 
-        my DBI $query_sth = $dbh->prepare(
+        my DBI $query_sth = $self->dbh->prepare(
             q{
             SELECT s.seq_seq
             FROM sequence s
@@ -836,8 +824,7 @@ sub get_ref_seq {
     my $self     = shift;
     my $align_id = shift;
 
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
+    my DBI $sth = $self->dbh->prepare(
         q{
         SELECT s.seq_seq
         FROM sequence s
@@ -857,9 +844,7 @@ sub get_names {
     my $self = shift;
     my $align_id = shift || 1;
 
-    my DBI $dbh = $self->dbh;
-
-    my DBI $sth = $dbh->prepare(
+    my DBI $sth = $self->dbh->prepare(
         q{
         SELECT s.common_name
         FROM sequence s
@@ -883,9 +868,7 @@ sub get_sets {
     my $self     = shift;
     my $align_id = shift;
 
-    my DBI $dbh = $self->dbh;
-
-    my DBI $sth = $dbh->prepare(
+    my DBI $sth = $self->dbh->prepare(
         q{
         SELECT align_length, align_comparable_runlist, align_indel_runlist
         FROM align 
@@ -893,8 +876,7 @@ sub get_sets {
         }
     );
     $sth->execute($align_id);
-    my ( $align_length, $comparable_runlist, $indel_runlist )
-        = $sth->fetchrow_array;
+    my ( $align_length, $comparable_runlist, $indel_runlist ) = $sth->fetchrow_array;
     $sth->finish;
 
     my $align_set      = AlignDB::IntSpan->new("1-$align_length");
@@ -909,8 +891,7 @@ sub get_chr_legnth_of {
     my $common_name = shift;
 
     my %length_of = ();
-    my DBI $dbh   = $self->dbh;
-    my DBI $std   = $dbh->prepare(
+    my DBI $std = $self->dbh->prepare(
         q{
         SELECT * FROM chromosome WHERE common_name = ?
         }
@@ -947,10 +928,9 @@ sub get_slice_indel {
     my $set_indel = $set->span_size - 1;
 
     # real indels in this alignment slice
-    my $seqs_ref = $self->get_seqs($align_id);
-    my @seq_slices = map { $set->substr_span($_) } @$seqs_ref;
-    my @seq_indel_sets
-        = map { App::Fasops::Common::indel_intspan($_) } @seq_slices;
+    my $seqs_ref       = $self->get_seqs($align_id);
+    my @seq_slices     = map { $set->substr_span($_) } @$seqs_ref;
+    my @seq_indel_sets = map { App::Fasops::Common::indel_intspan($_) } @seq_slices;
 
     my $indel_set = AlignDB::IntSpan->new;
     for (@seq_indel_sets) {
@@ -975,8 +955,7 @@ sub insert_window {
     my AlignDB::IntSpan $window_set = shift;
     my $internal_indel              = shift;
 
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
+    my DBI $sth = $self->dbh->prepare(
         q{
         INSERT INTO window (
             window_id, align_id, window_start, window_end, window_length,
@@ -1002,8 +981,7 @@ sub insert_window {
     # $set_indel is equal to $window_span - 1
     my $window_indel;
     if ($internal_indel) {
-        my ( $set_indel, $real_indel )
-            = $self->get_slice_indel( $align_id, $window_set );
+        my ( $set_indel, $real_indel ) = $self->get_slice_indel( $align_id, $window_set );
         $window_indel = $set_indel + $real_indel;
     }
     else {
@@ -1015,10 +993,9 @@ sub insert_window {
 
     my $window_stat = $self->get_slice_stat( $align_id, $window_set );
     $sth->execute(
-        $align_id,         $window_start,     $window_end,
-        $window_length,    $window_runlist,   $window_stat->[1],
-        $window_stat->[2], $window_stat->[3], $window_indel,
-        $window_stat->[7], $window_stat->[8],
+        $align_id,       $window_start,     $window_end,       $window_length,
+        $window_runlist, $window_stat->[1], $window_stat->[2], $window_stat->[3],
+        $window_indel,   $window_stat->[7], $window_stat->[8],
     );
 
     return $self->last_insert_id;
@@ -1027,8 +1004,7 @@ sub insert_window {
 sub last_insert_id {
     my $self = shift;
 
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
+    my DBI $sth = $self->dbh->prepare(
         q{
         SELECT LAST_INSERT_ID()
         }
@@ -1042,9 +1018,8 @@ sub last_insert_id {
 sub execute_sql {
     my ( $self, $sql_query, $bind_value ) = @_;
 
-    # init
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare($sql_query);
+    #@type DBI
+    my $sth = $self->dbh->prepare($sql_query);
 
     # bind value
     unless ( defined $bind_value ) {
@@ -1078,7 +1053,7 @@ sub empty_table {
     }
     else {
 
-# In MySQL 4.1, you must use the alias (if one was given) when referring to a table name
+        # In MySQL 4.1, you must use the alias (if one was given) when referring to a table name
         $dbh->do(
             qq{
             DELETE t,
@@ -1117,9 +1092,7 @@ sub create_column {
         # table names are quoted by ` (back-quotes) which is the
         #   quote_identifier
         my $table_name = "`$table`";
-        unless ( List::MoreUtils::PP::any { $_ =~ /$table_name/i }
-            @table_names )
-        {
+        unless ( List::MoreUtils::PP::any { $_ =~ /$table_name/i } @table_names ) {
             print "Table $table does not exist\n";
             return;
         }
@@ -1169,9 +1142,7 @@ sub check_column {
         # table names are quoted by ` (back-quotes) which is the
         #   quote_identifier
         my $table_name = "`$table`";
-        unless ( List::MoreUtils::PP::any { $_ =~ /$table_name/i }
-            @table_names )
-        {
+        unless ( List::MoreUtils::PP::any { $_ =~ /$table_name/i } @table_names ) {
             print " " x 4, "Table $table does not exist\n";
             return;
         }
@@ -1234,8 +1205,7 @@ sub get_align_ids_of_chr_name {
     my $self     = shift;
     my $chr_name = shift;
 
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
+    my DBI $sth = $self->dbh->prepare(
         q{
         SELECT a.align_id
         FROM sequence s
@@ -1264,8 +1234,7 @@ sub get_target_info {
     my $caching_info = $self->caching_info;
 
     if ( !exists $caching_info->{$align_id} ) {
-        my DBI $dbh = $self->dbh;
-        my DBI $sth = $dbh->prepare(
+        my DBI $sth = $self->dbh->prepare(
             q{
             SELECT c.common_name,
                    c.chr_id,
@@ -1301,8 +1270,7 @@ sub get_queries_info {
     my $self     = shift;
     my $align_id = shift;
 
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
+    my DBI $sth = $self->dbh->prepare(
         q{
         SELECT s.common_name,
                s.chr_id,
@@ -1336,8 +1304,7 @@ sub get_queries_info {
 sub get_seq_count {
     my $self = shift;
 
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
+    my DBI $sth = $self->dbh->prepare(
         q{
         SELECT DISTINCT COUNT(s.seq_id) + 1
         FROM  sequence s
@@ -1361,14 +1328,10 @@ sub get_seq_count {
 sub get_max_indel_freq {
     my $self = shift;
 
-    my DBI $dbh = $self->dbh;
-
-    my DBI $sth = $dbh->prepare(
+    my DBI $sth = $self->dbh->prepare(
         q{
-        SELECT
-            MAX(indel_freq)
-        FROM
-            indel
+        SELECT  MAX(indel_freq)
+        FROM    indel
         }
     );
 
@@ -1387,8 +1350,7 @@ sub find_align {
     my $start    = shift;
     my $end      = shift || $start;
 
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
+    my DBI $sth = $self->dbh->prepare(
         q{
         SELECT s.align_id
         FROM sequence s
@@ -1427,8 +1389,7 @@ sub add_meta {
     my $self      = shift;
     my $meta_hash = shift;
 
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
+    my DBI $sth = $self->dbh->prepare(
         q{
         INSERT INTO meta ( meta_id, meta_key, meta_value )
         VALUES ( NULL, ?, ? )
@@ -1448,12 +1409,11 @@ sub add_meta_stopwatch {
     my $self = shift;
     my AlignDB::Stopwatch $stopwatch = shift;
 
-    my DBI $dbh = $self->dbh;
-    my $ary_ref = $dbh->selectcol_arrayref(
+    my $ary_ref = $self->dbh->selectcol_arrayref(
         q{
-        SELECT meta_value
-        from meta
-        where meta_key = 'uuid'
+        SELECT  meta_value
+        from    meta
+        where   meta_key = 'uuid'
         }
     );
 
@@ -1478,22 +1438,3 @@ sub add_meta_stopwatch {
 1;
 
 __END__
-
-=head1 NAME
-
-AlignDB - convert alignment filea to an indel-concentrated RDBMS
-
-=head1 SYNOPSIS
-
-    use AlignDB;
-    my $obj = AlignDB->new(
-        mysql          => "$db:$server",
-        user           => $username,
-        passwd         => $password,
-    );
-
-=head1 AUTHOR
-
-B<Qiang Wang>
-
-=cut
