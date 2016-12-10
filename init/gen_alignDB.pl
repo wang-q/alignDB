@@ -3,15 +3,15 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
+use Getopt::Long::Descriptive;
 use Config::Tiny;
 use FindBin;
 use YAML::Syck;
 
 use File::Find::Rule;
 use Path::Tiny;
+use MCE;
 
-use AlignDB::Run;
 use AlignDB::Stopwatch;
 
 use lib "$FindBin::RealBin/../lib";
@@ -21,92 +21,94 @@ use AlignDB::Outgroup;
 #----------------------------------------------------------#
 # GetOpt section
 #----------------------------------------------------------#
-my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
-# record ARGV and Config
-my $stopwatch = AlignDB::Stopwatch->new(
-    program_name => $0,
-    program_argv => [@ARGV],
-    program_conf => $Config,
-);
+# record command line
+my $stopwatch = AlignDB::Stopwatch->new->record;
 
-=head1 NAME
+my $description = <<'EOF';
+Generate alignDB from .fas files
 
-gen_alignDB.pl - Generate alignDB from .fas files
+    perl init/gen_alignDB.pl -d S288cvsRM11_1a --lt 5000 --parallel 2
 
-=head1 SYNOPSIS
+Usage: perl %c [options]
+EOF
 
-    perl gen_alignDB.pl [options]
-      Options:
-        --help      -?          brief help message
-        --server    -s  STR     MySQL server IP/Domain name
-        --port      -P  INT     MySQL server port
-        --db        -d  STR     database name
-        --username  -u  STR     username
-        --password  -p  STR     password
-        --dir_align -da STR     .fas files' directory
-        --outgroup  -o          alignments have an outgroup
-        --length    -l  INT     threshold of alignment length
-        --parallel      INT     run in parallel mode
+(
+    #@type Getopt::Long::Descriptive::Opts
+    my $opt,
 
-=cut
+    #@type Getopt::Long::Descriptive::Usage
+    my $usage,
+    )
+    = Getopt::Long::Descriptive::describe_options(
+    $description,
+    [ 'help|h', 'display this message' ],
+    [],
+    ['Database init values'],
+    [ 'server|s=s',   'MySQL IP/Domain', { default => $conf->{database}{server} }, ],
+    [ 'port=i',       'MySQL port',      { default => $conf->{database}{port} }, ],
+    [ 'username|u=s', 'username',        { default => $conf->{database}{username} }, ],
+    [ 'password|p=s', 'password',        { default => $conf->{database}{password} }, ],
+    [ 'db|d=s',       'database name',   { default => $conf->{database}{db} }, ],
+    [],
+    [ 'dir_align|da=s', 'dir contains .fas files', { default => $conf->{generate}{dir_align} }, ],
+    [ 'length|lt=i',    'threshold of lengths',    { default => $conf->{generate}{length} }, ],
+    [ 'parallel=i',     'run in parallel mode',    { default => $conf->{generate}{parallel} }, ],
+    [ 'outgroup|o', 'alignments have an outgroup', ],
+    { show_defaults => 1, }
+    );
 
-GetOptions(
-    'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'     => \( my $server           = $Config->{database}{server} ),
-    'port=i'         => \( my $port             = $Config->{database}{port} ),
-    'db|d=s'         => \( my $db               = $Config->{database}{db} ),
-    'username|u=s'   => \( my $username         = $Config->{database}{username} ),
-    'password|p=s'   => \( my $password         = $Config->{database}{password} ),
-    'dir_align|da=s' => \( my $dir_align        = $Config->{generate}{dir_align} ),
-    'length|lt|l=i'  => \( my $length_threshold = $Config->{generate}{length_threshold} ),
-    'parallel=i'     => \( my $parallel         = $Config->{generate}{parallel} ),
-    'outgroup|o'     => \( my $outgroup ),
-) or Getopt::Long::HelpMessage(1);
+$usage->die if $opt->{help};
+
+# record config
+$stopwatch->record_conf($opt);
+
+# DBI Data Source Name
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $opt->{db}, $opt->{server}, $opt->{port};
 
 #----------------------------------------------------------#
 # Search for all files and push their paths to @files
 #----------------------------------------------------------#
-$dir_align = path($dir_align)->stringify;
-my @files = sort File::Find::Rule->file->name('*.fas')->in($dir_align);
+$opt->{dir_align} = path( $opt->{dir_align} )->stringify;
+my @files = sort File::Find::Rule->file->name('*.fas')->in( $opt->{dir_align} );
 printf "\n----Total .fas Files: %4s----\n\n", scalar @files;
 if ( scalar @files == 0 ) {
-    @files = sort File::Find::Rule->file->name('*.fas.gz')->in($dir_align);
+    @files = sort File::Find::Rule->file->name('*.fas.gz')->in( $opt->{dir_align} );
     printf "\n----Total .fas.gz Files: %4s----\n\n", scalar @files;
 }
-
-my @jobs = map { [$_] } @files;
 
 #----------------------------------------------------------#
 # worker
 #----------------------------------------------------------#
 my $worker = sub {
-    my $job = shift;
-    my $opt = shift;
+    my ( $self, $chunk_ref, $chunk_id ) = @_;
+    my $infile = $chunk_ref->[0];
 
-    my @infiles = @$job;
+    my $wid = MCE->wid;
 
-    my $obj;
-    if ( !$outgroup ) {
-        $obj = AlignDB->new(
-            mysql  => "$db:$server",
-            user   => $username,
-            passwd => $password,
+    my $inner = AlignDB::Stopwatch->new;
+    $inner->block_message("Process task [$chunk_id] by worker #$wid\n    File [$infile]...");
+
+    my $alignDB;
+    if ( !$opt->{outgroup} ) {
+        $alignDB = AlignDB->new(
+            dsn    => $dsn,
+            user   => $opt->{username},
+            passwd => $opt->{password},
         );
     }
     else {
-        $obj = AlignDB::Outgroup->new(
-            mysql  => "$db:$server",
-            user   => $username,
-            passwd => $password,
+        $alignDB = AlignDB::Outgroup->new(
+            dsn    => $dsn,
+            user   => $opt->{username},
+            passwd => $opt->{password},
         );
     }
 
-    for my $infile (@infiles) {
-        print "process " . path($infile)->basename . "\n";
-        $obj->parse_fas_file( $infile, $opt );
-        print "Done.\n\n";
-    }
+    $alignDB->parse_fas_file( $infile, { threshold => $opt->{length}, } );
+
+    $inner->block_message( "[$infile] has been processed.", "duration" );
 
     return;
 };
@@ -114,25 +116,17 @@ my $worker = sub {
 #----------------------------------------------------------#
 # start insert
 #----------------------------------------------------------#
-my $run = AlignDB::Run->new(
-    parallel => $parallel,
-    jobs     => \@jobs,
-    code     => $worker,
-    opt      => { threshold => $length_threshold, },
-);
-$run->run;
+my $mce = MCE->new( chunk_size => 1, max_workers => $opt->{parallel}, );
+$mce->foreach( [ sort @files ], $worker );    # foreach implies chunk_size => 1
 
 $stopwatch->end_message( "All files have been processed.", "duration" );
 
-# store program running meta info to database
-# this AlignDB object is just for storing meta info
-END {
-    AlignDB->new(
-        mysql  => "$db:$server",
-        user   => $username,
-        passwd => $password,
-    )->add_meta_stopwatch($stopwatch);
-}
+# store program's meta info to database
+AlignDB->new(
+    dsn    => $dsn,
+    user   => $opt->{username},
+    passwd => $opt->{password},
+)->add_meta_stopwatch($stopwatch);
 
 exit;
 
