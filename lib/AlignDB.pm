@@ -1422,11 +1422,10 @@ sub add_meta_stopwatch {
         $self->add_meta(
             {   '------'      => '------',
                 a_operation   => $stopwatch->operation,
-                b_start_time  => $stopwatch->start_time2,
-                c_store_time  => $stopwatch->time_now,
-                d_duration    => $stopwatch->duration_now,
-                e_cmd_line    => $stopwatch->cmd_line,
-                f_init_config => $stopwatch->init_config,
+                b_start_time  => scalar localtime $stopwatch->start_time,
+                c_duration    => $stopwatch->duration_now,
+                d_cmd_line    => $stopwatch->cmd_line,
+                e_init_config => $stopwatch->init_config,
                 uuid          => $uuid,
             }
         );

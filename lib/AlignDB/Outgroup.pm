@@ -449,7 +449,7 @@ sub update_D_values {
             }
         }
 
-        if ( !( $group_i->empty and $group_n->empty ) ) {
+        if ( !( $group_i->is_empty and $group_n->is_empty ) ) {
             ( $d_indel, $d_noindel, $d_bii, $d_bnn, $d_complex )
                 = _two_group_D( $group_i, $group_n, $ref_seq, \@sequences,
                 $window_length );
