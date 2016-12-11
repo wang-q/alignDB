@@ -14,7 +14,6 @@ use Math::Combinatorics;
 use MCE;
 
 use AlignDB::IntSpan;
-use AlignDB::Run;
 use AlignDB::Stopwatch;
 use App::Fasops::Common;
 
@@ -56,9 +55,11 @@ EOF
     [ 'password|p=s', 'password',        { default => $conf->{database}{password} }, ],
     [ 'db|d=s',       'database name',   { default => $conf->{database}{db} }, ],
     [],
-    [ 'parallel=i', 'run in parallel mode',       { default => $conf->{generate}{parallel} }, ],
-    [ 'batch=i',    '#alignments in one process', { default => $conf->{generate}{batch} }, ],
-    [ 'outgroup|o', 'alignments have an outgroup', ],
+    [ 'insert_segment=s', 'LD in segments',       { default => 1 }, ],
+    [ 'insert_ofg=s',     'LD in ofgs',           { default => 1 }, ],
+    [ 'near=i',           'near range',           { default => 100 }, ],
+    [ 'parallel=i',       'run in parallel mode', { default => $conf->{generate}{parallel} }, ],
+    [ 'batch=i', '#alignments in one process', { default => $conf->{generate}{batch} }, ],
     { show_defaults => 1, }
     );
 
@@ -69,14 +70,6 @@ $stopwatch->record_conf($opt);
 
 # DBI Data Source Name
 my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $opt->{db}, $opt->{server}, $opt->{port};
-
-GetOptions(
-    'insert_segment=s'  => \( my $insert_segment = 1 ),
-    'insert_ofg=s'      => \( my $insert_ofg     = 1 ),
-    'near|near_range=i' => \( my $near_range     = 100 ),
-    'parallel=i'        => \( my $parallel       = $conf->{generate}{parallel} ),
-    'batch=i'           => \( my $batch_number   = $conf->{generate}{batch} ),
-) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # init
@@ -114,12 +107,12 @@ my @jobs;
     $alignDB->create_column( "snp", "snp_r2_ni",         "DOUBLE" );
     $alignDB->create_column( "snp", "snp_dprime_abs_ni", "DOUBLE" );
 
-    if ($insert_segment) {
+    if ( $opt->{insert_segment} ) {
         $alignDB->create_column( "segment", "segment_r2_s",         "DOUBLE" );
         $alignDB->create_column( "segment", "segment_dprime_abs_s", "DOUBLE" );
     }
 
-    if ($insert_ofg) {
+    if ( $opt->{insert_ofg} ) {
         $alignDB->create_column( "ofgsw", "ofgsw_r2_s",         "DOUBLE" );
         $alignDB->create_column( "ofgsw", "ofgsw_dprime_abs_s", "DOUBLE" );
     }
@@ -254,7 +247,7 @@ my $worker = sub {
             for my $cur_snp ( @{$all_snps} ) {
                 my $snp_id          = $cur_snp->[0];
                 my $snp_pos         = $cur_snp->[3];
-                my $near_snps       = find_near_snps( $all_snps, $snp_pos, $near_range );
+                my $near_snps       = find_near_snps( $all_snps, $snp_pos, $opt->{near_range} );
                 my $near_snp_number = scalar @{$near_snps};
                 my ( $r2_s, $dprime_abs_s ) = combo_ld($near_snps);
 
@@ -262,7 +255,7 @@ my $worker = sub {
             }
         }
 
-        if ($insert_segment) {
+        if ( $opt->{insert_segment} ) {
 
             # snps in segment
             my $all_segments = $dbh->selectall_arrayref(
@@ -286,7 +279,7 @@ my $worker = sub {
             }
         }
 
-        if ($insert_ofg) {
+        if ( $opt->{insert_ofg} ) {
 
             # snps in ofgsw
             my $all_ofgsws = $dbh->selectall_arrayref(
@@ -339,7 +332,7 @@ my $worker = sub {
                 $update_indel_snp_sth->execute( $r, $dprime, $snp_id );
 
                 my ( $r2_i, $dprime_abs_i, $r2_ni, $dprime_abs_ni, );
-                my $near_snps = find_near_snps( $all_snps, $snp_pos, $near_range );
+                my $near_snps = find_near_snps( $all_snps, $snp_pos, $opt->{near_range} );
                 my $near_snp_number = scalar @{$near_snps};
                 if ( $near_snp_number > 1 ) {
                     my @near_snps_i
