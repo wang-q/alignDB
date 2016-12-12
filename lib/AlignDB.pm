@@ -189,14 +189,14 @@ sub _insert_set_and_sequence {
 
     my DBI $dbh = $self->dbh;
 
-    my $seq_number   = scalar @{$seq_refs};
+    my $seq_count    = scalar @{$seq_refs};
     my $align_length = length $seq_refs->[0];
 
     {    # sets
         my $align_set      = AlignDB::IntSpan->new("1-$align_length");
         my $indel_set      = AlignDB::IntSpan->new;
         my $comparable_set = AlignDB::IntSpan->new;
-        for my $i ( 0 .. $seq_number - 1 ) {
+        for my $i ( 0 .. $seq_count - 1 ) {
             $info_refs->[$i]{gc}
                 = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[$i] ] );
             my $seq_indel_set = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
@@ -228,7 +228,7 @@ sub _insert_set_and_sequence {
     }
 
     {    # and queries
-        for my $i ( 1 .. $seq_number - 1 ) {
+        for my $i ( 1 .. $seq_count - 1 ) {
             $info_refs->[$i]{seq_role}     = "Q";
             $info_refs->[$i]{seq_position} = $i;
             $self->_insert_seq( $align_id, $info_refs->[$i] );
@@ -501,12 +501,12 @@ sub _insert_snp {
         }
     );
 
-    my $seq_refs  = $self->get_seqs($align_id);
-    my $seq_count = scalar @{$seq_refs};
-    my $length    = length $seq_refs->[0];
+    my $seq_refs     = $self->get_seqs($align_id);
+    my $seq_count    = scalar @{$seq_refs};
+    my $align_length = length $seq_refs->[0];
 
     my $snp_site = {};
-    for my $pos ( 1 .. $length ) {
+    for my $pos ( 1 .. $align_length ) {
         my @bases;
         for my $i ( 0 .. $seq_count - 1 ) {
             my $base = substr( $seq_refs->[$i], $pos - 1, 1 );
