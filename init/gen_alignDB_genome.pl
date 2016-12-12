@@ -102,8 +102,8 @@ my $worker = sub {
 
     my $chr_name = path($infile)->basename( '.fasta', '.fas', '.fa' );
 
-    my $seq_of = App::Fasops::Common::read_fasta($infile);
-    my $chr_seq = $seq_of->{ ( keys %{$seq_of} )[0] };
+    my $seq_of     = App::Fasops::Common::read_fasta($infile);
+    my $chr_seq    = $seq_of->{ ( keys %{$seq_of} )[0] };
     my $chr_length = length $chr_seq;
 
     my $ambiguous_set = AlignDB::IntSpan->new;
