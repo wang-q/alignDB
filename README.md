@@ -220,8 +220,9 @@ perl ~/Scripts/alignDB/alignDB.pl \
     --da ~/data/alignment/example/scer/Scer_n2_Spar_refined \
     --ensembl yeast \
     --outgroup \
-    --lt 1000 --parallel 4 --batch 10 \
+    --lt 5000 --parallel 2 \
     --run all
+
 ```
 
 ## Slicing

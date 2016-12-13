@@ -386,7 +386,7 @@ sub _insert_indel {
             map { [ $_, tr/-/-/ ] } @uniq_indel_seqs;
 
         if ( scalar @uniq_indel_seqs < 2 ) {
-            warn "no indel!\n";
+            Carp::confess "no indel!\n";
             next;
         }
         elsif ( scalar @uniq_indel_seqs > 2 ) {
