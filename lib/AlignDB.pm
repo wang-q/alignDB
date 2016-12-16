@@ -359,7 +359,7 @@ sub _insert_indel {
         }
     );
 
-    my $seq_refs = $self->get_seqs($align_id);
+    my $seq_refs   = $self->get_seqs($align_id);
     my $indel_refs = App::Fasops::Common::get_indels($seq_refs);
 
     for my $site ( @{$indel_refs} ) {
@@ -409,8 +409,8 @@ sub _insert_snp {
         q{
         INSERT DELAYED INTO snp (
             snp_id, align_id, snp_pos,
-            target_base, query_base, all_bases,
-            mutant_to, snp_freq, snp_occured
+            snp_target_base, snp_query_base, snp_all_bases,
+            snp_mutant_to, snp_freq, snp_occured
         )
         VALUES (
             NULL, ?, ?,
@@ -426,31 +426,33 @@ sub _insert_snp {
     # %{$snp_site} keys are snp positions
     # Bulk inserting only trigger 1 commit in MySQL
     my $bulk_info = {
-        align_id    => [],
-        snp_pos     => [],
-        target_base => [],
-        query_base  => [],
-        all_bases   => [],
-        mutant_to   => [],
-        snp_freq    => [],
-        snp_occured => [],
+        align_id        => [],
+        snp_pos         => [],
+        snp_target_base => [],
+        snp_query_base  => [],
+        snp_all_bases   => [],
+        snp_mutant_to   => [],
+        snp_freq        => [],
+        snp_occured     => [],
     };
     for my $site ( @{$snp_refs} ) {
-        push @{ $bulk_info->{align_id} },    $align_id;
-        push @{ $bulk_info->{snp_pos} },     $site->{snp_pos};
-        push @{ $bulk_info->{target_base} }, $site->{target_base};
-        push @{ $bulk_info->{query_base} },  $site->{query_base};
-        push @{ $bulk_info->{all_bases} },   $site->{all_bases};
-        push @{ $bulk_info->{mutant_to} },   $site->{mutant_to};
-        push @{ $bulk_info->{snp_freq} },    $site->{snp_freq};
-        push @{ $bulk_info->{snp_occured} }, $site->{snp_occured};
+        push @{ $bulk_info->{align_id} },        $align_id;
+        push @{ $bulk_info->{snp_pos} },         $site->{snp_pos};
+        push @{ $bulk_info->{snp_target_base} }, $site->{snp_target_base};
+        push @{ $bulk_info->{snp_query_base} },  $site->{snp_query_base};
+        push @{ $bulk_info->{snp_all_bases} },   $site->{snp_all_bases};
+        push @{ $bulk_info->{snp_mutant_to} },   $site->{snp_mutant_to};
+        push @{ $bulk_info->{snp_freq} },        $site->{snp_freq};
+        push @{ $bulk_info->{snp_occured} },     $site->{snp_occured};
     }
 
     if ( scalar @{$snp_refs} ) {
         $sth->execute_array(
-            {},                        $bulk_info->{align_id},   $bulk_info->{snp_pos},
-            $bulk_info->{target_base}, $bulk_info->{query_base}, $bulk_info->{all_bases},
-            $bulk_info->{mutant_to},   $bulk_info->{snp_freq},   $bulk_info->{snp_occured},
+            {},                           $bulk_info->{align_id},
+            $bulk_info->{snp_pos},        $bulk_info->{snp_target_base},
+            $bulk_info->{snp_query_base}, $bulk_info->{snp_all_bases},
+            $bulk_info->{snp_mutant_to},  $bulk_info->{snp_freq},
+            $bulk_info->{snp_occured},
         );
     }
     $sth->finish;

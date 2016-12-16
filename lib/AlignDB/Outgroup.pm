@@ -120,7 +120,7 @@ sub _polarize_indel {
     my DBI $update_indel_sth = $dbh->prepare(
         q{
         UPDATE indel
-        SET indel_ref_seq = ?,
+        SET indel_outgroup_seq = ?,
             indel_type = ?,
             indel_occured = ?,
             indel_freq = ?
@@ -241,7 +241,7 @@ sub _polarize_snp {
 
     my DBI $snp_info_sth = $dbh->prepare(
         q{
-        SELECT snp_id, snp_pos, all_bases
+        SELECT snp_id, snp_pos, snp_all_bases
         FROM snp
         WHERE 1 = 1
         AND align_id = ?
@@ -250,8 +250,8 @@ sub _polarize_snp {
     my DBI $update_snp_sth = $dbh->prepare(
         q{
         UPDATE snp
-        SET ref_base = ?,
-            mutant_to = ?,
+        SET snp_outgroup_base = ?,
+            snp_mutant_to = ?,
             snp_freq = ?,
             snp_occured = ?
         WHERE snp_id = ?
@@ -299,7 +299,7 @@ sub _polarize_snp {
             $snp_occured = 'unknown';
         }
 
-        # ref_base is not equal to any nts
+        # snp_outgroup_base is not equal to any nts
         if ( $snp_occured eq ( '1' x ( length $snp_occured ) ) ) {
             $snp_freq    = -1;
             $mutant_to   = 'Complex';
@@ -333,7 +333,7 @@ sub update_D_values {
 
     my DBI $read_sth = $dbh->prepare(
         q{
-        SELECT s.ref_base, s.all_bases, w.isw_length, i.indel_occured
+        SELECT s.snp_outgroup_base, s.snp_all_bases, w.isw_length, i.indel_occured
         FROM snp s, isw w, indel i
         WHERE 1 = 1
         AND s.isw_id = w.isw_id
@@ -385,9 +385,9 @@ sub update_D_values {
         $read_sth->execute($isw_id);
         while ( my @row = $read_sth->fetchrow_array ) {
             $window_length = $row[2];
-            my $ref_base = $row[0];
+            my $snp_outgroup_base = $row[0];
 
-            $ref_seq .= $ref_base;
+            $ref_seq .= $snp_outgroup_base;
             my @snp_base    = split '', $row[1];
             my @indel_occur = split '', $row[3];
             my $align_cnt   = scalar @indel_occur;
@@ -409,34 +409,34 @@ sub update_D_values {
             my @group_n = $group_n->elements;
             my @i_snp   = List::MoreUtils::PP::uniq( @snp_base[@group_i] );
             my @n_snp   = List::MoreUtils::PP::uniq( @snp_base[@group_n] );
-            if ( @i_snp == 1 and $i_snp[0] ne $ref_base ) {
+            if ( @i_snp == 1 and $i_snp[0] ne $snp_outgroup_base ) {
 
                 # removes all mutations on the deepest indel branches
                 # add bases with recombination events
                 if ( List::MoreUtils::PP::any { $_ eq $i_snp[0] } @n_snp ) {
-                    $ref_seq3 .= $ref_base;
+                    $ref_seq3 .= $snp_outgroup_base;
                     for my $i ( 0 .. $align_cnt - 1 ) {
                         $sequences3[$i] .= $snp_base[$i];
                     }
                 }
             }
-            elsif ( @n_snp == 1 and $n_snp[0] ne $ref_base ) {
+            elsif ( @n_snp == 1 and $n_snp[0] ne $snp_outgroup_base ) {
 
                 # removes all mutations on the deepest noindel branches
                 # add bases with recombination events
                 if ( List::MoreUtils::PP::any { $_ eq $n_snp[0] } @i_snp ) {
-                    $ref_seq3 .= $ref_base;
+                    $ref_seq3 .= $snp_outgroup_base;
                     for my $i ( 0 .. $align_cnt - 1 ) {
                         $sequences3[$i] .= $snp_base[$i];
                     }
                 }
             }
             else {
-                $ref_seq2 .= $ref_base;
+                $ref_seq2 .= $snp_outgroup_base;
                 for my $i ( 0 .. $align_cnt - 1 ) {
                     $sequences2[$i] .= $snp_base[$i];
                 }
-                $ref_seq3 .= $ref_base;
+                $ref_seq3 .= $snp_outgroup_base;
                 for my $i ( 0 .. $align_cnt - 1 ) {
                     $sequences3[$i] .= $snp_base[$i];
                 }
@@ -485,9 +485,9 @@ sub _D_indels {
 sub _two_group_D {
     my AlignDB::IntSpan $group1 = shift;
     my AlignDB::IntSpan $group2 = shift;
-    my $ref_seq                 = shift;    # string
+    my $outgroup_seq            = shift;    # string
     my $sequences               = shift;    # array_ref of strings
-    my $window_length = shift || length $ref_seq;
+    my $window_length = shift || length $outgroup_seq;
 
     my ( $d_1, $d_2, $d_b11, $d_b22, $d_complex ) = (0) x 5;
     my ( @d1, @d2, @db11, @db22, @dc );
@@ -502,7 +502,7 @@ sub _two_group_D {
     for my $g1_side_seq (@g1_seqs) {
         for my $g2_side_seq (@g2_seqs) {
             my ( $di, $dn, $dc )
-                = _D_indels( [ $g1_side_seq, $g2_side_seq, $ref_seq, ] );
+                = _D_indels( [ $g1_side_seq, $g2_side_seq, $outgroup_seq, ] );
             push @d1, $di;
             push @d2, $dn;
             push @dc, $dc;
@@ -516,7 +516,7 @@ sub _two_group_D {
         my $j = $i + 1;
         while ( $g1_seqs[$j] ) {
             my ( $d1, $d2, $dc )
-                = _D_indels( [ $g1_seqs[$i], $g1_seqs[$j], $ref_seq, ] );
+                = _D_indels( [ $g1_seqs[$i], $g1_seqs[$j], $outgroup_seq, ] );
             push @db11, ( $d1 + $d2 );
             push @dc, $dc;
             $j++;
@@ -528,7 +528,7 @@ sub _two_group_D {
         my $j = $i + 1;
         while ( $g2_seqs[$j] ) {
             my ( $d1, $d2, $dc )
-                = _D_indels( [ $g2_seqs[$i], $g2_seqs[$j], $ref_seq, ] );
+                = _D_indels( [ $g2_seqs[$i], $g2_seqs[$j], $outgroup_seq, ] );
             push @db22, ( $d1 + $d2 );
             push @dc, $dc;
             $j++;
