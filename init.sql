@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 4.0                                    */
-/* Created on:     12/10/16 23:59:34                            */
+/* Created on:     12/16/16 11:55:06                            */
 /*==============================================================*/
 
 /*==============================================================*/
@@ -192,7 +192,7 @@ create table indel
    indel_length                   int,
    indel_seq                      text,
    indel_all_seqs                 text,
-   indel_ref_seq                  text,
+   indel_outgroup_seq             text,
    left_extand                    int,
    right_extand                   int,
    indel_gc                       double,
@@ -409,11 +409,11 @@ create table snp
    isw_id                         int,
    align_id                       int                            not null,
    snp_pos                        int,
-   target_base                    char(1),
-   query_base                     char(1),
-   all_bases                      text,
-   ref_base                       char(1),
-   mutant_to                      char(64),
+   snp_target_base                char(1),
+   snp_query_base                 char(1),
+   snp_all_bases                  text,
+   snp_outgroup_base              char(1),
+   snp_mutant_to                  char(64),
    snp_freq                       int,
    snp_occured                    text,
    snp_coding                     double,
