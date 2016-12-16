@@ -437,7 +437,7 @@ my $snp_list = sub {
     $toxlsx->column(0);
 
     my @names = qw{snp_id common_name chr_name snp_pos isw_distance
-        mutant_to snp_freq snp_occured
+        snp_mutant_to snp_freq snp_occured
         snp_coding snp_repeats snp_cpg};
     {    # header
         $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
@@ -447,7 +447,7 @@ my $snp_list = sub {
         my $sql_query = q{
             SELECT 
                 s.align_id, s.snp_id, se.common_name, se.chr_name, s.snp_pos,
-                i.isw_distance, s.mutant_to, s.snp_freq, s.snp_occured,
+                i.isw_distance, s.snp_mutant_to, s.snp_freq, s.snp_occured,
                 s.snp_coding, s.snp_repeats, s.snp_cpg
             FROM
                 snp s
@@ -497,7 +497,7 @@ my $snp_codon_list = sub {
     {    # contents
         my $sql_query = q{
             SELECT 
-                s.align_id, s.snp_id, se.chr_name, s.snp_pos, s.mutant_to,
+                s.align_id, s.snp_id, se.chr_name, s.snp_pos, s.snp_mutant_to,
                 s.snp_freq, s.snp_occured, s.snp_codon_pos, s.snp_syn, s.snp_nsy
             FROM
                 snp s

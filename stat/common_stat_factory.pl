@@ -1813,9 +1813,9 @@ my $distance_snp = sub {
 
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-distance_snp');
 
-        $thaw_sql->add_where( 'isw_distance'                    => \'>= -1' );
-        $thaw_sql->add_where( 'isw_distance'                    => \'<= 15' );
-        $thaw_sql->add_where( 'CONCAT(target_base, query_base)' => $bases );
+        $thaw_sql->add_where( 'isw_distance'                            => \'>= -1' );
+        $thaw_sql->add_where( 'isw_distance'                            => \'<= 15' );
+        $thaw_sql->add_where( 'CONCAT(snp_target_base, snp_query_base)' => $bases );
 
         my $data = $toxlsx->write_sql(
             $sheet,
@@ -1886,9 +1886,9 @@ my $density_snp = sub {
 
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-distance_snp');
 
-        $thaw_sql->add_where( 'isw_density'                     => \'>= -1' );
-        $thaw_sql->add_where( 'isw_density'                     => \'<= 30' );
-        $thaw_sql->add_where( 'CONCAT(target_base, query_base)' => $bases );
+        $thaw_sql->add_where( 'isw_density'                             => \'>= -1' );
+        $thaw_sql->add_where( 'isw_density'                             => \'<= 30' );
+        $thaw_sql->add_where( 'CONCAT(snp_target_base, snp_query_base)' => $bases );
 
         my $data = $toxlsx->write_sql(
             $sheet,
@@ -1954,9 +1954,9 @@ my $distance_tri_trv = sub {
 
         my AlignDB::SQL $thaw_sql = $sql_file->retrieve('common-distance_snp');
 
-        $thaw_sql->add_where( 'isw_distance'                    => \'>= -1' );
-        $thaw_sql->add_where( 'isw_distance'                    => \'<= 15' );
-        $thaw_sql->add_where( 'CONCAT(target_base, query_base)' => $_ );
+        $thaw_sql->add_where( 'isw_distance'                            => \'>= -1' );
+        $thaw_sql->add_where( 'isw_distance'                            => \'<= 15' );
+        $thaw_sql->add_where( 'CONCAT(snp_target_base, snp_query_base)' => $_ );
 
         my $data = $toxlsx->write_sql(
             $sheet,
