@@ -13,7 +13,7 @@ use AlignDB::Stopwatch;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use AlignDB;
+use AlignDB::Common;
 use AlignDB::WriteExcel;
 
 #----------------------------------------------------------#

@@ -18,7 +18,7 @@ use AlignDB::Stopwatch;
 use App::Fasops::Common;
 
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
+use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -94,7 +94,7 @@ my $worker = sub {
     my $basename = path($infile)->basename;
     $inner->block_message("Process task [$chunk_id] by worker #$wid. [$basename]");
 
-    my $alignDB = AlignDB->new(
+    my $alignDB = AlignDB::Common->new(
         dsn    => $dsn,
         user   => $opt->{username},
         passwd => $opt->{password},
@@ -183,7 +183,7 @@ $mce->foreach( [ sort @files ], $worker );    # foreach also implies chunk_size 
 $stopwatch->end_message( "All files have been processed.", "duration" );
 
 # store program's meta info to database
-AlignDB->new(
+AlignDB::Common->new(
     dsn    => $dsn,
     user   => $opt->{username},
     passwd => $opt->{password},

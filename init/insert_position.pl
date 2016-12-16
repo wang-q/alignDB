@@ -20,7 +20,7 @@ use AlignDB::Window;
 use App::RL::Common;
 
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
+use AlignDB::Common;
 use AlignDB::Position;
 
 #----------------------------------------------------------#
@@ -98,7 +98,7 @@ GetOptions(
 $stopwatch->start_message("Update data of $db...");
 
 {
-    my $obj = AlignDB->new(
+    my $obj = AlignDB::Common->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
@@ -162,7 +162,7 @@ my $worker_insert = sub {
 
     my @data = @{$chunk_ref};
 
-    my $obj = AlignDB->new(
+    my $obj = AlignDB::Common->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
@@ -248,7 +248,7 @@ my $worker_sw = sub {
 
     my @ofg_ids = @{$chunk_ref};
 
-    my $obj = AlignDB->new(
+    my $obj = AlignDB::Common->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
@@ -373,7 +373,7 @@ $stopwatch->end_message;
 # store program running meta info to database
 # this AlignDB object is just for storing meta info
 END {
-    AlignDB->new(
+    AlignDB::Common->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,

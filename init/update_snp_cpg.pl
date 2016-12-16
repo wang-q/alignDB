@@ -11,7 +11,7 @@ use AlignDB::Stopwatch;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use AlignDB;
+use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -48,7 +48,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Update CpG info of $db...");
 
-my $obj = AlignDB->new(
+my $obj = AlignDB::Common->new(
     mysql  => "$db:$server",
     user   => $username,
     passwd => $password,
@@ -61,6 +61,7 @@ if ( !$ref_name or $ref_name eq 'NULL' ) {
 }
 
 # Database handler
+#@type DBI
 my $dbh = $obj->dbh;
 
 #----------------------------------------------------------#
@@ -75,6 +76,8 @@ my $dbh = $obj->dbh;
         FROM snp
         WHERE align_id = ?
     };
+
+    #@type DBI
     my $snp_query_sth = $dbh->prepare($snp_query);
 
     # update snp table in the new feature column
@@ -83,6 +86,8 @@ my $dbh = $obj->dbh;
         SET snp_cpg = ?
         WHERE snp_id = ?
     };
+
+    #@type DBI
     my $snp_update_sth = $dbh->prepare($snp_update);
 
     for my $align_id (@align_ids) {
@@ -117,7 +122,7 @@ my $dbh = $obj->dbh;
     $snp_update_sth->finish;
     $snp_query_sth->finish;
 
-    {    # update NULL value of snp_cpg to 0
+    {                                               # update NULL value of snp_cpg to 0
         my $snp_null = q{
             UPDATE snp
             SET snp_cpg = 0
@@ -141,6 +146,8 @@ my $dbh = $obj->dbh;
         AND s.snp_cpg = 1
         GROUP BY i.isw_id
     };
+
+    #@type DBI
     my $isw_sth = $dbh->prepare($isw_query);
 
     # update isw table in the new feature column
@@ -149,6 +156,8 @@ my $dbh = $obj->dbh;
         SET isw_cpg_pi = ?
         WHERE isw_id = ?
     };
+
+    #@type DBI
     my $isw_update_sth = $dbh->prepare($isw_update);
 
     # for isw
@@ -167,8 +176,6 @@ my $dbh = $obj->dbh;
         $obj->execute_sql($isw_null);
     }
 };
-
-}
 
 $stopwatch->end_message;
 exit;

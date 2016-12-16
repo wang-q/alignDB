@@ -14,7 +14,7 @@ use Text::CSV_XS;
 use AlignDB::Stopwatch;
 
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
+use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -97,7 +97,7 @@ $stopwatch->start_message("Init [$opt->{db}]...");
 {
     $stopwatch->block_message("Use [$opt->{chr}] to Init table chromosome");
 
-    my $obj = AlignDB->new(
+    my $obj = AlignDB::Common->new(
         dsn    => $dsn,
         user   => $opt->{username},
         passwd => $opt->{password},
@@ -127,7 +127,7 @@ $stopwatch->start_message("Init [$opt->{db}]...");
 $stopwatch->end_message;
 
 # store program's meta info to database
-AlignDB->new(
+AlignDB::Common->new(
     dsn    => $dsn,
     user   => $opt->{username},
     passwd => $opt->{password},

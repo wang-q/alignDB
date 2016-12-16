@@ -18,7 +18,7 @@ use Proc::Background;
 use List::MoreUtils qw(uniq);
 
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
+use AlignDB::Common;
 
 has 'app'       => ( is => 'ro', isa => 'Object', );
 has 'win'       => ( is => 'ro', isa => 'Object', );
@@ -171,8 +171,7 @@ sub exec_cmd {
 sub read_config {
     my $self = shift;
 
-    my $Config = Config::Tiny->new;
-    $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
+    my $Config = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
     # parallel init values
     $self->set_value( "entry_parallel", $Config->{generate}{parallel} );
@@ -339,7 +338,7 @@ sub dialog_choose_db {
 
     if ( defined $db_name ) {
 
-        my $obj = AlignDB->new(
+        my $obj = AlignDB::Common->new(
             mysql  => "$db_name:$server",
             user   => $username,
             passwd => $password,
@@ -383,11 +382,13 @@ sub dialog_db_meta {
     # retrieve data for $model
     {
         # get dbh
-        my $obj = AlignDB->new(
+        my $obj = AlignDB::Common->new(
             mysql  => "$db_name:$server",
             user   => $username,
             passwd => $password,
         );
+
+        #@type DBI
         my $dbh = $obj->dbh;
 
         # query table meta
@@ -397,6 +398,7 @@ sub dialog_db_meta {
             WHERE meta_key LIKE "a_%"
                OR meta_key LIKE "c_%"
         };
+        #@type DBI
         my $sth = $dbh->prepare($sql);
         $sth->execute;
 
@@ -585,7 +587,7 @@ sub on_button_test_clicked {
     my $username = $self->get_value("entry_username");
     my $password = $self->get_value("entry_password");
 
-    my $dbh = AlignDB->new(
+    my $dbh = AlignDB::Common->new(
         mysql  => "mysql:$server",
         user   => $username,
         passwd => $password,

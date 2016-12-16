@@ -17,7 +17,7 @@ use App::Fasops::Common;
 
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
+use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -73,7 +73,7 @@ $stopwatch->start_message("Update dnds info of [$opt->{db}]...");
 
 my @jobs;
 {
-    my $alignDB = AlignDB->new(
+    my $alignDB = AlignDB::Common->new(
         dsn    => $dsn,
         user   => $opt->{username},
         passwd => $opt->{password},
@@ -110,7 +110,7 @@ my $worker = sub {
 
     $stopwatch->block_message("Process task [$chunk_id] by worker #$wid");
 
-    my $alignDB = AlignDB->new(
+    my $alignDB = AlignDB::Common->new(
         dsn    => $dsn,
         user   => $opt->{username},
         passwd => $opt->{password},
@@ -124,37 +124,37 @@ my $worker = sub {
     # select all exons which contain the snp
     my DBI $exon_sth = $dbh->prepare(
         q{
-    SELECT  e.exon_id, e.exon_strand,
-            e.exon_tl_runlist, e.exon_seq, e.exon_peptide
-    FROM exon e, window w
-    WHERE e.window_id = w.window_id
-    AND w.align_id = ?
-    AND e.exon_tl_runlist != '-'
-    }
+        SELECT  e.exon_id, e.exon_strand,
+                e.exon_tl_runlist, e.exon_seq, e.exon_peptide
+        FROM exon e, window w
+        WHERE e.window_id = w.window_id
+        AND w.align_id = ?
+        AND e.exon_tl_runlist != '-'
+        }
     );
 
     # select all coding snps in this alignment
     my DBI $snp_sth = $dbh->prepare(
         q{
-    SELECT  s.snp_id, s.snp_pos
-    FROM snp s
-    WHERE s.align_id = ?
-    AND s.snp_coding = 1
-    }
+        SELECT  s.snp_id, s.snp_pos
+        FROM snp s
+        WHERE s.align_id = ?
+        AND s.snp_coding = 1
+        }
     );
 
     # update snp table in the new feature column
     my DBI $snp_update_sth = $dbh->prepare(
         q{
-    UPDATE snp
-    SET exon_id = ?,
-        snp_codon_pos = ?,
-        snp_codons = ?,
-        snp_syn = ?,
-        snp_nsy = ?,
-        snp_stop = ?
-    WHERE snp_id = ?
-    }
+        UPDATE snp
+        SET exon_id = ?,
+            snp_codon_pos = ?,
+            snp_codons = ?,
+            snp_syn = ?,
+            snp_nsy = ?,
+            snp_stop = ?
+        WHERE snp_id = ?
+        }
     );
 
 ALIGN: for my $align_id (@align_ids) {
@@ -369,7 +369,7 @@ $mce->forchunk( \@jobs, $worker, );
 {
     $stopwatch->block_message("Processing isw_syn, nsy, stop\n");
 
-    my $alignDB = AlignDB->new(
+    my $alignDB = AlignDB::Common->new(
         dsn    => $dsn,
         user   => $opt->{username},
         passwd => $opt->{password},
@@ -416,7 +416,7 @@ $mce->forchunk( \@jobs, $worker, );
 {
     $stopwatch->block_message("Processing gene_syn, nsy, stop\n");
 
-    my $alignDB = AlignDB->new(
+    my $alignDB = AlignDB::Common->new(
         dsn    => $dsn,
         user   => $opt->{username},
         passwd => $opt->{password},
@@ -463,7 +463,7 @@ $mce->forchunk( \@jobs, $worker, );
 $stopwatch->end_message;
 
 # store program's meta info to database
-AlignDB->new(
+AlignDB::Common->new(
     dsn    => $dsn,
     user   => $opt->{username},
     passwd => $opt->{password},

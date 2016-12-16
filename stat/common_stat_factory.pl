@@ -16,7 +16,7 @@ use AlignDB::SQL::Library;
 use AlignDB::ToXLSX;
 
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
+use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -96,7 +96,7 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my $alignDB = AlignDB->new(
+my $alignDB = AlignDB::Common->new(
     dsn    => $dsn,
     user   => $username,
     passwd => $password,

@@ -15,7 +15,7 @@ use Path::Tiny;
 use AlignDB::Stopwatch;
 
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
+use AlignDB::Common;
 use AlignDB::Outgroup;
 
 #----------------------------------------------------------#
@@ -94,7 +94,7 @@ my $worker = sub {
 
     my $alignDB;
     if ( !$opt->{outgroup} ) {
-        $alignDB = AlignDB->new(
+        $alignDB = AlignDB::Common->new(
             dsn    => $dsn,
             user   => $opt->{username},
             passwd => $opt->{password},
@@ -124,7 +124,7 @@ $mce->foreach( [ sort @files ], $worker );    # foreach also implies chunk_size 
 $stopwatch->end_message( "All files have been processed.", "duration" );
 
 # store program's meta info to database
-AlignDB->new(
+AlignDB::Common->new(
     dsn    => $dsn,
     user   => $opt->{username},
     passwd => $opt->{password},

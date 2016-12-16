@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long qw(HelpMessage);
+use Getopt::Long;
 use Config::Tiny;
 use FindBin;
 use YAML qw(Dump Load DumpFile LoadFile);
@@ -17,7 +17,7 @@ use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
 
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
+use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -51,7 +51,7 @@ my $vicinal_size = $Config->{gc}{vicinal_size};
 my $fall_range   = $Config->{gc}{fall_range};
 
 GetOptions(
-    'help|?' => sub { HelpMessage(0) },
+    'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server           = $Config->{database}{server} ),
     'port|P=i'     => \( my $port             = $Config->{database}{port} ),
     'db|d=s'       => \( my $db               = $Config->{database}{db} ),
@@ -62,7 +62,7 @@ GetOptions(
     'width=i'      => \( my $width            = 800 ),
     'size=i'       => \( my $wave_window_size = $Config->{gc}{wave_window_size} ),
     'step=i'       => \( my $wave_window_step = $Config->{gc}{wave_window_step} ),
-) or HelpMessage(1);
+) or Getopt::Long::HelpMessage(1);
 
 #----------------------------------------------------------#
 # Init objects and SQL queries
@@ -70,7 +70,7 @@ GetOptions(
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Drawing picture for $db...");
 
-my $obj = AlignDB->new(
+my $obj = AlignDB::Common->new(
     mysql  => "$db:$server",
     user   => $username,
     passwd => $password,
@@ -86,6 +86,7 @@ for my $key ( sort keys %opt ) {
     $obj->$key( $opt{$key} );
 }
 
+#@type DBI
 my $dbh = $obj->dbh;
 
 #----------------------------------------------------------#
@@ -114,12 +115,15 @@ my ( undef, $comparable_set, $indel_set ) = @{ $obj->get_sets($align_id) };
 my ( $coding_set, $repeat_set );
 {
     print "Prepare align\n";
-    my $query = q{
+
+    #@type DBI
+    my $sth = $dbh->prepare(
+        q{
         SELECT align_coding_runlist, align_repeats_runlist
         FROM align
         WHERE align_id = ?
-    };
-    my $sth = $dbh->prepare($query);
+        }
+    );
 
     $sth->execute($align_id);
     my ( $coding_runlist, $repeat_runlist ) = $sth->fetchrow_array;
@@ -132,14 +136,17 @@ my $isw_pi_seg = [];
 my ( $isw_pi_max, $isw_pi_min ) = ( 0, 0 );
 {
     print "Prepare isw\n";
-    my $isw_query = q{
+
+    #@type DBI
+    my $isw_query_sth = $dbh->prepare(
+        q{
         SELECT i.isw_start, i.isw_end, i.isw_pi
         FROM isw i
         INNER JOIN indel ON i.indel_id = indel.indel_id
         WHERE indel.align_id = ?
         ORDER BY i.isw_start
-    };
-    my $isw_query_sth = $dbh->prepare($isw_query);
+        }
+    );
 
     $isw_query_sth->execute($align_id);
     while ( my @row = $isw_query_sth->fetchrow_array ) {

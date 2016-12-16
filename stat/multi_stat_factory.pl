@@ -18,7 +18,7 @@ use AlignDB::SQL::Library;
 use AlignDB::ToXLSX;
 
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
+use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -99,7 +99,7 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my $aligndb_obj = AlignDB->new(
+my $aligndb_obj = AlignDB::Common->new(
     dsn    => $dsn,
     user   => $username,
     passwd => $password,
@@ -792,6 +792,7 @@ my $indel_length_insdel = sub {
         }
 
         {    # content
+                #@type DBI
             my $sth = $dbh->prepare( $thaw_sql->as_sql );
             $sth->execute( $level->[1] );
 

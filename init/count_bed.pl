@@ -18,7 +18,7 @@ use AlignDB::Stopwatch;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use AlignDB;
+use AlignDB::Common;
 use AlignDB::Position;
 
 #----------------------------------------------------------#
@@ -81,7 +81,7 @@ $stopwatch->start_message("Update data of $db...");
 
 my @jobs;
 {
-    my $obj = AlignDB->new(
+    my $obj = AlignDB::Common->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
@@ -145,7 +145,7 @@ my $worker = sub {
     my $job       = shift;
     my @align_ids = @$job;
 
-    my $obj = AlignDB->new(
+    my $obj = AlignDB::Common->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
@@ -243,7 +243,7 @@ my $run = AlignDB::Run->new(
 $run->run;
 
 {    # set null to 0
-    my $obj = AlignDB->new(
+    my $obj = AlignDB::Common->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,
@@ -265,7 +265,7 @@ $stopwatch->end_message;
 # store program running meta info to database
 # this AlignDB object is just for storing meta info
 END {
-    AlignDB->new(
+    AlignDB::Common->new(
         mysql  => "$db:$server",
         user   => $username,
         passwd => $password,

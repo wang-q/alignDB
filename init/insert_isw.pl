@@ -13,7 +13,7 @@ use MCE;
 use AlignDB::Stopwatch;
 
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
+use AlignDB::Common;
 use AlignDB::Outgroup;
 
 #----------------------------------------------------------#
@@ -71,7 +71,7 @@ $stopwatch->start_message("Update isw-indel relationship of [$opt->{db}]...");
 
 my @jobs;
 {
-    my $alignDB = AlignDB->new(
+    my $alignDB = AlignDB::Common->new(
         dsn    => $dsn,
         user   => $opt->{username},
         passwd => $opt->{password},
@@ -96,7 +96,7 @@ my $worker = sub {
 
     my $alignDB;
     if ( !$opt->{outgroup} ) {
-        $alignDB = AlignDB->new(
+        $alignDB = AlignDB::Common->new(
             dsn    => $dsn,
             user   => $opt->{username},
             passwd => $opt->{password},
@@ -130,7 +130,7 @@ $mce->forchunk( \@jobs, $worker, );
 $stopwatch->end_message;
 
 # store program's meta info to database
-AlignDB->new(
+AlignDB::Common->new(
     dsn    => $dsn,
     user   => $opt->{username},
     passwd => $opt->{password},

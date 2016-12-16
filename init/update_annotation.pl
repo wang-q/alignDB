@@ -19,7 +19,7 @@ use AlignDB::Stopwatch;
 use App::RL::Common;
 
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
+use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -86,7 +86,7 @@ my $repeat_set_of = App::RL::Common::runlist2set( $yml->{repeat} );
 
 my @jobs;
 {
-    my $alignDB = AlignDB->new(
+    my $alignDB = AlignDB::Common->new(
         dsn    => $dsn,
         user   => $opt->{username},
         passwd => $opt->{password},
@@ -105,7 +105,7 @@ my $worker = sub {
 
     $stopwatch->block_message("Process task [$chunk_id] by worker #$wid");
 
-    my $alignDB = AlignDB->new(
+    my $alignDB = AlignDB::Common->new(
         dsn    => $dsn,
         user   => $opt->{username},
         passwd => $opt->{password},
@@ -387,7 +387,7 @@ $mce->forchunk( \@jobs, $worker, );
 $stopwatch->end_message;
 
 # store program's meta info to database
-AlignDB->new(
+AlignDB::Common->new(
     dsn    => $dsn,
     user   => $opt->{username},
     passwd => $opt->{password},

@@ -1,4 +1,4 @@
-package AlignDB;
+package AlignDB::Common;
 use Moose;
 use autodie;
 

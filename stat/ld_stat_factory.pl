@@ -16,7 +16,7 @@ use AlignDB::SQL::Library;
 use AlignDB::ToXLSX;
 
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
+use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -98,7 +98,7 @@ else {
 my $stopwatch = AlignDB::Stopwatch->new;
 $stopwatch->start_message("Do stat for $db...");
 
-my $aligndb_obj = AlignDB->new(
+my $aligndb_obj = AlignDB::Common->new(
     dsn    => $dsn,
     user   => $username,
     passwd => $password,
@@ -825,6 +825,7 @@ my $segment_gc_indel = sub {
                 }
                 push @group_names, $group_name;
 
+                #@type DBI
                 my $sth = $dbh->prepare($sql_query_in);
                 $sth->execute;
                 while ( my @row = $sth->fetchrow_array ) {
@@ -967,6 +968,7 @@ my $segment_cv_indel = sub {
                 }
                 push @group_names, $group_name;
 
+                #@type DBI
                 my $sth = $dbh->prepare($sql_query_in);
                 $sth->execute;
                 while ( my @row = $sth->fetchrow_array ) {

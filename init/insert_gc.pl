@@ -16,7 +16,7 @@ use AlignDB::Stopwatch;
 
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use AlignDB;
+use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -78,7 +78,7 @@ $stopwatch->start_message("Update GC tables of [$opt->{db}]...");
 
 my @jobs;
 {
-    my $alignDB = AlignDB->new(
+    my $alignDB = AlignDB::Common->new(
         dsn    => $dsn,
         user   => $opt->{username},
         passwd => $opt->{password},
@@ -103,7 +103,7 @@ my $worker = sub {
 
     $stopwatch->block_message("Process task [$chunk_id] by worker #$wid");
 
-    my $alignDB = AlignDB->new(
+    my $alignDB = AlignDB::Common->new(
         dsn    => $dsn,
         user   => $opt->{username},
         passwd => $opt->{password},
@@ -169,7 +169,7 @@ $mce->forchunk( \@jobs, $worker, );
 $stopwatch->end_message;
 
 # store program's meta info to database
-AlignDB->new(
+AlignDB::Common->new(
     dsn    => $dsn,
     user   => $opt->{username},
     passwd => $opt->{password},
@@ -179,7 +179,7 @@ exit;
 
 sub insert_extreme {
     my AlignDB::GC $obj_gc              = shift;
-    my AlignDB $obj                     = shift;
+    my AlignDB::Common $obj             = shift;
     my $align_id                        = shift;
     my AlignDB::IntSpan $comparable_set = shift;
 
@@ -277,7 +277,7 @@ sub insert_extreme {
 
 sub insert_gsw {
     my AlignDB::GC $obj_gc              = shift;
-    my AlignDB $obj                     = shift;
+    my AlignDB::Common $obj             = shift;
     my $align_id                        = shift;
     my AlignDB::IntSpan $comparable_set = shift;
 
@@ -443,7 +443,7 @@ sub insert_gsw {
 
 sub insert_segment {
     my AlignDB::GC $obj_gc              = shift;
-    my AlignDB $obj                     = shift;
+    my AlignDB::Common $obj             = shift;
     my $align_id                        = shift;
     my AlignDB::IntSpan $comparable_set = shift;
 

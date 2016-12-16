@@ -2,7 +2,7 @@ package AlignDB::Outgroup;
 use Moose;
 use autodie;
 
-extends qw(AlignDB);
+extends qw(AlignDB::Common);
 
 sub add_align {
     my $self      = shift;
@@ -344,7 +344,8 @@ sub update_D_values {
     );
 
     my DBI $update_sth = $dbh->prepare(
-        'UPDATE isw
+        q{
+        UPDATE isw
         SET isw_d_indel = ?,
             isw_d_noindel = ?,
             isw_d_bii = ?,
@@ -360,7 +361,8 @@ sub update_D_values {
             isw_d_bii3 = ?,
             isw_d_bnn3 = ?,
             isw_d_complex3 = ?
-        WHERE isw_id = ?'
+        WHERE isw_id = ?
+        }
     );
 
     for my $isw_id ( @{$isw_id_ref} ) {

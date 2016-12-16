@@ -13,7 +13,7 @@ use MCE;
 use AlignDB::Stopwatch;
 
 use lib "$FindBin::Bin/../lib";
-use AlignDB;
+use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -74,7 +74,7 @@ $stopwatch->start_message("Update indel-slippage of [$opt->{db}]...");
 
 my @jobs;
 {
-    my $alignDB = AlignDB->new(
+    my $alignDB = AlignDB::Common->new(
         dsn    => $dsn,
         user   => $opt->{username},
         passwd => $opt->{password},
@@ -93,7 +93,7 @@ my $worker = sub {
 
     $stopwatch->block_message("Process task [$chunk_id] by worker #$wid");
 
-    my $alignDB = AlignDB->new(
+    my $alignDB = AlignDB::Common->new(
         dsn    => $dsn,
         user   => $opt->{username},
         passwd => $opt->{password},
@@ -201,7 +201,7 @@ $mce->forchunk( \@jobs, $worker, );
 $stopwatch->end_message;
 
 # store program's meta info to database
-AlignDB->new(
+AlignDB::Common->new(
     dsn    => $dsn,
     user   => $opt->{username},
     passwd => $opt->{password},
