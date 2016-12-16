@@ -311,10 +311,10 @@ my $worker = sub {
             my $group_ni = AlignDB::IntSpan->new;
             for my $i ( 0 .. $seq_count - 1 ) {
                 my $ichar = substr $indel_occured, $i, 1;
-                if ( $ichar eq 'o' ) {
+                if ( $ichar eq '1' ) {
                     $group_i->add( $i + 1 );
                 }
-                elsif ( $ichar eq 'x' ) {
+                elsif ( $ichar eq '0' ) {
                     $group_ni->add( $i + 1 );
                 }
                 else {
@@ -415,7 +415,7 @@ sub calc_ld {
     for my $i ( 1 .. $size ) {
         my $ichar = substr $strA, $i - 1, 1;
         my $schar = substr $strB, $i - 1, 1;
-        if ( $ichar eq 'o' and $schar eq 'o' ) {
+        if ( $ichar eq '1' and $schar eq '1' ) {
             $AB_count++;
         }
     }

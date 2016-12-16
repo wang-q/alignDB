@@ -213,10 +213,10 @@ sub _polarize_indel {
         else {
             for my $seq (@indel_seqs) {
                 if ( $seq eq $outgroup_bases ) {
-                    $indel_occured .= 'x';
+                    $indel_occured .= '0';
                 }
                 else {
-                    $indel_occured .= 'o';
+                    $indel_occured .= '1';
                     $indel_freq++;
                 }
             }
@@ -284,10 +284,10 @@ sub _polarize_snp {
         elsif ( scalar @class == 2 ) {
             for my $nt (@nts) {
                 if ( $nt eq $outgroup_base ) {
-                    $snp_occured .= 'x';
+                    $snp_occured .= '0';
                 }
                 else {
-                    $snp_occured .= 'o';
+                    $snp_occured .= '1';
                     $snp_freq++;
                     $mutant_to = "$outgroup_base->$nt";
                 }
@@ -300,7 +300,7 @@ sub _polarize_snp {
         }
 
         # ref_base is not equal to any nts
-        if ( $snp_occured eq ( 'o' x ( length $snp_occured ) ) ) {
+        if ( $snp_occured eq ( '1' x ( length $snp_occured ) ) ) {
             $snp_freq    = -1;
             $mutant_to   = 'Complex';
             $snp_occured = 'unknown';
@@ -392,10 +392,10 @@ sub update_D_values {
             my @indel_occur = split '', $row[3];
             my $align_cnt   = scalar @indel_occur;
             for my $i ( 0 .. $align_cnt - 1 ) {
-                if ( $indel_occur[$i] eq 'o' ) {
+                if ( $indel_occur[$i] eq '1' ) {
                     $group_i->add($i);
                 }
-                elsif ( $indel_occur[$i] eq 'x' ) {
+                elsif ( $indel_occur[$i] eq '0' ) {
                     $group_n->add($i);
                 }
                 else {

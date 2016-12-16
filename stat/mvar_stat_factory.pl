@@ -47,7 +47,7 @@ mvar_stat_factory.pl - Variable lists for alignDB
 GetOptions(
     'help|?' => sub { Getopt::Long::HelpMessage(0) },
     'server|s=s'   => \( my $server   = $conf->{database}{server} ),
-    'port=i'     => \( my $port     = $conf->{database}{port} ),
+    'port=i'       => \( my $port     = $conf->{database}{port} ),
     'db|d=s'       => \( my $db       = $conf->{database}{db} ),
     'username|u=s' => \( my $username = $conf->{database}{username} ),
     'password|p=s' => \( my $password = $conf->{database}{password} ),
@@ -682,12 +682,10 @@ my $strain_list = sub {
                 }
 
                 for my $i ( 0 .. $#chars ) {
-                    if ( $chars[$i] eq 'o' ) {
+                    if ( $chars[$i] eq '1' ) {
                         $count_of->{$type}[$i]++;
                     }
-                    elsif ( $chars[$i] eq 'x' ) {
-
-                        # OK, do nothing
+                    elsif ( $chars[$i] eq '0' ) {    # OK, do nothing
                     }
                     else {
                         warn "indel_id [$id] occured string errors\n";
@@ -697,7 +695,7 @@ my $strain_list = sub {
         }
     }
 
-    {    # count snps
+    {                                                # count snps
         my $sql_query = q{
             SELECT  s.snp_id, s.snp_occured
             FROM    snp s
@@ -713,12 +711,10 @@ my $strain_list = sub {
             }
 
             for my $i ( 0 .. $#chars ) {
-                if ( $chars[$i] eq 'o' ) {
+                if ( $chars[$i] eq '1' ) {
                     $count_of->{S}[$i]++;
                 }
-                elsif ( $chars[$i] eq 'x' ) {
-
-                    # OK, do nothing
+                elsif ( $chars[$i] eq '0' ) {    # OK, do nothing
                 }
                 else {
                     warn "indel_id [$id] occured string errors\n";
@@ -727,7 +723,7 @@ my $strain_list = sub {
         }
     }
 
-    {    # contents
+    {                                            # contents
         for my $i ( 1 .. $all_freq ) {
             $toxlsx->write_row(
                 $sheet,
