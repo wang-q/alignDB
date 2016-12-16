@@ -341,8 +341,8 @@ sub _insert_indel {
     my $self     = shift;
     my $align_id = shift;
 
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
+    #@type DBI
+    my $sth = $self->dbh->prepare(
         q{
         INSERT INTO indel (
             indel_id, prev_indel_id, align_id,
@@ -359,119 +359,39 @@ sub _insert_indel {
         }
     );
 
-    #@type AlignDB::IntSpan
-    my ( $align_set, undef, $indel_set )
-        = @{ $self->get_sets($align_id) };
+    my $seq_refs = $self->get_seqs($align_id);
 
-    my $seq_refs  = $self->get_seqs($align_id);
-    my $seq_count = scalar @{$seq_refs};
+    my $indel_refs = App::Fasops::Common::get_indels($seq_refs);
 
-    my @indel_sites;
-    for my $cur_indel ( $indel_set->spans ) {
-        my ( $indel_start, $indel_end ) = @{$cur_indel};
-        my $indel_length = $indel_end - $indel_start + 1;
-
-        my @indel_seqs;
-        for my $seq ( @{$seq_refs} ) {
-            push @indel_seqs, ( substr $seq, $indel_start - 1, $indel_length );
-        }
-        my $indel_all_seqs = join "|", @indel_seqs;
-
-        my $indel_type;
-        my @uniq_indel_seqs = List::MoreUtils::PP::uniq(@indel_seqs);
-
-        # seqs with least '-' char wins
-        my ($indel_seq) = map { $_->[0] }
-            sort { $a->[1] <=> $b->[1] }
-            map { [ $_, tr/-/-/ ] } @uniq_indel_seqs;
-
-        if ( scalar @uniq_indel_seqs < 2 ) {
-            Carp::confess "no indel!\n";
-            next;
-        }
-        elsif ( scalar @uniq_indel_seqs > 2 ) {
-            $indel_type = 'C';
-        }
-        elsif ( $indel_seq =~ /-/ ) {
-            $indel_type = 'C';
-        }
-        else {
-            #   'D': means deletion relative to target/first seq
-            #        target is ----
-            #   'I': means insertion relative to target/first seq
-            #        target is AAAA
-            if ( $indel_seqs[0] eq $indel_seq ) {
-                $indel_type = 'I';
-            }
-            else {
-                $indel_type = 'D';
-            }
-        }
-
-        my $indel_freq = 0;
-        my $indel_occured;
-        if ( $indel_type eq 'C' ) {
-            $indel_freq    = -1;
-            $indel_occured = 'unknown';
-        }
-        else {
-            for (@indel_seqs) {
-
-                # same as target 'x', not 'o'
-                if ( $indel_seqs[0] eq $_ ) {
-                    $indel_freq++;
-                    $indel_occured .= 'o';
-                }
-                else {
-                    $indel_occured .= 'x';
-                }
-            }
-        }
-
-        # here freq is the minor allele freq
-        $indel_freq = List::Util::min( $indel_freq, $seq_count - $indel_freq );
-
-        my $indel_gc = App::Fasops::Common::calc_gc_ratio( [$indel_seq] );
-
-        push @indel_sites,
-            {
-            start    => $indel_start,
-            end      => $indel_end,
-            length   => $indel_length,
-            seq      => $indel_seq,
-            all_seqs => $indel_all_seqs,
-            gc       => $indel_gc,
-            freq     => $indel_freq,
-            occured  => $indel_occured,
-            type     => $indel_type,
-            };
+    for my $indel ( @{$indel_refs} ) {
+        $indel->{indel_gc} = App::Fasops::Common::calc_gc_ratio( [ $indel->{indel_seq} ] );
     }
 
     my $anterior_indel_end = 0;
-    for my $i ( 0 .. scalar @indel_sites - 1 ) {
-        my $cur_indel_start = $indel_sites[$i]->{start};
+    for my $i ( 0 .. scalar @{$indel_refs} - 1 ) {
+        my $cur_indel_start = $indel_refs->[$i]{indel_start};
         my $cur_left_extand = $cur_indel_start - 1 - $anterior_indel_end;
-        my $cur_indel_end   = $indel_sites[$i]->{end};
+        my $cur_indel_end   = $indel_refs->[$i]{indel_end};
         $anterior_indel_end = $cur_indel_end;
-        $indel_sites[$i]->{left_extand} = $cur_left_extand;
+        $indel_refs->[$i]{left_extand} = $cur_left_extand;
     }
 
-    my $posterior_indel_start = $align_set->max + 1;
-    for my $i ( reverse( 0 .. scalar @indel_sites - 1 ) ) {
-        my $cur_indel_end    = $indel_sites[$i]->{end};
+    my $posterior_indel_start = length( $seq_refs->[0] ) + 1;
+    for my $i ( reverse( 0 .. scalar @{$indel_refs} - 1 ) ) {
+        my $cur_indel_end    = $indel_refs->[$i]{indel_end};
         my $cur_right_extand = $posterior_indel_start - $cur_indel_end - 1;
-        my $cur_indel_start  = $indel_sites[$i]->{start};
+        my $cur_indel_start  = $indel_refs->[$i]{indel_start};
         $posterior_indel_start = $cur_indel_start;
-        $indel_sites[$i]->{right_extand} = $cur_right_extand;
+        $indel_refs->[$i]{right_extand} = $cur_right_extand;
     }
 
     my $prev_indel_id = 0;
-    for (@indel_sites) {
+    for ( @{$indel_refs} ) {
         $sth->execute(
-            $prev_indel_id,     $align_id, $_->{start},    $_->{end},
-            $_->{length},       $_->{seq}, $_->{all_seqs}, $_->{left_extand},
-            $_->{right_extand}, $_->{gc},  $_->{freq},     $_->{occured},
-            $_->{type},
+            $prev_indel_id,     $align_id,       $_->{indel_start},    $_->{indel_end},
+            $_->{indel_length}, $_->{indel_seq}, $_->{indel_all_seqs}, $_->{left_extand},
+            $_->{right_extand}, $_->{indel_gc},  $_->{indel_freq},     $_->{indel_occured},
+            $_->{indel_type},
         );
         ($prev_indel_id) = $self->last_insert_id;
     }
