@@ -360,11 +360,10 @@ sub _insert_indel {
     );
 
     my $seq_refs = $self->get_seqs($align_id);
-
     my $indel_refs = App::Fasops::Common::get_indels($seq_refs);
 
-    for my $indel ( @{$indel_refs} ) {
-        $indel->{indel_gc} = App::Fasops::Common::calc_gc_ratio( [ $indel->{indel_seq} ] );
+    for my $site ( @{$indel_refs} ) {
+        $site->{indel_gc} = App::Fasops::Common::calc_gc_ratio( [ $site->{indel_seq} ] );
     }
 
     my $anterior_indel_end = 0;
@@ -405,8 +404,8 @@ sub _insert_snp {
     my $self     = shift;
     my $align_id = shift;
 
-    my DBI $dbh = $self->dbh;
-    my DBI $sth = $dbh->prepare(
+    #@type DBI
+    my $sth = $self->dbh->prepare(
         q{
         INSERT DELAYED INTO snp (
             snp_id, align_id, snp_pos,
@@ -421,29 +420,14 @@ sub _insert_snp {
         }
     );
 
-    my $seq_refs     = $self->get_seqs($align_id);
-    my $seq_count    = scalar @{$seq_refs};
-    my $align_length = length $seq_refs->[0];
-
-    my $snp_site = {};
-    for my $pos ( 1 .. $align_length ) {
-        my @bases;
-        for my $i ( 0 .. $seq_count - 1 ) {
-            my $base = substr( $seq_refs->[$i], $pos - 1, 1 );
-            push @bases, $base;
-        }
-
-        if ( List::MoreUtils::PP::all { $_ =~ /[agct]/i } @bases ) {
-            if ( List::MoreUtils::PP::any { $_ ne $bases[0] } @bases ) {
-                $snp_site->{$pos} = \@bases;
-            }
-        }
-    }
+    my $seq_refs = $self->get_seqs($align_id);
+    my $snp_refs = App::Fasops::Common::get_snps($seq_refs);
 
     # %{$snp_site} keys are snp positions
+    # Bulk inserting only trigger 1 commit in MySQL
     my $bulk_info = {
         align_id    => [],
-        pos         => [],
+        snp_pos     => [],
         target_base => [],
         query_base  => [],
         all_bases   => [],
@@ -451,56 +435,20 @@ sub _insert_snp {
         snp_freq    => [],
         snp_occured => [],
     };
-    for my $pos ( sort { $a <=> $b } keys %{$snp_site} ) {
-
-        my @bases = @{ $snp_site->{$pos} };
-
-        my $target_base = $bases[0];
-        my $all_bases = join '', @bases;
-
-        my $query_base;
-        my $mutant_to;
-        my $snp_freq = 0;
-        my $snp_occured;
-        my @class = List::MoreUtils::PP::uniq(@bases);
-        if ( scalar @class < 2 ) {
-            Carp::confess "no snp\n";
-        }
-        elsif ( scalar @class > 2 ) {
-            $snp_freq    = -1;
-            $snp_occured = 'unknown';
-        }
-        else {
-            for (@bases) {
-                if ( $target_base ne $_ ) {
-                    $snp_freq++;
-                    $snp_occured .= 'o';
-                }
-                else {
-                    $snp_occured .= 'x';
-                }
-            }
-            ($query_base) = grep { $_ ne $target_base } @bases;
-            $mutant_to = $target_base . '<->' . $query_base;
-        }
-
-        # here freq is the minor allele freq
-        $snp_freq = List::Util::min( $snp_freq, $seq_count - $snp_freq );
-
+    for my $site ( @{$snp_refs} ) {
         push @{ $bulk_info->{align_id} },    $align_id;
-        push @{ $bulk_info->{pos} },         $pos;
-        push @{ $bulk_info->{target_base} }, $target_base;
-        push @{ $bulk_info->{query_base} },  $query_base;
-        push @{ $bulk_info->{all_bases} },   $all_bases;
-        push @{ $bulk_info->{mutant_to} },   $mutant_to;
-        push @{ $bulk_info->{snp_freq} },    $snp_freq;
-        push @{ $bulk_info->{snp_occured} }, $snp_occured;
-
+        push @{ $bulk_info->{snp_pos} },     $site->{snp_pos};
+        push @{ $bulk_info->{target_base} }, $site->{target_base};
+        push @{ $bulk_info->{query_base} },  $site->{query_base};
+        push @{ $bulk_info->{all_bases} },   $site->{all_bases};
+        push @{ $bulk_info->{mutant_to} },   $site->{mutant_to};
+        push @{ $bulk_info->{snp_freq} },    $site->{snp_freq};
+        push @{ $bulk_info->{snp_occured} }, $site->{snp_occured};
     }
 
-    if ( keys %{$snp_site} ) {
+    if ( scalar @{$snp_refs} ) {
         $sth->execute_array(
-            {},                        $bulk_info->{align_id},   $bulk_info->{pos},
+            {},                        $bulk_info->{align_id},   $bulk_info->{snp_pos},
             $bulk_info->{target_base}, $bulk_info->{query_base}, $bulk_info->{all_bases},
             $bulk_info->{mutant_to},   $bulk_info->{snp_freq},   $bulk_info->{snp_occured},
         );
