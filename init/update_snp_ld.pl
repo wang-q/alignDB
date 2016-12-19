@@ -10,7 +10,6 @@ use YAML::Syck;
 
 use List::Util;
 use List::MoreUtils::PP;
-use Math::Combinatorics;
 use MCE;
 
 use AlignDB::IntSpan;
@@ -247,7 +246,7 @@ my $worker = sub {
             for my $cur_snp ( @{$all_snps} ) {
                 my $snp_id          = $cur_snp->[0];
                 my $snp_pos         = $cur_snp->[3];
-                my $near_snps       = find_near_snps( $all_snps, $snp_pos, $opt->{near_range} );
+                my $near_snps       = find_near_snps( $all_snps, $snp_pos, $opt->{near} );
                 my $near_snp_number = scalar @{$near_snps};
                 my ( $r2_s, $dprime_abs_s ) = combo_ld($near_snps);
 
@@ -328,11 +327,11 @@ my $worker = sub {
 
                 # LD with nearest indel
                 my ( $r, $dprime );
-                ( $r, $dprime ) = calc_ld( $indel_occured, $snp_occured );
+                ( $r, $dprime ) = App::Fasops::Common::calc_ld( $indel_occured, $snp_occured );
                 $update_indel_snp_sth->execute( $r, $dprime, $snp_id );
 
                 my ( $r2_i, $dprime_abs_i, $r2_ni, $dprime_abs_ni, );
-                my $near_snps = find_near_snps( $all_snps, $snp_pos, $opt->{near_range} );
+                my $near_snps = find_near_snps( $all_snps, $snp_pos, $opt->{near} );
                 my $near_snp_number = scalar @{$near_snps};
                 if ( $near_snp_number > 1 ) {
                     my @near_snps_i
@@ -380,62 +379,6 @@ exit;
 #----------------------------------------------------------#
 # Subroutines
 #----------------------------------------------------------#
-sub calc_ld {
-    my $strA = shift;
-    my $strB = shift;
-
-    if ( length $strA != length $strB ) {
-        warn "length not equal for $strA and $strA\n";
-        return;
-    }
-
-    for ( $strA, $strB ) {
-        if (/[^ox]/) {
-            warn "$_ contains illegal chars\n";
-            return;
-        }
-    }
-
-    my $size = length $strA;
-
-    my $A_count = $strA =~ tr/o/o/;
-    my $fA      = $A_count / $size;
-    my $fa      = 1 - $fA;
-
-    my $B_count = $strB =~ tr/o/o/;
-    my $fB      = $B_count / $size;
-    my $fb      = 1 - $fB;
-
-    if ( List::MoreUtils::PP::any { $_ == 0 } ( $fA, $fa, $fB, $fb ) ) {
-        return ( undef, undef );
-    }
-
-    # o in strA and o in strB as fAB
-    my ( $AB_count, $fAB ) = ( 0, 0 );
-    for my $i ( 1 .. $size ) {
-        my $ichar = substr $strA, $i - 1, 1;
-        my $schar = substr $strB, $i - 1, 1;
-        if ( $ichar eq '1' and $schar eq '1' ) {
-            $AB_count++;
-        }
-    }
-    $fAB = $AB_count / $size;
-
-    my $DAB = $fAB - $fA * $fB;
-
-    my ( $r, $dprime );
-    $r = $DAB / sqrt( $fA * $fa * $fB * $fb );
-
-    if ( $DAB < 0 ) {
-        $dprime = $DAB / List::Util::min( $fA * $fB, $fa * $fb );
-    }
-    else {
-        $dprime = $DAB / List::Util::min( $fA * $fb, $fa * $fB );
-    }
-
-    return ( $r, $dprime );
-}
-
 sub find_nearest_snp {
     my $all_ary = shift;
     my $pos     = shift;
@@ -476,19 +419,19 @@ sub find_set_snps {
 sub combo_ld {
     my $snps = shift;
 
+    my $count = scalar @{$snps};
+
     my ( $r2, $dprime_abs );
-    if ( scalar @{$snps} > 1 ) {
+    if ( $count >= 2 ) {
         my ( @r2, @dprime_abs );
-        my $combinat = Math::Combinatorics->new(
-            count => 2,
-            data  => $snps,
-        );
-        while ( my @combo = $combinat->next_combination ) {
-            my ( $pair_r, $pair_dprime )
-                = calc_ld( $combo[0]->[2], $combo[1]->[2] );
-            next unless defined $pair_r;
-            push @r2,         $pair_r**2;
-            push @dprime_abs, abs($pair_dprime);
+        for my $i ( 0 .. $count - 1 ) {
+            for my $j ( $i + 1 .. $count - 1 ) {
+                my ( $pair_r, $pair_dprime )
+                    = App::Fasops::Common::calc_ld( $snps->[$i][2], $snps->[$j][2] );
+                next unless defined $pair_r;
+                push @r2,         $pair_r**2;
+                push @dprime_abs, abs($pair_dprime);
+            }
         }
         if ( scalar @r2 > 0 ) {
             $r2         = App::Fasops::Common::mean(@r2);
