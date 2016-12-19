@@ -2,12 +2,12 @@ package AlignDB::Common;
 use Moose;
 use autodie;
 
-use Carp;
+use Carp qw();
 use DBI;
 use IO::Zlib;
 use List::Util;
 use List::MoreUtils::PP;
-use YAML::Syck;
+use YAML::Syck qw();
 
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
