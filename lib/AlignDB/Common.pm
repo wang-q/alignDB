@@ -690,7 +690,7 @@ sub get_seqs {
     return $self->caching_seqs;
 }
 
-sub get_ref_seq {
+sub get_outgroup_seq {
     my $self     = shift;
     my $align_id = shift;
 
@@ -1129,6 +1129,7 @@ sub get_target_info {
 
         my $hash_ref = $sth->fetchrow_hashref;
         $sth->finish;
+        $hash_ref->{seq_intspan} = AlignDB::IntSpan->new()->add_runlist( $hash_ref->{seq_runlist} );
         $caching_info->{$align_id} = $hash_ref;
     }
 

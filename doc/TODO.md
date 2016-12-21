@@ -1,10 +1,10 @@
 # TODOs
 
-* AlignDB.pm to AlignDB/AlignDB.pm
-* Retire AlignDB::Position
 * Rewirte count_bed.pl
 * update_isw_cpg.pl calc wrong isw_cpg_pi
 * Separate indel_content.pl
+* ~~AlignDB.pm to AlignDB/Common.pm~~
+* ~~Retire AlignDB::Position~~
 * ~~indel_ref_seq => indel_outgroup_seq; snp ref_base => snp_outgroup_base~~
 * ~~Switch from `Getopt::Long` to `Getopt::Long::Descriptive`~~
 * ~~Switch from AlignDB::Run to MCE~~

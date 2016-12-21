@@ -9,15 +9,16 @@ use FindBin;
 use YAML::Syck;
 
 use DBI;
-use AlignDB::IntSpan;
-use AlignDB::Stopwatch;
-use AlignDB::ToXLSX;
-
 use List::Util;
 use List::MoreUtils::PP;
 
+use AlignDB::IntSpan;
+use AlignDB::Stopwatch;
+use AlignDB::ToXLSX;
+use App::Fasops::Common;
+
 use lib "$FindBin::Bin/../lib";
-use AlignDB::Position;
+use AlignDB::Common;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -94,7 +95,11 @@ my $toxlsx = AlignDB::ToXLSX->new(
     dbh     => $dbh,
     outfile => $outfile,
 );
-my $pos_obj = AlignDB::Position->new( dbh => $dbh );
+my $alignDB = AlignDB::Common->new(
+    dsn    => $dsn,
+    user   => $username,
+    passwd => $password,
+);
 
 #----------------------------#
 # count freq
@@ -406,7 +411,7 @@ my $indel_list = sub {
             FROM
                 indel i
                     INNER JOIN
-                sequence s ON i.align_id = s.align_id
+                sequence s ON i.align_id = s.align_id AND s.seq_role = 'T'
             ORDER BY s.chr_name, s.chr_start
         };
         my DBI $sth = $dbh->prepare($sql_query);
@@ -416,7 +421,9 @@ my $indel_list = sub {
             my $align_id = shift @row;
             for my $i ( 3, 4 ) {
                 my $align_pos = $row[$i];
-                my $chr_pos = $pos_obj->at_target_chr( $align_id, $align_pos );
+                my $info      = $alignDB->get_target_info($align_id);
+                my $chr_pos   = App::Fasops::Common::align_to_chr( $info->{seq_intspan}, $align_pos,
+                    $info->{chr_start}, $info->{chr_strand}, );
                 splice @row, $i, 1, $chr_pos;
             }
 
@@ -452,7 +459,7 @@ my $snp_list = sub {
             FROM
                 snp s
                     INNER JOIN
-                sequence se ON s.align_id = se.align_id
+                sequence se ON s.align_id = se.align_id AND se.seq_role = 'T'
                     LEFT JOIN
                 isw i ON s.isw_id = i.isw_id
             ORDER BY se.chr_name, se.chr_start
@@ -464,7 +471,9 @@ my $snp_list = sub {
             my $align_id = shift @row;
             for my $i (3) {
                 my $align_pos = $row[$i];
-                my $chr_pos = $pos_obj->at_target_chr( $align_id, $align_pos );
+                my $info      = $alignDB->get_target_info($align_id);
+                my $chr_pos   = App::Fasops::Common::align_to_chr( $info->{seq_intspan}, $align_pos,
+                    $info->{chr_start}, $info->{chr_strand}, );
                 splice @row, $i, 1, $chr_pos;
             }
 
@@ -472,7 +481,7 @@ my $snp_list = sub {
         }
     }
 
-    print "Sheet \"$sheet_name\" has been generated.\n";
+    print "Sheet [$sheet_name] has been generated.\n";
 };
 
 #----------------------------------------------------------#
@@ -502,7 +511,7 @@ my $snp_codon_list = sub {
             FROM
                 snp s
                     INNER JOIN
-                sequence se ON s.align_id = se.align_id
+                sequence se ON s.align_id = se.align_id  AND se.seq_role = 'T'
             ORDER BY se.chr_name, se.chr_start
         };
         my DBI $sth = $dbh->prepare($sql_query);
@@ -512,7 +521,9 @@ my $snp_codon_list = sub {
             my $align_id = shift @row;
             for my $i (2) {
                 my $align_pos = $row[$i];
-                my $chr_pos = $pos_obj->at_target_chr( $align_id, $align_pos );
+                my $info      = $alignDB->get_target_info($align_id);
+                my $chr_pos   = App::Fasops::Common::align_to_chr( $info->{seq_intspan}, $align_pos,
+                    $info->{chr_start}, $info->{chr_strand}, );
                 splice @row, $i, 1, $chr_pos;
             }
 
@@ -568,7 +579,7 @@ my $gene_list = sub {
                     INNER JOIN
                 window w ON g.window_id = w.window_id
                     INNER JOIN
-                sequence s ON w.align_id = s.align_id
+                sequence s ON w.align_id = s.align_id AND s.seq_role = 'T'
             ORDER BY s.chr_name, s.chr_start
         };
         my DBI $sth = $dbh->prepare($sql_query);
@@ -580,7 +591,9 @@ my $gene_list = sub {
             my $align_id = shift @row;
             for my $i ( 2, 3 ) {
                 my $align_pos = $row[$i];
-                my $chr_pos = $pos_obj->at_target_chr( $align_id, $align_pos );
+                my $info      = $alignDB->get_target_info($align_id);
+                my $chr_pos   = App::Fasops::Common::align_to_chr( $info->{seq_intspan}, $align_pos,
+                    $info->{chr_start}, $info->{chr_strand}, );
                 splice @row, $i, 1, $chr_pos;
             }
 

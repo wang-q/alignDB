@@ -13,11 +13,11 @@ use MCE;
 
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
+use App::Fasops::Common;
 
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use AlignDB::Common;
-use AlignDB::Position;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -109,7 +109,6 @@ my $worker = sub {
     );
 
     my DBI $dbh = $alignDB->dbh;
-    my $pos_obj = AlignDB::Position->new( dbh => $dbh );
 
     my $slice_adaptor = Bio::EnsEMBL::Registry->get_adaptor( $opt->{ensembl}, 'core', 'Slice' );
 
@@ -156,7 +155,8 @@ my $worker = sub {
         my $chr_name       = $target_info->{chr_name};
         my $chr_start      = $target_info->{chr_start};
         my $chr_end        = $target_info->{chr_end};
-        my $target_runlist = $target_info->{seq_runlist};
+        my $chr_strand     = $target_info->{chr_strand};
+        my $target_intspan = $target_info->{seq_intspan};
 
         next if $chr_name =~ /rand|un|contig|hap|scaf/i;
 
@@ -164,13 +164,11 @@ my $worker = sub {
 
         $chr_name =~ s/chr0?//i;
 
-        my $target_set = AlignDB::IntSpan->new($target_runlist);
-
         # obtain a slice
         my $slice
             = $slice_adaptor->fetch_by_region( 'chromosome', $chr_name, $chr_start, $chr_end );
 
-        my $slice_chr_set = AlignDB::IntSpan->new("$chr_start-$chr_end");
+        my $slice_chr_set = AlignDB::IntSpan->new()->add_pair( $chr_start, $chr_end );
 
         # insert internal indels, that are, indels in target_set
         # indels in query_set is equal to spans of target_set minus one
@@ -210,14 +208,16 @@ my $worker = sub {
             }
 
             # gene position set
-            my $gene_start = $pos_obj->at_align( $align_id, $gene_info{start} );
-            my $gene_end   = $pos_obj->at_align( $align_id, $gene_info{end} );
+            my $gene_start = App::Fasops::Common::chr_to_align( $target_intspan, $gene_info{start},
+                $chr_start, $chr_strand, );
+            my $gene_end = App::Fasops::Common::chr_to_align( $target_intspan, $gene_info{end},
+                $chr_start, $chr_strand, );
             if ( $gene_start >= $gene_end ) {
                 print "Gene $gene_info{stable_id} wrong, start >= end\n";
                 next;
             }
-            my $gene_set = AlignDB::IntSpan->new("$gene_start-$gene_end");
-            $gene_set = $gene_set->intersect($target_set);
+            my $gene_set = AlignDB::IntSpan->new()->add_pair( $gene_start, $gene_end );
+            $gene_set = $gene_set->intersect($target_intspan);
 
             # window
             my $cur_gene_window_id
@@ -297,14 +297,17 @@ my $worker = sub {
                 }
 
                 # exon position set
-                my $exon_start = $pos_obj->at_align( $align_id, $exon_info{start} );
-                my $exon_end   = $pos_obj->at_align( $align_id, $exon_info{end} );
+                my $exon_start
+                    = App::Fasops::Common::chr_to_align( $target_intspan, $exon_info{start},
+                    $chr_start, $chr_strand, );
+                my $exon_end = App::Fasops::Common::chr_to_align( $target_intspan, $exon_info{end},
+                    $chr_start, $chr_strand, );
                 if ( $exon_start >= $exon_end ) {
                     print "Exon $exon_info{stable_id} wrong, start >= end\n";
                     next;
                 }
                 my $exon_set = AlignDB::IntSpan->new("$exon_start-$exon_end");
-                $exon_set = $exon_set->intersect($target_set);
+                $exon_set = $exon_set->intersect($target_intspan);
 
                 # coding region set
                 my $coding_set = AlignDB::IntSpan->new;
@@ -320,15 +323,19 @@ my $worker = sub {
                         $exon_is_full = 0;
                     }
                     my $coding_region_start
-                        = $pos_obj->at_align( $align_id, $exon_info{coding_region_start} );
+                        = App::Fasops::Common::chr_to_align( $target_intspan,
+                        $exon_info{coding_region_start},
+                        $chr_start, $chr_strand, );
                     my $coding_region_end
-                        = $pos_obj->at_align( $align_id, $exon_info{coding_region_end} );
+                        = App::Fasops::Common::chr_to_align( $target_intspan,
+                        $exon_info{coding_region_end},
+                        $chr_start, $chr_strand, );
                     if ( $coding_region_start >= $coding_region_end ) {
                         warn "Exon $exon_info{stable_id} coding_region wrong, start >= end\n";
                         next;
                     }
                     $coding_set->add("$coding_region_start-$coding_region_end");
-                    $coding_set = $coding_set->intersect($target_set);
+                    $coding_set = $coding_set->intersect($target_intspan);
                 }
 
                 $exon_info{set}        = $exon_set;
