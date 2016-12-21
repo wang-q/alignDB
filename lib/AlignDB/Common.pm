@@ -749,9 +749,9 @@ sub get_sets {
     my ( $align_length, $comparable_runlist, $indel_runlist ) = $sth->fetchrow_array;
     $sth->finish;
 
-    my $align_set      = AlignDB::IntSpan->new("1-$align_length");
-    my $comparable_set = AlignDB::IntSpan->new($comparable_runlist);
-    my $indel_set      = AlignDB::IntSpan->new($indel_runlist);
+    my $align_set      = AlignDB::IntSpan->new()->add_pair( 1, $align_length );
+    my $comparable_set = AlignDB::IntSpan->new()->add_runlist($comparable_runlist);
+    my $indel_set      = AlignDB::IntSpan->new()->add_runlist($indel_runlist);
 
     return [ $align_set, $comparable_set, $indel_set ];
 }
@@ -1071,32 +1071,6 @@ sub get_align_ids {
     return $align_ids;
 }
 
-sub get_align_ids_of_chr_name {
-    my $self     = shift;
-    my $chr_name = shift;
-
-    my DBI $sth = $self->dbh->prepare(
-        q{
-        SELECT a.align_id
-        FROM sequence s
-        INNER JOIN align a ON s.align_id = a.align_id
-        WHERE 1 = 1
-        AND s.seq_role = "T"
-        AND s.chr_name = ?
-        ORDER BY a.align_id
-        }
-    );
-    $sth->execute($chr_name);
-
-    my @align_ids;
-    while ( my @row = $sth->fetchrow_array ) {
-        my ($align_id) = @row;
-        push @align_ids, $align_id;
-    }
-
-    return \@align_ids;
-}
-
 sub get_target_info {
     my $self     = shift;
     my $align_id = shift;
@@ -1280,27 +1254,15 @@ sub add_meta_stopwatch {
     my $self = shift;
     my AlignDB::Stopwatch $stopwatch = shift;
 
-    my $ary_ref = $self->dbh->selectcol_arrayref(
-        q{
-        SELECT  meta_value
-        from    meta
-        where   meta_key = 'uuid'
+    $self->add_meta(
+        {   '------'      => '------',
+            a_operation   => $stopwatch->operation,
+            b_start_time  => scalar localtime $stopwatch->start_time,
+            c_duration    => $stopwatch->duration_now,
+            d_cmd_line    => $stopwatch->cmd_line,
+            e_init_config => $stopwatch->init_config,
         }
     );
-
-    my $uuid = $stopwatch->uuid;
-    if ( !List::MoreUtils::PP::any { $_ eq $uuid } @$ary_ref ) {
-        $self->add_meta(
-            {   '------'      => '------',
-                a_operation   => $stopwatch->operation,
-                b_start_time  => scalar localtime $stopwatch->start_time,
-                c_duration    => $stopwatch->duration_now,
-                d_cmd_line    => $stopwatch->cmd_line,
-                e_init_config => $stopwatch->init_config,
-                uuid          => $uuid,
-            }
-        );
-    }
 
     return;
 }
