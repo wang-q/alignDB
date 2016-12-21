@@ -73,6 +73,7 @@ sub BUILD {
 sub _insert_align {
     my $self     = shift;
     my $seq_refs = shift;
+    my $outgroup = shift;
 
     #@type DBI
     my $sth = $self->dbh->prepare(
@@ -92,9 +93,12 @@ sub _insert_align {
         }
     );
 
-    my $result     = App::Fasops::Common::multi_seq_stat($seq_refs);
-    my $target_gc  = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[0] ] );
-    my $average_gc = App::Fasops::Common::calc_gc_ratio($seq_refs);
+    my @seqs = @{$seq_refs};
+    pop @seqs if $outgroup;
+
+    my $result     = App::Fasops::Common::multi_seq_stat( \@seqs );
+    my $target_gc  = App::Fasops::Common::calc_gc_ratio( [ $seqs[0] ] );
+    my $average_gc = App::Fasops::Common::calc_gc_ratio( \@seqs );
 
     $sth->execute(
         $result->[0], $result->[1], $result->[2], $result->[3], $result->[4],
@@ -185,16 +189,18 @@ sub _insert_set_and_sequence {
     my $align_id  = shift;
     my $info_refs = shift;
     my $seq_refs  = shift;
+    my $outgroup  = shift;
 
     my DBI $dbh = $self->dbh;
 
-    my $seq_count    = scalar @{$seq_refs};
-    my $align_length = length $seq_refs->[0];
+    my $seq_count = scalar @{$seq_refs};
+    if ($outgroup) {
+        $outgroup = $seq_count - 1;
+    }
 
     {    # sets
-        my $align_set      = AlignDB::IntSpan->new("1-$align_length");
-        my $indel_set      = AlignDB::IntSpan->new;
-        my $comparable_set = AlignDB::IntSpan->new;
+        my $align_set = AlignDB::IntSpan->new()->add_pair( 1, length $seq_refs->[0] );
+        my $indel_set = AlignDB::IntSpan->new;
         for my $i ( 0 .. $seq_count - 1 ) {
             $info_refs->[$i]{gc}
                 = App::Fasops::Common::calc_gc_ratio( [ $seq_refs->[$i] ] );
@@ -203,9 +209,10 @@ sub _insert_set_and_sequence {
             $info_refs->[$i]{runlist} = $seq_set->runlist;
             $info_refs->[$i]{length}  = $seq_set->size;
 
+            next if $outgroup and $i == $outgroup;
             $indel_set->merge($seq_indel_set);
         }
-        $comparable_set = $align_set->diff($indel_set);
+        my $comparable_set = $align_set->diff($indel_set);
 
         my DBI $sth = $dbh->prepare(
             q{
@@ -228,10 +235,18 @@ sub _insert_set_and_sequence {
 
     {    # and queries
         for my $i ( 1 .. $seq_count - 1 ) {
+            next if $outgroup and $i == $outgroup;
             $info_refs->[$i]{seq_role}     = "Q";
             $info_refs->[$i]{seq_position} = $i;
             $self->_insert_seq( $align_id, $info_refs->[$i] );
         }
+    }
+
+    # and outgroup
+    if ($outgroup) {
+        $info_refs->[$outgroup]{seq_role}     = "O";
+        $info_refs->[$outgroup]{seq_position} = $outgroup;
+        $self->_insert_seq( $align_id, $info_refs->[$outgroup] );
     }
 
     return;
@@ -295,7 +310,7 @@ sub add_align {
     #----------------------------#
     $self->_insert_snp($align_id);
 
-    return $align_id;
+    return;
 }
 
 # blocked fasta format
@@ -337,8 +352,9 @@ sub parse_fas_file {
 }
 
 sub _insert_indel {
-    my $self     = shift;
-    my $align_id = shift;
+    my $self         = shift;
+    my $align_id     = shift;
+    my $outgroup_seq = shift;
 
     #@type DBI
     my $sth = $self->dbh->prepare(
@@ -347,19 +363,29 @@ sub _insert_indel {
             indel_id, prev_indel_id, align_id,
             indel_start, indel_end, indel_length,
             indel_seq, indel_all_seqs, left_extand, right_extand,
-            indel_gc, indel_freq, indel_occured, indel_type
+            indel_gc, indel_freq, indel_occured, indel_type,
+            indel_outgroup_seq
         )
         VALUES (
             NULL, ?, ?,
             ?, ?, ?,
             ?, ?, ?, ?,
-            ?, ?, ?, ?
+            ?, ?, ?, ?,
+            ?
         )
         }
     );
 
     my $seq_refs   = $self->get_seqs($align_id);
     my $indel_refs = App::Fasops::Common::get_indels($seq_refs);
+    if ($outgroup_seq) {
+        App::Fasops::Common::polarize_indel( $indel_refs, $outgroup_seq );
+    }
+    else {
+        for my $site ( @{$indel_refs} ) {
+            $site->{indel_outgroup_seq} = undef;
+        }
+    }
 
     for my $site ( @{$indel_refs} ) {
         $site->{indel_gc} = App::Fasops::Common::calc_gc_ratio( [ $site->{indel_seq} ] );
@@ -386,10 +412,11 @@ sub _insert_indel {
     my $prev_indel_id = 0;
     for ( @{$indel_refs} ) {
         $sth->execute(
-            $prev_indel_id,     $align_id,       $_->{indel_start},    $_->{indel_end},
-            $_->{indel_length}, $_->{indel_seq}, $_->{indel_all_seqs}, $_->{left_extand},
-            $_->{right_extand}, $_->{indel_gc},  $_->{indel_freq},     $_->{indel_occured},
-            $_->{indel_type},
+            $prev_indel_id,       $align_id,          $_->{indel_start},
+            $_->{indel_end},      $_->{indel_length}, $_->{indel_seq},
+            $_->{indel_all_seqs}, $_->{left_extand},  $_->{right_extand},
+            $_->{indel_gc},       $_->{indel_freq},   $_->{indel_occured},
+            $_->{indel_type},     $_->{indel_outgroup_seq},
         );
         ($prev_indel_id) = $self->last_insert_id;
     }
@@ -400,8 +427,9 @@ sub _insert_indel {
 }
 
 sub _insert_snp {
-    my $self     = shift;
-    my $align_id = shift;
+    my $self         = shift;
+    my $align_id     = shift;
+    my $outgroup_seq = shift;
 
     #@type DBI
     my $sth = $self->dbh->prepare(
@@ -409,30 +437,36 @@ sub _insert_snp {
         INSERT DELAYED INTO snp (
             snp_id, align_id, snp_pos,
             snp_target_base, snp_query_base, snp_all_bases,
-            snp_mutant_to, snp_freq, snp_occured
+            snp_mutant_to, snp_freq, snp_occured,
+            snp_outgroup_base
         )
         VALUES (
             NULL, ?, ?,
             ?, ?, ?,
-            ?, ?, ?
+            ?, ?, ?,
+            ?
         )
         }
     );
 
     my $seq_refs = $self->get_seqs($align_id);
     my $snp_refs = App::Fasops::Common::get_snps($seq_refs);
+    if ($outgroup_seq) {
+        App::Fasops::Common::polarize_snp( $snp_refs, $outgroup_seq );
+    }
 
     # %{$snp_site} keys are snp positions
     # Bulk inserting only trigger 1 commit in MySQL
     my $bulk_info = {
-        align_id        => [],
-        snp_pos         => [],
-        snp_target_base => [],
-        snp_query_base  => [],
-        snp_all_bases   => [],
-        snp_mutant_to   => [],
-        snp_freq        => [],
-        snp_occured     => [],
+        align_id          => [],
+        snp_pos           => [],
+        snp_target_base   => [],
+        snp_query_base    => [],
+        snp_all_bases     => [],
+        snp_mutant_to     => [],
+        snp_freq          => [],
+        snp_occured       => [],
+        snp_outgroup_base => [],
     };
     for my $site ( @{$snp_refs} ) {
         push @{ $bulk_info->{align_id} },        $align_id;
@@ -443,6 +477,13 @@ sub _insert_snp {
         push @{ $bulk_info->{snp_mutant_to} },   $site->{snp_mutant_to};
         push @{ $bulk_info->{snp_freq} },        $site->{snp_freq};
         push @{ $bulk_info->{snp_occured} },     $site->{snp_occured};
+
+        if ($outgroup_seq) {
+            push @{ $bulk_info->{snp_outgroup_base} }, $site->{snp_outgroup_base};
+        }
+        else {
+            push @{ $bulk_info->{snp_outgroup_base} }, undef;
+        }
     }
 
     if ( scalar @{$snp_refs} ) {
@@ -451,7 +492,7 @@ sub _insert_snp {
             $bulk_info->{snp_pos},        $bulk_info->{snp_target_base},
             $bulk_info->{snp_query_base}, $bulk_info->{snp_all_bases},
             $bulk_info->{snp_mutant_to},  $bulk_info->{snp_freq},
-            $bulk_info->{snp_occured},
+            $bulk_info->{snp_occured},    $bulk_info->{snp_outgroup_base},
         );
     }
     $sth->finish;

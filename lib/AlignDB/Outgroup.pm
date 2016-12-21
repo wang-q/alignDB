@@ -8,6 +8,9 @@ sub add_align {
     my $self      = shift;
     my $info_refs = shift;
 
+    for my $info ( @{$info_refs} ) {
+        $info->{seq} = uc $info->{seq};
+    }
     my $seq_refs = [ map { $_->{seq} } @{$info_refs} ];
 
     my $target_idx = 0;
@@ -17,6 +20,7 @@ sub add_align {
     for ( @{$seq_refs} ) {
         if ( ( length $_ ) != $align_length ) {
             Carp::confess "Sequences should have the same length!\n";
+            return;
         }
     }
 
@@ -24,20 +28,17 @@ sub add_align {
     my $seq_count = scalar @{$seq_refs};
     if ( $seq_count < 3 ) {
         Carp::confess "Too few sequences [$seq_count]\n";
+        return;
     }
 
     # appoint outgroup
-    my $outgroup_idx = $seq_count - 1;
+    my $outgroup_idx = scalar( @{$info_refs} ) - 1;
     my $outgroup_seq = $seq_refs->[$outgroup_idx];
-
-    # exclude outgroup
-    my $ingroup_infos = [ @{$info_refs}[ 0 .. $outgroup_idx - 1 ] ];
-    my $ingroup_seqs  = [ @{$seq_refs}[ 0 .. $outgroup_idx - 1 ] ];
 
     #----------------------------#
     # INSERT INTO align
     #----------------------------#
-    my $align_id = $self->_insert_align($ingroup_seqs);
+    my $align_id = $self->_insert_align( $seq_refs, "outgroup" );
     printf "Prosess align [%s] at %s.%s(%s):%s-%s\n", $align_id,
         $info_refs->[$target_idx]{name},
         $info_refs->[$target_idx]{chr},
@@ -46,268 +47,19 @@ sub add_align {
         $info_refs->[$target_idx]{end};
 
     #----------------------------#
-    # UPDATE align, INSERT sequence, target, queries
+    # UPDATE align, INSERT sequence, target, queries and outgroup
     #----------------------------#
-    $self->_insert_set_and_sequence( $align_id, $ingroup_infos, $ingroup_seqs );
-
-    #----------------------------#
-    # INSERT outgroup
-    #----------------------------#
-    $self->_insert_outgroup( $align_id, $info_refs, $outgroup_idx );
+    $self->_insert_set_and_sequence( $align_id, $info_refs, $seq_refs, "outgroup" );
 
     #----------------------------#
     # INSERT INTO indel
     #----------------------------#
-    $self->_insert_indel($align_id);
-    $self->_polarize_indel( $align_id, $outgroup_seq );
+    $self->_insert_indel($align_id, $outgroup_seq);
 
     #----------------------------#
     # INSERT INTO snp
     #----------------------------#
-    $self->_insert_snp($align_id);
-    $self->_polarize_snp( $align_id, $outgroup_seq );
-
-    return;
-}
-
-sub _insert_outgroup {
-    my $self         = shift;
-    my $align_id     = shift;
-    my $info_refs    = shift;
-    my $outgroup_idx = shift;
-
-    my $outgroup_seq = $info_refs->[$outgroup_idx]{seq};
-    my $align_length = length $outgroup_seq;
-    my $align_set    = AlignDB::IntSpan->new("1-$align_length");
-
-    {
-        $info_refs->[$outgroup_idx]{gc}
-            = App::Fasops::Common::calc_gc_ratio( [$outgroup_seq] );
-        my $seq_indel_set = App::Fasops::Common::indel_intspan( [$outgroup_seq] );
-        my $seq_set = $align_set->diff($seq_indel_set);
-        $info_refs->[$outgroup_idx]{runlist} = $seq_set->runlist;
-        $info_refs->[$outgroup_idx]{length}  = $seq_set->size;
-    }
-
-    {    # outgroup
-        $info_refs->[$outgroup_idx]{seq_role}     = "O";
-        $info_refs->[$outgroup_idx]{seq_position} = $outgroup_idx;
-        $self->_insert_seq( $align_id, $info_refs->[$outgroup_idx] );
-    }
-
-    return;
-}
-
-sub _polarize_indel {
-    my $self         = shift;
-    my $align_id     = shift;
-    my $outgroup_seq = shift;
-
-    my $outgroup_indel_set = App::Fasops::Common::indel_intspan($outgroup_seq);
-
-    my DBI $dbh = $self->dbh;
-
-    # Complex indels determined without outgroup are still complex
-    # polarize clear ones
-    my DBI $indel_info_sth = $dbh->prepare(
-        q{
-        SELECT indel_id, indel_start, indel_end, indel_all_seqs
-        FROM indel
-        WHERE 1 = 1
-        AND align_id = ?
-        }
-    );
-    my DBI $update_indel_sth = $dbh->prepare(
-        q{
-        UPDATE indel
-        SET indel_outgroup_seq = ?,
-            indel_type = ?,
-            indel_occured = ?,
-            indel_freq = ?
-        WHERE indel_id = ?
-        }
-    );
-
-    $indel_info_sth->execute($align_id);
-    while ( my @row = $indel_info_sth->fetchrow_array ) {
-        my ( $indel_id, $indel_start, $indel_end, $indel_all_seqs ) = @row;
-
-        my @indel_seqs     = split /\|/, $indel_all_seqs;
-        my $indel_length   = $indel_end - $indel_start + 1;
-        my $outgroup_bases = substr $outgroup_seq, $indel_start - 1, $indel_length;
-
-        my ( $indel_type, $indel_occured, $indel_freq );
-
-        my $indel_set = AlignDB::IntSpan->new("$indel_start-$indel_end");
-
-        # this line is different to AlignDB.pm
-        my @uniq_indel_seqs = App::Fasops::Common::uniq( @indel_seqs, $outgroup_bases );
-
-        # seqs with least '-' char wins
-        my ($indel_seq) = map { $_->[0] }
-            sort { $a->[1] <=> $b->[1] }
-            map { [ $_, tr/-/-/ ] } @uniq_indel_seqs;
-
-        if ( scalar @uniq_indel_seqs < 2 ) {
-            Carp::confess "no indel!\n";
-        }
-        elsif ( scalar @uniq_indel_seqs > 2 ) {
-            $indel_type = 'C';
-        }
-        elsif ( $indel_seq =~ /-/ ) {
-            $indel_type = 'C';
-        }
-        else {
-
-            if (    ( $outgroup_bases !~ /\-/ )
-                and ( $indel_seq ne $outgroup_bases ) )
-            {
-
-                # this section should already be judged in previes
-                # uniq_indel_seqs section, but I keep it here for safe
-
-                # reference indel content does not contain '-' and is not equal
-                # to the one of alignment
-                #     AAA
-                #     A-A
-                # ref ACA
-                $indel_type = 'C';
-            }
-            elsif ( $outgroup_indel_set->intersect($indel_set)->is_not_empty ) {
-                my $island = $outgroup_indel_set->find_islands($indel_set);
-                if ( $island->equal($indel_set) ) {
-
-                    #     NNNN
-                    #     N--N
-                    # ref N--N
-                    $indel_type = 'I';
-                }
-                else {
-                    # reference indel island is larger or smaller
-                    #     NNNN
-                    #     N-NN
-                    # ref N--N
-                    # or
-                    #     NNNN
-                    #     N--N
-                    # ref N-NN
-                    $indel_type = 'C';
-                }
-            }
-            elsif ( $outgroup_indel_set->intersect($indel_set)->is_empty ) {
-
-                #     NNNN
-                #     N--N
-                # ref NNNN
-                $indel_type = 'D';
-            }
-            else {
-                Carp::confess "Errors when polarizing indel!\n";
-            }
-        }
-
-        if ( $indel_type eq 'C' ) {
-            $indel_occured = 'unknown';
-            $indel_freq    = -1;
-        }
-        else {
-            for my $seq (@indel_seqs) {
-                if ( $seq eq $outgroup_bases ) {
-                    $indel_occured .= '0';
-                }
-                else {
-                    $indel_occured .= '1';
-                    $indel_freq++;
-                }
-            }
-        }
-
-        $update_indel_sth->execute( $outgroup_bases, $indel_type, $indel_occured,
-            $indel_freq, $indel_id );
-    }
-
-    $update_indel_sth->finish;
-    $indel_info_sth->finish;
-
-    return;
-}
-
-sub _polarize_snp {
-    my $self         = shift;
-    my $align_id     = shift;
-    my $outgroup_seq = shift;
-
-    my DBI $dbh = $self->dbh;
-
-    my DBI $snp_info_sth = $dbh->prepare(
-        q{
-        SELECT snp_id, snp_pos, snp_all_bases
-        FROM snp
-        WHERE 1 = 1
-        AND align_id = ?
-        }
-    );
-    my DBI $update_snp_sth = $dbh->prepare(
-        q{
-        UPDATE snp
-        SET snp_outgroup_base = ?,
-            snp_mutant_to = ?,
-            snp_freq = ?,
-            snp_occured = ?
-        WHERE snp_id = ?
-        }
-    );
-
-    $snp_info_sth->execute($align_id);
-    while ( my @row = $snp_info_sth->fetchrow_array ) {
-        my ( $snp_id, $snp_pos, $all_bases ) = @row;
-
-        my $outgroup_base = substr $outgroup_seq, $snp_pos - 1, 1;
-
-        my @nts = split '', $all_bases;
-        my @class;
-        for my $nt (@nts) {
-            my $class_bool = 0;
-            for (@class) {
-                if ( $_ eq $nt ) { $class_bool = 1; }
-            }
-            unless ($class_bool) {
-                push @class, $nt;
-            }
-        }
-
-        my ( $mutant_to, $snp_freq, $snp_occured );
-
-        if ( scalar @class < 2 ) {
-            Carp::confess "Not a real SNP\n";
-        }
-        elsif ( scalar @class == 2 ) {
-            for my $nt (@nts) {
-                if ( $nt eq $outgroup_base ) {
-                    $snp_occured .= '0';
-                }
-                else {
-                    $snp_occured .= '1';
-                    $snp_freq++;
-                    $mutant_to = "$outgroup_base->$nt";
-                }
-            }
-        }
-        else {
-            $snp_freq    = -1;
-            $mutant_to   = 'Complex';
-            $snp_occured = 'unknown';
-        }
-
-        # snp_outgroup_base is not equal to any nts
-        if ( $snp_occured eq ( '1' x ( length $snp_occured ) ) ) {
-            $snp_freq    = -1;
-            $mutant_to   = 'Complex';
-            $snp_occured = 'unknown';
-        }
-
-        $update_snp_sth->execute( $outgroup_base, $mutant_to, $snp_freq, $snp_occured, $snp_id );
-    }
+    $self->_insert_snp($align_id, $outgroup_seq);
 
     return;
 }
