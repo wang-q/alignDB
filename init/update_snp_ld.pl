@@ -9,7 +9,6 @@ use FindBin;
 use YAML::Syck;
 
 use List::Util;
-use List::MoreUtils::PP;
 use MCE;
 
 use AlignDB::IntSpan;

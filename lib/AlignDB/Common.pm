@@ -6,7 +6,6 @@ use Carp qw();
 use DBI;
 use IO::Zlib;
 use List::Util;
-use List::MoreUtils::PP;
 use YAML::Syck qw();
 
 use AlignDB::IntSpan;
@@ -909,7 +908,7 @@ sub empty_table {
     my @table_names = $dbh->tables( '', '', '' );
 
     # returned table names are quoted by `` (back-quotes)
-    unless ( List::MoreUtils::PP::any { $_ =~ qr{`$table`} } @table_names ) {
+    unless ( App::Fasops::Common::any { $_ =~ qr{`$table`} } @table_names ) {
         print "Table $table does not exist\n";
         return;
     }
@@ -962,7 +961,7 @@ sub create_column {
         # table names are quoted by ` (back-quotes) which is the
         #   quote_identifier
         my $table_name = "`$table`";
-        unless ( List::MoreUtils::PP::any { $_ =~ /$table_name/i } @table_names ) {
+        unless ( App::Fasops::Common::any { $_ =~ /$table_name/i } @table_names ) {
             print "Table $table does not exist\n";
             return;
         }
@@ -1012,7 +1011,7 @@ sub check_column {
         # table names are quoted by ` (back-quotes) which is the
         #   quote_identifier
         my $table_name = "`$table`";
-        unless ( List::MoreUtils::PP::any { $_ =~ /$table_name/i } @table_names ) {
+        unless ( App::Fasops::Common::any { $_ =~ /$table_name/i } @table_names ) {
             print " " x 4, "Table $table does not exist\n";
             return;
         }

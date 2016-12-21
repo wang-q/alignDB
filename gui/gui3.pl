@@ -15,7 +15,6 @@ use Glib qw(TRUE FALSE);
 
 use Path::Tiny;
 use Proc::Background;
-use List::MoreUtils qw(uniq);
 
 use lib "$FindBin::RealBin/../lib";
 use AlignDB::Common;

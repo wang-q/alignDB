@@ -141,7 +141,7 @@ sub _polarize_indel {
         my $indel_set = AlignDB::IntSpan->new("$indel_start-$indel_end");
 
         # this line is different to AlignDB.pm
-        my @uniq_indel_seqs = List::MoreUtils::PP::uniq( @indel_seqs, $outgroup_bases );
+        my @uniq_indel_seqs = App::Fasops::Common::uniq( @indel_seqs, $outgroup_bases );
 
         # seqs with least '-' char wins
         my ($indel_seq) = map { $_->[0] }
@@ -409,13 +409,13 @@ sub update_D_values {
             # find mutations on the deepest branches
             my @group_i = $group_i->elements;
             my @group_n = $group_n->elements;
-            my @i_snp   = List::MoreUtils::PP::uniq( @snp_base[@group_i] );
-            my @n_snp   = List::MoreUtils::PP::uniq( @snp_base[@group_n] );
+            my @i_snp   = App::Fasops::Common::uniq( @snp_base[@group_i] );
+            my @n_snp   = App::Fasops::Common::uniq( @snp_base[@group_n] );
             if ( @i_snp == 1 and $i_snp[0] ne $snp_outgroup_base ) {
 
                 # removes all mutations on the deepest indel branches
                 # add bases with recombination events
-                if ( List::MoreUtils::PP::any { $_ eq $i_snp[0] } @n_snp ) {
+                if ( App::Fasops::Common::any { $_ eq $i_snp[0] } @n_snp ) {
                     $ref_seq3 .= $snp_outgroup_base;
                     for my $i ( 0 .. $align_cnt - 1 ) {
                         $sequences3[$i] .= $snp_base[$i];
@@ -426,7 +426,7 @@ sub update_D_values {
 
                 # removes all mutations on the deepest noindel branches
                 # add bases with recombination events
-                if ( List::MoreUtils::PP::any { $_ eq $n_snp[0] } @i_snp ) {
+                if ( App::Fasops::Common::any { $_ eq $n_snp[0] } @i_snp ) {
                     $ref_seq3 .= $snp_outgroup_base;
                     for my $i ( 0 .. $align_cnt - 1 ) {
                         $sequences3[$i] .= $snp_base[$i];

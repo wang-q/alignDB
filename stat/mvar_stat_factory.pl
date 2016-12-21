@@ -10,7 +10,6 @@ use YAML::Syck;
 
 use DBI;
 use List::Util;
-use List::MoreUtils::PP;
 
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
@@ -607,7 +606,7 @@ my $gene_list = sub {
 
         # combine partial genes
         my @ids = map { $_->[4] } @data;
-        @ids = List::MoreUtils::PP::uniq(@ids);
+        @ids = App::Fasops::Common::uniq(@ids);
         printf " " x 4 . "%d partial gene records\n", scalar @data;
         printf " " x 4 . "%d partial genes\n",        scalar @ids;
 
