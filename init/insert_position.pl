@@ -319,7 +319,7 @@ my $worker_sw = sub {
                 # inside rsw 2
                 # rsw2 start from -90, so there will be no conflicts with rsw
                 my @in_rsw2
-                    = $window_maker->inside_window2( $target_set, $ofg_set->min, $ofg_set->max );
+                    = $window_maker->inside_window_2( $target_set, $ofg_set->min, $ofg_set->max );
 
                 for my $inside_rsw (@in_rsw2) {
                     my ($cur_window_id)
