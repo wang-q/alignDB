@@ -16,30 +16,30 @@ use App::RL::Common;
 use App::Fasops::Common;
 
 # dbi:mysql:database=alignDB;host=localhost;port=3306
-has 'dsn' => ( is => 'ro', isa => 'Str', );
+has dsn => ( is => 'ro', isa => 'Str', );
 
-has 'server' => ( is => 'ro', isa => 'Str', );                          # 202.119.43.5 or localhost
-has 'db'     => ( is => 'ro', isa => 'Str', );                          # alignDB
-has 'port'   => ( is => 'ro', isa => 'Int', default => sub {3306}, );
+has server => ( is => 'ro', isa => 'Str', );                          # 202.119.43.5 or localhost
+has db     => ( is => 'ro', isa => 'Str', );                          # alignDB
+has port   => ( is => 'ro', isa => 'Int', default => sub {3306}, );
 
-has 'user'   => ( is => 'ro', isa => 'Str', );                          # username
-has 'passwd' => ( is => 'ro', isa => 'Str', );                          # password
+has user   => ( is => 'ro', isa => 'Str', );                          # username
+has passwd => ( is => 'ro', isa => 'Str', );                          # password
 
-has 'dbh'          => ( is => 'ro', isa => 'Object', );                 # store database handle here
-has 'window_maker' => ( is => 'ro', isa => 'Object', );                 # sliding windows maker
+has dbh          => ( is => 'ro', isa => 'Object', );                 # store database handle here
+has window_maker => ( is => 'ro', isa => 'Object', );                 # sliding windows maker
 
 # threshold of lengthes of alignments
-has 'threshold' => ( is => 'ro', isa => 'Int', default => sub {5_000}, );
+has threshold => ( is => 'ro', isa => 'Int', default => sub {5_000}, );
 
 # caching seqs
-has 'caching_id' => ( is => 'ro', isa => 'Int' );
-has 'caching_seqs' => ( is => 'ro', isa => 'ArrayRef[Str]', default => sub { [] }, );
+has caching_id => ( is => 'ro', isa => 'Int' );
+has caching_seqs => ( is => 'ro', isa => 'ArrayRef[Str]', default => sub { [] }, );
 
 # target info
-has 'caching_info' => ( is => 'ro', isa => 'HashRef', default => sub { {} }, );
+has caching_info => ( is => 'ro', isa => 'HashRef', default => sub { {} }, );
 
 # don't connect mysql
-has 'mocking' => ( is => 'ro', isa => 'Bool', default => sub {0}, );
+has mocking => ( is => 'ro', isa => 'Bool', default => sub {0}, );
 
 sub BUILD {
     my $self = shift;
