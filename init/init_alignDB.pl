@@ -71,17 +71,20 @@ $stopwatch->start_message("Init [$opt->{db}]...");
 {
     $stopwatch->block_message("Create DB skeleton");
 
-    #@type DBD::mysql
-    my $drh = DBI->install_driver("mysql");    # Driver handle object
-    print "* dropdb\n";
-    $drh->func( 'dropdb', $opt->{db}, $opt->{server}, $opt->{username}, $opt->{password}, 'admin' );
-    print "* createdb\n";
-    $drh->func( 'createdb', $opt->{db}, $opt->{server}, $opt->{username}, $opt->{password},
-        'admin' );
+    $ENV{MYSQL_PWD} = $opt->{password};
+    my $cmd = "mysql -h$opt->{server} -P$opt->{port} -u$opt->{username}";
+
+    my $drop = " -e \"DROP DATABASE IF EXISTS $opt->{db};\"";
+    print "* dropdb\n" . "$cmd $drop\n";
+    system("$cmd $drop");
+
+    my $create = " -e \"CREATE DATABASE $opt->{db};\"";
+    print "* createdb\n" . "$cmd $create\n";
+    system("$cmd $create");
 
     #@type DBI
-    my $dbh = DBI->connect( $dsn, $opt->{username}, $opt->{password} )
-        or die $DBI::errstr;
+    my $dbh = DBI->connect( $dsn, $opt->{username}, $opt->{password}, )
+        or Carp::confess $DBI::errstr;
 
     print "* init\n";
     my $content = path( $opt->{sql} )->slurp;
