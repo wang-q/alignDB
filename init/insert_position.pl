@@ -21,7 +21,6 @@ use App::RL::Common;
 
 use lib "$FindBin::RealBin/../lib";
 use AlignDB::Common;
-use AlignDB::Position;
 
 #----------------------------------------------------------#
 # GetOpt section
@@ -97,9 +96,12 @@ GetOptions(
 #----------------------------------------------------------#
 $stopwatch->start_message("Update data of $db...");
 
+# DBI Data Source Name
+my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $db, $server, $port;
+
 {
     my $obj = AlignDB::Common->new(
-        mysql  => "$db:$server",
+        dsn    => $dsn,
         user   => $username,
         passwd => $password,
     );
@@ -163,12 +165,11 @@ my $worker_insert = sub {
     my @data = @{$chunk_ref};
 
     my $obj = AlignDB::Common->new(
-        mysql  => "$db:$server",
+        dsn    => $dsn,
         user   => $username,
         passwd => $password,
     );
     my DBI $dbh = $obj->dbh;
-    my $pos_finder = AlignDB::Position->new( dbh => $dbh );
 
     # insert into ofg
     my DBI $ofg_insert_sth = $dbh->prepare(
@@ -196,32 +197,35 @@ my $worker_insert = sub {
             printf " " x 8 . "%s\n", App::RL::Common::encode_header($item);
         }
 
-        my $target_info = $obj->get_target_info($align_id);
-
-        # target runlist
-        my $target_set = AlignDB::IntSpan->new( $target_info->{seq_runlist} );
+        # target info
+        my $target_info    = $obj->get_target_info($align_id);
+        my $chr_start      = $target_info->{chr_start};
+        my $chr_strand     = $target_info->{chr_strand};
+        my $target_intspan = $target_info->{seq_intspan};
 
         # insert internal indels, that are, indels in target_set
         # indels in query_set is equal to spans of target_set minus one
         my $internal_indel_flag = 1;
 
-        my $item_start = $pos_finder->at_align( $align_id, $item->{start} );
-        my $item_end   = $pos_finder->at_align( $align_id, $item->{end} );
+        my $item_start = App::Fasops::Common::chr_to_align( $target_intspan, $item->{start},
+            $chr_start, $chr_strand, );
+        my $item_end = App::Fasops::Common::chr_to_align( $target_intspan, $item->{end},
+            $chr_start, $chr_strand, );
         next if $item_start > $item_end;
 
-        my $item_set = AlignDB::IntSpan->new;
-        $item_set->add_pair( $item_start, $item_end );
-        $item_set = $item_set->intersect($target_set);
+        my $item_intspan = AlignDB::IntSpan->new;
+        $item_intspan->add_pair( $item_start, $item_end );
+        $item_intspan = $item_intspan->intersect($target_intspan);
 
         # window
-        my ($cur_window_id) = $obj->insert_window( $align_id, $item_set, $internal_indel_flag );
+        my ($cur_window_id) = $obj->insert_window( $align_id, $item_intspan, $internal_indel_flag );
 
         # insert to table
         $ofg_insert_sth->execute( $cur_window_id, $item->{tag}, $item->{type} );
 
         $info_of{ $obj->last_insert_id } = {
             align_id => $align_id,
-            set      => $item_set,
+            set      => $item_intspan,
         };
     }
 
@@ -249,7 +253,7 @@ my $worker_sw = sub {
     my @ofg_ids = @{$chunk_ref};
 
     my $obj = AlignDB::Common->new(
-        mysql  => "$db:$server",
+        dsn    => $dsn,
         user   => $username,
         passwd => $password,
     );
@@ -374,7 +378,7 @@ $stopwatch->end_message;
 # this AlignDB object is just for storing meta info
 END {
     AlignDB::Common->new(
-        mysql  => "$db:$server",
+        dsn    => $dsn,
         user   => $username,
         passwd => $password,
     )->add_meta_stopwatch($stopwatch);
