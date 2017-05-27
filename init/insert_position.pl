@@ -18,6 +18,7 @@ use AlignDB::Stopwatch;
 use AlignDB::Window;
 
 use App::RL::Common;
+use App::Fasops::Common;
 
 use lib "$FindBin::RealBin/../lib";
 use AlignDB::Common;
