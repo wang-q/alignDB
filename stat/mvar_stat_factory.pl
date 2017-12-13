@@ -103,29 +103,7 @@ my $alignDB = AlignDB::Common->new(
 #----------------------------#
 # count freq
 #----------------------------#
-my $all_freq;
-{
-    my DBI $sth = $dbh->prepare(
-        q{
-        SELECT DISTINCT COUNT(s.seq_id) + 1
-        FROM  sequence s
-        WHERE 1 = 1
-        AND s.seq_role = "Q"
-        GROUP BY s.align_id
-        }
-    );
-
-    my @counts;
-    $sth->execute;
-    while ( my ($count) = $sth->fetchrow_array ) {
-        push @counts, $count;
-    }
-    if ( scalar @counts > 1 ) {
-        die "Database corrupts, freqs are not consistent\n";
-    }
-
-    $all_freq = $counts[0];
-}
+my $seq_count = $alignDB->get_seq_count;
 
 #----------------------------------------------------------#
 # worksheet -- indel_basic
@@ -689,7 +667,7 @@ my $strain_list = sub {
 
             while ( my ( $id, $string ) = $sth->fetchrow_array ) {
                 my @chars = split //, $string;
-                if ( $all_freq != scalar @chars ) {
+                if ( $seq_count != scalar @chars ) {
                     warn "indel_id [$id] occured string errors\n";
                 }
 
@@ -718,7 +696,7 @@ my $strain_list = sub {
 
         while ( my ( $id, $string ) = $sth->fetchrow_array ) {
             my @chars = split //, $string;
-            if ( $all_freq != scalar @chars ) {
+            if ( $seq_count != scalar @chars ) {
                 warn "snp_id [$id] occured string errors\n";
             }
 
@@ -736,7 +714,7 @@ my $strain_list = sub {
     }
 
     {                                            # contents
-        for my $i ( 1 .. $all_freq ) {
+        for my $i ( 1 .. $seq_count ) {
             $toxlsx->write_row(
                 $sheet,
                 {   row => [
