@@ -27,11 +27,11 @@ my $conf = Config::Tiny->read("$FindBin::RealBin/../alignDB.ini");
 
 =head1 NAME
 
-ld_stat_factory.pl - LD stats for alignDB
+multi_stat_factory.pl
 
 =head1 SYNOPSIS
 
-    perl ld_stat_factory.pl [options]
+    perl multi_stat_factory.pl [options]
       Options:
         --help      -?          brief help message
         --server    -s  STR     MySQL IP/Domain
