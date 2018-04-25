@@ -235,7 +235,7 @@ perl ~/Scripts/alignDB/alignDB.pl \
 mkdir -p ~/data/alignment/example/feature
 cd ~/data/alignment/example/feature
 
-perl ~/Scripts/alignDB/util/write_runlist_feature.pl \
+perl ~/Scripts/withncbi/ensembl/feature_runlists.pl \
     -e yeast --feature intergenic
 
 find ~/data/alignment/example/scer/Scer_n2_Spar_refined -name "*.fas" -or -name "*.fas.gz" \
