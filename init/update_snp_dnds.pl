@@ -81,7 +81,7 @@ my @jobs;
 
     $alignDB->create_column( "snp", "exon_id",       "INT" );
     $alignDB->create_column( "snp", "snp_codon_pos", "INT" );
-    $alignDB->create_column( "snp", "snp_codons",    "CHAR(128)" );
+    $alignDB->create_column( "snp", "snp_codons",    "TEXT" );
     $alignDB->create_column( "snp", "snp_syn",       "DOUBLE" );
     $alignDB->create_column( "snp", "snp_nsy",       "DOUBLE" );
     $alignDB->create_column( "snp", "snp_stop",      "DOUBLE" );
