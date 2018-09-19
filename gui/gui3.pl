@@ -336,9 +336,10 @@ sub dialog_choose_db {
     $dialog->destroy;
 
     if ( defined $db_name ) {
+        my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $db_name, $server, $port;
 
         my $obj = AlignDB::Common->new(
-            mysql  => "$db_name:$server",
+            dsn    => $dsn,
             user   => $username,
             passwd => $password,
         );
@@ -380,9 +381,11 @@ sub dialog_db_meta {
 
     # retrieve data for $model
     {
+        my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", $db_name, $server, $port;
+
         # get dbh
         my $obj = AlignDB::Common->new(
-            mysql  => "$db_name:$server",
+            dsn    => $dsn,
             user   => $username,
             passwd => $password,
         );
@@ -397,6 +400,7 @@ sub dialog_db_meta {
             WHERE meta_key LIKE "a_%"
                OR meta_key LIKE "c_%"
         };
+
         #@type DBI
         my $sth = $dbh->prepare($sql);
         $sth->execute;
@@ -586,8 +590,11 @@ sub on_button_test_clicked {
     my $username = $self->get_value("entry_username");
     my $password = $self->get_value("entry_password");
 
+    # DBI Data Source Name
+    my $dsn = sprintf "dbi:mysql:database=%s;host=%s;port=%s", "mysql", $server, $port;
+
     my $dbh = AlignDB::Common->new(
-        mysql  => "mysql:$server",
+        dsn    => $dsn,
         user   => $username,
         passwd => $password,
     )->dbh;

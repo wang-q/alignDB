@@ -3,10 +3,10 @@ use strict;
 use warnings;
 use autodie;
 
-use Getopt::Long;
+use Getopt::Long qw();
 use Config::Tiny;
 use FindBin;
-use YAML::Syck;
+use YAML::Syck qw();
 
 use AlignDB::IntSpan;
 use AlignDB::Stopwatch;
@@ -21,26 +21,26 @@ my $stopwatch = AlignDB::Stopwatch->new;
 
 =head1 NAME
 
-alignDB.pl - Batch process two/multi-way alignDB with/without outgroup
+alignDB.pl - Batch process multi-way alignDB with/without outgroup
 
 =cut
 
-GetOptions(
-    'help|?' => sub { Getopt::Long::HelpMessage(0) },
-    'server|s=s'     => \( my $server       = $conf->{database}{server} ),
-    'port=i'         => \( my $port         = $conf->{database}{port} ),
-    'db|d=s'         => \( my $db_name      = $conf->{database}{db} ),
-    'username|u=s'   => \( my $username     = $conf->{database}{username} ),
-    'password|p=s'   => \( my $password     = $conf->{database}{password} ),
-    'ensembl|e=s'    => \( my $ensembl_db   = $conf->{database}{ensembl} ),
-    'dir_align|da=s' => \( my $dir_align    = $conf->{generate}{dir_align} ),
-    'chr=s'          => \( my $init_chr     = $conf->{generate}{file_chr_length} ),
-    'annotation|a=s' => \( my $file_anno    = $conf->{generate}{file_anno} ),
-    'parallel=i'     => \( my $parallel     = $conf->{generate}{parallel} ),
+Getopt::Long::GetOptions(
+    'help|?'         => sub { Getopt::Long::HelpMessage(0) },
+    'server|s=s'     => \( my $server = $conf->{database}{server} ),
+    'port=i'         => \( my $port = $conf->{database}{port} ),
+    'db|d=s'         => \( my $db_name = $conf->{database}{db} ),
+    'username|u=s'   => \( my $username = $conf->{database}{username} ),
+    'password|p=s'   => \( my $password = $conf->{database}{password} ),
+    'ensembl|e=s'    => \( my $ensembl_db = $conf->{database}{ensembl} ),
+    'dir_align|da=s' => \( my $dir_align = $conf->{generate}{dir_align} ),
+    'chr=s'          => \( my $init_chr = $conf->{generate}{file_chr_length} ),
+    'annotation|a=s' => \( my $file_anno = $conf->{generate}{file_anno} ),
+    'parallel=i'     => \( my $parallel = $conf->{generate}{parallel} ),
     'batch=i'        => \( my $batch_number = $conf->{generate}{batch} ),
-    'length|lt=i'    => \( my $length       = $conf->{generate}{length} ),
+    'length|lt=i'    => \( my $length = $conf->{generate}{length} ),
     'outgroup|o'     => \( my $outgroup ),
-    'run|r=s'        => \( my $run          = "common" ),
+    'run|r=s'        => \( my $run = "common" ),
 ) or Getopt::Long::HelpMessage(1);
 
 # prepare to run tasks in @tasks
@@ -202,8 +202,9 @@ my $dispatch = {
 # Run
 #----------------------------#
 
-# use the dispatch template to generate $cmd
 for my $step (@tasks) {
+
+    # use the dispatch template to generate $cmd
     my $cmd = $dispatch->{$step};
     next unless $cmd;
 

@@ -8,8 +8,6 @@ use Config::Tiny;
 use FindBin;
 use YAML::Syck;
 
-use Bio::Tools::GFF;
-use File::Basename;
 use MCE;
 use Path::Tiny;
 
@@ -409,6 +407,7 @@ sub feature_portion {
 
     my $pos_n = $set->size;
     return if $pos_n <= 0;
+
     my $intersect       = $feature_set->intersect($set);
     my $n               = $intersect->size;
     my $feature_portion = $n / $pos_n;
