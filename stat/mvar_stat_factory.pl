@@ -475,7 +475,7 @@ my $snp_codon_list = sub {
     $toxlsx->row(0);
     $toxlsx->column(0);
 
-    my @names = qw{snp_id name mutant_to freq occured target codon_pos syn nsy };
+    my @names = qw{snp_id name mutant_to freq occured target codon_pos syn nsy snp_codons};
     {    # header
         $sheet = $toxlsx->write_header( $sheet_name, { header => \@names } );
     }
@@ -484,7 +484,7 @@ my $snp_codon_list = sub {
         my $sql_query = q{
             SELECT 
                 s.align_id, s.snp_id, se.chr_name, s.snp_pos, s.snp_mutant_to,
-                s.snp_freq, s.snp_occured, s.snp_codon_pos, s.snp_syn, s.snp_nsy
+                s.snp_freq, s.snp_occured, s.snp_codon_pos, s.snp_syn, s.snp_nsy, s.snp_codons
             FROM
                 snp s
                     INNER JOIN
@@ -511,7 +511,7 @@ my $snp_codon_list = sub {
                 $sheet,
                 {   row => [
                         $row[0], $name,   $row[3], $row[4], $row[5],
-                        $target, $row[6], $row[7], $row[8],
+                        $target, $row[6], $row[7], $row[8], $row[9],
                     ],
                 }
             );
