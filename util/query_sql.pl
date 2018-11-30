@@ -43,10 +43,10 @@ EOF
     [ 'password|p=s', 'password',        { default => $conf_db->{password} }, ],
     [ 'db|d=s',       'database name',   { default => $conf_db->{db} }, ],
     [],
-    [ 'query|q=s', 'SQL statement', { default => "SELECT * FROM meta" }, ],
-    [ 'file|f=s',  'SQL file', ],
+    [ 'query|q=s',  'SQL statement', { default => "SELECT * FROM meta" }, ],
+    [ 'file|f=s',   'SQL file', ],
     [ 'output|o=s', 'output filename. [stdout] for screen', ],
-    [ 'type|t=s', 'output style (csv, neat, table and box)', { default => "csv" }, ],
+    [ 'type|t=s', 'output style (csv, tsv, neat, table, and box)', { default => "csv" }, ],
     { show_defaults => 1, }
     );
 
@@ -106,18 +106,28 @@ sub result {
         open $out_fh, ">", $outfile;
     }
 
-    if ( $type eq 'csv' ) {
-        my $csv = Text::CSV_XS->new;
+    if ( $type eq 'csv' or $type eq 'tsv' ) {
+        my $handler = Text::CSV_XS->new;
+
+        if ( $type eq 'tsv' ) {
+            $handler = Text::CSV_XS->new(
+                {   sep_char    => "\t",
+                    eol         => "\n",
+                    quote_space => 0,
+                    escape_null => 0,
+                }
+            );
+        }
 
         # header line
         my @columns = @{ $sth->{NAME} };
-        $csv->combine(@columns);
-        print {$out_fh} $csv->string . "\n";
+        $handler->combine(@columns);
+        print {$out_fh} $handler->string . "\n";
 
         # all others
         while ( my @row = $sth->fetchrow_array ) {
-            $csv->combine(@row);
-            print {$out_fh} $csv->string . "\n";
+            $handler->combine(@row);
+            print {$out_fh} $handler->string . "\n";
         }
     }
     elsif ( $type eq 'neat' ) {
