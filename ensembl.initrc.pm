@@ -12,33 +12,8 @@ my $port = 3306;
 my $user = 'alignDB';
 my $pass = 'alignDB';
 
-{    # Arabidopsis lyrata
-    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-        -host    => $host,
-        -user    => $user,
-        -pass    => $pass,
-        -port    => $port,
-        -species => 'Arabidopsis lyrata',
-        -group   => 'core',
-        -dbname  => 'arabidopsis_lyrata_core_29_82_10',
-    );
-
-    my @aliases = (
-        'alyr',
-        'Alyr',
-        'Arabidopsis_lyrata',
-        'alyr_core_82',
-        'alyr_82',
-        'arabidopsis_lyrata_core_29_82_10',
-    );
-
-    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
-        -species => 'Arabidopsis lyrata',
-        -alias   => \@aliases,
-    );
-}
-
-{    # Arabidopsis thaliana
+# Arabidopsis thaliana
+{
     Bio::EnsEMBL::DBSQL::DBAdaptor->new(
         -host    => $host,
         -user    => $user,
@@ -46,16 +21,16 @@ my $pass = 'alignDB';
         -port    => $port,
         -species => 'Arabidopsis thaliana',
         -group   => 'core',
-        -dbname  => 'arabidopsis_thaliana_core_29_82_10',
+        -dbname  => 'arabidopsis_thaliana_core_41_94_11',
     );
 
     my @aliases = (
         'atha',
         'Atha',
         'Arabidopsis_thaliana',
-        'atha_core_82',
-        'atha_82',
-        'arabidopsis_thaliana_core_29_82_10',
+        'atha_core_94',
+        'atha_94',
+        'arabidopsis_thaliana_core_41_94_11',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -64,7 +39,8 @@ my $pass = 'alignDB';
     );
 }
 
-{    # Aspergillus fumigatus
+# Aspergillus fumigatus
+{
     Bio::EnsEMBL::DBSQL::DBAdaptor->new(
         -host    => $host,
         -user    => $user,
@@ -72,16 +48,16 @@ my $pass = 'alignDB';
         -port    => $port,
         -species => 'Aspergillus fumigatus',
         -group   => 'core',
-        -dbname  => 'aspergillus_fumigatus_core_29_82_2',
+        -dbname  => 'aspergillus_fumigatus_core_41_94_1',
     );
 
     my @aliases = (
         'afum',
         'Afum',
         'Aspergillus_fumigatus',
-        'afum_core_82',
-        'afum_82',
-        'aspergillus_fumigatus_core_29_82_2',
+        'afum_core_94',
+        'afum_94',
+        'aspergillus_fumigatus_core_41_94_1',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -90,111 +66,8 @@ my $pass = 'alignDB';
     );
 }
 
-{    # Brassica oleracea
-    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-        -host    => $host,
-        -user    => $user,
-        -pass    => $pass,
-        -port    => $port,
-        -species => 'Brassica oleracea',
-        -group   => 'core',
-        -dbname  => 'brassica_oleracea_core_29_82_1',
-    );
-
-    my @aliases = (
-        'bole',
-        'Bole',
-        'Brassica_oleracea',
-        'bole_core_82',
-        'bole_82',
-        'brassica_oleracea_core_29_82_1',
-    );
-
-    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
-        -species => 'Brassica oleracea',
-        -alias   => \@aliases,
-    );
-}
-
-{    # Brassica rapa
-    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-        -host    => $host,
-        -user    => $user,
-        -pass    => $pass,
-        -port    => $port,
-        -species => 'Brassica rapa',
-        -group   => 'core',
-        -dbname  => 'brassica_rapa_core_29_82_1',
-    );
-
-    my @aliases = (
-        'brap',
-        'Brap',
-        'Brassica_rapa',
-        'brap_core_82',
-        'brap_82',
-        'brassica_rapa_core_29_82_1',
-    );
-
-    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
-        -species => 'Brassica rapa',
-        -alias   => \@aliases,
-    );
-}
-
-{    # Caenorhabditis brenneri
-    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-        -host    => $host,
-        -user    => $user,
-        -pass    => $pass,
-        -port    => $port,
-        -species => 'Caenorhabditis brenneri',
-        -group   => 'core',
-        -dbname  => 'caenorhabditis_brenneri_core_29_82_233',
-    );
-
-    my @aliases = (
-        'cbre',
-        'Cbre',
-        'Caenorhabditis_brenneri',
-        'cbre_core_82',
-        'cbre_82',
-        'caenorhabditis_brenneri_core_29_82_233',
-    );
-
-    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
-        -species => 'Caenorhabditis brenneri',
-        -alias   => \@aliases,
-    );
-}
-
-{    # Caenorhabditis briggsae
-    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-        -host    => $host,
-        -user    => $user,
-        -pass    => $pass,
-        -port    => $port,
-        -species => 'Caenorhabditis briggsae',
-        -group   => 'core',
-        -dbname  => 'caenorhabditis_briggsae_core_29_82_230',
-    );
-
-    my @aliases = (
-        'cbri',
-        'Cbri',
-        'Caenorhabditis_briggsae',
-        'cbri_core_82',
-        'cbri_82',
-        'caenorhabditis_briggsae_core_29_82_230',
-    );
-
-    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
-        -species => 'Caenorhabditis briggsae',
-        -alias   => \@aliases,
-    );
-}
-
-{    # Caenorhabditis elegans
+# Caenorhabditis elegans
+{
     Bio::EnsEMBL::DBSQL::DBAdaptor->new(
         -host    => $host,
         -user    => $user,
@@ -202,16 +75,16 @@ my $pass = 'alignDB';
         -port    => $port,
         -species => 'Caenorhabditis elegans',
         -group   => 'core',
-        -dbname  => 'caenorhabditis_elegans_core_82_245',
+        -dbname  => 'caenorhabditis_elegans_core_94_260',
     );
 
     my @aliases = (
         'cele',
         'Cele',
         'Caenorhabditis_elegans',
-        'cele_core_82',
-        'cele_82',
-        'caenorhabditis_elegans_core_82_245',
+        'cele_core_94',
+        'cele_94',
+        'caenorhabditis_elegans_core_94_260',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -220,59 +93,8 @@ my $pass = 'alignDB';
     );
 }
 
-{    # Caenorhabditis japonica
-    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-        -host    => $host,
-        -user    => $user,
-        -pass    => $pass,
-        -port    => $port,
-        -species => 'Caenorhabditis japonica',
-        -group   => 'core',
-        -dbname  => 'caenorhabditis_japonica_core_29_82_233',
-    );
-
-    my @aliases = (
-        'cjap',
-        'Cjap',
-        'Caenorhabditis_japonica',
-        'cjap_core_82',
-        'cjap_82',
-        'caenorhabditis_japonica_core_29_82_233',
-    );
-
-    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
-        -species => 'Caenorhabditis japonica',
-        -alias   => \@aliases,
-    );
-}
-
-{    # Caenorhabditis remanei
-    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-        -host    => $host,
-        -user    => $user,
-        -pass    => $pass,
-        -port    => $port,
-        -species => 'Caenorhabditis remanei',
-        -group   => 'core',
-        -dbname  => 'caenorhabditis_remanei_core_29_82_233',
-    );
-
-    my @aliases = (
-        'crem',
-        'Crem',
-        'Caenorhabditis_remanei',
-        'crem_core_82',
-        'crem_82',
-        'caenorhabditis_remanei_core_29_82_233',
-    );
-
-    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
-        -species => 'Caenorhabditis remanei',
-        -alias   => \@aliases,
-    );
-}
-
-{    # Dictyostelium discoideum
+# Dictyostelium discoideum
+{
     Bio::EnsEMBL::DBSQL::DBAdaptor->new(
         -host    => $host,
         -user    => $user,
@@ -280,16 +102,16 @@ my $pass = 'alignDB';
         -port    => $port,
         -species => 'Dictyostelium discoideum',
         -group   => 'core',
-        -dbname  => 'dictyostelium_discoideum_core_29_82_1',
+        -dbname  => 'dictyostelium_discoideum_core_41_94_1',
     );
 
     my @aliases = (
         'ddis',
         'Ddis',
         'Dictyostelium_discoideum',
-        'ddis_core_82',
-        'ddis_82',
-        'dictyostelium_discoideum_core_29_82_1',
+        'ddis_core_94',
+        'ddis_94',
+        'dictyostelium_discoideum_core_41_94_1',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -298,7 +120,8 @@ my $pass = 'alignDB';
     );
 }
 
-{    # Drosophila melanogaster
+# Drosophila melanogaster
+{
     Bio::EnsEMBL::DBSQL::DBAdaptor->new(
         -host    => $host,
         -user    => $user,
@@ -306,16 +129,16 @@ my $pass = 'alignDB';
         -port    => $port,
         -species => 'Drosophila melanogaster',
         -group   => 'core',
-        -dbname  => 'drosophila_melanogaster_core_82_602',
+        -dbname  => 'drosophila_melanogaster_core_94_6',
     );
 
     my @aliases = (
         'dmel',
         'Dmel',
         'Drosophila_melanogaster',
-        'dmel_core_82',
-        'dmel_82',
-        'drosophila_melanogaster_core_82_602',
+        'dmel_core_94',
+        'dmel_94',
+        'drosophila_melanogaster_core_94_6',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -324,59 +147,8 @@ my $pass = 'alignDB';
     );
 }
 
-{    # Drosophila sechellia
-    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-        -host    => $host,
-        -user    => $user,
-        -pass    => $pass,
-        -port    => $port,
-        -species => 'Drosophila sechellia',
-        -group   => 'core',
-        -dbname  => 'drosophila_sechellia_core_29_82_1',
-    );
-
-    my @aliases = (
-        'dsec',
-        'Dsec',
-        'Drosophila_sechellia',
-        'dsec_core_82',
-        'dsec_82',
-        'drosophila_sechellia_core_29_82_1',
-    );
-
-    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
-        -species => 'Drosophila sechellia',
-        -alias   => \@aliases,
-    );
-}
-
-{    # Drosophila simulans
-    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-        -host    => $host,
-        -user    => $user,
-        -pass    => $pass,
-        -port    => $port,
-        -species => 'Drosophila simulans',
-        -group   => 'core',
-        -dbname  => 'drosophila_simulans_core_29_82_1',
-    );
-
-    my @aliases = (
-        'dsim',
-        'Dsim',
-        'Drosophila_simulans',
-        'dsim_core_82',
-        'dsim_82',
-        'drosophila_simulans_core_29_82_1',
-    );
-
-    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
-        -species => 'Drosophila simulans',
-        -alias   => \@aliases,
-    );
-}
-
-{    # Homo sapiens
+# Homo sapiens
+{
     Bio::EnsEMBL::DBSQL::DBAdaptor->new(
         -host    => $host,
         -user    => $user,
@@ -384,16 +156,16 @@ my $pass = 'alignDB';
         -port    => $port,
         -species => 'Homo sapiens',
         -group   => 'core',
-        -dbname  => 'homo_sapiens_core_82_37',
+        -dbname  => 'homo_sapiens_core_94_37',
     );
 
     my @aliases = (
         'hsap',
         'Hsap',
         'Homo_sapiens',
-        'hsap_core_82',
-        'hsap_82',
-        'homo_sapiens_core_82_37',
+        'hsap_core_94',
+        'hsap_94',
+        'homo_sapiens_core_94_37',
         'human',
     );
 
@@ -403,7 +175,8 @@ my $pass = 'alignDB';
     );
 }
 
-{    # Mus musculus
+# Mus musculus
+{
     Bio::EnsEMBL::DBSQL::DBAdaptor->new(
         -host    => $host,
         -user    => $user,
@@ -411,16 +184,16 @@ my $pass = 'alignDB';
         -port    => $port,
         -species => 'Mus musculus',
         -group   => 'core',
-        -dbname  => 'mus_musculus_core_82_38',
+        -dbname  => 'mus_musculus_core_94_38',
     );
 
     my @aliases = (
         'mmus',
         'Mmus',
         'Mus_musculus',
-        'mmus_core_82',
-        'mmus_82',
-        'mus_musculus_core_82_38',
+        'mmus_core_94',
+        'mmus_94',
+        'mus_musculus_core_94_38',
         'mouse',
     );
 
@@ -430,33 +203,8 @@ my $pass = 'alignDB';
     );
 }
 
-{    # Oryza indica
-    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-        -host    => $host,
-        -user    => $user,
-        -pass    => $pass,
-        -port    => $port,
-        -species => 'Oryza indica',
-        -group   => 'core',
-        -dbname  => 'oryza_indica_core_29_82_2',
-    );
-
-    my @aliases = (
-        'oind',
-        'Oind',
-        'Oryza_indica',
-        'oind_core_82',
-        'oind_82',
-        'oryza_indica_core_29_82_2',
-    );
-
-    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
-        -species => 'Oryza indica',
-        -alias   => \@aliases,
-    );
-}
-
-{    # Oryza sativa
+# Oryza sativa
+{
     Bio::EnsEMBL::DBSQL::DBAdaptor->new(
         -host    => $host,
         -user    => $user,
@@ -464,16 +212,16 @@ my $pass = 'alignDB';
         -port    => $port,
         -species => 'Oryza sativa',
         -group   => 'core',
-        -dbname  => 'oryza_sativa_core_29_82_7',
+        -dbname  => 'oryza_sativa_core_41_94_7',
     );
 
     my @aliases = (
         'osat',
         'Osat',
         'Oryza_sativa',
-        'osat_core_82',
-        'osat_82',
-        'oryza_sativa_core_29_82_7',
+        'osat_core_94',
+        'osat_94',
+        'oryza_sativa_core_41_94_7',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -482,7 +230,8 @@ my $pass = 'alignDB';
     );
 }
 
-{    # Plasmodium falciparum
+# Plasmodium falciparum
+{
     Bio::EnsEMBL::DBSQL::DBAdaptor->new(
         -host    => $host,
         -user    => $user,
@@ -490,16 +239,16 @@ my $pass = 'alignDB';
         -port    => $port,
         -species => 'Plasmodium falciparum',
         -group   => 'core',
-        -dbname  => 'plasmodium_falciparum_core_29_82_3',
+        -dbname  => 'plasmodium_falciparum_core_41_94_1',
     );
 
     my @aliases = (
         'pfal',
         'Pfal',
         'Plasmodium_falciparum',
-        'pfal_core_82',
-        'pfal_82',
-        'plasmodium_falciparum_core_29_82_3',
+        'pfal_core_94',
+        'pfal_94',
+        'plasmodium_falciparum_core_41_94_1',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -508,7 +257,8 @@ my $pass = 'alignDB';
     );
 }
 
-{    # Saccharomyces cerevisiae
+# Saccharomyces cerevisiae
+{
     Bio::EnsEMBL::DBSQL::DBAdaptor->new(
         -host    => $host,
         -user    => $user,
@@ -516,17 +266,18 @@ my $pass = 'alignDB';
         -port    => $port,
         -species => 'Saccharomyces cerevisiae',
         -group   => 'core',
-        -dbname  => 'saccharomyces_cerevisiae_core_29_82_4',
+        -dbname  => 'saccharomyces_cerevisiae_core_94_4',
     );
 
     my @aliases = (
         'scer',
         'Scer',
         'Saccharomyces_cerevisiae',
-        'scer_core_82',
-        'scer_82',
-        'saccharomyces_cerevisiae_core_29_82_4',
+        'scer_core_94',
+        'scer_94',
+        'saccharomyces_cerevisiae_core_94_4',
         'yeast',
+        'S288c',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
@@ -535,7 +286,8 @@ my $pass = 'alignDB';
     );
 }
 
-{    # Schizosaccharomyces pombe
+# Schizosaccharomyces pombe
+{
     Bio::EnsEMBL::DBSQL::DBAdaptor->new(
         -host    => $host,
         -user    => $user,
@@ -543,72 +295,20 @@ my $pass = 'alignDB';
         -port    => $port,
         -species => 'Schizosaccharomyces pombe',
         -group   => 'core',
-        -dbname  => 'schizosaccharomyces_pombe_core_29_82_2',
+        -dbname  => 'schizosaccharomyces_pombe_core_41_94_2',
     );
 
     my @aliases = (
         'spom',
         'Spom',
         'Schizosaccharomyces_pombe',
-        'spom_core_82',
-        'spom_82',
-        'schizosaccharomyces_pombe_core_29_82_2',
+        'spom_core_94',
+        'spom_94',
+        'schizosaccharomyces_pombe_core_41_94_2',
     );
 
     Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
         -species => 'Schizosaccharomyces pombe',
-        -alias   => \@aliases,
-    );
-}
-
-{    # Solanum lycopersicum
-    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-        -host    => $host,
-        -user    => $user,
-        -pass    => $pass,
-        -port    => $port,
-        -species => 'Solanum lycopersicum',
-        -group   => 'core',
-        -dbname  => 'solanum_lycopersicum_core_29_82_250',
-    );
-
-    my @aliases = (
-        'slyc',
-        'Slyc',
-        'Solanum_lycopersicum',
-        'slyc_core_82',
-        'slyc_82',
-        'solanum_lycopersicum_core_29_82_250',
-    );
-
-    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
-        -species => 'Solanum lycopersicum',
-        -alias   => \@aliases,
-    );
-}
-
-{    # Solanum tuberosum
-    Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-        -host    => $host,
-        -user    => $user,
-        -pass    => $pass,
-        -port    => $port,
-        -species => 'Solanum tuberosum',
-        -group   => 'core',
-        -dbname  => 'solanum_tuberosum_core_29_82_4',
-    );
-
-    my @aliases = (
-        'stub',
-        'Stub',
-        'Solanum_tuberosum',
-        'stub_core_82',
-        'stub_82',
-        'solanum_tuberosum_core_29_82_4',
-    );
-
-    Bio::EnsEMBL::Utils::ConfigRegistry->add_alias(
-        -species => 'Solanum tuberosum',
         -alias   => \@aliases,
     );
 }
