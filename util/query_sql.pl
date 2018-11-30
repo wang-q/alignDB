@@ -112,7 +112,6 @@ sub result {
         if ( $type eq 'tsv' ) {
             $handler = Text::CSV_XS->new(
                 {   sep_char    => "\t",
-                    eol         => "\n",
                     quote_space => 0,
                     escape_null => 0,
                 }
